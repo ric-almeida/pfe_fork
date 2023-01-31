@@ -1,0 +1,678 @@
+DIGEST 8b40b5bbab00baa905677af9622af64f
+FTop.bigraphs
+R15:20 Coq.Strings.String <> <> lib
+R38:41 Coq.Lists.List <> <> lib
+ind 127:130 <> list
+constr 155:159 <> empty
+constr 189:192 <> elts
+R180:183 Top.bigraphs <> list ind
+R185:185 Top.bigraphs <> A var
+R197:200 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R207:210 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R211:214 Top.bigraphs <> list ind
+R216:216 Top.bigraphs <> A var
+R201:204 Top.bigraphs <> list ind
+R206:206 Top.bigraphs <> A var
+R196:196 Top.bigraphs <> A var
+R238:242 Top.bigraphs <> empty constr
+not 229:229 <> ::list_scope:'['_']'
+R294:297 Top.bigraphs <> elts constr
+R301:305 Top.bigraphs <> empty constr
+not 282:282 <> ::list_scope:'['_x_']'
+R357:360 Top.bigraphs <> elts constr
+R365:368 Top.bigraphs <> elts constr
+R376:379 Top.bigraphs <> elts constr
+R383:387 Top.bigraphs <> empty constr
+not 331:331 <> ::list_scope:'['_x_';'_x_';'_'..'_';'_x_']'
+mod 474:482 <> MyBigraph
+ind 496:497 MyBigraph id
+constr 512:513 MyBigraph Id
+R523:526 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R527:528 Top.bigraphs <> id ind
+R517:522 Coq.Strings.String <> string ind
+ind 543:546 MyBigraph root
+constr 561:564 MyBigraph Root
+R570:573 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R574:577 Top.bigraphs <> root ind
+R568:569 Top.bigraphs MyBigraph id ind
+ind 592:592 MyBigraph k
+constr 607:607 MyBigraph K
+R613:616 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R617:617 Top.bigraphs <> k ind
+R611:612 Top.bigraphs MyBigraph id ind
+ind 632:635 MyBigraph node
+constr 650:653 MyBigraph Node
+R659:662 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R664:667 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R668:671 Top.bigraphs <> node ind
+R663:663 Top.bigraphs MyBigraph k ind
+R657:658 Top.bigraphs MyBigraph id ind
+ind 686:689 MyBigraph site
+constr 704:707 MyBigraph Site
+R713:716 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R717:720 Top.bigraphs <> site ind
+R711:712 Top.bigraphs MyBigraph id ind
+ind 734:738 MyBigraph place
+constr 755:763 MyBigraph PlaceRoot
+constr 780:788 MyBigraph PlaceNode
+constr 805:813 MyBigraph PlaceSite
+R770:773 Top.bigraphs MyBigraph root ind
+R775:775 Top.bigraphs <> place ind
+R795:798 Top.bigraphs MyBigraph node ind
+R800:800 Top.bigraphs <> place ind
+R820:823 Top.bigraphs MyBigraph site ind
+R825:825 Top.bigraphs <> place ind
+ind 860:869 MyBigraph edgeMilner
+constr 884:893 MyBigraph EdgeMilner
+R899:902 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R912:915 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R916:925 Top.bigraphs <> edgeMilner ind
+R903:906 Top.bigraphs <> list ind
+R908:911 Top.bigraphs MyBigraph node ind
+R897:898 Top.bigraphs MyBigraph id ind
+ind 940:954 MyBigraph outernameMilner
+constr 969:983 MyBigraph OuternameMilner
+R989:992 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1002:1005 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1006:1020 Top.bigraphs <> outernameMilner ind
+R993:996 Top.bigraphs <> list ind
+R998:1001 Top.bigraphs MyBigraph node ind
+R987:988 Top.bigraphs MyBigraph id ind
+ind 1035:1038 MyBigraph link
+constr 1055:1068 MyBigraph LinkEdgeMilner
+constr 1091:1109 MyBigraph LinkOuternameMilner
+R1075:1084 Top.bigraphs MyBigraph edgeMilner ind
+R1086:1086 Top.bigraphs <> link ind
+R1116:1130 Top.bigraphs MyBigraph outernameMilner ind
+R1132:1132 Top.bigraphs <> link ind
+ind 1145:1148 MyBigraph port
+constr 1163:1166 MyBigraph Port
+R1172:1175 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1180:1183 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1184:1187 Top.bigraphs <> port ind
+R1176:1179 Top.bigraphs MyBigraph node ind
+R1170:1171 Top.bigraphs MyBigraph id ind
+ind 1201:1215 MyBigraph innernameMilner
+constr 1230:1244 MyBigraph InnernameMilner
+R1250:1253 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1263:1266 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1267:1281 Top.bigraphs <> innernameMilner ind
+R1254:1257 Top.bigraphs <> list ind
+R1259:1262 Top.bigraphs MyBigraph node ind
+R1248:1249 Top.bigraphs MyBigraph id ind
+ind 1295:1299 MyBigraph point
+constr 1316:1330 MyBigraph PointPortMilner
+constr 1347:1366 MyBigraph PointInnernameMilner
+R1337:1340 Top.bigraphs MyBigraph port ind
+R1342:1342 Top.bigraphs <> point ind
+R1373:1387 Top.bigraphs MyBigraph innernameMilner ind
+R1389:1389 Top.bigraphs <> point ind
+ind 1420:1428 MyBigraph outername
+constr 1443:1451 MyBigraph Outername
+R1457:1460 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1461:1469 Top.bigraphs <> outername ind
+R1455:1456 Top.bigraphs MyBigraph id ind
+ind 1484:1492 MyBigraph innername
+constr 1507:1515 MyBigraph Innername
+R1521:1524 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1525:1533 Top.bigraphs <> innername ind
+R1519:1520 Top.bigraphs MyBigraph id ind
+ind 1548:1558 MyBigraph attachables
+constr 1575:1588 MyBigraph AttachableNode
+constr 1605:1623 MyBigraph AttachableOutername
+constr 1645:1663 MyBigraph AttachableInnername
+R1595:1598 Top.bigraphs MyBigraph node ind
+R1600:1600 Top.bigraphs <> attachables ind
+R1630:1638 Top.bigraphs MyBigraph outername ind
+R1640:1640 Top.bigraphs <> attachables ind
+R1670:1678 Top.bigraphs MyBigraph innername ind
+R1680:1680 Top.bigraphs <> attachables ind
+ind 1693:1696 MyBigraph edge
+constr 1711:1714 MyBigraph Edge
+R1720:1723 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1740:1743 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1744:1747 Top.bigraphs <> edge ind
+R1724:1727 Top.bigraphs <> list ind
+R1729:1739 Top.bigraphs MyBigraph attachables ind
+R1718:1719 Top.bigraphs MyBigraph id ind
+def 1763:1769 MyBigraph control
+R1774:1774 Top.bigraphs MyBigraph k ind
+R1779:1781 Coq.Init.Datatypes <> nat ind
+def 1813:1818 MyBigraph parent
+R1823:1827 Top.bigraphs MyBigraph place ind
+R1832:1836 Top.bigraphs MyBigraph place ind
+ind 1867:1876 MyBigraph placegraph
+constr 1892:1893 MyBigraph pg
+R1901:1904 Top.bigraphs <> list ind
+R1906:1909 Top.bigraphs MyBigraph node ind
+R1930:1933 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1934:1936 Coq.Init.Datatypes <> nat ind
+R1929:1929 Top.bigraphs MyBigraph k ind
+R1961:1964 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1965:1969 Top.bigraphs MyBigraph place ind
+R1956:1960 Top.bigraphs MyBigraph place ind
+R1986:1989 Top.bigraphs <> list ind
+R1991:1994 Top.bigraphs MyBigraph site ind
+R2011:2014 Top.bigraphs <> list ind
+R2016:2019 Top.bigraphs MyBigraph root ind
+R2021:2021 Top.bigraphs <> placegraph ind
+R2089:2098 Top.bigraphs MyBigraph placegraph ind
+R2030:2031 Top.bigraphs MyBigraph pg constr
+R2075:2079 Top.bigraphs <> empty constr
+R2081:2084 Top.bigraphs MyBigraph root ind
+R2062:2066 Top.bigraphs <> empty constr
+R2068:2071 Top.bigraphs MyBigraph site ind
+R2054:2059 Top.bigraphs MyBigraph parent prfax
+R2046:2052 Top.bigraphs MyBigraph control prfax
+R2034:2038 Top.bigraphs <> empty constr
+R2040:2043 Top.bigraphs MyBigraph node ind
+def 2356:2358 MyBigraph lnk
+R2363:2366 Top.bigraphs MyBigraph port ind
+R2371:2374 Top.bigraphs MyBigraph edge ind
+ind 2405:2413 MyBigraph linkgraph
+constr 2429:2430 MyBigraph lg
+R2438:2441 Top.bigraphs <> list ind
+R2443:2446 Top.bigraphs MyBigraph node ind
+R2464:2467 Top.bigraphs <> list ind
+R2469:2472 Top.bigraphs MyBigraph edge ind
+R2493:2496 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R2497:2499 Coq.Init.Datatypes <> nat ind
+R2492:2492 Top.bigraphs MyBigraph k ind
+R2523:2526 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R2527:2530 Top.bigraphs MyBigraph edge ind
+R2519:2522 Top.bigraphs MyBigraph port ind
+R2547:2550 Top.bigraphs <> list ind
+R2552:2560 Top.bigraphs MyBigraph innername ind
+R2577:2580 Top.bigraphs <> list ind
+R2582:2590 Top.bigraphs MyBigraph outername ind
+R2592:2592 Top.bigraphs <> linkgraph ind
+R2680:2688 Top.bigraphs MyBigraph linkgraph ind
+R2601:2602 Top.bigraphs MyBigraph lg constr
+R2661:2665 Top.bigraphs <> empty constr
+R2667:2675 Top.bigraphs MyBigraph outername ind
+R2643:2647 Top.bigraphs <> empty constr
+R2649:2657 Top.bigraphs MyBigraph innername ind
+R2638:2640 Top.bigraphs MyBigraph lnk prfax
+R2630:2636 Top.bigraphs MyBigraph control prfax
+R2618:2622 Top.bigraphs <> empty constr
+R2624:2627 Top.bigraphs MyBigraph edge ind
+R2605:2609 Top.bigraphs <> empty constr
+R2611:2614 Top.bigraphs MyBigraph node ind
+ind 2899:2905 MyBigraph bigraph
+constr 2921:2923 MyBigraph big
+constr 3170:3173 MyBigraph pglg
+R2930:2933 Top.bigraphs <> list ind
+R2935:2938 Top.bigraphs MyBigraph node ind
+R2955:2958 Top.bigraphs <> list ind
+R2960:2963 Top.bigraphs MyBigraph edge ind
+R2984:2987 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R2988:2990 Coq.Init.Datatypes <> nat ind
+R2983:2983 Top.bigraphs MyBigraph k ind
+R3015:3018 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R3019:3023 Top.bigraphs MyBigraph place ind
+R3010:3014 Top.bigraphs MyBigraph place ind
+R3046:3049 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R3050:3053 Top.bigraphs MyBigraph edge ind
+R3042:3045 Top.bigraphs MyBigraph port ind
+R3070:3073 Top.bigraphs <> list ind
+R3075:3078 Top.bigraphs MyBigraph root ind
+R3095:3098 Top.bigraphs <> list ind
+R3100:3103 Top.bigraphs MyBigraph site ind
+R3120:3123 Top.bigraphs <> list ind
+R3125:3133 Top.bigraphs MyBigraph innername ind
+R3150:3153 Top.bigraphs <> list ind
+R3155:3163 Top.bigraphs MyBigraph outername ind
+R3165:3165 Top.bigraphs <> bigraph ind
+R3181:3190 Top.bigraphs MyBigraph placegraph ind
+R3199:3207 Top.bigraphs MyBigraph linkgraph ind
+R3209:3209 Top.bigraphs <> bigraph ind
+R3331:3337 Top.bigraphs MyBigraph bigraph ind
+R3218:3220 Top.bigraphs MyBigraph big constr
+R3312:3316 Top.bigraphs <> empty constr
+R3318:3326 Top.bigraphs MyBigraph outername ind
+R3294:3298 Top.bigraphs <> empty constr
+R3300:3308 Top.bigraphs MyBigraph innername ind
+R3281:3285 Top.bigraphs <> empty constr
+R3287:3290 Top.bigraphs MyBigraph site ind
+R3268:3272 Top.bigraphs <> empty constr
+R3274:3277 Top.bigraphs MyBigraph root ind
+R3263:3265 Top.bigraphs MyBigraph lnk prfax
+R3256:3261 Top.bigraphs MyBigraph parent prfax
+R3248:3254 Top.bigraphs MyBigraph control prfax
+R3236:3240 Top.bigraphs <> empty constr
+R3242:3245 Top.bigraphs MyBigraph edge ind
+R3223:3227 Top.bigraphs <> empty constr
+R3229:3232 Top.bigraphs MyBigraph node ind
+R3492:3498 Top.bigraphs MyBigraph bigraph ind
+R3347:3350 Top.bigraphs MyBigraph pglg constr
+R3412:3413 Top.bigraphs MyBigraph lg constr
+R3472:3476 Top.bigraphs <> empty constr
+R3478:3486 Top.bigraphs MyBigraph outername ind
+R3454:3458 Top.bigraphs <> empty constr
+R3460:3468 Top.bigraphs MyBigraph innername ind
+R3449:3451 Top.bigraphs MyBigraph lnk prfax
+R3441:3447 Top.bigraphs MyBigraph control prfax
+R3429:3433 Top.bigraphs <> empty constr
+R3435:3438 Top.bigraphs MyBigraph edge ind
+R3416:3420 Top.bigraphs <> empty constr
+R3422:3425 Top.bigraphs MyBigraph node ind
+R3353:3354 Top.bigraphs MyBigraph pg constr
+R3398:3402 Top.bigraphs <> empty constr
+R3404:3407 Top.bigraphs MyBigraph root ind
+R3385:3389 Top.bigraphs <> empty constr
+R3391:3394 Top.bigraphs MyBigraph site ind
+R3377:3382 Top.bigraphs MyBigraph parent prfax
+R3369:3375 Top.bigraphs MyBigraph control prfax
+R3357:3361 Top.bigraphs <> empty constr
+R3363:3366 Top.bigraphs MyBigraph node ind
+def 3775:3782 MyBigraph getnodes
+R3787:3793 Top.bigraphs MyBigraph bigraph ind
+R3798:3801 Top.bigraphs <> list ind
+R3803:3806 Top.bigraphs MyBigraph node ind
+R3819:3819 Top.bigraphs <> b var
+R3830:3832 Top.bigraphs MyBigraph big constr
+R3861:3864 Top.bigraphs MyBigraph pglg constr
+R3867:3868 Top.bigraphs MyBigraph pg constr
+def 3985:3992 MyBigraph getedges
+R3997:4003 Top.bigraphs MyBigraph bigraph ind
+R4008:4011 Top.bigraphs <> list ind
+R4013:4016 Top.bigraphs MyBigraph edge ind
+R4029:4029 Top.bigraphs <> b var
+R4040:4042 Top.bigraphs MyBigraph big constr
+R4071:4074 Top.bigraphs MyBigraph pglg constr
+R4079:4080 Top.bigraphs MyBigraph lg constr
+def 4119:4125 MyBigraph getctrl
+R4130:4136 Top.bigraphs MyBigraph bigraph ind
+R4142:4145 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R4146:4148 Coq.Init.Datatypes <> nat ind
+R4141:4141 Top.bigraphs MyBigraph k ind
+R4161:4161 Top.bigraphs <> b var
+R4172:4174 Top.bigraphs MyBigraph big constr
+R4209:4212 Top.bigraphs MyBigraph pglg constr
+R4215:4216 Top.bigraphs MyBigraph pg constr
+def 4261:4267 MyBigraph getprnt
+R4272:4278 Top.bigraphs MyBigraph bigraph ind
+R4288:4291 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R4292:4296 Top.bigraphs MyBigraph place ind
+R4283:4287 Top.bigraphs MyBigraph place ind
+R4309:4309 Top.bigraphs <> b var
+R4320:4322 Top.bigraphs MyBigraph big constr
+R4357:4360 Top.bigraphs MyBigraph pglg constr
+R4363:4364 Top.bigraphs MyBigraph pg constr
+def 4409:4414 MyBigraph getlnk
+R4419:4425 Top.bigraphs MyBigraph bigraph ind
+R4434:4437 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R4438:4441 Top.bigraphs MyBigraph edge ind
+R4430:4433 Top.bigraphs MyBigraph port ind
+R4454:4454 Top.bigraphs <> b var
+R4465:4467 Top.bigraphs MyBigraph big constr
+R4500:4503 Top.bigraphs MyBigraph pglg constr
+R4508:4509 Top.bigraphs MyBigraph lg constr
+def 4552:4555 MyBigraph getk
+R4560:4566 Top.bigraphs MyBigraph bigraph ind
+R4571:4574 Top.bigraphs <> list ind
+R4576:4579 Top.bigraphs MyBigraph root ind
+R4592:4592 Top.bigraphs <> b var
+R4603:4605 Top.bigraphs MyBigraph big constr
+R4634:4637 Top.bigraphs MyBigraph pglg constr
+R4640:4641 Top.bigraphs MyBigraph pg constr
+def 4680:4683 MyBigraph getm
+R4688:4694 Top.bigraphs MyBigraph bigraph ind
+R4699:4702 Top.bigraphs <> list ind
+R4704:4707 Top.bigraphs MyBigraph site ind
+R4720:4720 Top.bigraphs <> b var
+R4731:4733 Top.bigraphs MyBigraph big constr
+R4762:4765 Top.bigraphs MyBigraph pglg constr
+R4768:4769 Top.bigraphs MyBigraph pg constr
+def 4808:4811 MyBigraph getx
+R4816:4822 Top.bigraphs MyBigraph bigraph ind
+R4827:4830 Top.bigraphs <> list ind
+R4832:4840 Top.bigraphs MyBigraph innername ind
+R4853:4853 Top.bigraphs <> b var
+R4864:4866 Top.bigraphs MyBigraph big constr
+R4895:4898 Top.bigraphs MyBigraph pglg constr
+R4903:4904 Top.bigraphs MyBigraph lg constr
+def 4943:4946 MyBigraph gety
+R4951:4957 Top.bigraphs MyBigraph bigraph ind
+R4962:4965 Top.bigraphs <> list ind
+R4967:4975 Top.bigraphs MyBigraph outername ind
+R4988:4988 Top.bigraphs <> b var
+R4999:5001 Top.bigraphs MyBigraph big constr
+R5030:5033 Top.bigraphs MyBigraph pglg constr
+R5038:5039 Top.bigraphs MyBigraph lg constr
+mod 5088:5098 <> MyBigraph.testBigraph
+def 5110:5111 MyBigraph.testBigraph v0
+R5116:5119 Top.bigraphs MyBigraph Node constr
+R5132:5132 Top.bigraphs MyBigraph K constr
+R5135:5136 Top.bigraphs MyBigraph Id constr
+R5122:5123 Top.bigraphs MyBigraph Id constr
+def 5153:5154 MyBigraph.testBigraph v1
+R5159:5162 Top.bigraphs MyBigraph Node constr
+R5175:5175 Top.bigraphs MyBigraph K constr
+R5178:5179 Top.bigraphs MyBigraph Id constr
+R5165:5166 Top.bigraphs MyBigraph Id constr
+def 5196:5197 MyBigraph.testBigraph v2
+R5202:5205 Top.bigraphs MyBigraph Node constr
+R5218:5218 Top.bigraphs MyBigraph K constr
+R5221:5222 Top.bigraphs MyBigraph Id constr
+R5208:5209 Top.bigraphs MyBigraph Id constr
+def 5240:5241 MyBigraph.testBigraph x0
+R5246:5254 Top.bigraphs MyBigraph Innername constr
+R5257:5258 Top.bigraphs MyBigraph Id constr
+def 5275:5276 MyBigraph.testBigraph x1
+R5281:5289 Top.bigraphs MyBigraph Innername constr
+R5292:5293 Top.bigraphs MyBigraph Id constr
+def 5311:5312 MyBigraph.testBigraph y0
+R5317:5325 Top.bigraphs MyBigraph Outername constr
+R5328:5329 Top.bigraphs MyBigraph Id constr
+def 5346:5347 MyBigraph.testBigraph y1
+R5352:5360 Top.bigraphs MyBigraph Outername constr
+R5363:5364 Top.bigraphs MyBigraph Id constr
+def 5381:5382 MyBigraph.testBigraph y2
+R5387:5395 Top.bigraphs MyBigraph Outername constr
+R5398:5399 Top.bigraphs MyBigraph Id constr
+def 5417:5418 MyBigraph.testBigraph e0
+R5426:5429 Top.bigraphs MyBigraph Edge constr
+R5454:5457 Top.bigraphs <> elts constr
+R5503:5506 Top.bigraphs <> elts constr
+R5552:5555 Top.bigraphs <> elts constr
+R5608:5612 Top.bigraphs <> empty constr
+R5614:5624 Top.bigraphs MyBigraph attachables ind
+R5570:5588 Top.bigraphs MyBigraph AttachableInnername constr
+R5590:5591 Top.bigraphs MyBigraph.testBigraph x0 ex
+R5557:5567 Top.bigraphs MyBigraph attachables ind
+R5521:5534 Top.bigraphs MyBigraph AttachableNode constr
+R5536:5537 Top.bigraphs MyBigraph.testBigraph v2 ex
+R5508:5518 Top.bigraphs MyBigraph attachables ind
+R5472:5485 Top.bigraphs MyBigraph AttachableNode constr
+R5487:5488 Top.bigraphs MyBigraph.testBigraph v0 ex
+R5459:5469 Top.bigraphs MyBigraph attachables ind
+R5433:5434 Top.bigraphs MyBigraph Id constr
+def 5639:5640 MyBigraph.testBigraph e1
+R5648:5651 Top.bigraphs MyBigraph Edge constr
+R5676:5679 Top.bigraphs <> elts constr
+R5726:5729 Top.bigraphs <> elts constr
+R5778:5782 Top.bigraphs <> empty constr
+R5784:5794 Top.bigraphs MyBigraph attachables ind
+R5744:5757 Top.bigraphs MyBigraph AttachableNode constr
+R5759:5760 Top.bigraphs MyBigraph.testBigraph v2 ex
+R5731:5741 Top.bigraphs MyBigraph attachables ind
+R5694:5707 Top.bigraphs MyBigraph AttachableNode constr
+R5709:5710 Top.bigraphs MyBigraph.testBigraph v1 ex
+R5681:5691 Top.bigraphs MyBigraph attachables ind
+R5655:5656 Top.bigraphs MyBigraph Id constr
+def 5808:5809 MyBigraph.testBigraph e2
+R5817:5820 Top.bigraphs MyBigraph Edge constr
+R5845:5848 Top.bigraphs <> elts constr
+R5894:5897 Top.bigraphs <> elts constr
+R5948:5951 Top.bigraphs <> elts constr
+R6004:6008 Top.bigraphs <> empty constr
+R6010:6020 Top.bigraphs MyBigraph attachables ind
+R5966:5984 Top.bigraphs MyBigraph AttachableInnername constr
+R5986:5987 Top.bigraphs MyBigraph.testBigraph x1 ex
+R5953:5963 Top.bigraphs MyBigraph attachables ind
+R5912:5930 Top.bigraphs MyBigraph AttachableOutername constr
+R5932:5933 Top.bigraphs MyBigraph.testBigraph y2 ex
+R5899:5909 Top.bigraphs MyBigraph attachables ind
+R5863:5876 Top.bigraphs MyBigraph AttachableNode constr
+R5878:5879 Top.bigraphs MyBigraph.testBigraph v2 ex
+R5850:5860 Top.bigraphs MyBigraph attachables ind
+R5824:5825 Top.bigraphs MyBigraph Id constr
+def 6035:6036 MyBigraph.testBigraph e3
+R6044:6047 Top.bigraphs MyBigraph Edge constr
+R6072:6075 Top.bigraphs <> elts constr
+R6121:6124 Top.bigraphs <> elts constr
+R6177:6181 Top.bigraphs <> empty constr
+R6183:6193 Top.bigraphs MyBigraph attachables ind
+R6139:6157 Top.bigraphs MyBigraph AttachableOutername constr
+R6159:6160 Top.bigraphs MyBigraph.testBigraph y1 ex
+R6126:6136 Top.bigraphs MyBigraph attachables ind
+R6090:6103 Top.bigraphs MyBigraph AttachableNode constr
+R6105:6106 Top.bigraphs MyBigraph.testBigraph v2 ex
+R6077:6087 Top.bigraphs MyBigraph attachables ind
+R6051:6052 Top.bigraphs MyBigraph Id constr
+def 6207:6208 MyBigraph.testBigraph e4
+R6216:6219 Top.bigraphs MyBigraph Edge constr
+R6244:6247 Top.bigraphs <> elts constr
+R6293:6296 Top.bigraphs <> elts constr
+R6341:6344 Top.bigraphs <> elts constr
+R6397:6401 Top.bigraphs <> empty constr
+R6403:6413 Top.bigraphs MyBigraph attachables ind
+R6359:6377 Top.bigraphs MyBigraph AttachableOutername constr
+R6379:6380 Top.bigraphs MyBigraph.testBigraph y0 ex
+R6346:6356 Top.bigraphs MyBigraph attachables ind
+R6311:6324 Top.bigraphs MyBigraph AttachableNode constr
+R6326:6327 Top.bigraphs MyBigraph.testBigraph v1 ex
+R6298:6308 Top.bigraphs MyBigraph attachables ind
+R6262:6275 Top.bigraphs MyBigraph AttachableNode constr
+R6277:6278 Top.bigraphs MyBigraph.testBigraph v0 ex
+R6249:6259 Top.bigraphs MyBigraph attachables ind
+R6223:6224 Top.bigraphs MyBigraph Id constr
+def 6429:6436 MyBigraph.testBigraph ctrltest
+R6441:6441 Top.bigraphs MyBigraph k ind
+R6455:6455 Top.bigraphs <> k var
+R6467:6467 Top.bigraphs MyBigraph K constr
+R6470:6471 Top.bigraphs MyBigraph Id constr
+R6487:6487 Top.bigraphs MyBigraph K constr
+R6490:6491 Top.bigraphs MyBigraph Id constr
+def 6544:6548 MyBigraph.testBigraph root0
+R6553:6556 Top.bigraphs MyBigraph Root constr
+R6559:6560 Top.bigraphs MyBigraph Id constr
+def 6577:6581 MyBigraph.testBigraph root1
+R6586:6589 Top.bigraphs MyBigraph Root constr
+R6592:6593 Top.bigraphs MyBigraph Id constr
+def 6612:6616 MyBigraph.testBigraph site0
+R6621:6624 Top.bigraphs MyBigraph Site constr
+R6627:6628 Top.bigraphs MyBigraph Id constr
+def 6645:6649 MyBigraph.testBigraph site1
+R6654:6657 Top.bigraphs MyBigraph Site constr
+R6660:6661 Top.bigraphs MyBigraph Id constr
+def 6679:6686 MyBigraph.testBigraph prnttest
+R6691:6695 Top.bigraphs MyBigraph place ind
+R6709:6709 Top.bigraphs <> p var
+R6720:6728 Top.bigraphs MyBigraph PlaceNode constr
+R6731:6734 Top.bigraphs MyBigraph Node constr
+R6737:6738 Top.bigraphs MyBigraph Id constr
+R6783:6791 Top.bigraphs MyBigraph PlaceRoot constr
+R6793:6797 Top.bigraphs MyBigraph.testBigraph root0 ex
+R6813:6821 Top.bigraphs MyBigraph PlaceNode constr
+R6823:6824 Top.bigraphs MyBigraph.testBigraph v0 ex
+R6840:6848 Top.bigraphs MyBigraph PlaceRoot constr
+R6850:6854 Top.bigraphs MyBigraph.testBigraph root1 ex
+R6867:6875 Top.bigraphs MyBigraph PlaceRoot constr
+R6878:6881 Top.bigraphs MyBigraph Root constr
+R6884:6885 Top.bigraphs MyBigraph Id constr
+R6923:6931 Top.bigraphs MyBigraph PlaceSite constr
+R6934:6937 Top.bigraphs MyBigraph Site constr
+R6940:6941 Top.bigraphs MyBigraph Id constr
+R6984:6992 Top.bigraphs MyBigraph PlaceNode constr
+R6994:6995 Top.bigraphs MyBigraph.testBigraph v0 ex
+R7011:7019 Top.bigraphs MyBigraph PlaceNode constr
+R7021:7022 Top.bigraphs MyBigraph.testBigraph v2 ex
+R7035:7043 Top.bigraphs MyBigraph PlaceRoot constr
+R7046:7049 Top.bigraphs MyBigraph Root constr
+R7052:7053 Top.bigraphs MyBigraph Id constr
+R7095:7103 Top.bigraphs MyBigraph PlaceRoot constr
+R7106:7109 Top.bigraphs MyBigraph Root constr
+R7112:7113 Top.bigraphs MyBigraph Id constr
+def 7155:7158 MyBigraph.testBigraph p0_0
+R7163:7166 Top.bigraphs MyBigraph Port constr
+R7180:7181 Top.bigraphs MyBigraph.testBigraph v0 ex
+R7169:7170 Top.bigraphs MyBigraph Id constr
+def 7192:7195 MyBigraph.testBigraph p0_1
+R7200:7203 Top.bigraphs MyBigraph Port constr
+R7217:7218 Top.bigraphs MyBigraph.testBigraph v0 ex
+R7206:7207 Top.bigraphs MyBigraph Id constr
+def 7229:7232 MyBigraph.testBigraph p1_0
+R7237:7240 Top.bigraphs MyBigraph Port constr
+R7254:7255 Top.bigraphs MyBigraph.testBigraph v1 ex
+R7243:7244 Top.bigraphs MyBigraph Id constr
+def 7266:7269 MyBigraph.testBigraph p1_1
+R7274:7277 Top.bigraphs MyBigraph Port constr
+R7291:7292 Top.bigraphs MyBigraph.testBigraph v1 ex
+R7280:7281 Top.bigraphs MyBigraph Id constr
+def 7303:7306 MyBigraph.testBigraph p2_0
+R7311:7314 Top.bigraphs MyBigraph Port constr
+R7328:7329 Top.bigraphs MyBigraph.testBigraph v2 ex
+R7317:7318 Top.bigraphs MyBigraph Id constr
+def 7340:7343 MyBigraph.testBigraph p2_1
+R7348:7351 Top.bigraphs MyBigraph Port constr
+R7365:7366 Top.bigraphs MyBigraph.testBigraph v2 ex
+R7354:7355 Top.bigraphs MyBigraph Id constr
+def 7377:7380 MyBigraph.testBigraph p2_2
+R7385:7388 Top.bigraphs MyBigraph Port constr
+R7402:7403 Top.bigraphs MyBigraph.testBigraph v2 ex
+R7391:7392 Top.bigraphs MyBigraph Id constr
+def 7414:7417 MyBigraph.testBigraph p2_3
+R7422:7425 Top.bigraphs MyBigraph Port constr
+R7439:7440 Top.bigraphs MyBigraph.testBigraph v2 ex
+R7428:7429 Top.bigraphs MyBigraph Id constr
+def 7453:7460 MyBigraph.testBigraph linktest
+R7465:7468 Top.bigraphs MyBigraph port ind
+R7482:7482 Top.bigraphs <> p var
+R7493:7496 Top.bigraphs MyBigraph Port constr
+R7499:7500 Top.bigraphs MyBigraph Id constr
+R7546:7547 Top.bigraphs MyBigraph.testBigraph e4 ex
+R7565:7566 Top.bigraphs MyBigraph.testBigraph e0 ex
+R7584:7585 Top.bigraphs MyBigraph.testBigraph e4 ex
+R7603:7604 Top.bigraphs MyBigraph.testBigraph e1 ex
+R7622:7623 Top.bigraphs MyBigraph.testBigraph e0 ex
+R7641:7642 Top.bigraphs MyBigraph.testBigraph e1 ex
+R7660:7661 Top.bigraphs MyBigraph.testBigraph e2 ex
+R7679:7680 Top.bigraphs MyBigraph.testBigraph e3 ex
+R7693:7696 Top.bigraphs MyBigraph Edge constr
+R7709:7713 Top.bigraphs <> empty constr
+R7715:7725 Top.bigraphs MyBigraph attachables ind
+R7700:7701 Top.bigraphs MyBigraph Id constr
+def 7770:7774 MyBigraph.testBigraph mybig
+R7788:7790 Top.bigraphs MyBigraph big constr
+R8195:8198 Top.bigraphs <> elts constr
+R8214:8217 Top.bigraphs <> elts constr
+R8233:8236 Top.bigraphs <> elts constr
+R8252:8256 Top.bigraphs <> empty constr
+R8258:8266 Top.bigraphs MyBigraph outername ind
+R8248:8249 Top.bigraphs MyBigraph.testBigraph y2 ex
+R8238:8246 Top.bigraphs MyBigraph outername ind
+R8229:8230 Top.bigraphs MyBigraph.testBigraph y1 ex
+R8219:8227 Top.bigraphs MyBigraph outername ind
+R8210:8211 Top.bigraphs MyBigraph.testBigraph y0 ex
+R8200:8208 Top.bigraphs MyBigraph outername ind
+R8129:8132 Top.bigraphs <> elts constr
+R8148:8151 Top.bigraphs <> elts constr
+R8167:8171 Top.bigraphs <> empty constr
+R8173:8181 Top.bigraphs MyBigraph innername ind
+R8163:8164 Top.bigraphs MyBigraph.testBigraph x1 ex
+R8153:8161 Top.bigraphs MyBigraph innername ind
+R8144:8145 Top.bigraphs MyBigraph.testBigraph x0 ex
+R8134:8142 Top.bigraphs MyBigraph innername ind
+R8072:8075 Top.bigraphs <> elts constr
+R8089:8092 Top.bigraphs <> elts constr
+R8106:8110 Top.bigraphs <> empty constr
+R8112:8115 Top.bigraphs MyBigraph site ind
+R8099:8103 Top.bigraphs MyBigraph.testBigraph site1 ex
+R8094:8097 Top.bigraphs MyBigraph site ind
+R8082:8086 Top.bigraphs MyBigraph.testBigraph site0 ex
+R8077:8080 Top.bigraphs MyBigraph site ind
+R8015:8018 Top.bigraphs <> elts constr
+R8032:8035 Top.bigraphs <> elts constr
+R8049:8053 Top.bigraphs <> empty constr
+R8055:8058 Top.bigraphs MyBigraph root ind
+R8042:8046 Top.bigraphs MyBigraph.testBigraph root1 ex
+R8037:8040 Top.bigraphs MyBigraph root ind
+R8025:8029 Top.bigraphs MyBigraph.testBigraph root0 ex
+R8020:8023 Top.bigraphs MyBigraph root ind
+R7997:8004 Top.bigraphs MyBigraph.testBigraph linktest ex
+R7979:7986 Top.bigraphs MyBigraph.testBigraph prnttest ex
+R7962:7969 Top.bigraphs MyBigraph.testBigraph ctrltest ex
+R7867:7870 Top.bigraphs <> elts constr
+R7881:7884 Top.bigraphs <> elts constr
+R7895:7898 Top.bigraphs <> elts constr
+R7909:7912 Top.bigraphs <> elts constr
+R7923:7926 Top.bigraphs <> elts constr
+R7937:7941 Top.bigraphs <> empty constr
+R7943:7946 Top.bigraphs MyBigraph edge ind
+R7933:7934 Top.bigraphs MyBigraph.testBigraph e4 ex
+R7928:7931 Top.bigraphs MyBigraph edge ind
+R7919:7920 Top.bigraphs MyBigraph.testBigraph e3 ex
+R7914:7917 Top.bigraphs MyBigraph edge ind
+R7905:7906 Top.bigraphs MyBigraph.testBigraph e2 ex
+R7900:7903 Top.bigraphs MyBigraph edge ind
+R7891:7892 Top.bigraphs MyBigraph.testBigraph e1 ex
+R7886:7889 Top.bigraphs MyBigraph edge ind
+R7877:7878 Top.bigraphs MyBigraph.testBigraph e0 ex
+R7872:7875 Top.bigraphs MyBigraph edge ind
+R7801:7804 Top.bigraphs <> elts constr
+R7815:7818 Top.bigraphs <> elts constr
+R7829:7832 Top.bigraphs <> elts constr
+R7843:7847 Top.bigraphs <> empty constr
+R7849:7852 Top.bigraphs MyBigraph node ind
+R7839:7840 Top.bigraphs MyBigraph.testBigraph v2 ex
+R7834:7837 Top.bigraphs MyBigraph node ind
+R7825:7826 Top.bigraphs MyBigraph.testBigraph v1 ex
+R7820:7823 Top.bigraphs MyBigraph node ind
+R7811:7812 Top.bigraphs MyBigraph.testBigraph v0 ex
+R7806:7809 Top.bigraphs MyBigraph node ind
+R8293:8299 Top.bigraphs MyBigraph bigraph ind
+R8283:8287 Top.bigraphs MyBigraph.testBigraph mybig ex
+R8307:8317 Top.bigraphs MyBigraph.testBigraph <> mod
+def 8391:8401 MyBigraph count_ports
+R8406:8412 Top.bigraphs MyBigraph bigraph ind
+R8418:8421 Top.bigraphs MyBigraph node ind
+R8435:8435 Top.bigraphs <> b var
+def 8752:8754 MyBigraph map
+R8759:8762 Top.bigraphs <> list ind
+R8764:8767 Top.bigraphs MyBigraph node ind
+R8781:8784 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8785:8785 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8794:8798 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8803:8806 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8799:8802 Top.bigraphs MyBigraph node ind
+R8787:8790 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8791:8793 Coq.Init.Datatypes <> nat ind
+R8786:8786 Top.bigraphs MyBigraph k ind
+R8774:8780 Top.bigraphs MyBigraph bigraph ind
+R8816:8822 Top.bigraphs MyBigraph bigraph ind
+R8833:8836 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R8837:8839 Coq.Init.Datatypes <> nat ind
+R8832:8832 Top.bigraphs MyBigraph k ind
+R8862:8862 Top.bigraphs <> l var
+R8877:8881 Top.bigraphs <> empty constr
+R8888:8891 Coq.Init.Logic <> True ind
+R8902:8905 Top.bigraphs <> elts constr
+R8916:8916 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R8927:8932 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R8947:8947 Coq.Init.Logic <> ::type_scope:x_'/\'_x not
+R8917:8917 Top.bigraphs <> f var
+R8921:8924 Top.bigraphs <> ctrl var
+R8919:8919 Top.bigraphs <> b var
+R8933:8935 Top.bigraphs <> map def
+R8943:8946 Top.bigraphs <> ctrl var
+R8941:8941 Top.bigraphs <> b var
+R8939:8939 Top.bigraphs <> f var
+def 8969:8985 MyBigraph ctrl_for_one_node
+R8990:8996 Top.bigraphs MyBigraph bigraph ind
+R9007:9010 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R9011:9013 Coq.Init.Datatypes <> nat ind
+R9006:9006 Top.bigraphs MyBigraph k ind
+R9019:9022 Top.bigraphs MyBigraph node ind
+R9045:9045 Top.bigraphs <> n var
+R9060:9063 Top.bigraphs MyBigraph Node constr
+R9088:9090 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R9073:9083 Top.bigraphs MyBigraph count_ports def
+R9087:9087 Top.bigraphs <> n var
+R9085:9085 Top.bigraphs <> b var
+R9091:9094 Top.bigraphs <> ctrl var
+prf 9116:9132 MyBigraph control_respected
+R9145:9151 Top.bigraphs MyBigraph bigraph ind
+R9160:9160 Top.bigraphs <> b var
+R9171:9173 Top.bigraphs MyBigraph big constr
+R9204:9206 Top.bigraphs MyBigraph map def
+R9228:9228 Top.bigraphs <> b var
+R9210:9226 Top.bigraphs MyBigraph ctrl_for_one_node def
+R9462:9465 Top.bigraphs MyBigraph pglg constr
+R9474:9477 Coq.Init.Logic <> True ind
+R9544:9546 Top.bigraphs MyBigraph map def
+R9575:9577 Top.bigraphs MyBigraph map def
+R9587:9603 Top.bigraphs MyBigraph ctrl_for_one_node def
+R9613:9615 Top.bigraphs MyBigraph map def
+R9637:9645 Top.bigraphs MyBigraph <> mod

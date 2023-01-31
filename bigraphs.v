@@ -1,21 +1,33 @@
-Require Import String.
-Require Import List.
-Open Scope string_scope.
-Open Scope list_scope.
+From Coq Require Import Arith ZArith Psatz Bool
+                        String List Program.Equality Program.Wf.
+Require Import Relations.
+Require Import Recdef.
+
+Set Warnings "-parsing".
+Set Implicit Arguments.
+Unset Strict Implicit.
+Unset Printing Implicit Defensive.
+Set Warnings "parsing".
+
+Local Open Scope string_scope.
+Local Open Scope list_scope.
+Local Open Scope nat_scope.
+Local Open Scope bool_scope.
+Import ListNotations.
 
 
 
 
 (*** Bigraph p13 *)
 
-Inductive list (A : Type) : Type :=
+(* Inductive list (A : Type) : Type :=
 | empty (* (n:list A) *) : list A
 | elts : A -> list A -> list A.
 
 Notation "[ ]" := empty (format "[ ]") : list_scope.
 Notation "[ x ]" := (elts x empty) : list_scope.
 Notation "[ x ; y ; .. ; z ]" :=  (elts x (elts y .. (elts z empty) ..))
-  (format "[ '[' x ;  '/' y ;  '/' .. ;  '/' z ']' ]") : list_scope.
+  (format "[ '[' x ;  '/' y ;  '/' .. ;  '/' z ']' ]") : list_scope. *)
 
 
 
@@ -77,11 +89,9 @@ Inductive attachables : Type :=
 Inductive edge : Type := 
   Edge : id -> list attachables -> edge. 
 
-Definition control (k:k) : nat.
-Proof. Admitted.
+Definition control := k -> nat.
 
-Definition parent (p:place) : place.
-Proof. Admitted.
+Definition parent := place -> place.
 
 Inductive placegraph : Type :=
   | pg  (v : list node) 
@@ -90,7 +100,8 @@ Inductive placegraph : Type :=
         (m : list site) 
         (n : list root).
 
-Check pg (empty node) control parent (empty site) (empty root) : placegraph.
+(* Check pg [] control parent (nil site) (nil root) : placegraph. *)
+
 
 (*Inductive placegraph : Type := 
   | Vp (ns : list node)
@@ -105,8 +116,8 @@ Check (ctrlp control)
 Check (prntp parent)
   : placegraph.*)
 
-Definition lnk (p:port) : edge.
-Proof. Admitted.
+(* Definition lnk (p:port) : edge.
+Proof. Admitted. *)
 
 Inductive linkgraph : Type :=
   | lg  (v : list node)  
@@ -116,7 +127,7 @@ Inductive linkgraph : Type :=
         (x : list innername) 
         (y : list outername).
 
-Check lg (empty node) (empty edge) control lnk (empty innername) (empty outername) : linkgraph.
+(* Check lg (empty node) (empty edge) control lnk (empty innername) (empty outername) : linkgraph. *)
 
 (*Inductive linkgraph : Type := 
   | Vl (ns : list node)
@@ -138,9 +149,9 @@ Inductive bigraph : Type :=
         (y : list outername)
   | pglg (pg : placegraph) (lg : linkgraph).
 
-Check big (empty node) (empty edge) control parent lnk (empty root) (empty site) (empty innername) (empty outername) : bigraph.
+(* Check big (empty node) (empty edge) control parent lnk (empty root) (empty site) (empty innername) (empty outername) : bigraph.
 
-Check pglg (pg (empty node) control parent (empty site) (empty root)) (lg (empty node) (empty edge) control lnk (empty innername) (empty outername)) : bigraph.
+Check pglg (pg (empty node) control parent (empty site) (empty root)) (lg (empty node) (empty edge) control lnk (empty innername) (empty outername)) : bigraph. *)
 (*Inductive bigraph : Type :=
   | V (ns : list node)
   | E (es : list edge)
@@ -222,32 +233,23 @@ Example y2 := Outername (Id "y2").
 
 Example e0 := 
   Edge  (Id "e0") 
-          (elts attachables (AttachableNode v0) 
-          (elts attachables (AttachableNode v2) 
-          (elts attachables (AttachableInnername x0) 
-            (empty attachables)))).
+    [AttachableNode v0; AttachableNode v2; AttachableInnername x0].
+
 Example e1 := 
   Edge  (Id "e1") 
-          (elts attachables (AttachableNode v1)  
-          (elts attachables (AttachableNode v2)  
-            (empty attachables))).
+    [AttachableNode v1; AttachableNode v2].
+
 Example e2 := 
   Edge  (Id "e2") 
-          (elts attachables (AttachableNode v2) 
-          (elts attachables (AttachableOutername y2) 
-          (elts attachables (AttachableInnername x1) 
-            (empty attachables)))).
+    [AttachableNode v2; AttachableOutername y2; AttachableInnername x1].
+
 Example e3 := 
   Edge  (Id "e3") 
-          (elts attachables (AttachableNode v2) 
-          (elts attachables (AttachableOutername y1) 
-            (empty attachables))).
+    [AttachableNode v2; AttachableOutername y1].
+
 Example e4 := 
   Edge  (Id "e4") 
-          (elts attachables (AttachableNode v0) 
-          (elts attachables (AttachableNode v1)
-          (elts attachables (AttachableOutername y0) 
-            (empty attachables)))).
+    [AttachableNode v0; AttachableNode v1;AttachableOutername y0].
 
 Example ctrltest (k:k) :=
   match k with 
@@ -303,23 +305,22 @@ Example linktest (p:port) :=
     | "p2_1" => e1
     | "p2_2" => e2
     | "p2_3" => e3
-    | _ => Edge  (Id "_") (empty attachables) (* Weird case *)
+    | _ => Edge  (Id "_") [] (* Weird case *)
     end 
   end.
 
 Example mybig :=  
-      (big
-        (elts node v0 (elts node v1 (elts node v2 (empty node))))
-        (elts edge e0 (elts edge e1 (elts edge e2 (elts edge e3 (elts edge e4 (empty edge))))))
-        ctrltest
-        prnttest 
-        linktest
-        (elts root root0 (elts root root1 (empty root)))
-        (elts site site0 (elts site site1 (empty site)))
-        (elts innername x0 (elts innername x1 (empty innername)))
-        (elts outername y0 (elts outername y1 (elts outername y2 (empty outername))))).
-
-
+  big
+    [ v0 ;  v1 ; v2 ]
+    [ e0 ; e1 ; e2; e3 ; e4]
+    ctrltest
+    prnttest 
+    linktest
+    [ root0 ; root1 ]
+    [ site0 ; site1 ]
+    [ x0 ; x1 ]
+    [ y0 ; y1 ; y2 ].
+     
 
 Check mybig
   : bigraph.
@@ -345,8 +346,8 @@ Fixpoint count_ports (b:bigraph) (n:node) :=
 
 Fixpoint map (l:list node) (f: bigraph -> (k -> nat) -> node -> Prop) (b:bigraph) (ctrl: k -> nat) : Prop :=
     match l with
-      | empty _ => True 
-      | elts _ a t => (f b ctrl a) /\ (map t f b ctrl)
+      | [] => True 
+      | a :: t => (f b ctrl a) /\ (map t f b ctrl)
     end. 
 
 Fixpoint ctrl_for_one_node (b:bigraph) (ctrl: k -> nat) (n:node) : Prop :=
