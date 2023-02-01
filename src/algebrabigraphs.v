@@ -22,112 +22,80 @@ Import ListNotations.
 
 Module MyBigraph.
 
-Inductive id : Type := 
+Variant id : Type := 
   Id : string -> id. 
 
-Inductive root : Type := 
-  Root : id -> root. 
-
-Inductive k : Type := 
+Variant k : Type := 
   K : id -> k. 
 
-Inductive node : Type := 
+Variant root : Type := 
+  Root : id -> root.  
+
+Variant node : Type := 
   Node : id -> k -> node. 
 
-Inductive site : Type := 
-  Site : id -> site.
+Variant site : Type := 
+  Site : id -> site. 
 
-Inductive place : Type := 
-  | PlaceRoot (r : root)
-  | PlaceNode (n : node)
-  | PlaceSite (s : site).
+Variant place : Type := 
+  | PRoot (r : root)
+  | PNode (n : node)
+  | PSite (s : site).
+(* Variant place : Type := 
+  | Root (id : id)
+  | Node (id : id)
+  | Site (id : id). *)
 
-(*Milner definition*)
-Inductive edgeMilner : Type := 
-  EdgeMilner : id -> list node -> edgeMilner. 
-
-Inductive outernameMilner : Type := 
-  OuternameMilner : id -> list node -> outernameMilner. 
-
-Inductive link : Type := 
-  | LinkEdgeMilner (e : edgeMilner)
-  | LinkOuternameMilner (o : outernameMilner).
-
-Inductive port : Type := 
-  Port : id -> node -> port.
-
-Inductive innernameMilner : Type := 
-  InnernameMilner : id -> list node -> innernameMilner.
-
-Inductive point : Type := 
-  | PointPortMilner (p : port)
-  | PointInnernameMilner (i : innernameMilner).
-
-(*My definition*)
-Inductive outername : Type := 
+Variant outername : Type := 
   Outername : id -> outername. 
 
-Inductive innername : Type := 
-  Innername : id -> innername. 
-
-Inductive attachables : Type := 
+Variant innername : Type := 
+  Innername : id -> innername.
+  
+(*Pas décrit par Milner mais obligé pour avoir des edges*)
+Variant attachables : Type := 
   | AttachableNode (n : node)
   | AttachableOutername (o : outername)
   | AttachableInnername (i : innername).
 
-Inductive edge : Type := 
-  Edge : id -> list attachables -> edge. 
+Variant edge : Type := 
+Edge : id -> list attachables -> edge. 
 
-Definition control := k -> nat.
+(*Pas trouvé d'utilité encore*)
+(*Variant link : Type := 
+  | LinkEdge (e : edge)
+  | LinkOutername (o : outername).*)
 
-Definition parent := place -> place.
+Variant port : Type := 
+  Port : id -> node -> port.
 
-Inductive placegraph : Type :=
-  | pg  (v : list node) 
+
+(*Pas trouvé d'utilité encore*)
+(*Variant point : Type := 
+  | PointPort (p : port)
+  | PointInnername (i : innername).*)
+
+
+
+Variant placegraph : Type :=
+  Placegraph (v : list node) 
         (ctrl : k -> nat) 
         (prnt : place -> place) 
         (m : list site) 
         (n : list root).
 
-(* Check pg [] control parent (nil site) (nil root) : placegraph. *)
 
-
-(*Inductive placegraph : Type := 
-  | Vp (ns : list node)
-  | ctrlp (c : k -> nat)
-  | prntp (p : place -> place)
-  | mp (ss : list site)
-  | np (rs : list root).
-
-Check (ctrlp control)
-  : placegraph.
-
-Check (prntp parent)
-  : placegraph.*)
-
-(* Definition lnk (p:port) : edge.
-Proof. Admitted. *)
-
-Inductive linkgraph : Type :=
-  | lg  (v : list node)  
+Variant linkgraph : Type :=
+  Linkgraph  (v : list node)  
         (e : list edge) 
         (ctrl : k -> nat) 
         (link : port -> edge) 
         (x : list innername) 
         (y : list outername).
 
-(* Check lg (empty node) (empty edge) control lnk (empty innername) (empty outername) : linkgraph. *)
-
-(*Inductive linkgraph : Type := 
-  | Vl (ns : list node)
-  | El (es : list edge)
-  | ctrll (c : k -> nat)
-  | linkl (l : port -> edge)
-  | Xl (ss : list innername)
-  | Yl (rs : list outername).*)
 
 Inductive bigraph : Type :=
-  | big (v : list node) 
+  Bigraph (v : list node) 
         (e : list edge) 
         (ctrl : k -> nat) 
         (prnt : place -> place) 
@@ -135,76 +103,55 @@ Inductive bigraph : Type :=
         (k : list root) 
         (m : list site) 
         (x : list innername) 
-        (y : list outername)
-  | pglg (pg : placegraph) (lg : linkgraph).
+        (y : list outername).
 
-(* Check big (empty node) (empty edge) control parent lnk (empty root) (empty site) (empty innername) (empty outername) : bigraph.
 
-Check pglg (pg (empty node) control parent (empty site) (empty root)) (lg (empty node) (empty edge) control lnk (empty innername) (empty outername)) : bigraph. *)
-(*Inductive bigraph : Type :=
-  | V (ns : list node)
-  | E (es : list edge)
-  | Ctrl (c : k -> nat)
-  | Prnt (p : place -> place)
-  | Lnk (l : port -> edge)
-  | K (rs : list root)
-  | M (ss : list site)
-  | X (ss : list innername)
-  | Y (rs : list outername).*)
-
-Definition getnodes (b:bigraph) : list node :=
+Definition getv (b:bigraph) : list node :=
   match b with
-  | big v _ _ _ _ _ _ _ _ => v
-  | pglg (pg v _ _ _ _) _ => v (* je peux pas vérifier que c'est le même ensemble de nodes dans pg et lg*)
+  | Bigraph v _ _ _ _ _ _ _ _ => v
   end.
 
-Definition getedges (b:bigraph) : list edge :=
+Definition gete (b:bigraph) : list edge :=
   match b with
-  | big _ e _ _ _ _ _ _ _ => e
-  | pglg _ (lg _ e _ _ _ _) => e
+  | Bigraph _ e _ _ _ _ _ _ _ => e
   end.
 
 Definition getctrl (b:bigraph) : k -> nat :=
   match b with
-  | big _ _ ctrl _ _ _ _ _ _ => ctrl
-  | pglg (pg _ ctrl _ _ _) _ => ctrl
+  | Bigraph _ _ ctrl _ _ _ _ _ _ => ctrl
   end.
 
 Definition getprnt (b:bigraph) : place -> place :=
   match b with
-  | big _ _ _ prnt _ _ _ _ _ => prnt
-  | pglg (pg _ _ prnt _ _) _ => prnt
+  | Bigraph _ _ _ prnt _ _ _ _ _ => prnt
   end.
 
 Definition getlnk (b:bigraph) : port -> edge :=
   match b with
-  | big _ _ _ _ lnk _ _ _ _ => lnk
-  | pglg _ (lg _ _ _ lnk _ _) => lnk
+  | Bigraph _ _ _ _ lnk _ _ _ _ => lnk
   end.
 
 Definition getk (b:bigraph) : list root :=
   match b with
-  | big _ _ _ _ _ k _ _ _ => k
-  | pglg (pg _ _ _ _ n) _ => n
+  | Bigraph _ _ _ _ _ k _ _ _ => k
   end.
 
 Definition getm (b:bigraph) : list site :=
   match b with
-  | big _ _ _ _ _ _ m _ _ => m
-  | pglg (pg _ _ _ m _) _ => m
+  | Bigraph _ _ _ _ _ _ m _ _ => m
   end.
 
 Definition getx (b:bigraph) : list innername :=
   match b with
-  | big _ _ _ _ _ _ _ x _ => x
-  | pglg _ (lg _ _ _ _ x _) => x
+  | Bigraph _ _ _ _ _ _ _ x _ => x
   end.
 
 Definition gety (b:bigraph) : list outername :=
   match b with
-  | big _ _ _ _ _ _ _ _ y => y
-  | pglg _ (lg _ _ _ _ _ y) => y
+  | Bigraph _ _ _ _ _ _ _ _ y => y
   end.
+
+
 
 (* Example *)
 Module testBigraph.
@@ -255,20 +202,20 @@ Example site1 := Site (Id "s1").
 
 Example prnttest (p:place) :=
   match p with
-  | PlaceNode (Node (Id id) _) => 
+  | PNode (Node (Id id) _) => 
     match id with
-    | "v0" => PlaceRoot root0
-    | "v1" => PlaceNode v0
-    | "v2" => PlaceRoot root1
-    | _ => PlaceRoot (Root (Id "_")) (* Weird case *)
+    | "v0" => PRoot root0
+    | "v1" => PNode v0
+    | "v2" => PRoot root1
+    | _ => PRoot (Root (Id "_")) (* Weird case *)
     end 
-  | PlaceSite (Site (Id id)) => 
+  | PSite (Site (Id id)) => 
     match id with
-    | "s0" => PlaceNode v0
-    | "s1" => PlaceNode v2
-    | _ => PlaceRoot (Root (Id "_")) (* Weird case *)
+    | "s0" => PNode v0
+    | "s1" => PNode v2
+    | _ => PRoot (Root (Id "_")) (* Weird case *)
     end
-  | _ => PlaceRoot (Root (Id "_")) (* Weird case *)
+  | _ => PRoot (Root (Id "_")) (* Weird case *)
   end.
 
 
@@ -299,7 +246,7 @@ Example linktest (p:port) :=
   end.
 
 Example mybig :=  
-  big
+  Bigraph
     [ v0 ;  v1 ; v2 ]
     [ e0 ; e1 ; e2; e3 ; e4]
     ctrltest
@@ -316,42 +263,52 @@ Check mybig
 
 End testBigraph.
 
-
-(* Smth that checks that number of ports = control(node) *)
-Fixpoint count_ports (b:bigraph) (n:node) :=
-  match b with
-  (*| big (v : list node) 
-        (e : list edge) 
-        (ctrl : k -> nat) 
-        (prnt : place -> place) 
-        (lnk : port -> edge) 
-        (k : list root) 
-        (m : list site) 
-        (x : list innername) 
-        (y : list outername)
-  | pglg pg lg => 0 (*TODO*)*)
-  | _ => 0
+Definition equalsnodes (n1:node) (n2:node) :=
+  match n1 with Node (Id id1) _ =>
+    match n2 with Node (Id id2) _ => eqb id1 id2
+    end
   end.
 
+Fixpoint count_ports_on_node_from_edges (atts:list attachables) (n:node) :=
+  match atts with 
+    | [] => 0
+    | a :: q => 
+      match a with
+        | AttachableNode an =>
+          if (equalsnodes an n)
+            then 1 + (count_ports_on_node_from_edges q n)
+            else (count_ports_on_node_from_edges q n)           
+        | _ => (count_ports_on_node_from_edges q n)
+      end
+  end.
+  
+  (*obligée d'utiliser le comme arg decreasing*)
+Fixpoint count_ports_on_node_from_bigraph (b:bigraph) (n:node) (le: list edge) {struct le}:=
+  match le with
+  | [] => 0
+  | (Edge _ atts) :: es => 
+    (count_ports_on_node_from_edges atts n) +
+      (count_ports_on_node_from_bigraph (
+        Bigraph (getv b) es (getctrl b) (getprnt b) (getlnk b) (getk b) (getm b) (getx b) (gety b)) 
+        n
+        es
+      )
+  end.
+
+
 Fixpoint map (l:list node) (f: bigraph -> (k -> nat) -> node -> Prop) (b:bigraph) (ctrl: k -> nat) : Prop :=
-    match l with
-      | [] => True 
-      | a :: t => (f b ctrl a) /\ (map t f b ctrl)
-    end. 
+  match l with
+    | [] => True 
+    | a :: t => (f b ctrl a) /\ (map t f b ctrl)
+  end. 
 
 Fixpoint ctrl_for_one_node (b:bigraph) (ctrl: k -> nat) (n:node) : Prop :=
-    match n with
-      | Node id k => count_ports b n = ctrl k
-    end.
+  match n with
+    | Node id k => count_ports_on_node_from_bigraph b n (gete b) = ctrl k
+  end.
 
 Theorem control_respected : forall b:bigraph, match b with
-  | big v e ctrl prnt lnk k m x y => map v ctrl_for_one_node b ctrl 
-(*  | big v e ctrl prnt lnk k m x y => map v (fun n =>  count_ports b n = ctrl (K (Id "test")))*)
-    (*match v with
-      | empty _ => True
-      | elts _ (Node id k) q => count_ports b (Node id k) = ctrl k /\ 
-    end*)
-  | pglg _ _ => True
+  | Bigraph v e ctrl prnt lnk k m x y => map v ctrl_for_one_node b ctrl 
   end.
 Proof. intros. induction b.
   - induction v.
