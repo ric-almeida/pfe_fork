@@ -17,252 +17,226 @@ Import ListNotations.
 
 
 
-
-(*** Bigraph p13 *)
-
 Module MyBigraph.
 
-Variant id : Type := 
-  Id : string -> id. 
+Section Bigraphs.
 
-Variant k : Type := 
-  K : id -> k. 
+  Variable A : Type.
 
-Variant root : Type := 
-  Root : id -> root.  
+  Variant id : Type := 
+    Id : A -> id. 
 
-Variant node : Type := 
-  Node : id -> k -> node. 
+  Variant root : Type := 
+    Root : id -> root.  
 
-Variant site : Type := 
-  Site : id -> site. 
+  Variant node : Type := 
+    Node : id -> node.
 
-Variant place : Type := 
-  | PRoot (r : root)
-  | PNode (n : node)
-  | PSite (s : site).
-(* Variant place : Type := 
-  | Root (id : id)
-  | Node (id : id)
-  | Site (id : id). *)
+  Variant site : Type := 
+    Site : id -> site. 
 
-Variant outername : Type := 
-  Outername : id -> outername. 
-
-Variant innername : Type := 
-  Innername : id -> innername.
+  Variant place : Type := 
+    | PRoot (r : root)
+    | PNode (n : node)
+    | PSite (s : site).
   
-(*Pas décrit par Milner mais obligé pour avoir des edges*)
-Variant attachables : Type := 
-  | AttachableNode (n : node)
-  | AttachableOutername (o : outername)
-  | AttachableInnername (i : innername).
+  Variant nors : Type := 
+    | Ssite : site -> nors
+    | Snode : node -> nors.
 
-Variant edge : Type := 
-Edge : id -> list attachables -> edge. 
+  Variant norr : Type := 
+    | Rroot : root -> norr
+    | Rnode : node -> norr.
 
-(*Pas trouvé d'utilité encore*)
-(*Variant link : Type := 
-  | LinkEdge (e : edge)
-  | LinkOutername (o : outername).*)
+  Variant outername : Type := 
+    Outername : id -> outername. 
 
-Variant port : Type := 
-  Port : id -> node -> port.
+  Variant innername : Type := 
+    Innername : id -> innername.
 
+  Variant edge : Type := 
+    Edge : id -> edge. 
 
-(*Pas trouvé d'utilité encore*)
-(*Variant point : Type := 
-  | PointPort (p : port)
-  | PointInnername (i : innername).*)
+  Variant port : Type := 
+    Port : node -> nat -> port.
 
+  Variant link : Type := 
+    | Ledge: edge -> link
+    | Loutername : outername -> link.
 
+  Variant point : Type := 
+    | Pport : port -> point
+    | Pinnername : innername -> point.
 
-Variant placegraph : Type :=
-  Placegraph (v : list node) 
-        (ctrl : k -> nat) 
-        (prnt : place -> place) 
-        (m : list site) 
-        (n : list root).
+  Variant linkgraph : Type :=
+    Linkgraph 
+      (v : list node)  
+      (e : list edge) 
+      (ctrl : node -> id -> nat) 
+      (lnk : point -> link) 
+      (* lnk : port + innername -> edge + outername *)
+      (x : list innername) 
+      (y : list outername).
 
+  Variant placegraph : Type :=
+  Placegraph 
+    (v : list node) 
+    (ctrl : node -> id -> nat) 
+    (prnt : nors -> norr) 
+    (m : list site) 
+    (n : list root).
 
-Variant linkgraph : Type :=
-  Linkgraph  (v : list node)  
-        (e : list edge) 
-        (ctrl : k -> nat) 
-        (link : port -> edge) 
-        (x : list innername) 
-        (y : list outername).
+  Inductive bigraph : Type :=
+    Bigraph 
+      (v : list node) 
+      (e : list edge) 
+      (ctrl : node -> id -> nat) 
+      (prnt : nors -> norr) 
+      (lnk : point -> link) 
+      (m : list site) 
+      (n : list root) 
+      (x : list innername) 
+      (y : list outername).
 
-
-Inductive bigraph : Type :=
-  Bigraph (v : list node) 
-        (e : list edge) 
-        (ctrl : k -> nat) 
-        (prnt : place -> place) 
-        (lnk : port -> edge) 
-        (k : list root) 
-        (m : list site) 
-        (x : list innername) 
-        (y : list outername).
-
-
-Definition getv (b:bigraph) : list node :=
-  match b with
-  | Bigraph v _ _ _ _ _ _ _ _ => v
-  end.
-
-Definition gete (b:bigraph) : list edge :=
-  match b with
-  | Bigraph _ e _ _ _ _ _ _ _ => e
-  end.
-
-Definition getctrl (b:bigraph) : k -> nat :=
-  match b with
-  | Bigraph _ _ ctrl _ _ _ _ _ _ => ctrl
-  end.
-
-Definition getprnt (b:bigraph) : place -> place :=
-  match b with
-  | Bigraph _ _ _ prnt _ _ _ _ _ => prnt
-  end.
-
-Definition getlnk (b:bigraph) : port -> edge :=
-  match b with
-  | Bigraph _ _ _ _ lnk _ _ _ _ => lnk
-  end.
-
-Definition getk (b:bigraph) : list root :=
-  match b with
-  | Bigraph _ _ _ _ _ k _ _ _ => k
-  end.
-
-Definition getm (b:bigraph) : list site :=
-  match b with
-  | Bigraph _ _ _ _ _ _ m _ _ => m
-  end.
-
-Definition getx (b:bigraph) : list innername :=
-  match b with
-  | Bigraph _ _ _ _ _ _ _ x _ => x
-  end.
-
-Definition gety (b:bigraph) : list outername :=
-  match b with
-  | Bigraph _ _ _ _ _ _ _ _ y => y
-  end.
+  Inductive bigraph_bis 
+    (v : list node) 
+    (e : list edge) 
+    (ctrl : node -> id -> nat) 
+    (prnt : node + site -> node + root)
+    (lnk : point -> link)  
+      : Type :=
+        Bigraph_bis    
+          (m : list site) 
+          (n : list root) 
+          (x : list innername) 
+          (y : list outername).
 
 
+  Definition getv (b:bigraph) : list node :=
+    match b with
+    | Bigraph v _ _ _ _ _ _ _ _ => v
+    end.
 
-(* Example *)
-Module testBigraph.
+  Definition gete (b:bigraph) : list edge :=
+    match b with
+    | Bigraph _ e _ _ _ _ _ _ _ => e
+    end.
 
-Example v0 := Node (Id "v0") (K (Id "k")).
-Example v1 := Node (Id "v0") (K (Id "k")).
-Example v2 := Node (Id "v0") (K (Id "m")).
+  Definition getctrl (b:bigraph) : node -> id -> nat :=
+    match b with
+    | Bigraph _ _ ctrl _ _ _ _ _ _ => ctrl
+    end.
 
-Example x0 := Innername (Id "x0").
-Example x1 := Innername (Id "x0").
+  Definition getprnt (b:bigraph) : nors -> norr :=
+    match b with
+    | Bigraph _ _ _ prnt _ _ _ _ _ => prnt
+    end.
 
-Example y0 := Outername (Id "y0").
-Example y1 := Outername (Id "y1").
-Example y2 := Outername (Id "y2").
+  Definition getlnk (b:bigraph) : point -> link :=
+    match b with
+    | Bigraph _ _ _ _ lnk _ _ _ _ => lnk
+    end.
 
-Example e0 := 
-  Edge  (Id "e0") 
-    [AttachableNode v0; AttachableNode v2; AttachableInnername x0].
+  Definition getm (b:bigraph) : list site :=
+    match b with
+    | Bigraph _ _ _ _ _ m _ _ _ => m
+    end.
 
-Example e1 := 
-  Edge  (Id "e1") 
-    [AttachableNode v1; AttachableNode v2].
+  Definition getn (b:bigraph) : list root :=
+    match b with
+    | Bigraph _ _ _ _ _ _ n _ _ => n
+    end.
 
-Example e2 := 
-  Edge  (Id "e2") 
-    [AttachableNode v2; AttachableOutername y2; AttachableInnername x1].
+  Definition getx (b:bigraph) : list innername :=
+    match b with
+    | Bigraph _ _ _ _ _ _ _ x _ => x
+    end.
 
-Example e3 := 
-  Edge  (Id "e3") 
-    [AttachableNode v2; AttachableOutername y1].
+  Definition gety (b:bigraph) : list outername :=
+    match b with
+    | Bigraph _ _ _ _ _ _ _ _ y => y
+    end.
 
-Example e4 := 
-  Edge  (Id "e4") 
-    [AttachableNode v0; AttachableNode v1;AttachableOutername y0].
+  End Bigraphs.
 
-Example ctrltest (k:k) :=
-  match k with 
-  | K (Id "K") => 2
-  | K (Id "M") => 4
-  | _ => 0 (* ou None *)
-  end.
+  (* Example *)
+Section testBigraph.
 
-Example root0 := Root (Id "r0").
-Example root1 := Root (Id "r1").
- 
-Example site0 := Site (Id "s0").
-Example site1 := Site (Id "s1").
+  Example v0 := Node (Id "v0").
+  Example v1 := Node (Id "v1").
+  Example v2 := Node (Id "v2").
 
-Example prnttest (p:place) :=
-  match p with
-  | PNode (Node (Id id) _) => 
-    match id with
-    | "v0" => PRoot root0
-    | "v1" => PNode v0
-    | "v2" => PRoot root1
-    | _ => PRoot (Root (Id "_")) (* Weird case *)
-    end 
-  | PSite (Site (Id id)) => 
-    match id with
-    | "s0" => PNode v0
-    | "s1" => PNode v2
-    | _ => PRoot (Root (Id "_")) (* Weird case *)
-    end
-  | _ => PRoot (Root (Id "_")) (* Weird case *)
-  end.
+  Example x0 := Innername (Id "x0").
+  Example x1 := Innername (Id "x1").
 
+  Example y0 := Outername (Id "y0").
+  Example y1 := Outername (Id "y1").
+  Example y2 := Outername (Id "y2").
 
-Example p0_0 := Port (Id "p0_0") v0.
-Example p0_1 := Port (Id "p0_1") v0.
-Example p1_0 := Port (Id "p1_0") v1.
-Example p1_1 := Port (Id "p1_1") v1.
-Example p2_0 := Port (Id "p2_0") v2.
-Example p2_1 := Port (Id "p2_1") v2.
-Example p2_2 := Port (Id "p2_2") v2.
-Example p2_3 := Port (Id "p2_3") v2.
+  Example e0 := Edge  (Id "e0").
+  Example e1 := Edge  (Id "e1").
+  Example e2 := Edge  (Id "e2").
+  Example e3 := Edge  (Id "e3").
+  Example e4 := Edge  (Id "e4").
 
+  Example kappa (i:id string) :=
+    match i with 
+    | Id "K" => 2
+    | Id "M" => 4
+    | _ => 0 (* ou None *)
+    end.
+  
+  Example ctrltest (n:node string) :=
+    match n with 
+    | Node i => kappa 
+    end.
 
-Example linktest (p:port) :=
-  match p with
-  | Port (Id id) _ => 
-    match id with
-    | "p0_0" => e4
-    | "p0_1" => e0
-    | "p1_0" => e4
-    | "p1_1" => e1
-    | "p2_0" => e0
-    | "p2_1" => e1
-    | "p2_2" => e2
-    | "p2_3" => e3
-    | _ => Edge  (Id "_") [] (* Weird case *)
-    end 
-  end.
+  Example site0 := Site (Id "s0").
+  Example site1 := Site (Id "s1").
+    
+  Example root0 := Root (Id "r0").
+  Example root1 := Root (Id "r1").
 
-Example mybig :=  
-  Bigraph
-    [ v0 ;  v1 ; v2 ]
-    [ e0 ; e1 ; e2; e3 ; e4]
-    ctrltest
-    prnttest 
-    linktest
-    [ root0 ; root1 ]
-    [ site0 ; site1 ]
-    [ x0 ; x1 ]
-    [ y0 ; y1 ; y2 ].
-     
+  Example prnttest (p:nors string) :=
+    match p with
+    | Snode (Node (Id "v0")) => Rroot root0
+    | Snode (Node (Id "v1")) => Rnode v0
+    | Snode (Node (Id "v2")) => Rroot root1
+    | Ssite (Site (Id "s0")) => Rnode v0
+    | Ssite (Site (Id "s1")) => Rnode v2 
+    | _ => Rroot (Root (Id "_")) (* Weird case *)
+    end.
 
-Check mybig
-  : bigraph.
+  Example lnktest (p:point string) :=
+    match p with
+    | Pport (Port (Node (Id "v0")) 1) => Loutername y0
+    | Pport (Port (Node (Id "v0")) 2) => Ledge e0
+    | Pport (Port (Node (Id "v1")) 1) => Loutername y0
+    | Pport (Port (Node (Id "v1")) 2) => Ledge e1
+    | Pport (Port (Node (Id "v2")) 1) => Loutername y1
+    | Pport (Port (Node (Id "v2")) 2) => Loutername y2
+    | Pport (Port (Node (Id "v2")) 3) => Ledge e0
+    | Pport (Port (Node (Id "v2")) 4) => Ledge e1
+    | Pinnername (Innername (Id "x0")) => Ledge e0
+    | Pinnername (Innername (Id "x1")) => Loutername y2
+    | _ => Loutername (Outername (Id "_"))
+    end.
+
+  Example mybig :=  
+    Bigraph
+      [ v0 ;  v1 ; v2 ]
+      [ e0 ; e1 ; e2; e3 ; e4]
+      ctrltest
+      prnttest 
+      lnktest
+      [ site0 ; site1 ]
+      [ root0 ; root1 ]
+      [ x0 ; x1 ]
+      [ y0 ; y1 ; y2 ].
 
 End testBigraph.
 
+(*
 Definition equalsnodes (n1:node) (n2:node) :=
   match n1 with Node (Id id1) _ =>
     match n2 with Node (Id id2) _ => eqb id1 id2
@@ -282,7 +256,8 @@ Fixpoint count_ports_on_node_from_edges (atts:list attachables) (n:node) :=
       end
   end.
   
-  (*obligée d'utiliser le comme arg decreasing*)
+  (*obligée d'utiliser le comme arg decreasing 
+    (*TODO*) foldleft <- existe déja *)
 Fixpoint count_ports_on_node_from_bigraph (b:bigraph) (n:node) (le: list edge) {struct le}:=
   match le with
   | [] => 0
@@ -313,9 +288,9 @@ Theorem control_respected : forall b:bigraph, match b with
 Proof. intros. induction b.
   - induction v.
     + unfold map. reflexivity.
-    + unfold map. unfold ctrl_for_one_node. unfold map. Admitted.
+    + unfold map. Admitted. 
 
-
+*)
 
 
 
