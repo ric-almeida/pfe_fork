@@ -23,6 +23,10 @@
 
     Variable A : Type.
 
+  Inductive option (A:Type) : Type :=
+    | Some : A -> option A
+    | None : option A.
+
     Variant id : Type := 
       Id : A -> id. 
 
@@ -72,8 +76,8 @@
       Linkgraph 
         (v : list node)  
         (e : list edge) 
-        (ctrl : node -> id -> nat) 
-        (lnk : point -> link) 
+        (ctrl : node -> option (id * nat)) 
+        (lnk : point -> option link) 
         (* lnk : port + innername -> edge + outername *)
         (x : list innername) 
         (y : list outername).
@@ -81,8 +85,8 @@
     Variant placegraph : Type :=
     Placegraph 
       (v : list node) 
-      (ctrl : node -> id -> nat) 
-      (prnt : nors -> norr) 
+      (ctrl : node -> option (id * nat)) 
+      (prnt : nors -> option norr) 
       (m : list site) 
       (n : list root).
 
@@ -90,9 +94,9 @@
       Bigraph 
         (v : list node) 
         (e : list edge) 
-        (ctrl : node -> (id * nat)) 
-        (prnt : nors -> norr) 
-        (lnk : point -> link) 
+        (ctrl : node -> option (id * nat)) 
+        (prnt : nors -> option norr) 
+        (lnk : point -> option link) 
         (m : list site) 
         (n : list root) 
         (x : list innername) 
@@ -122,17 +126,17 @@
       | Bigraph _ e _ _ _ _ _ _ _ => e
       end.
 
-    Definition getctrl (b:bigraph) : node -> (id * nat) :=
+    Definition getctrl (b:bigraph) : node -> option (id * nat) :=
       match b with
       | Bigraph _ _ ctrl _ _ _ _ _ _ => ctrl
       end.
 
-    Definition getprnt (b:bigraph) : nors -> norr :=
+    Definition getprnt (b:bigraph) : nors -> option norr :=
       match b with
       | Bigraph _ _ _ prnt _ _ _ _ _ => prnt
       end.
 
-    Definition getlnk (b:bigraph) : point -> link :=
+    Definition getlnk (b:bigraph) : point -> option link :=
       match b with
       | Bigraph _ _ _ _ lnk _ _ _ _ => lnk
       end.
@@ -179,24 +183,12 @@
     Example e3 := Edge  (Id "e3").
     Example e4 := Edge  (Id "e4").
 
-    Example kappa (i:id string) :=
-      match i with 
-      | Id "K" => 2
-      | Id "M" => 4
-      | _ => 0 (* ou None *)
-      end.
-    
-    Example ctrltest (n:node string) :=
-      match n with 
-      | Node i => kappa 
-      end.
-
     Example ctrltest2 (n:node string) :=
       match n with 
-      | Node (Id "v0") => ((Id "K"), kappa (Id "K"))
-      | Node (Id "v1") => ((Id "K"), kappa (Id "K"))
-      | Node (Id "v2") => ((Id "M"), kappa (Id "M"))
-      | _ => ((Id "_"), kappa (Id "_"))
+      | Node (Id "v0") => Some ((Id "K"), 2)
+      | Node (Id "v1") => Some ((Id "K"), 2)
+      | Node (Id "v2") => Some ((Id "M"), 4)
+      | _ => None (id string * nat)
       end.
 
     Example site0 := Site (Id "s0").
@@ -207,27 +199,27 @@
 
     Example prnttest (p:nors string) :=
       match p with
-      | Snode (Node (Id "v0")) => Rroot root0
-      | Snode (Node (Id "v1")) => Rnode v0
-      | Snode (Node (Id "v2")) => Rroot root1
-      | Ssite (Site (Id "s0")) => Rnode v0
-      | Ssite (Site (Id "s1")) => Rnode v2 
-      | _ => Rroot (Root (Id "_")) (* Weird case *)
+      | Snode (Node (Id "v0")) => Some (Rroot root0)
+      | Snode (Node (Id "v1")) => Some (Rnode v0)
+      | Snode (Node (Id "v2")) => Some (Rroot root1)
+      | Ssite (Site (Id "s0")) => Some (Rnode v0)
+      | Ssite (Site (Id "s1")) => Some (Rnode v2)
+      | _ => None (norr string)
       end.
 
     Example lnktest (p:point string) :=
       match p with
-      | Pport (Port (Node (Id "v0")) 1) => Loutername y0
-      | Pport (Port (Node (Id "v0")) 2) => Ledge e0
-      | Pport (Port (Node (Id "v1")) 1) => Loutername y0
-      | Pport (Port (Node (Id "v1")) 2) => Ledge e1
-      | Pport (Port (Node (Id "v2")) 1) => Loutername y1
-      | Pport (Port (Node (Id "v2")) 2) => Loutername y2
-      | Pport (Port (Node (Id "v2")) 3) => Ledge e0
-      | Pport (Port (Node (Id "v2")) 4) => Ledge e1
-      | Pinnername (Innername (Id "x0")) => Ledge e0
-      | Pinnername (Innername (Id "x1")) => Loutername y2
-      | _ => Loutername (Outername (Id "_"))
+      | Pport (Port (Node (Id "v0")) 1) =>  Some (Loutername y0)
+      | Pport (Port (Node (Id "v0")) 2) =>  Some (Ledge e0)
+      | Pport (Port (Node (Id "v1")) 1) =>  Some (Loutername y0)
+      | Pport (Port (Node (Id "v1")) 2) =>  Some (Ledge e1)
+      | Pport (Port (Node (Id "v2")) 1) =>  Some (Loutername y1)
+      | Pport (Port (Node (Id "v2")) 2) =>  Some (Loutername y2)
+      | Pport (Port (Node (Id "v2")) 3) =>  Some (Ledge e0)
+      | Pport (Port (Node (Id "v2")) 4) =>  Some (Ledge e1)
+      | Pinnername (Innername (Id "x0")) => Some ( Ledge e0)
+      | Pinnername (Innername (Id "x1")) => Some ( Loutername y2)
+      | _ => None (link string)
       end.
 
     Example mybig :=  
@@ -269,14 +261,16 @@
   Proof. unfold equalsnodes. unfold getIdNode. simpl. Admitted. 
 
   Definition getk (n:node string) (b:bigraph string) :=
-    let c := getctrl b in 
-    snd(c n). 
+    match getctrl b n with 
+      | Some (i,n) => Some n
+      | None _ => None nat 
+    end. 
 
-  Example k_v0: getk v0 mybig = 2.
+  Example k_v0: getk v0 mybig = Some 2.
   Proof. unfold getk. unfold getctrl. simpl. reflexivity. Qed.
-  Example k_v1: getk v1 mybig = 2.
+  Example k_v1: getk v1 mybig = Some 2.
   Proof. unfold getk. unfold getctrl. simpl. reflexivity. Qed.
-  Example k_v2: getk v2 mybig = 4.
+  Example k_v2: getk v2 mybig = Some 4.
   Proof. unfold getk. unfold getctrl. simpl. reflexivity. Qed.
 
   Fixpoint count_links_to_node {A: Type} (n:node A) (b:bigraph A) :=
