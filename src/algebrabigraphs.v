@@ -3,6 +3,8 @@
   Require Import Relations.
   Require Import Recdef.
 
+  Require Import OrderedType.
+
   Set Warnings "-parsing".
   Set Implicit Arguments.
   Unset Strict Implicit.
@@ -72,21 +74,24 @@
       | Pport : port -> point
       | Pinnername : innername -> point.
 
+    Definition control : Type := list ( node * id * nat).
+    Definition parent : Type := list (nors *  norr).
+    Definition link_m : Type := list (point * link).
+
     Variant linkgraph : Type :=
       Linkgraph 
         (v : list node)  
         (e : list edge) 
-        (ctrl : node -> option (id * nat)) 
-        (lnk : point -> option link) 
-        (* lnk : port + innername -> edge + outername *)
+        (ctrl : control) 
+        (lnk : link_m)
         (x : list innername) 
         (y : list outername).
 
     Variant placegraph : Type :=
     Placegraph 
       (v : list node) 
-      (ctrl : node -> option (id * nat)) 
-      (prnt : nors -> option norr) 
+      (ctrl : list ( node * id * nat)) 
+      (prnt : parent) 
       (m : list site) 
       (n : list root).
 
@@ -94,9 +99,9 @@
       Bigraph 
         (v : list node) 
         (e : list edge) 
-        (ctrl : node -> option (id * nat)) 
-        (prnt : nors -> option norr) 
-        (lnk : point -> option link) 
+        (ctrl : control) 
+        (prnt : parent) 
+        (lnk : link_m)
         (m : list site) 
         (n : list root) 
         (x : list innername) 
@@ -126,17 +131,17 @@
       | Bigraph _ e _ _ _ _ _ _ _ => e
       end.
 
-    Definition getctrl (b:bigraph) : node -> option (id * nat) :=
+    Definition getctrl (b:bigraph) : control :=
       match b with
       | Bigraph _ _ ctrl _ _ _ _ _ _ => ctrl
       end.
 
-    Definition getprnt (b:bigraph) : nors -> option norr :=
+    Definition getprnt (b:bigraph) : parent :=
       match b with
       | Bigraph _ _ _ prnt _ _ _ _ _ => prnt
       end.
 
-    Definition getlnk (b:bigraph) : point -> option link :=
+    Definition getlnk (b:bigraph) : link_m :=
       match b with
       | Bigraph _ _ _ _ lnk _ _ _ _ => lnk
       end.
@@ -183,13 +188,12 @@
     Example e3 := Edge  (Id "e3").
     Example e4 := Edge  (Id "e4").
 
-    Example ctrltest2 (n:node string) :=
-      match n with 
-      | Node (Id "v0") => Some ((Id "K"), 2)
-      | Node (Id "v1") => Some ((Id "K"), 2)
-      | Node (Id "v2") => Some ((Id "M"), 4)
-      | _ => None (id string * nat)
-      end.
+    Example ctrltest :=
+      [ (v0, Id "K", 2); 
+        (v1, Id "K", 2); 
+        (v2, Id "M", 4)].
+
+    Check ctrltest : control string.
 
     Example site0 := Site (Id "s0").
     Example site1 := Site (Id "s1").
@@ -197,36 +201,30 @@
     Example root0 := Root (Id "r0").
     Example root1 := Root (Id "r1").
 
-    Example prnttest (p:nors string) :=
-      match p with
-      | Snode (Node (Id "v0")) => Some (Rroot root0)
-      | Snode (Node (Id "v1")) => Some (Rnode v0)
-      | Snode (Node (Id "v2")) => Some (Rroot root1)
-      | Ssite (Site (Id "s0")) => Some (Rnode v0)
-      | Ssite (Site (Id "s1")) => Some (Rnode v2)
-      | _ => None (norr string)
-      end.
+    Example prnttest :=
+      [ (Snode v0, Rroot root0); 
+        (Snode v1, Rnode v0); 
+        (Snode v2, Rroot root1);
+        (Ssite site0, Rnode v0);
+        (Ssite site1, Rnode v2)].
 
-    Example lnktest (p:point string) :=
-      match p with
-      | Pport (Port (Node (Id "v0")) 1) =>  Some (Loutername y0)
-      | Pport (Port (Node (Id "v0")) 2) =>  Some (Ledge e0)
-      | Pport (Port (Node (Id "v1")) 1) =>  Some (Loutername y0)
-      | Pport (Port (Node (Id "v1")) 2) =>  Some (Ledge e1)
-      | Pport (Port (Node (Id "v2")) 1) =>  Some (Loutername y1)
-      | Pport (Port (Node (Id "v2")) 2) =>  Some (Loutername y2)
-      | Pport (Port (Node (Id "v2")) 3) =>  Some (Ledge e0)
-      | Pport (Port (Node (Id "v2")) 4) =>  Some (Ledge e1)
-      | Pinnername (Innername (Id "x0")) => Some ( Ledge e0)
-      | Pinnername (Innername (Id "x1")) => Some ( Loutername y2)
-      | _ => None (link string)
-      end.
+    Example lnktest :=
+      [ (Pport (Port v0 1) ,  Loutername y0);
+        (Pport (Port v0 2) ,  Ledge e0);
+        (Pport (Port v1 1) ,  Loutername y0);
+        (Pport (Port v1 2) ,  Ledge e1);
+        (Pport (Port v2 1) ,  Loutername y1);
+        (Pport (Port v2 2) ,  Loutername y2);
+        (Pport (Port v2 3) ,  Ledge e0);
+        (Pport (Port v2 4) ,  Ledge e1);
+        (Pinnername x0, Ledge e0);
+        (Pinnername x1, Loutername y2)].
 
     Example mybig :=  
       Bigraph
         [ v0 ;  v1 ; v2 ]
         [ e0 ; e1 ; e2; e3 ; e4]
-        ctrltest2
+        ctrltest
         prnttest 
         lnktest
         [ site0 ; site1 ]
@@ -242,16 +240,19 @@
   Section properties.
   Variable A : Type.
 
-  Definition getIdNode {A : Type} (n : node A) :=
+  Definition getIdNode {A : Type} (n : node A) : A :=
     match n with Node (Id idn) => idn 
     end.
 
-  Definition equalsnodes {A : Type} (n1:node A) (n2:node A) :=
-      getIdNode n1 = getIdNode n2.
+  (*Fixpoint equalsnodes {A : Type} (n1:node A) (n2:node A) : bool :=
+      match (Compare (getIdNode n1) (getIdNode n2)) with 
+        | True => true
+        | False => false
+      end.
   
   Check equalsnodes : node A -> node A -> Prop.
 
-  End properties.
+  
 
   Example v2b := Node (Id "v2").
 
@@ -260,11 +261,13 @@
   Example difIds : equalsnodes v0 v1 = False.
   Proof. unfold equalsnodes. unfold getIdNode. simpl. Admitted. 
 
-  Definition getk (n:node string) (b:bigraph string) :=
-    match getctrl b n with 
-      | Some (i,n) => Some n
-      | None _ => None nat 
+  Fixpoint getk {A:Type} (n:node A) (c:control A) : option nat :=
+    match c with 
+      | [] => None nat
+      | (n', idk, k) :: q => if (equalsnodes n n') then Some k else None nat 
     end. 
+
+  End properties.
 
   Example k_v0: getk v0 mybig = Some 2.
   Proof. unfold getk. unfold getctrl. simpl. reflexivity. Qed.
@@ -274,7 +277,7 @@
   Proof. unfold getk. unfold getctrl. simpl. reflexivity. Qed.
 
   Fixpoint count_links_to_node {A: Type} (n:node A) (b:bigraph A) :=
-    0.
+    0.*)
 
 
     (** From the time with attachables*)
@@ -329,5 +332,5 @@
   
 
 
-
+    End properties.
   End MyBigraph.
