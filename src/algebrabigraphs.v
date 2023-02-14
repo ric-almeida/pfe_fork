@@ -243,7 +243,7 @@
   Variable A : Type.
 
   Definition getIdNode {A : Type} (n : node A) :=
-    match n with Node (Id idn) => idn (** Question, ça ou return (Id idn) *)
+    match n with Node (Id idn) => idn 
     end.
 
   Definition equalsnodes {A : Type} (n1:node A) (n2:node A) :=
@@ -331,65 +331,3 @@
 
 
   End MyBigraph.
-
-
-
-
-
-
-  (*  
-  Inductive natlist : Type :=
-    | nil
-    | cons (n : nat) (l : natlist).
-  *)
-
-
-
-
-
-
-
-
-
-
-
-
-
-  (*
-
-  (* Version bigraphe = place graphe + link graphe *)
-
-  Module DeuxGraphs. 
-
-  Definition leaf : Type := string. 
-
-  Inductive leaves : Type := 
-    | Leaves : leaf -> leaves 
-    | EmptyLeaves. 
-
-  Definition arcs : Type := leaves * leaves. 
-
-  Inductive tree : Set := leaves * arcs.
-
-    | Leaf : string -> tree 
-    | EmptyTree.
-
-  Inductive forest : Type := 
-    | Tree : tree -> forest
-    | EmptyForest.
-
-  Inductive hypergraph : Type := 
-    | Node : string -> hypergraph
-    | EmptyHypergraph.
-
-  Definition bigraph : Type := forest * hypergraph.
-
-  End DeuxGraphs.
-
-  (* version bigraphe = bigraphe *)
-
-  Module UnGraphe.
-
-  Definition leaf : Type := string * port. 
-
-  End UnGraphe. *)
