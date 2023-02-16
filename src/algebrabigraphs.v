@@ -5,6 +5,8 @@
 
   Require Import OrderedType.
 
+
+
   Set Warnings "-parsing".
   Set Implicit Arguments.
   Unset Strict Implicit.
@@ -18,67 +20,67 @@
   Import ListNotations.
 
 
-
+  Require Export Bool DecidableType OrderedType.
   Module MyBigraph.
 
   Section Bigraphs.
 
-    Variable A : Type.
+  Variable A : Type.
 
-  Inductive option (A:Type) : Type :=
-    | Some : A -> option A
-    | None : option A.
+  Inductive option {A:Type} : Type :=
+    | Some : A -> option
+    | None : option.
 
-    Variant id : Type := 
-      Id : A -> id. 
+    Variant id (A:Type) : Type := 
+      Id : A -> id A. 
 
     Variant root : Type := 
-      Root : id -> root.  
+      Root : id A -> root.  
 
-    Variant node : Type := 
-      Node : id -> node.
+    Variant node  : Type := 
+      Node :  id A -> node.
 
-    Variant site : Type := 
-      Site : id -> site. 
+    Variant site  : Type := 
+      Site :  id A -> site. 
 
-    Variant place : Type := 
+    Variant place  : Type := 
       | PRoot (r : root)
       | PNode (n : node)
       | PSite (s : site).
     
-    Variant nors : Type := 
+    Variant nors  : Type := 
       | Ssite : site -> nors
       | Snode : node -> nors.
 
-    Variant norr : Type := 
+    Variant norr  : Type := 
       | Rroot : root -> norr
       | Rnode : node -> norr.
 
-    Variant outername : Type := 
-      Outername : id -> outername. 
+    Variant outername  : Type := 
+      Outername :  id A -> outername. 
 
-    Variant innername : Type := 
-      Innername : id -> innername.
+    Variant innername  : Type := 
+      Innername :  id A -> innername.
 
-    Variant edge : Type := 
-      Edge : id -> edge. 
+    Variant edge  : Type := 
+      Edge :  id A -> edge. 
 
-    Variant port : Type := 
+    Variant port  : Type := 
       Port : node -> nat -> port.
 
-    Variant link : Type := 
+    Variant link  : Type := 
       | Ledge: edge -> link
       | Loutername : outername -> link.
 
-    Variant point : Type := 
+    Variant point  : Type := 
       | Pport : port -> point
       | Pinnername : innername -> point.
 
-    Definition control : Type := list ( node * id * nat).
-    Definition parent : Type := list (nors *  norr).
-    Definition link_m : Type := list (point * link).
+    Definition control  : Type := list ( node *  id A * nat).
+    Definition parent  : Type := list (nors *  norr).
+    Definition link_m  : Type := list (point * link).
 
-    Variant linkgraph : Type :=
+    Variant linkgraph  : Type :=
       Linkgraph 
         (v : list node)  
         (e : list edge) 
@@ -87,39 +89,25 @@
         (x : list innername) 
         (y : list outername).
 
-    Variant placegraph : Type :=
-    Placegraph 
-      (v : list node) 
-      (ctrl : list ( node * id * nat)) 
-      (prnt : parent) 
-      (m : list site) 
-      (n : list root).
+    Variant placegraph {A:Type}: Type :=
+      Placegraph 
+        (v : list node)  
+        (ctrl : list ( node *  id A * nat)) 
+        (prnt : parent) 
+        (m : list site) 
+        (n : list root).
 
-    Inductive bigraph : Type :=
+    Inductive bigraph: Type :=
       Bigraph 
-        (v : list node) 
+        (v : list node )  
         (e : list edge) 
-        (ctrl : control) 
+        (ctrl : list ( node *  id A * nat)) 
         (prnt : parent) 
         (lnk : link_m)
         (m : list site) 
-        (n : list root) 
+        (n : list root)
         (x : list innername) 
         (y : list outername).
-
-    Inductive bigraph_bis 
-      (v : list node) 
-      (e : list edge) 
-      (ctrl : node -> id -> nat) 
-      (prnt : node + site -> node + root)
-      (lnk : point -> link)  
-        : Type :=
-          Bigraph_bis    
-            (m : list site) 
-            (n : list root) 
-            (x : list innername) 
-            (y : list outername).
-
 
     Definition getv (b:bigraph) : list node :=
       match b with
@@ -244,27 +232,22 @@
     match n with Node (Id idn) => idn 
     end.
 
-  (*Fixpoint equalsnodes {A : Type} (n1:node A) (n2:node A) : bool :=
-      match (Compare (getIdNode n1) (getIdNode n2)) with 
-        | True => true
-        | False => false
-      end.
+  Definition eq_nodes {A : Type} (n1:node A) (n2:node A) : Prop :=
+      getIdNode n1 = getIdNode n2.
   
-  Check equalsnodes : node A -> node A -> Prop.
-
-  
-
   Example v2b := Node (Id "v2").
+  Example sameids : eq_nodes v0 v0.
+  Proof. unfold eq_nodes. unfold getIdNode. simpl. reflexivity. Qed. 
+  Example difIds : not (eq_nodes v0 v1).
+  Proof. unfold eq_nodes. unfold getIdNode. simpl. discriminate. Qed. 
+  
+  Lemma eq_nodes_refl : forall A : Type, forall n : node A, eq_nodes n n.
+  Proof. intros. unfold eq_nodes. unfold getIdNode. reflexivity. Qed.   
 
-  Example sameids : equalsnodes v0 v0 = True.
-  Proof. unfold equalsnodes. unfold getIdNode. simpl. Admitted. 
-  Example difIds : equalsnodes v0 v1 = False.
-  Proof. unfold equalsnodes. unfold getIdNode. simpl. Admitted. 
-
-  Fixpoint getk {A:Type} (n:node A) (c:control A) : option nat :=
+  Fixpoint getk {A:Type} (n:node A) (c:control A) : option :=
     match c with 
-      | [] => None nat
-      | (n', idk, k) :: q => if (equalsnodes n n') then Some k else None nat 
+      | [] => None
+      | (n', idk, k) :: q => if (eq_nodes n n' = True) then Some k else getk n q
     end. 
 
   End properties.
@@ -277,7 +260,7 @@
   Proof. unfold getk. unfold getctrl. simpl. reflexivity. Qed.
 
   Fixpoint count_links_to_node {A: Type} (n:node A) (b:bigraph A) :=
-    0.*)
+    0.
 
 
     (** From the time with attachables*)
