@@ -1,0 +1,9 @@
+.CoqMakefile.d
+CoqMakefile.conf
+Makefile.coq
+Makefile.coq.conf
+.Makefile.conf.d
+.Makefile.coq.d
+settings.json
+.vscode
+src/.*.aux
