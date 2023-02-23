@@ -1,0 +1,17 @@
+DIGEST 4fa97a7bf28d28367c719dfa4f1ecb76
+FMyProofs.propertiesbigraphs
+R24:28 Coq.Arith.Arith <> <> lib
+R30:35 Coq.ZArith.ZArith <> <> lib
+R37:41 Coq.micromega.Psatz <> <> lib
+R43:46 Coq.Bool.Bool <> <> lib
+R48:53 Coq.Strings.String <> <> lib
+R55:58 Coq.Lists.List <> <> lib
+R60:75 Coq.Program.Equality <> <> lib
+R77:86 Coq.Program.Wf <> <> lib
+R104:112 Coq.Relations.Relations <> <> lib
+R130:135 Coq.funind.Recdef <> <> lib
+R154:164 Coq.Structures.OrderedType <> <> lib
+R433:436 Coq.Bool.Bool <> <> lib
+R438:450 Coq.Structures.DecidableType <> <> lib
+R452:462 Coq.Structures.OrderedType <> <> lib
+R519:533 MyProofs.AlgebraBigraphs <> <> lib
