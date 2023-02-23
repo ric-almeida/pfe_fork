@@ -23,97 +23,85 @@ Set Implicit Arguments.
 
 From MyProofs Require Import AlgebraBigraphs. 
 
-(*Definition Cmp (elt:Type)(cmp:elt->elt->bool) e1 e2 := cmp e1 e2 = true.
 
 
-Module Type WSfun (E : DecidableType).
+Module Type IdDec.
 
+Parameter A : Type.
+Parameter eq_decA : forall (a1 a2 : A), {a1 = a2} + {~ a1 = a2}.
 
+End IdDec.
 
-Section properties.
-Variable A : Type.
+Module Properties (IDD : IdDec).
+  Import IDD.
+  Definition A := IDD.A.
 
-Definition getIdNode {A : Type} (n : node A) : A :=
-  match n with Node (Id idn) => idn 
-  end.
+  Definition getIdNode (n : node A) : A :=
+    match n with Node (Id idn) => idn 
+    end.
 
-Definition eq_nodes {A : Type} (n1:node A) (n2:node A) : Prop :=
-    getIdNode n1 = getIdNode n2.
-
-Example v2b := Node (Id "v2").
-Example sameids : eq_nodes v0 v0.
-Proof. unfold eq_nodes. unfold getIdNode. simpl. reflexivity. Qed. 
-Example difIds : not (eq_nodes v0 v1).
-Proof. unfold eq_nodes. unfold getIdNode. simpl. discriminate. Qed. 
-
-Lemma eq_nodes_refl : forall A : Type, forall n : node A, eq_nodes n n.
-Proof. intros. unfold eq_nodes. unfold getIdNode. reflexivity. Qed.   
-
-Fixpoint getk (A:DecidableType) (n:node A) (c:control A) : option :=
-  match c with 
-    | [] => None
-    | (n', idk, k) :: q => if (eq_nodes n n') then Some k else getk n q
-  end. 
-
-End properties.
-
-Example k_v0: getk v0 mybig = Some 2.
-Proof. unfold getk. unfold getctrl. simpl. reflexivity. Qed.
-Example k_v1: getk v1 mybig = Some 2.
-Proof. unfold getk. unfold getctrl. simpl. reflexivity. Qed.
-Example k_v2: getk v2 mybig = Some 4.
-Proof. unfold getk. unfold getctrl. simpl. reflexivity. Qed.
-
-Fixpoint count_links_to_node {A: Type} (n:node A) (b:bigraph A) :=
-  0.
-
-*)
-  (** From the time with attachables*)
-(*Fixpoint count_ports_on_node_from_edges (atts:list attachables) (n:node) :=
-  match atts with 
-    | [] => 0
-    | a :: q => 
-      match a with
-        | AttachableNode an =>
-          if (equalsnodes an n)
-            then 1 + (count_ports_on_node_from_edges q n)
-            else (count_ports_on_node_from_edges q n)           
-        | _ => (count_ports_on_node_from_edges q n)
-      end
-  end.
+  Definition eq_nodes (n1 n2:node A) : Prop :=
+      getIdNode n1 = getIdNode n2.
   
-  (*obligée d'utiliser le comme arg decreasing 
-    (*TODO*) foldleft <- existe déja *)
-Fixpoint count_ports_on_node_from_bigraph (b:bigraph) (n:node) (le: list edge) {struct le}:=
-  match le with
-  | [] => 0
-  | (Edge _ atts) :: es => 
-    (count_ports_on_node_from_edges atts n) +
-      (count_ports_on_node_from_bigraph (
-        Bigraph (getv b) es (getctrl b) (getprnt b) (getlnk b) (getk b) (getm b) (getx b) (gety b)) 
-        n
-        es
-      )
-  end.
+  Definition eq_nodes_dec: forall (n1 n2 : node A),
+    { getIdNode n1 = getIdNode n2 } + { ~ getIdNode n1 = getIdNode n2 }.
+    intros. destruct n1 as [a1], n2 as [a2].
+    destruct (eq_decA (getIdNode (Node a1)) (getIdNode (Node a2))); [left | right].
+    - apply e.
+    - apply n.
+  Defined.
+
+  Definition eq_nodes_b (n1:node A) (n2:node A) : bool.
+    destruct (eq_decA (getIdNode n1) (getIdNode n2)).
+    - exact true.
+    - exact false.
+    Defined.
+
+  Theorem eqb_eq_dec_reflects : forall (n1 n2 : node A),
+    reflect (eq_nodes n1 n2) (eq_nodes_b n1 n2).
+  Proof.
+    intros. unfold eq_nodes_b.
+    destruct (eq_nodes_dec n1 n2) as [H1 | H2].
+    - destruct eq_decA as [h1 | h2].
+      + constructor. apply h1.
+      + constructor. apply h2.
+    - destruct eq_decA as [h1 | h2].
+      + constructor. apply h1.
+      + constructor. apply h2.
+  Qed.
+
+  Lemma eq_nodes_refl : forall n : node A, 
+    eq_nodes n n.
+  Proof. intros. unfold eq_nodes. unfold getIdNode. reflexivity. Qed.   
+
+  Lemma eq_nodes_sym : forall (n1 n2 : node A), 
+    eq_nodes n1 n2 -> eq_nodes n2 n1.
+  Proof. intros. unfold eq_nodes.
+  unfold eq_nodes in H. symmetry in H. apply H. Qed.   
+
+  Lemma eq_nodes_trans : forall (n1 n2 n3: node A), 
+    ((eq_nodes n1 n2) /\ (eq_nodes n2 n3)) -> (eq_nodes n1 n3).
+  Proof. intros. unfold eq_nodes. 
+  unfold eq_nodes in H. destruct H as [H1 H2].
+  rewrite H1. rewrite H2. reflexivity. Qed.   
 
 
-Fixpoint map (l:list node) (f: bigraph -> (k -> nat) -> node -> Prop) (b:bigraph) (ctrl: k -> nat) : Prop :=
-  match l with
-    | [] => True 
-    | a :: t => (f b ctrl a) /\ (map t f b ctrl)
-  end. 
+  (* Fixpoint getk {A:Type} (n:node A) (c:control A) : option :=
+    match c with 
+      | [] => None
+      | (n', idk, k) :: q => if (eq_nodes_b n n') then Some k else getk n q
+    end. 
 
-Fixpoint ctrl_for_one_node (b:bigraph) (ctrl: k -> nat) (n:node) : Prop :=
-  match n with
-    | Node id k => count_ports_on_node_from_bigraph b n (gete b) = ctrl k
-  end.
 
-Theorem control_respected : forall b:bigraph, match b with
-  | Bigraph v e ctrl prnt lnk k m x y => map v ctrl_for_one_node b ctrl 
-  end.
-Proof. intros. induction b.
-  - induction v.
-    + unfold map. reflexivity.
-    + unfold map. Admitted. 
+  Example k_v0: getk v0 mybig = Some 2.
+  Proof. unfold getk. unfold getctrl. simpl. reflexivity. Qed.
+  Example k_v1: getk v1 mybig = Some 2.
+  Proof. unfold getk. unfold getctrl. simpl. reflexivity. Qed.
+  Example k_v2: getk v2 mybig = Some 4.
+  Proof. unfold getk. unfold getctrl. simpl. reflexivity. Qed.
 
-*)
+  Fixpoint count_links_to_node {A: Type} (n:node A) (b:bigraph A) :=
+    0. *)
+
+End Properties.
+
