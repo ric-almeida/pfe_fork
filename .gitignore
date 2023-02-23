@@ -7,4 +7,6 @@ Makefile.coq.conf
 settings.json
 .vscode
 src/*.aux
+src/*.glob
+src/*.vo*
 CoqMakefile
