@@ -25,7 +25,7 @@ Require Import FMapInterface.
 
 
 
-Module Type IdDec.
+Module IdDec.
 
 Parameter A : Type.
 Parameter eq_decA : forall (a1 a2 : A), {a1 = a2} + {~ a1 = a2}.
@@ -34,7 +34,7 @@ End IdDec.
 
 
 
-Module MyBigraph.
+Module MyBigraph1.
   Variable A : Type.
 
   Inductive option {type:Type} : Type :=
@@ -44,25 +44,25 @@ Module MyBigraph.
   Variant id (A:Type) : Type := 
     Id : A -> id A. 
 
-  Variant root : Type := 
-    Root : id A -> root.  
-
   Variant node (A:Type) : Type := 
     Node :  id A -> node A.
 
-  Module NodeProperties (IDDD : IdDec).
+(* End MyBigraph1. *)
+  (***** NODE PROPERTIES *****)
 
-    Definition A := IDDD.A.
-    Definition eq_decA := IDDD.eq_decA.
-  
-    Definition getIdNode (n : node A) : A :=
+  Module NodeProperties.
+
+    Definition AD := IdDec.A.
+    Definition eq_decA := IdDec.eq_decA.
+
+    Definition getIdNode (n : node AD) : AD :=
       match n with Node (Id idn) => idn 
       end.
   
-    Definition eq_nodes (n1 n2 : node A) : Prop :=
+    Definition eq_nodes (n1 n2 : node AD) : Prop :=
         getIdNode n1 = getIdNode n2.
     
-    Definition eq_nodes_dec: forall (n1 n2 : node A),
+    Definition eq_nodes_dec: forall (n1 n2 : node AD),
       { getIdNode n1 = getIdNode n2 } + { ~ getIdNode n1 = getIdNode n2 }.
       intros. destruct n1 as [a1], n2 as [a2].
       destruct (eq_decA (getIdNode (Node a1)) (getIdNode (Node a2))); [left | right].
@@ -70,13 +70,13 @@ Module MyBigraph.
       - apply n.
     Defined.
   
-    Definition eq_nodes_b (n1:node A) (n2:node A) : bool.
+    Definition eq_nodes_b (n1:node AD) (n2:node AD) : bool.
       destruct (eq_decA (getIdNode n1) (getIdNode n2)).
       - exact true.
       - exact false.
       Defined.
   
-    Theorem eqb_eq_dec_reflects : forall (n1 n2 : node A),
+    Theorem eqb_eq_dec_reflects : forall (n1 n2 : node AD),
       reflect (eq_nodes n1 n2) (eq_nodes_b n1 n2).
     Proof.
       intros. unfold eq_nodes_b.
@@ -89,71 +89,56 @@ Module MyBigraph.
         + constructor. apply h2.
     Qed.
   
-    Lemma eq_nodes_refl : forall n : node A, 
+    Lemma eq_nodes_refl : forall n : node AD, 
       eq_nodes n n.
     Proof. intros. unfold eq_nodes. unfold getIdNode. reflexivity. Qed.   
   
-    Lemma eq_nodes_sym : forall (n1 n2 : node A), 
+    Lemma eq_nodes_sym : forall (n1 n2 : node AD), 
       eq_nodes n1 n2 -> eq_nodes n2 n1.
     Proof. intros. unfold eq_nodes.
     unfold eq_nodes in H. symmetry in H. apply H. Qed.   
   
-    Lemma eq_nodes_trans : forall (n1 n2 n3: node A), 
+    Lemma eq_nodes_trans : forall (n1 n2 n3: node AD), 
       ((eq_nodes n1 n2) /\ (eq_nodes n2 n3)) -> (eq_nodes n1 n3).
     Proof. intros. unfold eq_nodes. 
     unfold eq_nodes in H. destruct H as [H1 H2].
     rewrite H1. rewrite H2. reflexivity. Qed.   
   
-  
-    (* Fixpoint getk {A:Type} (n:node A) (c:control A) : option :=
-      match c with 
-        | [] => None
-        | (n', idk, k) :: q => if (eq_nodes_b n n') then Some k else getk n q
-      end. 
-  
-  
-    Example k_v0: getk v0 mybig = Some 2.
-    Proof. unfold getk. unfold getctrl. simpl. reflexivity. Qed.
-    Example k_v1: getk v1 mybig = Some 2.
-    Proof. unfold getk. unfold getctrl. simpl. reflexivity. Qed.
-    Example k_v2: getk v2 mybig = Some 4.
-    Proof. unfold getk. unfold getctrl. simpl. reflexivity. Qed.
-  
-    Fixpoint count_links_to_node {A: Type} (n:node A) (b:bigraph A) :=
-      0. *)
-  
   End NodeProperties.
+  (****** END NODE PROPERTIES ******)
 
+  Import NodeProperties.
 
-
+  Variant root : Type := 
+    Root : id AD -> root.  
 
   Variant site  : Type := 
-    Site :  id A -> site. 
+    Site :  id AD -> site. 
 
   Variant place  : Type := 
     | PRoot (r : root)
-    | PNode (n : node A)
+    | PNode (n : node AD)
     | PSite (s : site).
   
   Variant nors  : Type := 
     | Ssite : site -> nors
-    | Snode : node A -> nors.
+    | Snode : node AD -> nors.
 
   Variant norr  : Type := 
     | Rroot : root -> norr
-    | Rnode : node A -> norr.
+    | Rnode : node AD -> norr.
 
   Variant outername  : Type := 
-    Outername :  id A -> outername. 
+    Outername :  id AD -> outername. 
 
   Variant innername  : Type := 
-    Innername :  id A -> innername.
+    Innername :  id AD -> innername.
 
   Variant edge  : Type := 
-    Edge :  id A -> edge. 
+    Edge :  id AD -> edge. 
 
   Variant port  : Type := 
-    Port : node A -> nat -> port.
+    Port : node AD -> nat -> port.
 
   Variant link  : Type := 
     | Ledge: edge -> link
@@ -163,29 +148,48 @@ Module MyBigraph.
     | Pport : port -> point
     | Pinnername : innername -> point.
 
-  (****** SECTION ON MAPS ******)
-    Definition key : Type := node A.
-    Definition elt : Type := id A * nat.
-    Definition t (e:Type) : Type := list (node A * e).
-  (****** END SECTION ON MAPS ******)
+  (****** SECTION ON CONTROL ******)
+    Definition control : Type.
+     - exact (list (node AD * (id AD * nat))). Defined.
+    Definition elements_control (elts:control) : list (node AD * (id AD * nat)).
+     - exact elts. Defined.
+  (****** END SECTION ON CONTROL ******)
 
-  Definition control : Type := t elt.
-  Definition parent  : Type := list (nors *  norr).
-  Definition link_m  : Type := list (point * link).
-  Definition empty_control : control := [].
+  (****** SECTION ON PARENT ******)
+    Definition parent : Type.
+    - exact (list (nors *  norr)). Defined.
+    Definition elements_parent (elts:parent) : list (nors * norr).
+    - exact elts. Defined.
+  (****** END SECTION ON PARENT ******)
 
+  (****** SECTION ON LINK ******)
+  Definition link_m : Type.
+  - exact (list (point * link)). Defined.
+  Definition elements_link_m (elts:link_m) : list (point * link).
+  - exact elts. Defined.
+  (****** END SECTION ON LINK ******)
+
+
+  (* Type is AD bc it needs to be decidable *)
+  Fixpoint getk (n:node AD) (c:control) : option :=
+      match (elements_control c) with 
+        | [] => None
+        | (n',(idA, k)) :: q => if (eq_nodes_b n n') then Some k else getk n q
+      end. 
+  
+  
   Variant linkgraph  : Type :=
     Linkgraph 
-      (v : list (node A))  
+      (v : list (node AD))  
       (e : list edge) 
       (ctrl : control) 
       (lnk : link_m)
       (x : list innername) 
       (y : list outername).
 
-  Variant placegraph {A:Type}: Type :=
+  Variant placegraph : Type :=
     Placegraph 
-      (v : list (node A))  
+      (v : list (node AD))  
       (ctrl : control) 
       (prnt : parent) 
       (m : list site) 
@@ -193,7 +197,7 @@ Module MyBigraph.
 
   Inductive bigraph: Type :=
     Bigraph 
-      (v : list (node A) )  
+      (v : list (node AD) )  
       (e : list edge) 
       (ctrl : control) 
       (prnt : parent) 
@@ -203,7 +207,7 @@ Module MyBigraph.
       (x : list innername) 
       (y : list outername).
 
-  Definition getv (b:bigraph) : list (node A) :=
+  Definition getv (b:bigraph) : list (node AD) :=
     match b with
     | Bigraph v _ _ _ _ _ _ _ _ => v
     end.
@@ -248,7 +252,7 @@ Module MyBigraph.
     | Bigraph _ _ _ _ _ _ _ _ y => y
     end.
 
-  End MyBigraph.
+End MyBigraph1.
 
   (* Example
 Section testBigraph.

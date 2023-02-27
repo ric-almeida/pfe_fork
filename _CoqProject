@@ -1,6 +1,5 @@
 -R src MyProofs
 -I src/
-
-src/bigraphs.v
+src/Bigraphs.v
 src/AlgebraBigraphs.v
-src/propertiesbigraphs.v
+src/PropertiesBigraphs.v

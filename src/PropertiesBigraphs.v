@@ -25,7 +25,7 @@ From MyProofs Require Import AlgebraBigraphs.
 
 
 
-Module Type IdDec.
+(* Module Type IdDec.
 
 Parameter A : Type.
 Parameter eq_decA : forall (a1 a2 : A), {a1 = a2} + {~ a1 = a2}.
@@ -83,7 +83,7 @@ Module Properties (IDD : IdDec).
     ((eq_nodes n1 n2) /\ (eq_nodes n2 n3)) -> (eq_nodes n1 n3).
   Proof. intros. unfold eq_nodes. 
   unfold eq_nodes in H. destruct H as [H1 H2].
-  rewrite H1. rewrite H2. reflexivity. Qed.   
+  rewrite H1. rewrite H2. reflexivity. Qed.    *)
 
 
   (* Fixpoint getk {A:Type} (n:node A) (c:control A) : option :=
@@ -101,7 +101,7 @@ Module Properties (IDD : IdDec).
   Proof. unfold getk. unfold getctrl. simpl. reflexivity. Qed.
 
   Fixpoint count_links_to_node {A: Type} (n:node A) (b:bigraph A) :=
-    0. *)
+    0. 
 
 End Properties.
-
+*)
