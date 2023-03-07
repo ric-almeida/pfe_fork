@@ -68,15 +68,18 @@ Lemma eq_nodes_refl : forall n : node,
 Proof. intros. unfold eq_nodes. reflexivity. Qed.   
 
 Lemma eq_nodes_sym : forall (n1 n2 : node), 
-eq_nodes n1 n2 -> eq_nodes n2 n1.
+    eq_nodes n1 n2 -> eq_nodes n2 n1.
 Proof. intros. unfold eq_nodes.
 unfold eq_nodes in H. symmetry in H. apply H. Qed.   
 
 Lemma eq_nodes_trans : forall (n1 n2 n3: node), 
-(eq_nodes n1 n2) -> (eq_nodes n2 n3) -> (eq_nodes n1 n3).
+    (eq_nodes n1 n2) -> (eq_nodes n2 n3) -> (eq_nodes n1 n3).
 Proof. intros. unfold eq_nodes. 
 unfold eq_nodes in H. 
 rewrite H. rewrite H0. reflexivity. Qed.   
 
-(* id1 = id2 <-> eq_nodes (Node (Id id1)) (Node (Id id2)) *)
+Theorem eq_eq_eq_nodes : forall (n1 n2 : node), 
+    n1 = n2 <-> eq_nodes n1 n2.
+Proof. intros. split; intros; apply H. Qed.
+
 End Nodes.
