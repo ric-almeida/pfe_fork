@@ -3,3 +3,4 @@
 src/Bigraphs.v
 src/AlgebraBigraphs.v
 src/PropertiesBigraphs.v
+src/AbstractBigraphs.v
