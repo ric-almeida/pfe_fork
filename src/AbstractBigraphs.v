@@ -6,6 +6,14 @@ Require Import Recdef.
 Require Import OrderedType.
 
 
+Require Import Coq.Lists.List.
+Require Import Coq.NArith.NArith.
+Require Import Coq.Strings.String.
+
+
+Notation " f @@ x " := (apply f x)
+  (at level 42, right associativity).
+
 
 Set Warnings "-parsing".
 Unset Strict Implicit.
@@ -16,6 +24,7 @@ Local Open Scope string_scope.
 Local Open Scope list_scope.
 Local Open Scope nat_scope.
 Local Open Scope bool_scope.
+Local Open Scope N. 
 Import ListNotations.
 
 Set Implicit Arguments.
@@ -79,7 +88,7 @@ Proof. intros. split; intros; apply H. Qed.
 End ADec.
 
 (****** Nodes as a decidable type ******)
-Module Nodes.
+Module Node.
 Import ADec.
 Definition node := A.
 Definition eq_dec_nodes := eq_dec_As.
@@ -117,7 +126,7 @@ Theorem eq_eq_eq_nodes : forall (n1 n2 : node),
     n1 = n2 <-> eq_nodes n1 n2.
 Proof. apply eq_eq_eq_As. Qed.
 
-End Nodes.
+End Node.
 
 
 (****** Roots as a decidable type ******)
@@ -163,20 +172,214 @@ End Roots.
 
 
 (****** Sites as a decidable type ******)
+Module Sites.
+Import ADec.
+Definition site := A.
+Definition eq_dec_sites := eq_dec_As.
+
+Definition eq_sites (s1 s2 : site) : Prop :=
+    s1 = s2.
+
+Theorem eq_sites_dec: forall (s1 s2 : site),
+    { s1 = s2 } + { ~ s1 = s2 }.
+Proof. apply eq_As_dec. Qed.
+
+Definition eq_sites_b (s1 s2 : site) : bool.
+destruct (eq_dec_sites (s1) (s2)).
+- exact true.
+- exact false.
+Defined.
+
+Theorem eqb_eq_dec_reflects : forall (s1 s2 : site),
+    reflect (eq_sites s1 s2) (eq_sites_b s1 s2).
+Proof. apply eqAb_eqA_reflects. Qed.
+
+Lemma eq_sites_refl : forall n : site, 
+    eq_sites n n.
+Proof. apply eq_As_refl. Qed.   
+
+Lemma eq_sites_sym : forall (s1 s2 : site), 
+    eq_sites s1 s2 -> eq_sites s2 s1.
+Proof. apply eq_As_sym. Qed.   
+
+Lemma eq_sites_trans : forall (s1 s2 s3: site), 
+    (eq_sites s1 s2) -> (eq_sites s2 s3) -> (eq_sites s1 s3).
+Proof. apply eq_As_trans. Qed.   
+
+Theorem eq_eq_eq_sites : forall (s1 s2 : site), 
+    s1 = s2 <-> eq_sites s1 s2.
+Proof. apply eq_eq_eq_As. Qed.
+
+End Sites.
 
 (****** Outername as a decidable type ******)
+Module Outernames.
+Import ADec.
+Definition outername := A.
+Definition eq_dec_outernames := eq_dec_As.
+
+Definition eq_outernames (o1 o2 : outername) : Prop :=
+    o1 = o2.
+
+Theorem eq_outernames_dec: forall (o1 o2 : outername),
+    { o1 = o2 } + { ~ o1 = o2 }.
+Proof. apply eq_As_dec. Qed.
+
+Definition eq_outernames_b (o1 o2 : outername) : bool.
+destruct (eq_dec_outernames (o1) (o2)).
+- exact true.
+- exact false.
+Defined.
+
+Theorem eqb_eq_dec_reflects : forall (o1 o2 : outername),
+    reflect (eq_outernames o1 o2) (eq_outernames_b o1 o2).
+Proof. apply eqAb_eqA_reflects. Qed.
+
+Lemma eq_outernames_refl : forall n : outername, 
+    eq_outernames n n.
+Proof. apply eq_As_refl. Qed.   
+
+Lemma eq_outernames_sym : forall (o1 o2 : outername), 
+    eq_outernames o1 o2 -> eq_outernames o2 o1.
+Proof. apply eq_As_sym. Qed.   
+
+Lemma eq_outernames_trans : forall (o1 o2 o3: outername), 
+    (eq_outernames o1 o2) -> (eq_outernames o2 o3) -> (eq_outernames o1 o3).
+Proof. apply eq_As_trans. Qed.   
+
+Theorem eq_eq_eq_outernames : forall (o1 o2 : outername), 
+    o1 = o2 <-> eq_outernames o1 o2.
+Proof. apply eq_eq_eq_As. Qed.
+
+End Outernames.
 
 (****** Innername as a decidable type ******)
+Module Innernames.
+Import ADec.
+Definition innername := A.
+Definition eq_dec_innernames := eq_dec_As.
+
+Definition eq_innernames (i1 i2 : innername) : Prop :=
+    i1 = i2.
+
+Theorem eq_innernames_dec: forall (i1 i2 : innername),
+    { i1 = i2 } + { ~ i1 = i2 }.
+Proof. apply eq_As_dec. Qed.
+
+Definition eq_innernames_b (i1 i2 : innername) : bool.
+destruct (eq_dec_innernames (i1) (i2)).
+- exact true.
+- exact false.
+Defined.
+
+Theorem eqb_eq_dec_reflects : forall (i1 i2 : innername),
+    reflect (eq_innernames i1 i2) (eq_innernames_b i1 i2).
+Proof. apply eqAb_eqA_reflects. Qed.
+
+Lemma eq_innernames_refl : forall n : innername, 
+    eq_innernames n n.
+Proof. apply eq_As_refl. Qed.   
+
+Lemma eq_innernames_sym : forall (i1 i2 : innername), 
+    eq_innernames i1 i2 -> eq_innernames i2 i1.
+Proof. apply eq_As_sym. Qed.   
+
+Lemma eq_innernames_trans : forall (i1 i2 i3: innername), 
+    (eq_innernames i1 i2) -> (eq_innernames i2 i3) -> (eq_innernames i1 i3).
+Proof. apply eq_As_trans. Qed.   
+
+Theorem eq_eq_eq_innernames : forall (i1 i2 : innername), 
+    i1 = i2 <-> eq_innernames i1 i2.
+Proof. apply eq_eq_eq_As. Qed.
+
+End Innernames.
 
 (****** Edge as a decidable type ******)
+Module Edges.
+Import ADec.
+Definition edge := A.
+Definition eq_dec_edges := eq_dec_As.
 
-(****** Port as a decidable type ******)
+Definition eq_edges (e1 e2 : edge) : Prop :=
+    e1 = e2.
+
+Theorem eq_edges_dec: forall (e1 e2 : edge),
+    { e1 = e2 } + { ~ e1 = e2 }.
+Proof. apply eq_As_dec. Qed.
+
+Definition eq_edges_b (e1 e2 : edge) : bool.
+destruct (eq_dec_edges (e1) (e2)).
+- exact true.
+- exact false.
+Defined.
+
+Theorem eqb_eq_dec_reflects : forall (e1 e2 : edge),
+    reflect (eq_edges e1 e2) (eq_edges_b e1 e2).
+Proof. apply eqAb_eqA_reflects. Qed.
+
+Lemma eq_edges_refl : forall n : edge, 
+    eq_edges n n.
+Proof. apply eq_As_refl. Qed.   
+
+Lemma eq_edges_sym : forall (e1 e2 : edge), 
+    eq_edges e1 e2 -> eq_edges e2 e1.
+Proof. apply eq_As_sym. Qed.   
+
+Lemma eq_edges_trans : forall (e1 e2 e3: edge), 
+    (eq_edges e1 e2) -> (eq_edges e2 e3) -> (eq_edges e1 e3).
+Proof. apply eq_As_trans. Qed.   
+
+Theorem eq_eq_eq_edges : forall (e1 e2 : edge), 
+    e1 = e2 <-> eq_edges e1 e2.
+Proof. apply eq_eq_eq_As. Qed.
+
+End Edges.
+
+(****** Port as a decidable type ++ ******)
+
+
+Module Iterable.
+Class Iter (T A : Type) : Type := {
+    iter : forall {S E : Type},
+      S -> (S -> A -> S + E) -> T -> S + E }.
+
+    Module Example_list_nodes.
+        Import Node.
+        Instance list_nodes : Iter (list node) node := {
+            iter := fun S E =>
+              fix iter (s : S) (f : S -> node -> S + E) (l : list node) : S + E :=
+                match l with
+                | [] => inl s
+                | x :: l =>
+                  match f s x with
+                  | inl s => iter s f l
+                  | inr e => inr e
+                  end
+                end }.
+    End Example_list_nodes.
+
+Definition fold {T A : Type} `{Iter T A} {S : Type} (s : S)
+(f : S -> A -> S) (l : T) : S :=
+    match iter (E := Empty_set) s (fun s x => inl @@ f s x) l with
+    | inl x => x
+    | inr e => match e with end
+    end.
+
+
+Definition length {T A : Type} `{Iter T A} (l : T) : N :=
+    fold 0 (fun n _ => N.succ n) l.
+End Iterable.
+
+Module Nodes.
+Import Iterable.
+Import Node.
+Parameter T : Type.
+#[refine] Instance nodes : Iter T node := {}. (* refine car nodes pas entièrement instancié *)
+Proof. intros; auto. Qed.   
+End Nodes.
 
 
 Module Bigraph.
     Import Nodes.
-
-    Check node : Type.
-    Fail Check root : Type.
 
 End Bigraph.
