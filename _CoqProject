@@ -1,8 +1,5 @@
 -R src MyProofs
 -I src/
-src/Bigraphs.v
-src/AlgebraBigraphs.v
-src/PropertiesBigraphs.v
 src/AbstractBigraphs.v
 src/Innername.v  
 src/Outername.v           
