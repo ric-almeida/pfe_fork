@@ -1,12 +1,21 @@
-# PFE
+# PHD
 
-Playground for my PFE
+Playground for my PhD, mostly bigraphs in Coq
 
+To compile first
 
-To create CoqMakefile
+    + First create CoqMakefile
 coq_makefile -f _CoqProject -o CoqMakefile
 
+    + Then compile with
+make -f CoqMakefile
 
-To clean
-make -f CoqMakefile clean
+
+To clean:
+
+    + Run
+./coqclean.sh
+
+    + If necessary: 
+chmod +x coqclean.sh
 
