@@ -29,10 +29,10 @@ Import ListNotations.
 
 Set Implicit Arguments.
 
-From MyProofs Require Import Node Decidable Edge Innername Iterable Outername Port Root Site. 
+From MyProofs Require Import Decidable Iterable. 
 
-Module Bigraph.
-    Import Node.
-    Check node : Type.
+(*********************START OF DOC*********************)
 
-End Bigraph.
+
+
+(****** Port as a decidable type ++ ******)

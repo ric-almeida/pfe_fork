@@ -29,10 +29,20 @@ Import ListNotations.
 
 Set Implicit Arguments.
 
-From MyProofs Require Import Node Decidable Edge Innername Iterable Outername Port Root Site. 
+(*********************START OF DOC*********************)
+Module Iterable.
+Class Iter (T A : Type) : Type := {
+    iter : forall {S E : Type},
+      S -> (S -> A -> S + E) -> T -> S + E }.
 
-Module Bigraph.
-    Import Node.
-    Check node : Type.
+Definition fold {T A : Type} `{Iter T A} {S : Type} (s : S)
+(f : S -> A -> S) (l : T) : S :=
+    match iter (E := Empty_set) s (fun s x => inl @@ f s x) l with
+    | inl x => x
+    | inr e => match e with end
+    end.
 
-End Bigraph.
+
+Definition length {T A : Type} `{Iter T A} (l : T) : N :=
+    fold 0 (fun n _ => N.succ n) l.
+End Iterable.
