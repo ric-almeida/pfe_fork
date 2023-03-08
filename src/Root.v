@@ -72,4 +72,9 @@ Theorem eq_eq_eq_roots : forall (r1 r2 : root),
     r1 = r2 <-> eq_roots r1 r2.
 Proof. apply eq_eq_eq_As. Qed.
 
+Import Iterable.
+Parameter T : Type.
+#[refine] Instance roots : Iter T root := {}.
+Proof. intros; auto. Qed. 
+
 End Roots.

@@ -34,7 +34,7 @@ From MyProofs Require Import Decidable Iterable.
 (*********************START OF DOC*********************)
 
 (****** Nodes as a decidable type ******)
-Module Node.
+Module Nodes.
 Import ADec.
 Definition node := A.
 Definition eq_dec_nodes := eq_dec_As.
@@ -72,13 +72,11 @@ Theorem eq_eq_eq_nodes : forall (n1 n2 : node),
     n1 = n2 <-> eq_nodes n1 n2.
 Proof. apply eq_eq_eq_As. Qed.
 
-End Node.
-
-
-Module Nodes.
 Import Iterable.
-Import Node.
 Parameter T : Type.
-#[refine] Instance nodes : Iter T node := {}. (* refine car nodes pas entièrement instancié *)
-Proof. intros; auto. Qed.   
+#[refine] Instance nodes : Iter T node := {}.
+Proof. intros; auto. Qed. 
+
 End Nodes.
+
+

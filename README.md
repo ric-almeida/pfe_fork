@@ -14,6 +14,7 @@ Then compile with
 
 
 To clean:
+
 Run
 
     ./coqclean.sh

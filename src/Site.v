@@ -72,4 +72,9 @@ Theorem eq_eq_eq_sites : forall (s1 s2 : site),
     s1 = s2 <-> eq_sites s1 s2.
 Proof. apply eq_eq_eq_As. Qed.
 
+Import Iterable.
+Parameter T : Type.
+#[refine] Instance sites : Iter T site := {}.
+Proof. intros; auto. Qed. 
+
 End Sites.

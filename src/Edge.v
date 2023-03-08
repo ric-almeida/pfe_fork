@@ -71,4 +71,9 @@ Theorem eq_eq_eq_edges : forall (e1 e2 : edge),
     e1 = e2 <-> eq_edges e1 e2.
 Proof. apply eq_eq_eq_As. Qed.
 
+Import Iterable.
+Parameter T : Type.
+#[refine] Instance edges : Iter T edge := {}.
+Proof. intros; auto. Qed. 
+
 End Edges.

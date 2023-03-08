@@ -71,4 +71,8 @@ Theorem eq_eq_eq_innernames : forall (i1 i2 : innername),
     i1 = i2 <-> eq_innernames i1 i2.
 Proof. apply eq_eq_eq_As. Qed.
 
+Import Iterable.
+Parameter T : Type.
+#[refine] Instance innernames : Iter T innername := {}.
+Proof. intros; auto. Qed. 
 End Innernames.

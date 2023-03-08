@@ -72,4 +72,8 @@ Theorem eq_eq_eq_outernames : forall (o1 o2 : outername),
     o1 = o2 <-> eq_outernames o1 o2.
 Proof. apply eq_eq_eq_As. Qed.
 
+Import Iterable.
+Parameter T : Type.
+#[refine] Instance outernames : Iter T outername := {}.
+Proof. intros; auto. Qed. 
 End Outernames.
