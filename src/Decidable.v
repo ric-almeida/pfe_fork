@@ -87,3 +87,15 @@ Theorem eq_eq_eq_As : forall (a1 a2 : A),
 Proof. intros. split; intros; apply H. Qed.
 
 End ADec.
+
+
+Module AADec.
+Import ADec.
+Definition AA : Type := A*A .
+
+Theorem eq_AAs_dec: forall (aa1 aa2 : AA),
+    { aa1 = aa2 } + { ~ aa1 = aa2 }.
+Proof. intros (a, b) (c, d). 
+
+destruct (eq_dec_As (a) (c)); destruct (eq_dec_As (b) (d)).
+- rewrite e. rewrite e0. Admitted.
