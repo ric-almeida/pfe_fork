@@ -32,7 +32,8 @@ Set Implicit Arguments.
 From MyProofs Require Import Node Decidable Edge Innername Iterable Outername Port Root Site. 
 
 Module Bigraph.
-    Import Node.
+    Import Nodes.
     Check node : Type.
+    Check nodes : Type.
 
 End Bigraph.

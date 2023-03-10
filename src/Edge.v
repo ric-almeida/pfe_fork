@@ -43,7 +43,7 @@ Definition eq_edges (e1 e2 : edge) : Prop :=
 
 Theorem eq_edges_dec: forall (e1 e2 : edge),
     { e1 = e2 } + { ~ e1 = e2 }.
-Proof. apply eq_As_dec. Qed.
+Proof. apply eq_dec_edges. Qed.
 
 Definition eq_edges_b (e1 e2 : edge) : bool.
 destruct (eq_dec_edges (e1) (e2)).
