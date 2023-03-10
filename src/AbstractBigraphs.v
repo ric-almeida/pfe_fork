@@ -32,8 +32,42 @@ Set Implicit Arguments.
 From MyProofs Require Import Node Decidable Edge Innername Iterable Outername Port Root Site. 
 
 Module Bigraph.
-    Import Nodes.
-    Check node : Type.
-    Check nodes : Type.
+Import Nodes.
+Import Roots.
+Import Sites.
+Import Edges.
+Import Innernames.
+Import Outernames.
+Import Ports.
+
+Check node : Type.
+Check root : Type.
+Check site : Type.
+Check edge : Type.
+Check innername : Type.
+Check outername : Type.
+Check port : Type.
+Fail Check nodes : Type.
+
+Definition place : Type := root + node + site.
+Definition link : Type := edge + outername.
+Definition point : Type := port + innername.
+
+Definition kappa : Type := ADec.A * nat.
+Definition control : Type := node -> kappa.
+
+Definition parent : Type := node + site -> node + root.
+
+About nodes.
+
+Record bigraph : Type := Big
+  { v : node }.
+
+
+
+
+
+
+
 
 End Bigraph.

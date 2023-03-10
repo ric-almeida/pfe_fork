@@ -72,10 +72,11 @@ Theorem eq_eq_eq_nodes : forall (n1 n2 : node),
     n1 = n2 <-> eq_nodes n1 n2.
 Proof. apply eq_eq_eq_As. Qed.
 
-Import Iterable.
+Definition nodes := Type.
+(* Import Iterable.
 Parameter T : Type.
 #[refine] Instance nodes : Iter T node := {}.
-Proof. intros; auto. Qed. 
+Proof. intros; auto. Qed.  *)
 
 End Nodes.
 
