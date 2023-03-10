@@ -32,36 +32,21 @@ Set Implicit Arguments.
 From MyProofs Require Import Decidable Iterable Node. 
 
 (*********************START OF DOC*********************)
-(* 
-Module AADec.
-Import ADec.
-Definition AA : Type := A*A .
 
-Theorem eq_AAs_dec: forall (aa1 aa2 : AA),
-    { aa1 = aa2 } + { ~ aa1 = aa2 }.
-Proof. intros (a, b) (c, d). 
 
-destruct (eq_dec_As (a) (c)); destruct (eq_dec_As (b) (d)).
-- rewrite e. rewrite e0. left. reflexivity.
-- right. injection. auto.
-- right. injection. auto.
-- right. injection. auto.
-Qed.
-End AADec. *)
-
+(******* Ports as a decidable type ******)
 
 Module Ports.
 Import ADec.
-Import Node.
+Import Nodes.
 Definition IdP := A.
 Definition eq_dec_IdP := eq_dec_As.
-
-Import Node.
-Definition port : Type := node * IdP.
 
 Theorem eq_IdP_dec: forall (id1 id2 : IdP), {id1 = id2} + {~ id1 = id2}.
 Proof. apply eq_dec_IdP. Qed.
 
+
+Definition port : Type := node * IdP.
 Theorem eq_dec_ports : forall (p1 p2 : port), {p1 = p2} + {~ p1 = p2}.
 Proof. intros (a, b) (c, d). 
 
@@ -116,4 +101,3 @@ Proof. intros; auto. Qed.
 End Ports.
 
 
-(****** Port as a decidable type ++ ******)
