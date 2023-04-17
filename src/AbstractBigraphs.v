@@ -9,6 +9,8 @@ Require Import OrderedType.
 Require Import Coq.Lists.List.
 Require Import Coq.NArith.NArith.
 Require Import Coq.Strings.String.
+Require Import Coq.Logic.FinFun.
+Require Import Coq.Structures.Equalities.
 
 
 Notation " f @@ x " := (apply f x)
@@ -47,7 +49,6 @@ Check edge : Type.
 Check innername : Type.
 Check outername : Type.
 Check port : Type.
-Fail Check nodes : Type.
 
 Definition place : Type := root + node + site.
 Definition link : Type := edge + outername.
@@ -58,13 +59,23 @@ Definition control : Type := node -> kappa.
 
 Definition parent : Type := node + site -> node + root.
 
-About nodes.
+(* Function decidability_A (A : Type) : Prop := forall (x y : A), {x = y} + {~x = y}.
+
+Definition decidability_nat : forall (x y : nat), {x = y} + {~x = y} := (decidability_A nat). *)
 
 Record bigraph : Type := Big
-  { v : node }.
+  { v : Type ;
+   p : parent ; 
+    fv : Finite v}.
 
 
+  
+  (* 
+      Finite 
+      control respected
+  *)
 
+(* Add defs *)
 
 
 

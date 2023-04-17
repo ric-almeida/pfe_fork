@@ -42,9 +42,12 @@ Definition eq_dec_nodes := eq_dec_As.
 Definition eq_nodes (n1 n2 : node) : Prop :=
     n1 = n2.
 
-Theorem eq_nodes_dec: forall (n1 n2 : node),
+Definition eq_nodes_dec : forall (n1 n2 : node),
+{ n1 = n2 } + { ~ n1 = n2 } := eq_As_dec. 
+
+(* Theorem eq_nodes_dec: forall (n1 n2 : node),
     { n1 = n2 } + { ~ n1 = n2 }.
-Proof. apply eq_As_dec. Qed.
+Proof. apply eq_As_dec. Qed. *)
 
 Definition eq_nodes_b (n1 n2 : node) : bool.
 destruct (eq_dec_nodes (n1) (n2)).
@@ -72,8 +75,8 @@ Theorem eq_eq_eq_nodes : forall (n1 n2 : node),
     n1 = n2 <-> eq_nodes n1 n2.
 Proof. apply eq_eq_eq_As. Qed.
 
-Definition nodes := Type.
-(* Import Iterable.
+(* Definition nodes := Type.
+Import Iterable.
 Parameter T : Type.
 #[refine] Instance nodes : Iter T node := {}.
 Proof. intros; auto. Qed.  *)
