@@ -54,8 +54,8 @@ Definition parent : Type := node + site -> node + root. *)
 
 Definition decidability_nat : forall (x y : nat), {x = y} + {~x = y} := (decidability_A nat). *)
 
-Class EqDec (T: Type) :=
-  { eq_dec: forall t1 t2: T, { t1 = t2 } + { t1 <> t2 } }.
+(* Class EqDec (T: Type) :=
+  { eq_dec: forall t1 t2: T, { t1 = t2 } + { t1 <> t2 } }. *)
 
 Record bigraph {site innername root outername : Type} : Type := Big 
   { 
@@ -64,9 +64,20 @@ Record bigraph {site innername root outername : Type} : Type := Big
     control : node -> nat * nat; (* k * nat *)
     parent : node + site -> node + root ; 
     link : innername + {x : node * nat | snd x < snd (control (fst x))} -> outername + edge; 
-    kd : EqDec innername;
-    fv : Finite node
+    sd : EqDec site ;
+    sf : Finite site ;
+    id_ : EqDec innername ;
+    if_ : Finite innername ;
+    rd : EqDec root ;
+    rf : Finite root ;
+    od : EqDec outername ;
+    of : Finite outername ;
+    nd : EqDec node ;
+    nf : Finite node ;
+    ed : EqDec edge ;
+    ef : Finite edge ;
   }.
+
 
   (* Definition mySite : Type := nat.
   Definition myInnerName : Type := nat.
