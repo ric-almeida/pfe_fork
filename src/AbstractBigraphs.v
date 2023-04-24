@@ -10,11 +10,8 @@ Require Import Coq.Lists.List.
 Require Import Coq.NArith.NArith.
 Require Import Coq.Strings.String.
 Require Import Coq.Logic.FinFun.
-Require Import Coq.Structures.Equalities.
-
-
-Notation " f @@ x " := (apply f x)
-  (at level 42, right associativity).
+Require Import Coq.Logic.Decidable.
+Require Import Lia.
 
 
 Set Warnings "-parsing".
@@ -26,29 +23,23 @@ Local Open Scope string_scope.
 Local Open Scope list_scope.
 Local Open Scope nat_scope.
 Local Open Scope bool_scope.
-Local Open Scope N. 
-Import ListNotations.
+Import ListNotations.  
 
 Set Implicit Arguments.
 
-From MyProofs Require Import Node Decidable Edge Innername Iterable Outername Port Root Site. 
+(* From MyProofs Require Import Decidable.  *)
+
+
 
 Module Bigraph.
-Import Nodes.
-Import Roots.
-Import Sites.
-Import Edges.
-Import Innernames.
-Import Outernames.
-Import Ports.
 
-Check node : Type.
-Check root : Type.
-Check site : Type.
-Check edge : Type.
-Check innername : Type.
-Check outername : Type.
-Check port : Type.
+(* Definition node : Type := Type.
+Definition root : Type := Type.
+Definition site : Type.
+Definition edge : Type.
+Definition innername : Type.
+Definition outername : Type.
+Definition port : Type.
 
 Definition place : Type := root + node + site.
 Definition link : Type := edge + outername.
@@ -57,25 +48,72 @@ Definition point : Type := port + innername.
 Definition kappa : Type := ADec.A * nat.
 Definition control : Type := node -> kappa.
 
-Definition parent : Type := node + site -> node + root.
+Definition parent : Type := node + site -> node + root. *)
 
 (* Function decidability_A (A : Type) : Prop := forall (x y : A), {x = y} + {~x = y}.
 
 Definition decidability_nat : forall (x y : nat), {x = y} + {~x = y} := (decidability_A nat). *)
 
-Record bigraph : Type := Big
-  { v : Type ;
-   p : parent ; 
-    fv : Finite v}.
+Class EqDec (T: Type) :=
+  { eq_dec: forall t1 t2: T, { t1 = t2 } + { t1 <> t2 } }.
 
+Record bigraph {site innername root outername : Type} : Type := Big 
+  { 
+    node : Type ;
+    edge : Type ;
+    control : node -> nat * nat; (* k * nat *)
+    parent : node + site -> node + root ; 
+    link : innername + {x : node * nat | snd x < snd (control (fst x))} -> outername + edge; 
+    kd : EqDec innername;
+    fv : Finite node
+  }.
+
+  (* Definition mySite : Type := nat.
+  Definition myInnerName : Type := nat.
+  Definition myRoot : Type := nat.
+  Definition myOuterName : Type := nat.
+  Definition myNode : Type := {n:nat | n<3}.
+  Definition myEdge : Type := nat.
+  
+  Definition myControl : myNode -> nat * nat := fun _ => (10, 20).
+  Definition myParent : myNode + mySite -> myNode + myRoot := fun _ => inr 2.
+  Definition myLink : myInnerName + {x : myNode * nat | snd x < snd (myControl (fst x))} -> 
+    myOuterName + myEdge := fun _ => inr 1.
+
+
+  Definition Full (l:list myNode) :=
+  forall n:myNode, In n l.
+
+
+  Definition node0 : myNode.
+  Proof. unfold myNode. exists 0. auto. Qed.
+
+  Definition node1 : myNode.
+  Proof. unfold myNode. exists 1. auto. Qed.
+
+  Definition node2 : myNode.
+  Proof. unfold myNode. exists 2. auto. Qed.
+
+
+
+
+  Lemma myFinite : forall n:myNode, exists (l:list myNode), Full l.
+  Proof.
+  intros n. 
+  unfold Full. exists [node0;node1;node2]. intros. destruct n0 as [n0 Hn0 Hn1 Hn2].
+  apply Hn0. exists. unfold node0. 
+  
+  
+  
+  right. right. right. contradiction.  
+
+  Instance EqDec_nat : EqDec nat := {| eq_dec := PeanoNat.Nat.eq_dec |}.
 
   
-  (* 
-      Finite 
-      control respected
-  *)
+  Definition myBigraph : bigraph :=
+    Big myParent myLink EqDec_nat. *)
+  
 
-(* Add defs *)
 
 
 
