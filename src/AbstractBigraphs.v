@@ -25,37 +25,13 @@ Local Open Scope nat_scope.
 Local Open Scope bool_scope.
 Import ListNotations.  
 
-Set Implicit Arguments.
+(* Set Implicit Arguments. *)
 
 (* From MyProofs Require Import Decidable.  *)
 
 
 
 Module Bigraph.
-
-(* Definition node : Type := Type.
-Definition root : Type := Type.
-Definition site : Type.
-Definition edge : Type.
-Definition innername : Type.
-Definition outername : Type.
-Definition port : Type.
-
-Definition place : Type := root + node + site.
-Definition link : Type := edge + outername.
-Definition point : Type := port + innername.
-
-Definition kappa : Type := ADec.A * nat.
-Definition control : Type := node -> kappa.
-
-Definition parent : Type := node + site -> node + root. *)
-
-(* Function decidability_A (A : Type) : Prop := forall (x y : A), {x = y} + {~x = y}.
-
-Definition decidability_nat : forall (x y : nat), {x = y} + {~x = y} := (decidability_A nat). *)
-
-(* Class EqDec (T: Type) :=
-  { eq_dec: forall t1 t2: T, { t1 = t2 } + { t1 <> t2 } }. *)
 
 Definition finite (A : Type) : Type := { l : list A | Listing l }.
 
@@ -69,13 +45,13 @@ Definition Port (node : Type) (kind : Type) (control : node -> kind * nat) : Typ
   { vi : node * nat | let (v, i) := vi in let (_, a) := control v in i < a }.
 
 Record bigraph (site: Type) (innername: Type) (root: Type) (outername: Type) (kind: Type): Type := 
-  Big 
+  Big  
   { 
     node : Type ;
     edge : Type ;
     control : node -> kind * nat; (* k * nat *)
     parent : node + site -> node + root ; 
-    link : innername + Port control -> outername + edge; 
+    link : innername + Port node kind control -> outername + edge; 
     (* sd : EqDec site ;
     sf : finite site ;
     id_ : EqDec innername ;
@@ -92,31 +68,134 @@ Record bigraph (site: Type) (innername: Type) (root: Type) (outername: Type) (ki
   }.
   (* sortir les preuves des types interface?*)
 
-  Check ap.
+Check parent.
 
-Definition getNode {s i r o k : Type} (bg : bigraph s i r o k) : Type := node bg.
-(* Definition getParent {s i r o : Type} (bg : bigraph s i r o) : 
-  node bg + s -> node bg + r := 
-    parent bg. *)
+Definition getNode {s i r o k : Type} (bg : bigraph s i r o k) : Type := 
+  node s i r o k bg.
+
+Definition getEdge {s i r o k : Type} (bg : bigraph s i r o k) : Type := 
+  edge s i r o k bg.
   
-Definition getControl {s i r o k : Type} (bg : bigraph s i r o k) : node bg -> k * nat :=
-@control s i r o k bg.
+Definition getControl {s i r o k : Type} (bg : bigraph s i r o k) 
+  : node s i r o k bg -> k * nat :=
+  @control s i r o k bg.
 
-(*Check getControl.
-Locate "+".
+Definition mk_new_control {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
+  ((getNode b1) + (getNode b2)) -> (k1+k2) * nat :=
+  let c1 := getControl b1 in
+  let c2 := getControl b2 in
+  let n1 := getNode b1 in
+  let n2 := getNode b2 in
+  let new_control (n : n1+n2) : (k1+k2) * nat := 
+    match n with
+    | inl n1' => (inl (fst (c1 n1')), snd (c1 n1'))
+    | inr n2' => (inr (fst (c2 n2')), snd (c2 n2'))
+    end 
+  in new_control.
 
-Print EqDec. *)
-(* 
-Definition foo (P:Prop) : Prop. *)
+Definition getParent {s i r o k : Type} (bg : bigraph s i r o k) : 
+  node s i r o k bg + s -> node s i r o k bg + r :=
+  @parent s i r o k bg.
 
-Definition mk_new_link {i1 i2 o1 o2 new_edge new_node new_kind: Type} (new_control: new_node -> new_kind * nat)
-  (i : (i1 + i2) + (Port new_control)) : (o1 + o2) + new_edge.
+Definition mk_new_parent {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
+  ((getNode b1) + (getNode b2)) + (s1 + s2) -> ((getNode b1) + (getNode b2)) + (r1 + r2):=
+  let p1 := getParent b1 in
+  let p2 := getParent b2 in
+  let n1 := getNode b1 in
+  let n2 := getNode b2 in
+  let new_parent (p : (n1 + n2) + (s1 + s2)) : (n1 + n2) + (r1 + r2) :=
+    match p with
+     | inl node =>  match node with 
+                    |inl n1 => match p1 (inl n1) with
+                              | inl n1' => inl (inl n1')
+                              | inr r1 => inr (inl r1)
+                              end
+                    |inr n2 => match p2 (inl n2) with
+                              | inl n2' => inl (inr n2')
+                              | inr r2 => inr (inr r2)
+                              end
+                    end
+    | inr site => match site with 
+                  |inl s1 => match p1 (inr s1) with
+                            | inl n1' => inl (inl n1')
+                            | inr r1 => inr (inl r1)
+                            end
+                  |inr s2 => match p2 (inr s2) with
+                            | inl n2' => inl (inr n2')
+                            | inr r2 => inr (inr r2)
+                            end
+    end
+  end
+  in new_parent.
+
+
+Definition getLink {s i r o k : Type} (bg : bigraph s i r o k) : 
+  i + Port (node s i r o k bg) k (getControl bg) -> o + getEdge bg :=
+  @link s i r o k bg.
+
+Definition mk_new_link {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
+  (i1 + i2) + (Port ((getNode b1) + getNode b2) (k1 + k2) (mk_new_control b1 b2)) 
+  -> (o1 + o2) + ((getEdge b1) + (getEdge b2)). 
+    (* :=
+    let n1 := getNode b1 in
+    let n2 := getNode b2 in
+    let c := mk_new_control b1 b2 in
+    let p := Port (n1 + n2) (k1 + k2) c in
+    let e1 := getEdge b1 in
+    let e2 := getEdge b2 in
+    let l1 := getLink b1 in
+    let l2 := getLink b2 in
+    let new_link (ip : (i1 + i2) + p) : (o1 + o2) + (e1 + e2) :=
+      match ip with 
+      | inr p =>  let (n,i) := proj1_sig p in 
+                  match n with 
+                  | inl n1' =>  match (l1 (inr (n1',i))) with 
+                                | inl o1 => inl (inl o1)
+                                | inr e1 => inr (inl e1)
+                                end
+                  | inr n2' =>  match (l2 (inr n2',i)) with 
+                                | inl o2 => inl (inl o2)
+                                | inr e2 => inr (inl e2)
+                                end
+                  end
+
+      | inl i =>  match i with 
+                  |inl i1 =>  match l1 (inl i1) with
+                              | inl o1 => inl (inl o1)
+                              | inr e1 => inr (inl e1)
+                              end
+                  |inr i2 =>  match l2 (inl i2) with
+                              | inl o2 => inl (inr o2)
+                              | inr e2 => inr (inr e2)
+                              end
+                  end
+      end
+    in new_link. *)
   Admitted.
+
+
+Definition mk_new_link' {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
+(b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
+(i1 + i2) + ((Port (getNode b1) k1 (getControl b1)) + (Port (getNode b2) k2 (getControl b2))) 
+-> (o1 + o2) + ((getEdge b1) + (getEdge b2)).
+Admitted.
 
 (*close_scope nat_scope*)
 Definition juxtaposition {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) 
-    : bigraph (s1+s2)%type (i1+i2)%type (r1+r2)%type (o1+o2)%type (k1+k2)%type:=
+    : bigraph (s1+s2)%type (i1+i2)%type (r1+r2)%type (o1+o2)%type (k1+k2)%type :=
+  {|
+    node := (getNode b1) + (getNode b2) ;
+    edge := (getEdge b1) + (getEdge b2) ;
+    control := mk_new_control b1 b2 ;
+    parent := mk_new_parent b1 b2 ;
+    link := mk_new_link b1 b2 ;
+  |}.
+
+  
   let new_node : Type := (node b1 + node b2)%type in
   (* let eqdec_newnode := fun a b =>
     match a, b with
@@ -276,7 +355,7 @@ Definition juxtaposition {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
   Instance EqDec_nat : EqDec nat := {| eq_dec := PeanoNat.Nat.eq_dec |}. *)
 
   
-  Definition myBigraph : bigraph mySite myInnerName myRoot myOuterName myKind.
+Definition myBigraph : bigraph mySite myInnerName myRoot myOuterName myKind.
   Admitted.
   
 
