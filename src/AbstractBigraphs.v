@@ -88,7 +88,7 @@ Record bigraph (site: Type) (innername: Type) (root: Type) (outername: Type) (ki
     nf : finite node ;
     ed : EqDec edge ;
     ef : finite edge ;*)
-    (* ap : acyclic parent *)
+    ap : acyclic parent
   }.
   (* sortir les preuves des types interface?*)
 
@@ -195,7 +195,12 @@ Definition juxtaposition {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
                   end
     end 
   in *)
-  (* let new_ap : acyclic new_parent := ap in *)
+  let new_ap : acyclic new_parent := @ap (s1+s2) (i1+i2) (r1+r2) (o1+o2) (k1+k2)
+  (* match n with 
+  |inl n1 => ap
+  |inr n2 => ap
+  end *)
+  in
   {|
     node := new_node ;
     edge := new_edge ;
@@ -214,7 +219,7 @@ Definition juxtaposition {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
     nf : Finite node ;
     ed : EqDec edge ;
     ef : Finite edge ; *)
-    (* ap := new_ap *)
+    ap := new_ap
   |}.
   (* Big new_parent new_link (s1+s2)%type (i1+i2) (r1+r2) (o1+o2) new_node new_edge new_control. 
 
