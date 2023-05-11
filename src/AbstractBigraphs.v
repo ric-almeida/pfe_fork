@@ -68,39 +68,35 @@ Definition Kappa (kind : Type) (arity : kind -> nat) : Type :=
 Definition Port (node : Type) (kind : Type) (control : node -> kind * nat) : Type :=
   { vi : node * nat | let (v, i) := vi in let (_, a) := control v in i < a }.
 
-Record bigraph (site: Type) (innername: Type) (root: Type) (outername: Type) (kind: Type): Type := 
+Record bigraph 
+(site: Type) 
+(innername: Type) 
+(root: Type) 
+(outername: Type) 
+(kind: Type)
+(node : Type)
+(edge : Type)
+(control : node -> kind * nat)
+(parent : node + site -> node + root)
+(link : innername + Port control -> outername + edge)
+(ap : acyclic parent)
+: Type := 
   Big 
-  { 
-    node : Type ;
-    edge : Type ;
-    control : node -> kind * nat; (* k * nat *)
-    parent : node + site -> node + root ; 
-    link : innername + Port control -> outername + edge; 
-    (* sd : EqDec site ;
-    sf : finite site ;
-    id_ : EqDec innername ;
-    if_ : finite innername ;
-    rd : EqDec root ;
-    rf : finite root ;
-    od : EqDec outername ;
-    of : finite outername ; *)
-    (* nd : EqDec node ;
-    nf : finite node ;
-    ed : EqDec edge ;
-    ef : finite edge ;*)
-    ap : acyclic parent
-  }.
-  (* sortir les preuves des types interface?*)
+  {  }.
 
-  Check ap.
 
-Definition getNode {s i r o k : Type} (bg : bigraph s i r o k) : Type := node bg.
+Definition getNode {s i r o k n e: Type} 
+(c:n->k*nat) 
+(p:n+s->n+r) 
+(l:i+Port c->o+e) 
+(a:acyclic p) 
+(bg : bigraph l a) : Type := n.
 (* Definition getParent {s i r o : Type} (bg : bigraph s i r o) : 
   node bg + s -> node bg + r := 
     parent bg. *)
   
-Definition getControl {s i r o k : Type} (bg : bigraph s i r o k) : node bg -> k * nat :=
-@control s i r o k bg.
+(* Definition getControl {s i r o k : Type} (bg : bigraph s i r o k) : node bg -> k * nat :=
+@control s i r o k bg. *)
 
 (*Check getControl.
 Locate "+".
@@ -114,9 +110,17 @@ Definition mk_new_link {i1 i2 o1 o2 new_edge new_node new_kind: Type} (new_contr
   Admitted.
 
 (*close_scope nat_scope*)
-Definition juxtaposition {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) 
-    : bigraph (s1+s2)%type (i1+i2)%type (r1+r2)%type (o1+o2)%type (k1+k2)%type:=
+Definition juxtaposition {s1 i1 r1 o1 k1 n1 e1 s2 i2 r2 o2 k2 n2 e2: Type} 
+(c1:n1->k1*nat) 
+(p1:n1+s1->n1+r1) 
+(l1:i1+Port c1->o1+e1) 
+(a1:acyclic p1) 
+(c2:n2->k2*nat) 
+(p2:n2+s2->n2+r2) 
+(l2:i2+Port c2->o2+e2) 
+(a2:acyclic p2) 
+  (b1 : bigraph l1 a1) (b2 : bigraph l2 a2) 
+    : bigraph (l1+l2)%type (a1+a2)%type:=
   let new_node : Type := (node b1 + node b2)%type in
   (* let eqdec_newnode := fun a b =>
     match a, b with
