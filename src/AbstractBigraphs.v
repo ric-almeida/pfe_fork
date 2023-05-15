@@ -42,7 +42,7 @@ Fixpoint merge_list {A B : Type} (la : list A) (lb : list B) (acc : list (A + B)
 Definition merge {A B : Type} (la : list A) (lb : list B) : list (A + B) :=
   merge_list la lb [].
 
-  
+
 Definition finite (A : Type) : Type := { l : list A | Listing l }.
 
 Definition acyclic (node site root : Type) (parent : node + site -> node + root) : Prop :=
@@ -195,13 +195,22 @@ Definition mk_new_link {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
 Definition getNd {s i r o k : Type} (bg : bigraph s i r o k) : 
   EqDec (getNode bg) :=
   @nd s i r o k bg.
+
+Print EqDec.
 Definition mk_new_nd {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
   EqDec ((getNode b1) + (getNode b2)).
   Proof.  
-    (*destruct (getNd b1). EqDec. as [l1 H1]. 
-    destruct (getNd b2) as [l2 H2].*)
-    Admitted.
+    unfold EqDec. intros. destruct x as [x1 | x2]; destruct y as [y1 | y2].
+      - destruct (getNd b1 x1 y1).
+        + left. rewrite e. auto. 
+        + right. intro contra. congruence.  
+      - right. intros contra. congruence.
+      - right. intros contra. congruence. 
+      - destruct (getNd b2 x2 y2).
+      + left. rewrite e. auto. 
+      + right. intro contra. congruence. 
+    Defined.
 Definition getNf {s i r o k : Type} (bg : bigraph s i r o k) : 
   finite (getNode bg) :=
   @nf s i r o k bg.
