@@ -196,7 +196,6 @@ Definition getNd {s i r o k : Type} (bg : bigraph s i r o k) :
   EqDec (getNode bg) :=
   @nd s i r o k bg.
 
-Print EqDec.
 Definition mk_new_nd {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
   EqDec ((getNode b1) + (getNode b2)).
@@ -232,9 +231,24 @@ Definition mk_new_nf' {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
     destruct (getNf b1) as [l1 H1]. 
     destruct (getNf b2) as [l2 H2].
     unfold finite. Admitted.  
+
+Definition getEd {s i r o k : Type} (bg : bigraph s i r o k) : 
+  EqDec (getEdge bg) :=
+  @ed s i r o k bg.
 Definition mk_new_ed {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
-  EqDec ((getEdge b1) + (getEdge b2)). Admitted.
+  EqDec ((getEdge b1) + (getEdge b2)). 
+  Proof.  
+    unfold EqDec. intros. destruct x as [x1 | x2]; destruct y as [y1 | y2].
+      - destruct (getEd b1 x1 y1).
+        + left. rewrite e. auto. 
+        + right. intro contra. congruence.  
+      - right. intros contra. congruence.
+      - right. intros contra. congruence. 
+      - destruct (getEd b2 x2 y2).
+      + left. rewrite e. auto. 
+      + right. intro contra. congruence. 
+    Defined.
 Definition mk_new_ef {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
   finite ((getEdge b1) + (getEdge b2)). Admitted.
