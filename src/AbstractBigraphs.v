@@ -60,11 +60,11 @@ Record bigraph (site: Type) (innername: Type) (root: Type) (outername: Type) (ki
     rf : finite root ;
     od : EqDec outername ;
     of : finite outername ; *)
-    (* nd : EqDec node ;
+    nd : EqDec node ;
     nf : finite node ;
     ed : EqDec edge ;
-    ef : finite edge ;*)
-    (* ap : acyclic parent *)
+    ef : finite edge ;
+    ap : acyclic node site root parent
   }.
   (* sortir les preuves des types interface?*)
 
@@ -135,11 +135,24 @@ Definition getLink {s i r o k : Type} (bg : bigraph s i r o k) :
   i + Port (node s i r o k bg) k (getControl bg) -> o + getEdge bg :=
   @link s i r o k bg.
 
+Definition mk_port {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) 
+  (p:Port ((getNode b1) + getNode b2) (k1 + k2) (mk_new_control b1 b2)) :
+  Port (node s1 i1 r1 o1 k1 b1) k1 (getControl b1) +
+  Port (node s2 i2 r2 o2 k2 b2) k2 (getControl b2).
+  Proof. destruct p as [vi12 P12]. unfold getNode in vi12. destruct vi12 as [v12 i12]. 
+  destruct v12 as [n1 | n2].
+  - left. unfold mk_new_control in P12.   
+    unfold Port. exists (n1,i12). unfold snd in P12. 
+    destruct (getControl b1 n1) eqn:HgetControl. apply P12.
+  - right. unfold mk_new_control in P12.   
+  unfold Port. exists (n2,i12). unfold snd in P12. 
+  destruct (getControl b2 n2) eqn:HgetControl. apply P12. Defined.
+
 Definition mk_new_link {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
   (i1 + i2) + (Port ((getNode b1) + getNode b2) (k1 + k2) (mk_new_control b1 b2)) 
-  -> (o1 + o2) + ((getEdge b1) + (getEdge b2)). 
-    (* :=
+  -> (o1 + o2) + ((getEdge b1) + (getEdge b2)) :=
     let n1 := getNode b1 in
     let n2 := getNode b2 in
     let c := mk_new_control b1 b2 in
@@ -150,18 +163,17 @@ Definition mk_new_link {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
     let l2 := getLink b2 in
     let new_link (ip : (i1 + i2) + p) : (o1 + o2) + (e1 + e2) :=
       match ip with 
-      | inr p =>  let (n,i) := proj1_sig p in 
-                  match n with 
-                  | inl n1' =>  match (l1 (inr (n1',i))) with 
-                                | inl o1 => inl (inl o1)
-                                | inr e1 => inr (inl e1)
-                                end
-                  | inr n2' =>  match (l2 (inr n2',i)) with 
-                                | inl o2 => inl (inl o2)
-                                | inr e2 => inr (inl e2)
-                                end
+      | inr p =>  let p' := mk_port b1 b2 p in
+                  match p' with 
+                  | inl p1 => match (l1 (inr p1)) with 
+                              | inl o1 => inl (inl o1)
+                              | inr e1 => inr (inl e1)
+                              end
+                  | inr p2 => match (l2 (inr p2)) with 
+                              | inl o2 => inl (inr o2)
+                              | inr e2 => inr (inr e2)
+                              end
                   end
-
       | inl i =>  match i with 
                   |inl i1 =>  match l1 (inl i1) with
                               | inl o1 => inl (inl o1)
@@ -173,17 +185,11 @@ Definition mk_new_link {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
                               end
                   end
       end
-    in new_link. *)
-  Admitted.
+    in new_link.
 
 
-Definition mk_new_link' {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
-(b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
-(i1 + i2) + ((Port (getNode b1) k1 (getControl b1)) + (Port (getNode b2) k2 (getControl b2))) 
--> (o1 + o2) + ((getEdge b1) + (getEdge b2)).
-Admitted.
 
-(*close_scope nat_scope*)
+
 Definition juxtaposition {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) 
     : bigraph (s1+s2)%type (i1+i2)%type (r1+r2)%type (o1+o2)%type (k1+k2)%type :=
