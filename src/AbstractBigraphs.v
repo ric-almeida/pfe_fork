@@ -33,14 +33,9 @@ Import ListNotations.
 
 Module Bigraph.
 
-Fixpoint merge_list {A B : Type} (la : list A) (lb : list B) (acc : list (A + B)) : list (A + B) :=
-  match la with
-  | [] => acc ++ (map inr lb)
-  | ha :: ta => merge_list ta lb ((inl ha) :: acc)
-  end.
-  
+
 Definition merge {A B : Type} (la : list A) (lb : list B) : list (A + B) :=
-  merge_list la lb [].
+  (map inl la) ++ (map inr lb).
 
 
 Definition finite (A : Type) : Type := { l : list A | Listing l }.
@@ -54,12 +49,12 @@ Definition Kappa (kind : Type) (arity : kind -> nat) : Type :=
 Definition Port (node : Type) (kind : Type) (control : node -> kind * nat) : Type :=
   { vi : node * nat | let (v, i) := vi in let (_, a) := control v in i < a }.
 
-Record bigraph (site: Type) (innername: Type) (root: Type) (outername: Type) (kind: Type): Type := 
+Record bigraph (site: Type) (innername: Type) (root: Type) (outername: Type) (kind: Type) : Type := 
   Big  
   { 
     node : Type ;
     edge : Type ;
-    control : node -> kind * nat; (* k * nat *)
+    control : node -> kind * nat;
     parent : node + site -> node + root ; 
     link : innername + Port node kind control -> outername + edge; 
     nd : EqDec node ;
@@ -68,9 +63,65 @@ Record bigraph (site: Type) (innername: Type) (root: Type) (outername: Type) (ki
     ef : finite edge ;
     ap : acyclic node site root parent
   }.
+
+
   (* sortir les preuves des types interface?*)
 
 Check parent.
+
+(*  PREVIOUS LISTING  *)
+  (* Lemma NoDup_Add {A: Type} (a:A) (l:list A) (l':list A) : Add a l l' -> (NoDup l' <-> NoDup l /\ ~(In a l)).
+    Proof.
+    induction 1 as [l|x l l' AD IH].
+    - split; [ inversion_clear 1; now split | now constructor ].
+    - split.
+      + inversion_clear 1. rewrite IH in *. rewrite (Add_in AD) in *.
+        simpl in *; split; try constructor; intuition.
+      + intros (N,IN). inversion_clear N. constructor.
+        * rewrite (Add_in AD); simpl in *; intuition.
+        * apply IH. split; trivial. simpl in *; intuition.
+    Qed.
+
+  Lemma in_elt_inv {A : Type}: forall (x y : A) l1 l2,
+    In x (l1 ++ y :: l2) -> x = y \/ In x (l1 ++ l2).
+    Proof.
+    intros x y l1 l2 Hin.
+    apply in_app_or in Hin.
+    destruct Hin as [Hin|[Hin|Hin]]; [right|left|right]; try apply in_or_app; intuition.
+    Qed.
+
+  Theorem nodupAB {A : Type}: forall (l: list A) (l': list A), NoDup l -> NoDup l' -> NoDup (l ++ l').
+    Proof.
+    intros l l' H1 H2.
+    induction l as [| x l IH].
+    - simpl. apply H2.
+    - simpl. inversion H1. apply NoDup_cons. 
+      + 
+      induction l' as [| x' l' IH'].
+        ++ rewrite app_nil_r. apply H3.
+        ++ destruct IH. 
+          +++ apply H4.
+          +++ apply in_nil.
+          +++ apply not_in_cons. split.
+            * rewrite <- H. Admitted. (* GAVE UP SEE BOOKMARKED TAB*)
+
+  Theorem listingAB {A : Type}: forall (l: list A) (l': list A), Listing l -> Listing l' -> Listing (l ++ l').
+    Proof.
+    intros l l' H1 H2.
+    induction l as [| x xs IH] using list_ind.
+    - (* Base case: l = nil *)
+      simpl. exact H2.
+    - (* Inductive case: l = x :: xs *)
+      simpl. inversion_clear H1 as [H3 H4].
+
+      unfold Listing. unfold Listing in IH. split.
+      + apply NoDup_cons.
+        ++ Admitted.
+
+
+  Definition finiteAB {A B : Type} (fa: finite A) (fb: finite B) : finite (A+B).  
+  Proof. unfold finite. destruct fa as [la La] eqn:Ha. destruct fb as [lb Lb] eqn:Hb.
+  exists (merge la lb). unfold merge. *)
 
 Definition getNode {s i r o k : Type} (bg : bigraph s i r o k) : Type := 
   node s i r o k bg.
@@ -135,7 +186,7 @@ Definition mk_new_parent {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
 
 Definition getLink {s i r o k : Type} (bg : bigraph s i r o k) : 
   i + Port (node s i r o k bg) k (getControl bg) -> o + getEdge bg :=
-  @link s i r o k bg.
+  @link s i r o k bg. 
 
 Definition mk_port {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) 
@@ -150,7 +201,7 @@ Definition mk_port {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
   - right. unfold mk_new_control in P12.   
   unfold Port. exists (n2,i12). unfold snd in P12. 
   destruct (getControl b2 n2) eqn:HgetControl. apply P12. Defined.
-
+Print mk_port.
 Definition mk_new_link {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
   (i1 + i2) + (Port ((getNode b1) + getNode b2) (k1 + k2) (mk_new_control b1 b2)) 
@@ -210,27 +261,72 @@ Definition mk_new_nd {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
       + left. rewrite e. auto. 
       + right. intro contra. congruence. 
     Defined.
+
+Search (EqDec (_ + _)).
 Definition getNf {s i r o k : Type} (bg : bigraph s i r o k) : 
   finite (getNode bg) :=
   @nf s i r o k bg.
-  
-Definition mk_new_nf {s i r o k : Type} 
-  (bg : bigraph s i r o k) (bg' : bigraph s i r o k) :
-  finite ((getNode bg) + (getNode bg')). 
-  Proof. 
-    destruct (getNf bg) as [l1 H1]. 
-    destruct (getNf bg') as [l2 H2].
-    unfold finite. 
-    (* exists (merge l1 l2). 
-    unfold merge. unfold merge_list.  *)
-    Admitted.
-Definition mk_new_nf' {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
+
+Lemma NoDup_map_inl {A B : Type} (la : list A) (lb : list B) :
+  NoDup la -> NoDup (map (@inl A B) la).
+  Proof.
+    intro Hla.
+    induction la as [| a la' IH].
+    - constructor.
+    - apply Injective_map_NoDup. 
+      + Search (inl). unfold Injective.
+        intros. inversion H. reflexivity.
+      + apply Hla.      
+  Qed.
+
+Lemma NoDup_map_inr {A B : Type} (la : list A) (lb : list B) :
+  NoDup lb -> NoDup (map (@inr A B) lb).
+  Proof.
+    intro Hla.
+    induction lb as [| b lb' IH].
+    - constructor.
+    - apply Injective_map_NoDup. 
+      + Search (inl). unfold Injective.
+        intros. inversion H. reflexivity.
+      + apply Hla.      
+  Qed.
+
+Theorem nodupAB {A B eq H: Type}: forall (la: list A) (lb: list B), NoDup la -> NoDup lb -> NoDup (merge la lb).
+  Proof.
+      intros la lb Hla Hlb. unfold merge. simpl. Admitted. 
+      (* Search (NoDup).
+      apply NoDup_map_inl. ; assumption.
+      apply NoDup_map_inr; assumption.
+      apply NoDup_app.
+    Qed.  *)
+(*     
+  intros l l' H1 H2.
+  induction l as [| x l IH].
+  - unfold merge. simpl. apply H2.
+  - simpl. inversion H1. apply NoDup_cons. 
+    + 
+    induction l' as [| x' l' IH'].
+      ++ rewrite app_nil_r. apply H3.
+      ++ destruct IH. 
+        +++ apply H4.
+        +++ apply in_nil.
+        +++ apply not_in_cons. split.
+          * rewrite <- H. Admitted. GAVE UP SEE BOOKMARKED TAB*) 
+
+Theorem listingAB {A B : Type}: forall (la: list A) (lb: list B), Listing la -> Listing lb -> Listing (merge la lb).
+  Proof.
+  intros la lb Ha Hb.
+  induction la as [| xa ts IHa].
+  - (* Base case: l = nil *)
+    unfold merge. simpl. Admitted.
+
+Definition mk_new_nf {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
   finite ((getNode b1) + (getNode b2)). 
   Proof. 
     destruct (getNf b1) as [l1 H1]. 
     destruct (getNf b2) as [l2 H2].
-    unfold finite. Admitted.  
+    unfold finite. exists (merge l1 l2). Admitted.  
 
 Definition getEd {s i r o k : Type} (bg : bigraph s i r o k) : 
   EqDec (getEdge bg) :=
@@ -254,19 +350,20 @@ Definition mk_new_ef {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
   finite ((getEdge b1) + (getEdge b2)). Admitted.
 Definition mk_new_ap {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
-  acyclic ((getNode b1) + (getNode b2)) (s1 + s2) (r1 + r2) (mk_new_parent b1 b2). Admitted.
+  acyclic ((getNode b1) + (getNode b2)) (s1 + s2) (r1 + r2) (mk_new_parent b1 b2). 
+  Admitted.
 
-  Definition juxtaposition {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
+Definition juxtaposition {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
 (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) 
   : bigraph (s1+s2)%type (i1+i2)%type (r1+r2)%type (o1+o2)%type (k1+k2)%type :=
 {|
   node := (getNode b1) + (getNode b2) ;
   edge := (getEdge b1) + (getEdge b2) ;
   control := mk_new_control b1 b2 ;
-  parent := mk_new_parent b1 b2 ;
+  parent := mk_new_parent b1 b2 ; 
   link := mk_new_link b1 b2 ;
   nd := mk_new_nd b1 b2 ;
-  nf := mk_new_nf' b1 b2 ;
+  nf := mk_new_nf b1 b2 ;
   ed := mk_new_ed b1 b2 ;
   ef := mk_new_ef b1 b2 ;
   ap := mk_new_ap b1 b2 ;
@@ -434,6 +531,8 @@ Proof. unfold myNode. exists 2. auto. Qed.
 
   
 Definition myBigraph : bigraph mySite myInnerName myRoot myOuterName myKind.
+  Proof. unfold mySite. unfold myInnerName. unfold myRoot. unfold myOuterName.
+  unfold myKind. 
   Admitted.
   
 
