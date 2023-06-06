@@ -322,10 +322,18 @@ Definition mk_new_ef {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
     destruct (get_ef b1) as [l1 H1]. 
     destruct (get_ef b2) as [l2 H2].
     unfold finite. exists (merge l1 l2). apply listing_merge; auto. Qed.
-      
+
+Definition get_ap {s i r o k : Type} (bg : bigraph s i r o k) : 
+  acyclic (getNode bg) s r (getParent bg) :=
+    @ap s i r o k bg.
+
 Definition mk_new_ap {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
-  acyclic ((getNode b1) + (getNode b2)) (s1 + s2) (r1 + r2) (mk_new_parent b1 b2). 
+  acyclic ((getNode b1) + (getNode b2)) (s1 + s2) (r1 + r2) (mk_new_parent b1 b2).
+  Proof.
+    unfold acyclic. intros. 
+    simpl.  
+    unfold mk_new_parent.
   Admitted.
 
 Definition juxtaposition {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
@@ -386,6 +394,9 @@ Definition myBigraph : bigraph mySite myInnerName myRoot myOuterName myKind.
 
 
 
+  (* TODO *)
+  (* mettre des Defined au lieu de Qed *)
+  (* sortir preuves des interfaces *)
 
 
 End Bigraph.
