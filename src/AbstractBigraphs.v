@@ -25,10 +25,6 @@ Local Open Scope nat_scope.
 Local Open Scope bool_scope.
 Import ListNotations.  
 
-(* Set Implicit Arguments. *)
-
-(* From MyProofs Require Import Decidable.  *)
-
 
 
 Module Bigraph.
@@ -65,63 +61,9 @@ Record bigraph (site: Type) (innername: Type) (root: Type) (outername: Type) (ki
   }.
 
 
-  (* sortir les preuves des types interface?*)
-
 Check parent.
 
-(*  PREVIOUS LISTING  *)
-  (* Lemma NoDup_Add {A: Type} (a:A) (l:list A) (l':list A) : Add a l l' -> (NoDup l' <-> NoDup l /\ ~(In a l)).
-    Proof.
-    induction 1 as [l|x l l' AD IH].
-    - split; [ inversion_clear 1; now split | now constructor ].
-    - split.
-      + inversion_clear 1. rewrite IH in *. rewrite (Add_in AD) in *.
-        simpl in *; split; try constructor; intuition.
-      + intros (N,IN). inversion_clear N. constructor.
-        * rewrite (Add_in AD); simpl in *; intuition.
-        * apply IH. split; trivial. simpl in *; intuition.
-    Qed.
 
-  Lemma in_elt_inv {A : Type}: forall (x y : A) l1 l2,
-    In x (l1 ++ y :: l2) -> x = y \/ In x (l1 ++ l2).
-    Proof.
-    intros x y l1 l2 Hin.
-    apply in_app_or in Hin.
-    destruct Hin as [Hin|[Hin|Hin]]; [right|left|right]; try apply in_or_app; intuition.
-    Qed.
-
-  Theorem nodupAB {A : Type}: forall (l: list A) (l': list A), NoDup l -> NoDup l' -> NoDup (l ++ l').
-    Proof.
-    intros l l' H1 H2.
-    induction l as [| x l IH].
-    - simpl. apply H2.
-    - simpl. inversion H1. apply NoDup_cons. 
-      + 
-      induction l' as [| x' l' IH'].
-        ++ rewrite app_nil_r. apply H3.
-        ++ destruct IH. 
-          +++ apply H4.
-          +++ apply in_nil.
-          +++ apply not_in_cons. split.
-            * rewrite <- H. Admitted. (* GAVE UP SEE BOOKMARKED TAB*)
-
-  Theorem listingAB {A : Type}: forall (l: list A) (l': list A), Listing l -> Listing l' -> Listing (l ++ l').
-    Proof.
-    intros l l' H1 H2.
-    induction l as [| x xs IH] using list_ind.
-    - (* Base case: l = nil *)
-      simpl. exact H2.
-    - (* Inductive case: l = x :: xs *)
-      simpl. inversion_clear H1 as [H3 H4].
-
-      unfold Listing. unfold Listing in IH. split.
-      + apply NoDup_cons.
-        ++ Admitted.
-
-
-  Definition finiteAB {A B : Type} (fa: finite A) (fb: finite B) : finite (A+B).  
-  Proof. unfold finite. destruct fa as [la La] eqn:Ha. destruct fb as [lb Lb] eqn:Hb.
-  exists (merge la lb). unfold merge. *)
 
 Definition getNode {s i r o k : Type} (bg : bigraph s i r o k) : Type := 
   node s i r o k bg.
@@ -262,10 +204,20 @@ Definition mk_new_nd {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
       + right. intro contra. congruence. 
     Defined.
 
-Search (EqDec (_ + _)).
+
 Definition getNf {s i r o k : Type} (bg : bigraph s i r o k) : 
   finite (getNode bg) :=
   @nf s i r o k bg.
+
+Lemma NoDup_map_left {A B : Type} (la : list A) (lb : list B) (f: A -> A + B) (i: Injective f):
+  NoDup la -> NoDup (map f la).
+  Proof.
+    intro Hla.
+    induction la as [| a la' IH].
+    - constructor.
+    - apply Injective_map_NoDup. 
+      + apply i.
+      + apply Hla. Qed.
 
 Lemma NoDup_map_inl {A B : Type} (la : list A) (lb : list B) :
   NoDup la -> NoDup (map (@inl A B) la).
@@ -274,7 +226,7 @@ Lemma NoDup_map_inl {A B : Type} (la : list A) (lb : list B) :
     induction la as [| a la' IH].
     - constructor.
     - apply Injective_map_NoDup. 
-      + Search (inl). unfold Injective.
+      +  unfold Injective.
         intros. inversion H. reflexivity.
       + apply Hla.      
   Qed.
@@ -282,43 +234,52 @@ Lemma NoDup_map_inl {A B : Type} (la : list A) (lb : list B) :
 Lemma NoDup_map_inr {A B : Type} (la : list A) (lb : list B) :
   NoDup lb -> NoDup (map (@inr A B) lb).
   Proof.
-    intro Hla.
+    intro Hlb.
     induction lb as [| b lb' IH].
     - constructor.
     - apply Injective_map_NoDup. 
-      + Search (inl). unfold Injective.
+      + unfold Injective.
         intros. inversion H. reflexivity.
-      + apply Hla.      
-  Qed.
+      + apply Hlb.      
+  Qed. 
 
-Theorem nodupAB {A B eq H: Type}: forall (la: list A) (lb: list B), NoDup la -> NoDup lb -> NoDup (merge la lb).
+Theorem noDup_app {A: Type} : forall (l:list A) (l':list A),
+  (forall x, In x l -> ~ In x l') -> NoDup l -> NoDup l' -> NoDup (l ++ l').
   Proof.
-      intros la lb Hla Hlb. unfold merge. simpl. Admitted. 
-      (* Search (NoDup).
-      apply NoDup_map_inl. ; assumption.
-      apply NoDup_map_inr; assumption.
-      apply NoDup_app.
-    Qed.  *)
-(*     
-  intros l l' H1 H2.
-  induction l as [| x l IH].
-  - unfold merge. simpl. apply H2.
-  - simpl. inversion H1. apply NoDup_cons. 
-    + 
-    induction l' as [| x' l' IH'].
-      ++ rewrite app_nil_r. apply H3.
-      ++ destruct IH. 
-        +++ apply H4.
-        +++ apply in_nil.
-        +++ apply not_in_cons. split.
-          * rewrite <- H. Admitted. GAVE UP SEE BOOKMARKED TAB*) 
+    intros l l' H ndl. induction ndl ; intros ndl'.
+    - auto.
+    - simpl. apply NoDup_cons_iff.
+      split.  
+      + intros H1. apply (H x) ; simpl ; auto.
+        apply in_app_or in H1 ; destruct H1 ; auto. 
+        contradiction.
+      + apply IHndl ; auto.
+        intros x' H1. apply H. simpl. auto.
+    Qed.
+  
+Theorem nodupAB {A B: Type}: forall (la: list A) (lb: list B), NoDup la -> NoDup lb -> NoDup (merge la lb).
+  Proof.
+      intros la lb Hla Hlb.
+      unfold merge. 
+      apply noDup_app.
+      - intros [a | b] Ha Hb. 
+        + apply in_map_iff in Hb.
+          destruct Hb as [b [H1 H2]]. discriminate H1.
+        + apply in_map_iff in Ha.
+        destruct Ha as [a [H1 H2]]. discriminate H1.
+      - apply NoDup_map_left. 
+        + assumption. 
+        + unfold Injective. intros x y H. injection H. auto.
+        + assumption.
+      - apply NoDup_map_inr; auto. 
+  Qed. 
+
 
 Theorem listingAB {A B : Type}: forall (la: list A) (lb: list B), Listing la -> Listing lb -> Listing (merge la lb).
   Proof.
-  intros la lb Ha Hb.
-  induction la as [| xa ts IHa].
-  - (* Base case: l = nil *)
-    unfold merge. simpl. Admitted.
+  intros la lb [nda fa] [ndb fb]. split.
+  -   apply nodupAB ; auto. 
+  -   unfold merge. simpl. Admitted.
 
 Definition mk_new_nf {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
@@ -326,7 +287,7 @@ Definition mk_new_nf {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
   Proof. 
     destruct (getNf b1) as [l1 H1]. 
     destruct (getNf b2) as [l2 H2].
-    unfold finite. exists (merge l1 l2). Admitted.  
+    unfold finite. exists (merge l1 l2). apply listingAB; auto. Qed.  
 
 Definition getEd {s i r o k : Type} (bg : bigraph s i r o k) : 
   EqDec (getEdge bg) :=
@@ -370,122 +331,6 @@ Definition juxtaposition {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
 |}.
 
 
-(* COMMENTS former juxtaposition function
-  let new_node : Type := (node b1 + node b2)%type in
-  (* let eqdec_newnode := fun a b =>
-    match a, b with
-    | inl a1, inl b1 => nd a1 b1
-    | inr a2, inr b2 => nd a2 b2
-    | _, _ => False
-    end in *)
-  let new_edge : Type := ((edge b1) + (edge b2))%type in
-  let new_kind : Type := (k1 + k2)%type in
-  (* let new_arity (k : new_kind) : nat := 
-    match k with
-    | inl k1 => arity b1 k1 
-    | inr k2 => arity b2 k2
-    end  
-  in *)
-  let new_control (n : new_node) : new_kind * nat := 
-    match n with
-    | inl n1 => (inl (fst (control n1)), snd (control n1))
-    | inr n2 => (inr (fst (control n2)), snd (control n2))
-    end 
-  in
-  let new_parent (p : new_node + (s1 + s2)) : new_node + (r1 + r2) :=
-    match p with
-    | inl node =>  match node with 
-                    |inl n1 => match parent (inl n1) with
-                              | inl n1' => inl (inl n1')
-                              | inr r1 => inr (inl r1)
-                              end
-                    |inr n2 => match parent (inl n2) with
-                              | inl n2' => inl (inr n2')
-                              | inr r2 => inr (inr r2)
-                              end
-                    end
-    | inr site => match site with 
-                  |inl s1 => match parent (inr s1) with
-                            | inl n1' => inl (inl n1')
-                            | inr r1 => inr (inl r1)
-                            end
-                  |inr s2 => match parent (inr s2) with
-                            | inl n2' => inl (inr n2')
-                            | inr r2 => inr (inr r2)
-                            end
-    end
-  end
-  in
-  (*let new_port : Type := 
-    ({x : node b1 * nat | snd x < snd (control (fst x))} + 
-    {x : node b2 * nat | snd x < snd (control (fst x))})%type
-  in*)
-  let new_link (i : (i1 + i2) + (Port new_control)): (o1 + o2) + new_edge := 
-    mk_new_link i
-  in
-  (* let new_link (i : (i1 + i2) + (Port new_control)): (o1 + o2) + new_edge := 
-    match i with
-    | inl innername => match innername with 
-                      |inl i1 =>  match link (inl i1) with
-                                  | inl o1 => inl (inl o1)
-                                  | inr e1 => inr (inl e1)
-                                  end
-                      |inr i2 =>  match link (inl i2) with
-                                  | inl o2 => inl (inr o2)
-                                  | inr e2 => inr (inr e2)
-                                  end
-                      end
-    | inr port => match fst (proj1_sig port) with
-                  | inl n1 => let port1 := Port 
-                  
-                              match @link s1 i1 r1 o1 k1 b1 (inr port) with
-                              | inl ot1 => inl (inl ot1)
-                              | inr ed1 => inr (inl ed1)
-                              end
-                  | inr n2 => match link (inr port) with 
-                              | inl o2 => inl (inr o2)
-                              | inr e2 => inr (inr e2)
-                              end
-                  end
-    end 
-  in *)
-  (* let new_ap : acyclic new_parent := ap in *)
-  {|
-    node := new_node ;
-    edge := new_edge ;
-    control := new_control ;
-    parent := new_parent ;
-    link := new_link ;
-    (* sd := EqDec site ;
-    sf := Finite site ;
-    id_ := EqDec innername ;
-    if_ := Finite innername ;
-    rd := EqDec root ;
-    rf : Finite root ;
-    od : EqDec outername ;
-    of : Finite outername ;
-    nd : EqDec node ;
-    nf : Finite node ;
-    ed : EqDec edge ;
-    ef : Finite edge ; *)
-    (* ap := new_ap *)
-  |}.
-  (* Big new_parent new_link (s1+s2)%type (i1+i2) (r1+r2) (o1+o2) new_node new_edge new_control. 
-
-  { node := new_node ;
-    edge := new_edge ;
-    control := new_control ;
-    parent := new_parent ;
-    link := new_link }.
-
-  Big (node := new_node) (edge := new_edge) (control := new_control)
-      (parent := new_parent) (link := new_link) (sd := sum_dec (sd b1) (sd b2))
-      (sf := sum_finite (sf b1) (sf b2)) (id_ := sum_dec (id_ b1) (id_ b2))
-      (if_ := sum_finite (if_ b1) (if_ b2)) (rd := sum_dec (rd b1) (rd b2))
-      (rf := sum_finite (rf b1) (rf b2)) (od := sum_dec (od b1) (od b2))
-      (of := sum_finite (of b1) (of b2)) (nd := sum_dec (nd b1) (nd b2))
-      (nf := sum_finite (nf b1) (nf b2)) (ed := sum_dec (ed b1) (ed b2))
-      (ef := sum_finite (ef b1) (ef b2)). *) *)
 
 Definition mySite : Type := nat.
 Definition myInnerName : Type := nat.
