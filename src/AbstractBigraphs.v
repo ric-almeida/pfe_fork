@@ -257,7 +257,8 @@ Theorem noDup_app {A: Type} : forall (l:list A) (l':list A),
         intros x' H1. apply H. simpl. auto.
     Qed.
   
-Theorem nodupAB {A B: Type}: forall (la: list A) (lb: list B), NoDup la -> NoDup lb -> NoDup (merge la lb).
+Theorem noDup_merge {A B: Type}: forall (la: list A) (lb: list B), 
+  NoDup la -> NoDup lb -> NoDup (merge la lb).
   Proof.
       intros la lb Hla Hlb.
       unfold merge. 
@@ -274,12 +275,17 @@ Theorem nodupAB {A B: Type}: forall (la: list A) (lb: list B), NoDup la -> NoDup
       - apply NoDup_map_inr; auto. 
   Qed. 
 
+Theorem full_merge {A B: Type}: forall (la: list A) (lb: list B), Full la -> Full lb -> Full (merge la lb).
+  Proof. intros la lb fa fb. unfold Full. destruct a as [a | b].
+    - unfold merge. apply in_or_app. left. apply in_map. unfold Full in fa. apply fa.
+    - unfold merge. apply in_or_app. right. apply in_map. unfold Full in fb. apply fb. 
+  Qed.
 
-Theorem listingAB {A B : Type}: forall (la: list A) (lb: list B), Listing la -> Listing lb -> Listing (merge la lb).
+Theorem listing_merge {A B : Type}: forall (la: list A) (lb: list B), Listing la -> Listing lb -> Listing (merge la lb).
   Proof.
   intros la lb [nda fa] [ndb fb]. split.
-  -   apply nodupAB ; auto. 
-  -   unfold merge. simpl. Admitted.
+  -   apply noDup_merge ; auto. 
+  -   apply full_merge ; auto. Qed. 
 
 Definition mk_new_nf {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
@@ -287,7 +293,7 @@ Definition mk_new_nf {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
   Proof. 
     destruct (getNf b1) as [l1 H1]. 
     destruct (getNf b2) as [l2 H2].
-    unfold finite. exists (merge l1 l2). apply listingAB; auto. Qed.  
+    unfold finite. exists (merge l1 l2). apply listing_merge; auto. Qed.  
 
 Definition getEd {s i r o k : Type} (bg : bigraph s i r o k) : 
   EqDec (getEdge bg) :=
@@ -306,9 +312,17 @@ Definition mk_new_ed {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
       + left. rewrite e. auto. 
       + right. intro contra. congruence. 
     Defined.
+Definition get_ef {s i r o k : Type} (bg : bigraph s i r o k) : 
+  finite (getEdge bg) :=
+  @ef s i r o k bg.
 Definition mk_new_ef {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
-  finite ((getEdge b1) + (getEdge b2)). Admitted.
+  finite ((getEdge b1) + (getEdge b2)). 
+  Proof. 
+    destruct (get_ef b1) as [l1 H1]. 
+    destruct (get_ef b2) as [l2 H2].
+    unfold finite. exists (merge l1 l2). apply listing_merge; auto. Qed.
+      
 Definition mk_new_ap {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
   acyclic ((getNode b1) + (getNode b2)) (s1 + s2) (r1 + r2) (mk_new_parent b1 b2). 
