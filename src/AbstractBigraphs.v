@@ -143,7 +143,7 @@ Definition mk_port {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
   - right. unfold mk_new_control in P12.   
   unfold Port. exists (n2,i12). unfold snd in P12. 
   destruct (getControl b2 n2) eqn:HgetControl. apply P12. Defined.
-Print mk_port.
+
 Definition mk_new_link {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
   (i1 + i2) + (Port ((getNode b1) + getNode b2) (k1 + k2) (mk_new_control b1 b2)) 
@@ -361,18 +361,6 @@ Proof. unfold myNode. exists 2. auto. Qed.
 
 
 
-(* 
-  Lemma myFinite : forall n:myNode, exists (l:list myNode), Full l.
-  Proof.
-  intros n. 
-  unfold Full. exists [node0;node1;node2]. intros. destruct n0 as [n0 Hn0 Hn1 Hn2].
-  apply Hn0. exists. unfold node0. 
-  
-  
-  
-  right. right. right. contradiction.  
-
-  Instance EqDec_nat : EqDec nat := {| eq_dec := PeanoNat.Nat.eq_dec |}. *)
 
   
 Definition myBigraph : bigraph mySite myInnerName myRoot myOuterName myKind.
