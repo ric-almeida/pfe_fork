@@ -402,6 +402,9 @@ Definition juxtaposition {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
   ap := mk_dis_ap b1 b2 ;
 |}.
 
+
+Notation "b1 '||' b2" := (juxtaposition b1 b2) (at level 50, left associativity).
+
 Definition mk_comp_parent {s1 i1 r1 o1 k1 s2 i2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 s1 i1 k2) :
   ((get_node b1) + (get_node b2)) + s2 -> ((get_node b1) + (get_node b2)) + r1 :=
