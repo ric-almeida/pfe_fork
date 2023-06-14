@@ -333,7 +333,7 @@ Definition get_ap {s i r o k : Type} (bg : bigraph s i r o k) :
   acyclic (get_node bg) s r (get_parent bg) :=
     @ap s i r o k bg.
 
-Definition mk_new_ap {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
+Definition mk_dis_ap {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
   acyclic ((get_node b1) + (get_node b2)) (s1 + s2) (r1 + r2) (mk_dis_parent b1 b2).
   Proof. destruct (mk_dis_parent b1 b2).
@@ -353,10 +353,10 @@ Definition juxtaposition {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
   nf := mk_new_nf b1 b2 ;
   ed := mk_new_ed b1 b2 ;
   ef := mk_new_ef b1 b2 ;
-  ap := mk_new_ap b1 b2 ;
+  ap := mk_dis_ap b1 b2 ;
 |}.
 
-Definition mk_comp_parent {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
+Definition mk_comp_parent {s1 i1 r1 o1 k1 s2 i2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 s1 i1 k2) :
   ((get_node b1) + (get_node b2)) + s2 -> ((get_node b1) + (get_node b2)) + r1 :=
   let p1 := get_parent b1 in
@@ -391,7 +391,7 @@ Definition mk_comp_parent {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
     end
   in new_parent.
 
-Definition mk_comp_link {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
+Definition mk_comp_link {s1 i1 r1 o1 k1 s2 i2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 s1 i1 k2) :
   i2 + (Port ((get_node b1) + get_node b2) (k1 + k2) (mk_dis_control b1 b2)) 
   -> o1 + ((get_edge b1) + (get_edge b2)) :=
@@ -408,22 +408,33 @@ Definition mk_comp_link {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
       | inr p =>  let p' := mk_dis_port b1 b2 p in
                   match p' with 
                   | inl p1 => match (l1 (inr p1)) with 
-                              | inl o1 => inl (inl o1)
+                              | inl o1 => inl o1
                               | inr e1 => inr (inl e1)
                               end
                   | inr p2 => match (l2 (inr p2)) with 
-                              | inl o2 => inl (inr o2)
+                              | inl o2i1 => match (l1 (inl o2i1)) with 
+                                            | inl o1 => inl o1
+                                            | inr e1 => inr (inl e1)
+                                            end
                               | inr e2 => inr (inr e2)
                               end
                   end
       | inl i =>  match l2 (inl i) with
-                  | inl o2 => inl (inr o2)
                   | inr e2 => inr (inr e2)
+                  | inl o2i1 => match (l1 (inl o2i1)) with 
+                                | inl o1 => inl o1
+                                | inr e1 => inr (inl e1)
+                                end
                   end
       end
     in new_link.
 
-Definition composition {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
+Definition mk_comp_ap {s1 i1 r1 o1 k1 s2 i2 k2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 s1 i1 k2) :
+  acyclic ((get_node b1) + (get_node b2)) s2 r1 (mk_comp_parent b1 b2).
+  Proof. Admitted.
+
+Definition composition {s1 i1 r1 o1 k1 s2 i2 k2 : Type} 
 (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 s1 i1 k2) 
   : bigraph s2 i2 r1 o1 (k1+k2)%type :=
 {|
@@ -436,7 +447,7 @@ Definition composition {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
   nf := mk_new_nf b1 b2 ;
   ed := mk_new_ed b1 b2 ;
   ef := mk_new_ef b1 b2 ;
-  ap := mk_new_ap b1 b2 ;
+  ap := mk_comp_ap b1 b2 ;
 |}.
 
 Definition mySite : Type := nat.
