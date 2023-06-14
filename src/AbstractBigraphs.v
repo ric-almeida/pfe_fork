@@ -51,7 +51,21 @@ Definition acyclic (node site root : Type) (parent : node + site -> node + root)
 Definition Port (node : Type) (kind : Type) (control : node -> kind * nat) : Type :=
   { vi : node * nat | let (v, i) := vi in let (_, a) := control v in i < a }.
 
-Record bigraph (site: Type) (innername: Type) (root: Type) (outername: Type) (kind: Type) : Type := 
+(*BIgraph avec toutes les finite et eqdec *)
+  (*
+  Record bigraph  (site: Type) 
+                (innername: Type) 
+                (root: Type) 
+                (outername: Type) 
+                (kind: Type) 
+                (sf: finite site) 
+                (sd: EqDec site) 
+                (_if: finite innername) 
+                (_id: EqDec innername) 
+                (rf: finite root) 
+                (rd: EqDec root) 
+                (of: finite outername) 
+                (od: EqDec outername) : Type := 
   Big  
   { 
     node : Type ;
@@ -67,7 +81,39 @@ Record bigraph (site: Type) (innername: Type) (root: Type) (outername: Type) (ki
   }.
 
 
-Check parent.
+
+  Definition get_node {s i r o k : Type} 
+    (sf: finite s) 
+    (sd: EqDec s)
+    (_if: finite i) 
+    (_id: EqDec i)
+    (rf: finite r) 
+    (rd: EqDec r)
+    (of: finite o) 
+    (od: EqDec o)
+    (bg : bigraph s i r o k sf sd _if _id rf rd of od) : Type := 
+    node s i r o k sf sd _if _id rf rd of od bg.
+    *)
+Record bigraph  (site: Type) 
+                (innername: Type) 
+                (root: Type) 
+                (outername: Type) 
+                (kind: Type) : Type := 
+  Big  
+  { 
+    node : Type ;
+    edge : Type ;
+    control : node -> kind * nat;
+    parent : node + site -> node + root ; 
+    link : innername + Port node kind control -> outername + edge; 
+    nd : EqDec node ;
+    nf : finite node ;
+    ed : EqDec edge ;
+    ef : finite edge ;
+    ap : acyclic node site root parent
+  }.
+
+
 
 
 
@@ -449,6 +495,14 @@ Definition composition {s1 i1 r1 o1 k1 s2 i2 k2 : Type}
   ef := mk_new_ef b1 b2 ;
   ap := mk_comp_ap b1 b2 ;
 |}.
+
+Notation "b1 'o' b2" := (composition b1 b2) (at level 40, left associativity).
+
+Definition b1b2 {s1 i1 r1 o1 k1 s2 i2 k2 : Type} 
+(b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 s1 i1 k2) 
+: bigraph s2 i2 r1 o1 (k1+k2)%type := b1 o b2.
+
+Check b1b2.
 
 Definition mySite : Type := nat.
 Definition myInnerName : Type := nat.
