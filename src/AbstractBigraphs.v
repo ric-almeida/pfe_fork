@@ -39,7 +39,25 @@ Definition finite (A : Type) : Type := { l : list A | Listing l }.
 Definition acyclic (node site root : Type) (parent : node + site -> node + root) : Prop :=
   forall (n:node), Acc (fun n n' => parent (inl n) = (inl n')) n.
 
-(* Fixpoint closure_acylcic {A B : Type} (f : A -> A + B) (a : A):  
+Fixpoint exp_function {A : Type} (f : A -> A) (a : A) (i : nat) : A :=
+  match i with 
+  | 0 => a
+  | S i' => exp_function f (f a) (i')
+  end.
+
+Fixpoint exp_function' {A B C: Type} (f : A + B -> A + C) (a : A) (i : nat) : A + C :=
+  match i with 
+  | 0 => inl a
+  | S i' => match (f (inl a)) with 
+            | inl a' => exp_function' f a' i'
+            | inr c => inr c
+            end
+  end.
+
+Definition acyclic' (node site root : Type) (parent : node + site -> node + root) : Prop :=
+  forall (n:node), forall (i:nat), exp_function' parent n i = (inl n) -> i = 0.
+
+  (* Fixpoint closure_acylcic {A B : Type} (f : A -> A + B) (a : A):  
   match f a with 
   | inl a' => a' :: (closure_acylcic f a')
   | inr b => []
@@ -110,7 +128,8 @@ Record bigraph  (site: Type)
     nf : finite node ;
     ed : EqDec edge ;
     ef : finite edge ;
-    ap : acyclic node site root parent
+    ap : acyclic node site root parent ;
+    ap' : acyclic' node site root parent
   }.
 
 
@@ -386,7 +405,27 @@ Definition mk_dis_ap {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
   - left. left. unfold get_node. simpl. 
   Admitted.
 
-Definition juxtaposition {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
+
+(* Definition finidec : Type := finite t *)
+
+Definition get_ap' {s i r o k : Type} (bg : bigraph s i r o k) : 
+acyclic' (get_node bg) s r (get_parent bg) :=
+  @ap' s i r o k bg.
+
+Definition mk_dis_ap' {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
+  acyclic' ((get_node b1) + (get_node b2)) (s1 + s2) (r1 + r2) (mk_dis_parent b1 b2).
+  Proof. unfold acyclic'. intros n i H.
+  destruct n as [n1 | n2].
+  - edestruct (get_ap' b1). unfold mk_dis_parent in H. simpl.
+  
+  - induction n.
+  unfold exp_function' in H.
+  injection H.  
+
+
+
+Definition dis_juxtaposition {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
 (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) 
   : bigraph (s1+s2)%type (i1+i2)%type (r1+r2)%type (o1+o2)%type (k1+k2)%type :=
 {|
@@ -403,7 +442,20 @@ Definition juxtaposition {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
 |}.
 
 
-Notation "b1 '||' b2" := (juxtaposition b1 b2) (at level 50, left associativity).
+Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativity).
+
+
+
+
+Theorem dis_juxtaposition_associative {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 s3 i3 r3 o3 k3: Type} :
+  forall (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) (b3 : bigraph s3 i3 r3 o3 k3),
+  (b1 || b2) || b3 = b1 || (b2 || b3).
+
+Theorem dis_juxtaposition_commutative {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} :
+  forall (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2),
+  b1 || b2 = b2 || b1.
+
+
 
 Definition mk_comp_parent {s1 i1 r1 o1 k1 s2 i2 k2 : Type} 
   (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 s1 i1 k2) :
@@ -425,8 +477,6 @@ Definition mk_comp_parent {s1 i1 r1 o1 k1 s2 i2 k2 : Type}
                                             | inl n1' => inl (inl n1')
                                             | inr r1 => inr r1
                                             end
-                                  (* inl (p1 (inr r2s1)) *)
-                              (*site qui a le même nom que la racine*)
                               end
                     end
     | inr s2 => match p2 (inr s2) with
