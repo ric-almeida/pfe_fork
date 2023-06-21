@@ -66,8 +66,12 @@ Definition acyclic' (node site root : Type) (parent : node + site -> node + root
 (* Definition acyclic' (node site root : Type) (parent : node + site -> node + root) : Prop :=
   forall (n:node), exists (r:root),  In (inl n) closure (parent (inl n)).  *)
 
-Definition Port (node : Type) (kind : Type) (control : node -> kind * nat) : Type :=
+Definition Port' (node : Type) (kind : Type) (control : node -> kind * nat) : Type :=
   { vi : node * nat | let (v, i) := vi in let (_, a) := control v in i < a }.
+
+
+Definition Port {kind : Type} (node : Type) (control : node -> kind) (arity : kind -> nat): Type :=
+  { vi : node * nat | let (v, i) := vi in let k := control v in let a := arity k in i < a }.
 
 (*BIgraph avec toutes les finite et eqdec *)
   (*
@@ -100,7 +104,7 @@ Definition Port (node : Type) (kind : Type) (control : node -> kind * nat) : Typ
 
 
 
-  Definition get_node {s i r o k : Type} 
+  Definition get_node {s i r o : Type} 
     (sf: finite s) 
     (sd: EqDec s)
     (_if: finite i) 
@@ -109,63 +113,87 @@ Definition Port (node : Type) (kind : Type) (control : node -> kind * nat) : Typ
     (rd: EqDec r)
     (of: finite o) 
     (od: EqDec o)
-    (bg : bigraph s i r o k sf sd _if _id rf rd of od) : Type := 
-    node s i r o k sf sd _if _id rf rd of od bg.
+    (bg : bigraph s i r o sf sd _if _id rf rd of od) : Type := 
+    node s i r o sf sd _if _id rf rd of od bg.
     *)
 Record bigraph  (site: Type) 
                 (innername: Type) 
                 (root: Type) 
-                (outername: Type) 
-                (kind: Type) : Type := 
+                (outername: Type) : Type := 
   Big  
   { 
     node : Type ;
     edge : Type ;
-    control : node -> kind * nat;
+    kind : Type ;
+    arity : kind -> nat ;
+    control : node -> kind ;
     parent : node + site -> node + root ; 
-    link : innername + Port node kind control -> outername + edge; 
+    link : innername + Port node control arity -> outername + edge; 
     nd : EqDec node ;
     nf : finite node ;
     ed : EqDec edge ;
     ef : finite edge ;
     ap : acyclic node site root parent ;
-    ap' : acyclic' node site root parent
   }.
 
 
 
 
 
-Definition get_node {s i r o k : Type} (bg : bigraph s i r o k) : Type := 
-  node s i r o k bg.
+Definition get_node {s i r o : Type} (bg : bigraph s i r o) : Type := 
+  node s i r o bg.
 
-Definition get_edge {s i r o k : Type} (bg : bigraph s i r o k) : Type := 
-  edge s i r o k bg.
+Definition get_edge {s i r o : Type} (bg : bigraph s i r o) : Type := 
+  edge s i r o bg.
+
+Definition get_kind {s i r o : Type} (bg : bigraph s i r o) : Type := 
+  kind s i r o bg.
+
+Definition get_arity {s i r o : Type} (bg : bigraph s i r o) : 
+  (get_kind bg) -> nat := 
+  arity s i r o bg.
   
-Definition get_control {s i r o k : Type} (bg : bigraph s i r o k) 
-  : node s i r o k bg -> k * nat :=
-  @control s i r o k bg.
+Definition mk_dis_arity {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
+  ((get_kind b1) + (get_kind b2)) -> nat :=
+  let k1 := get_kind b1 in
+  let k2 := get_kind b2 in
+  let a1 := get_arity b1 in
+  let a2 := get_arity b2 in
+  let new_arity (k : k1+k2) : nat :=
+    match k with
+    | inl k1' => a1 k1'
+    | inr k2' => a2 k2'
+    end
+  in new_arity.
 
-Definition mk_dis_control {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
-  ((get_node b1) + (get_node b2)) -> (k1+k2) * nat :=
+
+Definition get_control {s i r o : Type} (bg : bigraph s i r o) 
+  : node s i r o bg -> (get_kind bg) :=
+  @control s i r o bg.
+
+Definition mk_dis_control {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
+  ((get_node b1) + (get_node b2)) -> ((get_kind b1)+(get_kind b2))%type :=
   let c1 := get_control b1 in
   let c2 := get_control b2 in
   let n1 := get_node b1 in
   let n2 := get_node b2 in
-  let new_control (n : n1+n2) : (k1+k2) * nat := 
+  let k1 := get_kind b1 in
+  let k2 := get_kind b2 in
+  let new_control (n : n1+n2) : (k1+k2) := 
     match n with
-    | inl n1' => (inl (fst (c1 n1')), snd (c1 n1'))
-    | inr n2' => (inr (fst (c2 n2')), snd (c2 n2'))
+    | inl n1' => inl (c1 n1')
+    | inr n2' => inr (c2 n2')
     end 
   in new_control.
 
-Definition get_parent {s i r o k : Type} (bg : bigraph s i r o k) : 
-  node s i r o k bg + s -> node s i r o k bg + r :=
-  @parent s i r o k bg.
+Definition get_parent {s i r o : Type} (bg : bigraph s i r o) : 
+  node s i r o bg + s -> node s i r o bg + r :=
+  @parent s i r o bg.
 
-Definition mk_dis_parent {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
+Definition mk_dis_parent {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   ((get_node b1) + (get_node b2)) + (s1 + s2) -> ((get_node b1) + (get_node b2)) + (r1 + r2):=
   let p1 := get_parent b1 in
   let p2 := get_parent b2 in
@@ -196,16 +224,18 @@ Definition mk_dis_parent {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
   end
   in new_parent.
 
+Definition get_link {s i r o : Type} (bg : bigraph s i r o) : 
+  i + Port (node s i r o bg) (get_control bg) (get_arity bg) -> o + get_edge bg :=
+  @link s i r o bg. 
 
-Definition get_link {s i r o k : Type} (bg : bigraph s i r o k) : 
-  i + Port (node s i r o k bg) k (get_control bg) -> o + get_edge bg :=
-  @link s i r o k bg. 
-
-Definition mk_dis_port {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) 
-  (p:Port ((get_node b1) + get_node b2) (k1 + k2) (mk_dis_control b1 b2)) :
-  Port (node s1 i1 r1 o1 k1 b1) k1 (get_control b1) +
-  Port (node s2 i2 r2 o2 k2 b2) k2 (get_control b2).
+Definition mk_dis_port {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
+  (p:Port ((get_kind b1)+(get_kind b2))%type 
+          ((get_node b1) + get_node b2)%type 
+          (mk_dis_control b1 b2) 
+          (mk_dis_arity b1 b2)) :
+  Port (node s1 i1 r1 o1 b1) k1 (get_control b1) +
+  Port (node s2 i2 r2 o2 b2) k2 (get_control b2).
   Proof. destruct p as [vi12 P12]. unfold get_node in vi12. destruct vi12 as [v12 i12]. 
   destruct v12 as [n1 | n2].
   - left. unfold mk_dis_control in P12.   
@@ -215,8 +245,8 @@ Definition mk_dis_port {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
   unfold Port. exists (n2,i12). unfold snd in P12. 
   destruct (get_control b2 n2) eqn:Hget_control. apply P12. Defined.
 
-Definition mk_new_link {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
+Definition mk_new_link {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   (i1 + i2) + (Port ((get_node b1) + get_node b2) (k1 + k2) (mk_dis_control b1 b2)) 
   -> (o1 + o2) + ((get_edge b1) + (get_edge b2)) :=
     let n1 := get_node b1 in
@@ -256,12 +286,12 @@ Definition mk_new_link {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
 
 
 
-Definition get_nd {s i r o k : Type} (bg : bigraph s i r o k) : 
+Definition get_nd {s i r o : Type} (bg : bigraph s i r o) : 
   EqDec (get_node bg) :=
-  @nd s i r o k bg.
+  @nd s i r o bg.
 
-Definition mk_new_nd {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
+Definition mk_new_nd {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   EqDec ((get_node b1) + (get_node b2)).
   Proof.  
     unfold EqDec. intros. destruct x as [x1 | x2]; destruct y as [y1 | y2].
@@ -276,9 +306,9 @@ Definition mk_new_nd {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
     Defined.
 
 
-Definition get_nf {s i r o k : Type} (bg : bigraph s i r o k) : 
+Definition get_nf {s i r o : Type} (bg : bigraph s i r o) : 
   finite (get_node bg) :=
-  @nf s i r o k bg.
+  @nf s i r o bg.
 
 Lemma NoDup_map_left {A B : Type} (la : list A) (lb : list B) (f: A -> A + B) (i: Injective f):
   NoDup la -> NoDup (map f la).
@@ -358,19 +388,19 @@ Theorem listing_merge {A B : Type}: forall (la: list A) (lb: list B), Listing la
   -   apply noDup_merge ; auto. 
   -   apply full_merge ; auto. Qed. 
 
-Definition mk_new_nf {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
+Definition mk_new_nf {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   finite ((get_node b1) + (get_node b2)). 
   Proof. 
     destruct (get_nf b1) as [l1 H1]. 
     destruct (get_nf b2) as [l2 H2].
     unfold finite. exists (merge l1 l2). apply listing_merge; auto. Qed.  
 
-Definition get_ed {s i r o k : Type} (bg : bigraph s i r o k) : 
+Definition get_ed {s i r o : Type} (bg : bigraph s i r o) : 
   EqDec (get_edge bg) :=
-  @ed s i r o k bg.
-Definition mk_new_ed {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
+  @ed s i r o bg.
+Definition mk_new_ed {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   EqDec ((get_edge b1) + (get_edge b2)). 
   Proof.  
     unfold EqDec. intros. destruct x as [x1 | x2]; destruct y as [y1 | y2].
@@ -383,23 +413,23 @@ Definition mk_new_ed {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
       + left. rewrite e. auto. 
       + right. intro contra. congruence. 
     Defined.
-Definition get_ef {s i r o k : Type} (bg : bigraph s i r o k) : 
+Definition get_ef {s i r o : Type} (bg : bigraph s i r o) : 
   finite (get_edge bg) :=
-  @ef s i r o k bg.
-Definition mk_new_ef {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
+  @ef s i r o bg.
+Definition mk_new_ef {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   finite ((get_edge b1) + (get_edge b2)). 
   Proof. 
     destruct (get_ef b1) as [l1 H1]. 
     destruct (get_ef b2) as [l2 H2].
     unfold finite. exists (merge l1 l2). apply listing_merge; auto. Qed.
 
-Definition get_ap {s i r o k : Type} (bg : bigraph s i r o k) : 
+Definition get_ap {s i r o : Type} (bg : bigraph s i r o) : 
   acyclic (get_node bg) s r (get_parent bg) :=
-    @ap s i r o k bg.
+    @ap s i r o bg.
 
-Definition mk_dis_ap {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
+Definition mk_dis_ap {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   acyclic ((get_node b1) + (get_node b2)) (s1 + s2) (r1 + r2) (mk_dis_parent b1 b2).
   Proof. destruct (mk_dis_parent b1 b2).
   - left. left. unfold get_node. simpl. 
@@ -408,12 +438,12 @@ Definition mk_dis_ap {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
 
 (* Definition finidec : Type := finite t *)
 
-Definition get_ap' {s i r o k : Type} (bg : bigraph s i r o k) : 
+Definition get_ap' {s i r o : Type} (bg : bigraph s i r o) : 
 acyclic' (get_node bg) s r (get_parent bg) :=
-  @ap' s i r o k bg.
+  @ap' s i r o bg.
 
-Definition mk_dis_ap' {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) :
+Definition mk_dis_ap' {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   acyclic' ((get_node b1) + (get_node b2)) (s1 + s2) (r1 + r2) (mk_dis_parent b1 b2).
   Proof. unfold acyclic'. intros n i H.
   destruct n as [n1 | n2].
@@ -425,8 +455,8 @@ Definition mk_dis_ap' {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type}
 
 
 
-Definition dis_juxtaposition {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} 
-(b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) 
+Definition dis_juxtaposition {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
+(b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
   : bigraph (s1+s2)%type (i1+i2)%type (r1+r2)%type (o1+o2)%type (k1+k2)%type :=
 {|
   node := (get_node b1) + (get_node b2) ;
@@ -447,18 +477,18 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
 
 
 
-Theorem dis_juxtaposition_associative {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 s3 i3 r3 o3 k3: Type} :
-  forall (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2) (b3 : bigraph s3 i3 r3 o3 k3),
+Theorem dis_juxtaposition_associative {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 k3: Type} :
+  forall (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3 k3),
   (b1 || b2) || b3 = b1 || (b2 || b3).
 
-Theorem dis_juxtaposition_commutative {s1 i1 r1 o1 k1 s2 i2 r2 o2 k2 : Type} :
-  forall (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 r2 o2 k2),
+Theorem dis_juxtaposition_commutative {s1 i1 r1 o1 s2 i2 r2 o2 : Type} :
+  forall (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2),
   b1 || b2 = b2 || b1.
 
 
 
-Definition mk_comp_parent {s1 i1 r1 o1 k1 s2 i2 k2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 s1 i1 k2) :
+Definition mk_comp_parent {s1 i1 r1 o1 s2 i2 k2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1 k2) :
   ((get_node b1) + (get_node b2)) + s2 -> ((get_node b1) + (get_node b2)) + r1 :=
   let p1 := get_parent b1 in
   let p2 := get_parent b2 in
@@ -490,8 +520,8 @@ Definition mk_comp_parent {s1 i1 r1 o1 k1 s2 i2 k2 : Type}
     end
   in new_parent.
 
-Definition mk_comp_link {s1 i1 r1 o1 k1 s2 i2 k2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 s1 i1 k2) :
+Definition mk_comp_link {s1 i1 r1 o1 s2 i2 k2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1 k2) :
   i2 + (Port ((get_node b1) + get_node b2) (k1 + k2) (mk_dis_control b1 b2)) 
   -> o1 + ((get_edge b1) + (get_edge b2)) :=
     let n1 := get_node b1 in
@@ -528,13 +558,13 @@ Definition mk_comp_link {s1 i1 r1 o1 k1 s2 i2 k2 : Type}
       end
     in new_link.
 
-Definition mk_comp_ap {s1 i1 r1 o1 k1 s2 i2 k2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 s1 i1 k2) :
+Definition mk_comp_ap {s1 i1 r1 o1 s2 i2 k2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1 k2) :
   acyclic ((get_node b1) + (get_node b2)) s2 r1 (mk_comp_parent b1 b2).
   Proof. Admitted.
 
-Definition composition {s1 i1 r1 o1 k1 s2 i2 k2 : Type} 
-(b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 s1 i1 k2) 
+Definition composition {s1 i1 r1 o1 s2 i2 k2 : Type} 
+(b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1 k2) 
   : bigraph s2 i2 r1 o1 (k1+k2)%type :=
 {|
   node := (get_node b1) + (get_node b2) ;
@@ -551,8 +581,8 @@ Definition composition {s1 i1 r1 o1 k1 s2 i2 k2 : Type}
 
 Notation "b1 'o' b2" := (composition b1 b2) (at level 40, left associativity).
 
-Definition b1b2 {s1 i1 r1 o1 k1 s2 i2 k2 : Type} 
-(b1 : bigraph s1 i1 r1 o1 k1) (b2 : bigraph s2 i2 s1 i1 k2) 
+Definition b1b2 {s1 i1 r1 o1 s2 i2 k2 : Type} 
+(b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1 k2) 
 : bigraph s2 i2 r1 o1 (k1+k2)%type := b1 o b2.
 
 Check b1b2.
