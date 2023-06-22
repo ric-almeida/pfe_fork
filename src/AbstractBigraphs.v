@@ -604,7 +604,7 @@ Proof. unfold myNode. exists 2. auto. Qed.
 
 
   
-Definition myBigraph : bigraph mySite myInnerName myRoot myOuterName myKind.
+Definition myBigraph : bigraph mySite myInnerName myRoot myOuterName.
   Proof. unfold mySite. unfold myInnerName. unfold myRoot. unfold myOuterName.
   unfold myKind. 
   Admitted.
