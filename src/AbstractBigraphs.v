@@ -230,29 +230,30 @@ Definition get_link {s i r o : Type} (bg : bigraph s i r o) :
 
 Definition mk_dis_port {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
-  (p:Port ((get_kind b1)+(get_kind b2))%type 
-          ((get_node b1) + get_node b2)%type 
+  (p:Port ((get_node b1) + get_node b2)%type 
           (mk_dis_control b1 b2) 
           (mk_dis_arity b1 b2)) :
-  Port (node s1 i1 r1 o1 b1) k1 (get_control b1) +
-  Port (node s2 i2 r2 o2 b2) k2 (get_control b2).
+  Port (get_node b1) (get_control b1) (get_arity b1) +
+  Port (get_node b2) (get_control b2) (get_arity b2).
   Proof. destruct p as [vi12 P12]. unfold get_node in vi12. destruct vi12 as [v12 i12]. 
   destruct v12 as [n1 | n2].
-  - left. unfold mk_dis_control in P12.   
-    unfold Port. exists (n1,i12). unfold snd in P12. 
-    destruct (get_control b1 n1) eqn:Hget_control. apply P12.
-  - right. unfold mk_dis_control in P12.   
-  unfold Port. exists (n2,i12). unfold snd in P12. 
-  destruct (get_control b2 n2) eqn:Hget_control. apply P12. Defined.
+  - left. unfold mk_dis_control in P12. unfold mk_dis_arity in P12.   
+    unfold Port. exists (n1,i12).  
+    destruct (get_arity b1) eqn:Hget_control; apply P12.
+  - right. unfold mk_dis_control in P12.   unfold mk_dis_arity in P12.   
+  unfold Port. exists (n2,i12); apply P12. Defined.
 
 Definition mk_new_link {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
-  (i1 + i2) + (Port ((get_node b1) + get_node b2) (k1 + k2) (mk_dis_control b1 b2)) 
+  (i1 + i2) + Port ((get_node b1) + get_node b2)%type 
+                    (mk_dis_control b1 b2) 
+                    (mk_dis_arity b1 b2) 
   -> (o1 + o2) + ((get_edge b1) + (get_edge b2)) :=
     let n1 := get_node b1 in
     let n2 := get_node b2 in
     let c := mk_dis_control b1 b2 in
-    let p := Port (n1 + n2) (k1 + k2) c in
+    let a := mk_dis_arity b1 b2 in
+    let p := Port (n1 + n2) c a in
     let e1 := get_edge b1 in
     let e2 := get_edge b2 in
     let l1 := get_link b1 in
@@ -282,9 +283,6 @@ Definition mk_new_link {s1 i1 r1 o1 s2 i2 r2 o2 : Type}
                   end
       end
     in new_link.
-
-
-
 
 Definition get_nd {s i r o : Type} (bg : bigraph s i r o) : 
   EqDec (get_node bg) :=
@@ -436,31 +434,15 @@ Definition mk_dis_ap {s1 i1 r1 o1 s2 i2 r2 o2 : Type}
   Admitted.
 
 
-(* Definition finidec : Type := finite t *)
-
-Definition get_ap' {s i r o : Type} (bg : bigraph s i r o) : 
-acyclic' (get_node bg) s r (get_parent bg) :=
-  @ap' s i r o bg.
-
-Definition mk_dis_ap' {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
-  acyclic' ((get_node b1) + (get_node b2)) (s1 + s2) (r1 + r2) (mk_dis_parent b1 b2).
-  Proof. unfold acyclic'. intros n i H.
-  destruct n as [n1 | n2].
-  - edestruct (get_ap' b1). unfold mk_dis_parent in H. simpl.
-  
-  - induction n.
-  unfold exp_function' in H.
-  injection H.  
-
-
 
 Definition dis_juxtaposition {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
 (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
-  : bigraph (s1+s2)%type (i1+i2)%type (r1+r2)%type (o1+o2)%type (k1+k2)%type :=
+  : bigraph (s1+s2)%type (i1+i2)%type (r1+r2)%type (o1+o2)%type :=
 {|
   node := (get_node b1) + (get_node b2) ;
   edge := (get_edge b1) + (get_edge b2) ;
+  kind := (get_kind b1) + (get_kind b2) ;
+  arity := mk_dis_arity b1 b2 ;
   control := mk_dis_control b1 b2 ;
   parent := mk_dis_parent b1 b2 ; 
   link := mk_new_link b1 b2 ;
@@ -477,18 +459,18 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
 
 
 
-Theorem dis_juxtaposition_associative {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 k3: Type} :
+(* Theorem dis_juxtaposition_associative {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 k3: Type} :
   forall (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3 k3),
   (b1 || b2) || b3 = b1 || (b2 || b3).
 
 Theorem dis_juxtaposition_commutative {s1 i1 r1 o1 s2 i2 r2 o2 : Type} :
   forall (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2),
-  b1 || b2 = b2 || b1.
+  b1 || b2 = b2 || b1. *)
 
 
 
-Definition mk_comp_parent {s1 i1 r1 o1 s2 i2 k2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1 k2) :
+Definition mk_comp_parent {s1 i1 r1 o1 s2 i2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) :
   ((get_node b1) + (get_node b2)) + s2 -> ((get_node b1) + (get_node b2)) + r1 :=
   let p1 := get_parent b1 in
   let p2 := get_parent b2 in
@@ -520,14 +502,16 @@ Definition mk_comp_parent {s1 i1 r1 o1 s2 i2 k2 : Type}
     end
   in new_parent.
 
-Definition mk_comp_link {s1 i1 r1 o1 s2 i2 k2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1 k2) :
-  i2 + (Port ((get_node b1) + get_node b2) (k1 + k2) (mk_dis_control b1 b2)) 
+Definition mk_comp_link {s1 i1 r1 o1 s2 i2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) :
+  i2 + Port ((get_node b1) + get_node b2)%type 
+            (mk_dis_control b1 b2) 
+            (mk_dis_arity b1 b2)  
   -> o1 + ((get_edge b1) + (get_edge b2)) :=
     let n1 := get_node b1 in
     let n2 := get_node b2 in
     let c := mk_dis_control b1 b2 in
-    let p := Port (n1 + n2) (k1 + k2) c in
+    let p := Port ((get_node b1) + get_node b2) (mk_dis_control b1 b2) (mk_dis_arity b1 b2)  in
     let e1 := get_edge b1 in
     let e2 := get_edge b2 in
     let l1 := get_link b1 in
@@ -558,17 +542,19 @@ Definition mk_comp_link {s1 i1 r1 o1 s2 i2 k2 : Type}
       end
     in new_link.
 
-Definition mk_comp_ap {s1 i1 r1 o1 s2 i2 k2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1 k2) :
+Definition mk_comp_ap {s1 i1 r1 o1 s2 i2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) :
   acyclic ((get_node b1) + (get_node b2)) s2 r1 (mk_comp_parent b1 b2).
   Proof. Admitted.
 
-Definition composition {s1 i1 r1 o1 s2 i2 k2 : Type} 
-(b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1 k2) 
-  : bigraph s2 i2 r1 o1 (k1+k2)%type :=
+Definition composition {s1 i1 r1 o1 s2 i2 : Type} 
+(b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) 
+  : bigraph s2 i2 r1 o1 :=
 {|
   node := (get_node b1) + (get_node b2) ;
   edge := (get_edge b1) + (get_edge b2) ;
+  kind := (get_kind b1) + (get_kind b2) ;
+  arity := mk_dis_arity b1 b2 ;
   control := mk_dis_control b1 b2 ;
   parent := mk_comp_parent b1 b2 ; 
   link := mk_comp_link b1 b2 ;
@@ -581,9 +567,9 @@ Definition composition {s1 i1 r1 o1 s2 i2 k2 : Type}
 
 Notation "b1 'o' b2" := (composition b1 b2) (at level 40, left associativity).
 
-Definition b1b2 {s1 i1 r1 o1 s2 i2 k2 : Type} 
-(b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1 k2) 
-: bigraph s2 i2 r1 o1 (k1+k2)%type := b1 o b2.
+Definition b1b2 {s1 i1 r1 o1 s2 i2 : Type} 
+(b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) 
+: bigraph s2 i2 r1 o1 := b1 o b2.
 
 Check b1b2.
 
