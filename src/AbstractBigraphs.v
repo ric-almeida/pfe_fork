@@ -30,6 +30,8 @@ Import ListNotations.
 Module Bigraph.
 
 
+Inductive void : Type := .
+
 Definition merge {A B : Type} (la : list A) (lb : list B) : list (A + B) :=
   (map inl la) ++ (map inr lb).
 
@@ -202,8 +204,8 @@ Definition mk_dis_parent {s1 i1 r1 o1 s2 i2 r2 o2 : Type}
   let new_parent (p : (n1 + n2) + (s1 + s2)) : (n1 + n2) + (r1 + r2) :=
     match p with
      | inl node =>  match node with 
-                    |inl n1 => match p1 (inl n1) with
-                              | inl n1' => inl (inl n1')
+                    |inl n1' => match p1 (inl n1') with
+                              | inl n1'' => inl (inl n1'')
                               | inr r1 => inr (inl r1)
                               end
                     |inr n2 => match p2 (inl n2) with
@@ -426,12 +428,69 @@ Definition get_ap {s i r o : Type} (bg : bigraph s i r o) :
   acyclic (get_node bg) s r (get_parent bg) :=
     @ap s i r o bg.
 
+Theorem acyclic_dis_parent_left : forall {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
+  (n1: get_node b1),
+    Acc (fun n n' => (get_parent b1) (inl n) = inl n') n1 
+      -> Acc (fun n n' => (mk_dis_parent b1 b2) (inl n) = inl n') (inl n1).
+  Proof.
+  intros.
+  induction H as (n1, _, Hindn1').
+  apply Acc_intro.
+  destruct y as [n1' | n2'].
+  + intro Hn1'.
+    apply Hindn1'.
+    simpl in Hn1'.
+    unfold get_parent in *. 
+    set (p1 := parent s1 i1 r1 o1 b1 (inl n1')).
+    fold p1 in Hn1'.
+    change (p1 = inl n1).
+    destruct p1;  congruence.
+  + intro Hn2'.
+    simpl in Hn2'.
+    unfold get_parent in *. 
+    set (p2 := parent s2 i2 r2 o2 b2 (inl n2')).
+    fold p2 in Hn2'.
+    destruct p2; inversion Hn2'.
+  Qed.
+
+Theorem acyclic_dis_parent_right : forall {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
+  (n2: get_node b2),
+    Acc (fun n n' => (get_parent b2) (inl n) = inl n') n2 
+      -> Acc (fun n n' => (mk_dis_parent b1 b2) (inl n) = inl n') (inr n2).
+  Proof.
+    intros.
+    induction H as (n2, _, Hindn2').
+    apply Acc_intro.
+    destruct y as [n1' | n2'].
+    + intro Hn1'.
+      simpl in Hn1'.
+      unfold get_parent in *. 
+      set (p1 := parent s1 i1 r1 o1 b1 (inl n1')).
+      fold p1 in Hn1'.
+      destruct p1 ; congruence.
+    + intro Hn2'.
+      apply Hindn2'.
+      simpl in Hn2'.
+      unfold get_parent in *. 
+      set (p2 := parent s2 i2 r2 o2 b2 (inl n2')).
+      fold p2 in Hn2'.
+      change (p2 = inl n2).
+      destruct p2 ; congruence.
+    Qed.
+
 Definition mk_dis_ap {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   acyclic ((get_node b1) + (get_node b2)) (s1 + s2) (r1 + r2) (mk_dis_parent b1 b2).
-  Proof. destruct (mk_dis_parent b1 b2).
-  - left. left. unfold get_node. simpl. 
-  Admitted.
+  Proof.
+  unfold acyclic ; intros [n1 | n2].
+  - apply acyclic_dis_parent_left.
+    destruct b1 ; auto.
+  - apply acyclic_dis_parent_right.
+    destruct b2 ; auto.
+  Qed.
+  
 
 
 
