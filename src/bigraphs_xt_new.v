@@ -1351,7 +1351,7 @@ destruct y as [n1' | n2'].
   unfold sequence in Hn2'.
   simpl in Hn2'.
   unfold extract in Hn2'.
-  destruct (p2 (inl n2')); congruence.
+  destruct (p2 (inl n2')). ++ congruence. ++ congruence.
 Qed.
 
 Theorem finite_child_sequence_right : forall {N1 I1 M N2 O2 : Type} (p1 : N1+I1 -> N1+M) (p2 : N2+M -> N2+O2) n2,
