@@ -696,43 +696,102 @@ Definition b1b2 {s1 i1 r1 o1 s2 i2 : Type}
 (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) 
 : bigraph s2 i2 r1 o1 := b1 o b2.
 
+
+
+
 Check b1b2.
 
-Definition mySite : Type := nat.
-Definition myInnerName : Type := nat.
-Definition myRoot : Type := nat.
-Definition myOuterName : Type := nat.
-Definition myKind : Type := nat.
-Definition myNode : Type := {n:nat | n<3}.
-Definition myEdge : Type := nat.
 
-Definition myControl : myNode -> nat * nat := fun _ => (10, 20).
-Definition myParent : myNode + mySite -> myNode + myRoot := fun _ => inr 2.
-Definition myLink : myInnerName + {x : myNode * nat | snd x < snd (myControl (fst x))} -> 
-  myOuterName + myEdge := fun _ => inr 1.
+Definition mySite : Type := {n:nat | n<=0}.
+Definition myInnername : Type := {n:nat | n<=0}.
+Definition myRoot : Type := {n:nat | n<=0}.
+Definition root0 : myRoot.
+Proof. unfold myRoot. exists 0. auto. Defined.
+Definition myOutername : Type := {n:nat | n<=0}.
+Definition outername0 : myOutername.
+Proof. unfold myOutername. exists 0. auto. Defined.
 
+Definition myNode : Type := {n:nat | n<=1}.
+Definition myEdge : Type := {n:nat | n<=1}.
+Definition edge0 : myEdge.
+Proof. unfold myEdge. exists 0. auto. Defined.
+Definition edge1 : myEdge.
+Proof. unfold myEdge. exists 1. auto. Defined.
+Definition myKind : Type := {n:nat | n<=0}.
 
-Definition Full (l:list myNode) :=
-forall n:myNode, In n l.
-
-
+Definition myArity (k:myKind) : nat.
+Proof. exact 2.  Defined.
+Definition myControl (n:myNode) : myKind. 
+Proof. unfold myKind. exists 0. auto. Defined.
 Definition node0 : myNode.
-Proof. unfold myNode. exists 0. auto. Qed.
-
+Proof. unfold myNode. exists 0. auto. Defined.
 Definition node1 : myNode.
-Proof. unfold myNode. exists 1. auto. Qed.
-
-Definition node2 : myNode.
-Proof. unfold myNode. exists 2. auto. Qed.
+Proof. unfold myNode. exists 1. auto. Defined.
 
 
+Definition myParent (ns : myNode + mySite) : myNode + myRoot :=
+  match ns with
+  | inl (exist _ n' prf) => 
+    match n' with
+      | 0 => inl node1
+      | S _ => inr root0
+    end
+  | inr s => inl node0
+  end. 
 
+Definition myLink (ip: myInnername +  (Port myNode myControl myArity)) :
+  myOutername + myEdge :=
+  match ip with 
+  | inl i => inr edge0
+  | inr (exist _ ((exist _ n' prf'), idp) prf) => 
+    match n',idp with
+      | 0,0 => inr edge0 
+      | 0,1 => inr edge1
+      | 1,0 => inr edge1
+      | _,_ => inl outername0
+    end
+  end.
+
+Lemma nat_le_dec : forall (n m : nat), {n <= m} + {~(n <= m)}.
+Proof. apply le_dec. Qed.
+
+Definition eq_nat_le_dec : forall (x y : {n : nat | n <= 1}), {x = y} + {x <> y}.
+Proof. intros. Search ({_ = _} + {_ <> _}).
+  destruct x as [x Hx].
+  destruct y as [y Hy].
+  destruct (nat_le_dec x y) as [Hxy | Hxy].
+  - destruct (nat_le_dec y x) as [Hyx | Hyx].
+    + left. inversion Hx.
+      ++ inversion Hy. Admitted.
+      
+Definition myNd : EqDec myNode.
+Proof. unfold myNode. unfold EqDec. auto. Admitted.
+Definition myNf : finite myNode.
+Proof. Admitted.
+Definition myEd : EqDec myEdge.
+Proof. Admitted.
+Definition myEf : finite myEdge.
+Proof. Admitted.
+Definition myAp : acyclic myNode mySite myRoot myParent.
+Proof. Admitted.
 
   
-Definition myBigraph : bigraph mySite myInnerName myRoot myOuterName.
-  Proof. unfold mySite. unfold myInnerName. unfold myRoot. unfold myOuterName.
-  unfold myKind. 
-  Admitted.
+Definition myBigraph : bigraph mySite myInnername myRoot myOutername :=
+  {|
+  node := myNode ;
+  edge := myEdge ;
+  kind := myKind ;
+  arity := myArity ;
+  control := myControl ;
+  parent := myParent ; 
+  link := myLink ;
+  nd := myNd ;
+  nf := myNf ;
+  ed := myEd ;
+  ef := myEf ;
+  ap := myAp ;
+|}.
+    
   
 
 
