@@ -1386,8 +1386,10 @@ destruct n as [np | nq].
   apply Hpq.
 Qed.
 
-Theorem finite_parent_sequence_right : forall {N1 I1 M N2 O2 : Type} (p1 : N1+I1 -> N1+M) (p2 : N2+M -> N2+O2) n2,
-  Acc (fun n' n => p2 (inl n) = inl n') n2 -> Acc (fun n' n => (sequence p1 p2) (inl n) = inl n') (inr n2).
+Theorem finite_parent_sequence_right : forall {N1 I1 M N2 O2 : Type} 
+(p1 : N1+I1 -> N1+M) (p2 : N2+M -> N2+O2) n2,
+  Acc (fun n' n => p2 (inl n) = inl n') n2 -> 
+  Acc (fun n' n => (sequence p1 p2) (inl n) = inl n') (inr n2).
 Proof.
 intros until p2.
 intros n2 Hp2n2.
@@ -1398,7 +1400,7 @@ destruct y as [n1' | n2'].
   unfold sequence in Hn1'.
   simpl in Hn1'.
   unfold extract in Hn1'.
-  destruct (p2 (inl n2)); congruence.
+  destruct (p2 (inl n2)). ++ congruence. ++ congruence.
 + intro Hn2'.
   apply Hindn2'.
   unfold sequence in Hn2'.

@@ -601,62 +601,65 @@ Definition mk_comp_link {s1 i1 r1 o1 s2 i2 : Type}
       end
     in new_link.
 
-Theorem acyclic_comp_parent_left : forall {s1 i1 r1 o1 s2 i2 : Type} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1)
-  (n1: get_node b1),
-    Acc (fun n n' => (get_parent b1) (inl n) = inl n') n1 -> Acc (fun n n' => (mk_comp_parent b1 b2) (inl n) = inl n') (inl n1).
-  Proof.
-  intros.
-  induction H as (n1, _, Hindn1').
-  apply Acc_intro.
-  destruct y as [n1' | n2'].
-  + intro Hn1'.
-    apply Hindn1'.
-    unfold mk_comp_parent in Hn1'.
-    simpl in Hn1'.
-    unfold get_parent in *.
-    set (p1 := parent s1 i1 r1 o1 b1 (inl n1')).
-    fold p1 in Hn1'.
-    change (p1 = inl n1).
-    destruct (p1) as [n1'' | r1'']; congruence.
-  + intro Hn2'.
-    simpl in Hn2'.
-    unfold get_parent in *. 
-    set (p2 := parent s2 i2 s1 i1 b2 (inl n2')).
-    fold p2 in Hn2'.
-    destruct p2.
-    ++ congruence.
-    ++ set (p1 := parent s1 i1 r1 o1 b1 (inr s)).
-        fold p1 in Hn2'. destruct p1.
-        +++ inversion Hn2'. Admitted.
+
+
+      
+
 
 Theorem acyclic_comp_parent_right : forall {s1 i1 r1 o1 s2 i2 : Type} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1)
-  (n2: get_node b2),
-  acyclic (get_node b1) s1 r1 (get_parent b1) -> 
-    Acc (fun n n' => (get_parent b2) (inl n) = inl n') n2 -> 
+  (n2 : get_node b2),
+    Acc (fun n n' => (get_parent b2) (inl n) = inl n') n2 ->
     Acc (fun n n' => (mk_comp_parent b1 b2) (inl n) = inl n') (inr n2).
   Proof.
-  intros.
-  induction H0 as (n2, _, Hindn2').
-  apply Acc_intro.
-  destruct y as [n1' | n2'].
-  + intro Hn1'.
-  apply acyclic_comp_parent_left.
-  apply H.
-  + intro Hn2'.
-  apply Hindn2'.
-  unfold mk_comp_parent in Hn2'.
-  unfold get_parent in *.
-  set (p2 := parent s2 i2 s1 i1 b2 (inl n2')).
-  fold p2 in Hn2'.
-  simpl in Hn2'.
-  change (p2 = inl n2).
-  destruct p2.
+    intros.
+    induction H as (n2, _, Hindn2').
+    apply Acc_intro.
+    destruct y as [n1' | n2'].
+    + intro Hn1'.
+      unfold mk_comp_parent in Hn1'.
+      unfold get_parent in *.
+      set (p1 := parent s1 i1 r1 o1 b1 (inl n1')).
+      fold p1 in Hn1'.
+      destruct (p1); congruence.
+    + intro Hn2'.
+    apply Hindn2'.
+    unfold mk_comp_parent in Hn2'.
+    unfold get_parent in *.
+    set (p2 := parent s2 i2 s1 i1 b2 (inl n2')).
+    fold p2 in Hn2'.
+    change (p2 = inl n2).
+    destruct p2.
     ++ congruence.
-    ++  set (p1 := parent s1 i1 r1 o1 b1 (inr s)).
-        fold p1 in Hn2'. destruct p1; congruence.
-  Qed.
+    ++ set (p2' := parent s1 i1 r1 o1 b1 (inr s)).
+    fold p2' in Hn2'. destruct p2'; congruence. Qed.
+ 
+
+
+Theorem acyclic_comp_parent_left : forall {s1 i1 r1 o1 s2 i2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1)
+  (n1: get_node b1),
+    Acc (fun n n' => (get_parent b1) (inl n) = inl n') n1 -> 
+    acyclic (get_node b2) s2 s1 (get_parent b2) ->
+    Acc (fun n n' => (mk_comp_parent b1 b2) (inl n) = inl n') (inl n1).
+  Proof.
+    intros s1 i1 r1 o1 s2 i2 b1 b2 n1 H a.
+    induction H as (n1, _, Hindn1').
+    apply Acc_intro.
+    destruct y as [n1' | n2'].
+    + intro Hn1'.
+      apply Hindn1'.
+      unfold mk_comp_parent in Hn1'.
+      unfold get_parent in *.
+      set (p1 := parent s1 i1 r1 o1 b1 (inl n1')).
+      fold p1 in Hn1'.
+      change (p1 = inl n1).
+      destruct (p1); congruence.
+    + intro Hn2'.
+      apply acyclic_comp_parent_right.
+      apply a.
+    Qed.
+
 
 Definition mk_comp_ap {s1 i1 r1 o1 s2 i2 : Type} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) :
@@ -664,10 +667,9 @@ Definition mk_comp_ap {s1 i1 r1 o1 s2 i2 : Type}
   Proof. 
   unfold acyclic ; intros [n1 | n2].
   - apply acyclic_comp_parent_left.
-    destruct b1 ; auto.
-  - apply acyclic_comp_parent_right.
-    + destruct b1 ; auto.
+    + destruct b1 ;  auto.
     + destruct b2 ; auto.
+  - apply acyclic_comp_parent_right ; destruct b2 ; auto.
   Qed.
 
 Definition composition {s1 i1 r1 o1 s2 i2 : Type} 
