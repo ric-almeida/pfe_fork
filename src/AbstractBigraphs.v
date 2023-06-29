@@ -35,89 +35,14 @@ Inductive void : Type := .
 Definition merge {A B : Type} (la : list A) (lb : list B) : list (A + B) :=
   (map inl la) ++ (map inr lb).
 
-
 Definition finite (A : Type) : Type := { l : list A | Listing l }.
 
 Definition acyclic (node site root : Type) (parent : node + site -> node + root) : Prop :=
   forall (n:node), Acc (fun n n' => parent (inl n) = (inl n')) n.
 
-Fixpoint exp_function {A : Type} (f : A -> A) (a : A) (i : nat) : A :=
-  match i with 
-  | 0 => a
-  | S i' => exp_function f (f a) (i')
-  end.
-
-Fixpoint exp_function' {A B C: Type} (f : A + B -> A + C) (a : A) (i : nat) : A + C :=
-  match i with 
-  | 0 => inl a
-  | S i' => match (f (inl a)) with 
-            | inl a' => exp_function' f a' i'
-            | inr c => inr c
-            end
-  end.
-
-Definition acyclic' (node site root : Type) (parent : node + site -> node + root) : Prop :=
-  forall (n:node), forall (i:nat), exp_function' parent n i = (inl n) -> i = 0.
-
-  (* Fixpoint closure_acylcic {A B : Type} (f : A -> A + B) (a : A):  
-  match f a with 
-  | inl a' => a' :: (closure_acylcic f a')
-  | inr b => []
-  end. *)
-
-(* Definition acyclic' (node site root : Type) (parent : node + site -> node + root) : Prop :=
-  forall (n:node), exists (r:root),  In (inl n) closure (parent (inl n)).  *)
-
-Definition Port' (node : Type) (kind : Type) (control : node -> kind * nat) : Type :=
-  { vi : node * nat | let (v, i) := vi in let (_, a) := control v in i < a }.
-
-
 Definition Port {kind : Type} (node : Type) (control : node -> kind) (arity : kind -> nat): Type :=
   { vi : node * nat | let (v, i) := vi in let k := control v in let a := arity k in i < a }.
 
-(*BIgraph avec toutes les finite et eqdec *)
-  (*
-  Record bigraph  (site: Type) 
-                (innername: Type) 
-                (root: Type) 
-                (outername: Type) 
-                (kind: Type) 
-                (sf: finite site) 
-                (sd: EqDec site) 
-                (_if: finite innername) 
-                (_id: EqDec innername) 
-                (rf: finite root) 
-                (rd: EqDec root) 
-                (of: finite outername) 
-                (od: EqDec outername) : Type := 
-  Big  
-  { 
-    node : Type ;
-    edge : Type ;
-    control : node -> kind * nat;
-    parent : node + site -> node + root ; 
-    link : innername + Port node kind control -> outername + edge; 
-    nd : EqDec node ;
-    nf : finite node ;
-    ed : EqDec edge ;
-    ef : finite edge ;
-    ap : acyclic node site root parent
-  }.
-
-
-
-  Definition get_node {s i r o : Type} 
-    (sf: finite s) 
-    (sd: EqDec s)
-    (_if: finite i) 
-    (_id: EqDec i)
-    (rf: finite r) 
-    (rd: EqDec r)
-    (of: finite o) 
-    (od: EqDec o)
-    (bg : bigraph s i r o sf sd _if _id rf rd of od) : Type := 
-    node s i r o sf sd _if _id rf rd of od bg.
-    *)
 Record bigraph  (site: Type) 
                 (innername: Type) 
                 (root: Type) 
@@ -140,21 +65,43 @@ Record bigraph  (site: Type)
 
 
 
-
-
-Definition get_node {s i r o : Type} (bg : bigraph s i r o) : Type := 
+(* GETTERS *)
+  Definition get_node {s i r o : Type} (bg : bigraph s i r o) : Type := 
   node s i r o bg.
-
-Definition get_edge {s i r o : Type} (bg : bigraph s i r o) : Type := 
+  Definition get_edge {s i r o : Type} (bg : bigraph s i r o) : Type := 
   edge s i r o bg.
-
-Definition get_kind {s i r o : Type} (bg : bigraph s i r o) : Type := 
+  Definition get_kind {s i r o : Type} (bg : bigraph s i r o) : Type := 
   kind s i r o bg.
-
-Definition get_arity {s i r o : Type} (bg : bigraph s i r o) : 
+  Definition get_arity {s i r o : Type} (bg : bigraph s i r o) : 
   (get_kind bg) -> nat := 
   arity s i r o bg.
-  
+  Definition get_control {s i r o : Type} (bg : bigraph s i r o) 
+  : node s i r o bg -> (get_kind bg) :=
+  @control s i r o bg.
+  Definition get_parent {s i r o : Type} (bg : bigraph s i r o) : 
+  node s i r o bg + s -> node s i r o bg + r :=
+  @parent s i r o bg.
+  Definition get_link {s i r o : Type} (bg : bigraph s i r o) : 
+  i + Port (node s i r o bg) (get_control bg) (get_arity bg) -> o + get_edge bg :=
+  @link s i r o bg. 
+  Definition get_nd {s i r o : Type} (bg : bigraph s i r o) : 
+  EqDec (get_node bg) :=
+  @nd s i r o bg.
+  Definition get_nf {s i r o : Type} (bg : bigraph s i r o) : 
+  finite (get_node bg) :=
+  @nf s i r o bg.
+  Definition get_ed {s i r o : Type} (bg : bigraph s i r o) : 
+  EqDec (get_edge bg) :=
+  @ed s i r o bg.
+  Definition get_ef {s i r o : Type} (bg : bigraph s i r o) : 
+  finite (get_edge bg) :=
+  @ef s i r o bg.
+  Definition get_ap {s i r o : Type} (bg : bigraph s i r o) : 
+  acyclic (get_node bg) s r (get_parent bg) :=
+    @ap s i r o bg.
+
+
+(* MAKERS FOR DISJOINT JUXTAPOSITION   *)
 Definition mk_dis_arity {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   ((get_kind b1) + (get_kind b2)) -> nat :=
@@ -170,9 +117,7 @@ Definition mk_dis_arity {s1 i1 r1 o1 s2 i2 r2 o2 : Type}
   in new_arity.
 
 
-Definition get_control {s i r o : Type} (bg : bigraph s i r o) 
-  : node s i r o bg -> (get_kind bg) :=
-  @control s i r o bg.
+
 
 Definition mk_dis_control {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
@@ -190,9 +135,6 @@ Definition mk_dis_control {s1 i1 r1 o1 s2 i2 r2 o2 : Type}
     end 
   in new_control.
 
-Definition get_parent {s i r o : Type} (bg : bigraph s i r o) : 
-  node s i r o bg + s -> node s i r o bg + r :=
-  @parent s i r o bg.
 
 Definition mk_dis_parent {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
@@ -226,9 +168,7 @@ Definition mk_dis_parent {s1 i1 r1 o1 s2 i2 r2 o2 : Type}
   end
   in new_parent.
 
-Definition get_link {s i r o : Type} (bg : bigraph s i r o) : 
-  i + Port (node s i r o bg) (get_control bg) (get_arity bg) -> o + get_edge bg :=
-  @link s i r o bg. 
+
 
 Definition mk_dis_port {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
@@ -286,9 +226,7 @@ Definition mk_new_link {s1 i1 r1 o1 s2 i2 r2 o2 : Type}
       end
     in new_link.
 
-Definition get_nd {s i r o : Type} (bg : bigraph s i r o) : 
-  EqDec (get_node bg) :=
-  @nd s i r o bg.
+
 
 Definition mk_new_nd {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
@@ -306,20 +244,9 @@ Definition mk_new_nd {s1 i1 r1 o1 s2 i2 r2 o2 : Type}
     Defined.
 
 
-Definition get_nf {s i r o : Type} (bg : bigraph s i r o) : 
-  finite (get_node bg) :=
-  @nf s i r o bg.
 
-Lemma NoDup_map_left {A B : Type} (la : list A) (lb : list B) (f: A -> A + B) (i: Injective f):
-  NoDup la -> NoDup (map f la).
-  Proof.
-    intro Hla.
-    induction la as [| a la' IH].
-    - constructor.
-    - apply Injective_map_NoDup. 
-      + apply i.
-      + apply Hla. Qed.
 
+(* cannot generalise NoDup_map to injective functions bc one maps on la the other on lb *)
 Lemma NoDup_map_inl {A B : Type} (la : list A) (lb : list B) :
   NoDup la -> NoDup (map (@inl A B) la).
   Proof.
@@ -369,11 +296,8 @@ Theorem noDup_merge {A B: Type}: forall (la: list A) (lb: list B),
           destruct Hb as [b [H1 H2]]. discriminate H1.
         + apply in_map_iff in Ha.
         destruct Ha as [a [H1 H2]]. discriminate H1.
-      - apply NoDup_map_left. 
-        + assumption. 
-        + unfold Injective. intros x y H. injection H. auto.
-        + assumption.
-      - apply NoDup_map_inr; auto. 
+      - apply NoDup_map_inl; assumption. 
+      - apply NoDup_map_inr; assumption. 
   Qed. 
 
 Theorem full_merge {A B: Type}: forall (la: list A) (lb: list B), Full la -> Full lb -> Full (merge la lb).
@@ -396,9 +320,7 @@ Definition mk_new_nf {s1 i1 r1 o1 s2 i2 r2 o2 : Type}
     destruct (get_nf b2) as [l2 H2].
     unfold finite. exists (merge l1 l2). apply listing_merge; auto. Qed.  
 
-Definition get_ed {s i r o : Type} (bg : bigraph s i r o) : 
-  EqDec (get_edge bg) :=
-  @ed s i r o bg.
+
 Definition mk_new_ed {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   EqDec ((get_edge b1) + (get_edge b2)). 
@@ -413,9 +335,7 @@ Definition mk_new_ed {s1 i1 r1 o1 s2 i2 r2 o2 : Type}
       + left. rewrite e. auto. 
       + right. intro contra. congruence. 
     Defined.
-Definition get_ef {s i r o : Type} (bg : bigraph s i r o) : 
-  finite (get_edge bg) :=
-  @ef s i r o bg.
+
 Definition mk_new_ef {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   finite ((get_edge b1) + (get_edge b2)). 
@@ -424,9 +344,7 @@ Definition mk_new_ef {s1 i1 r1 o1 s2 i2 r2 o2 : Type}
     destruct (get_ef b2) as [l2 H2].
     unfold finite. exists (merge l1 l2). apply listing_merge; auto. Qed.
 
-Definition get_ap {s i r o : Type} (bg : bigraph s i r o) : 
-  acyclic (get_node bg) s r (get_parent bg) :=
-    @ap s i r o bg.
+
 
 Theorem acyclic_dis_parent_left : forall {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
@@ -517,14 +435,14 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
 
 
 
+(* THEOREMS ONLY TRUE WHEN EQUALITY BETWEEN BIGRAPHS IS ACTUALLY AN ISOMORPHISM *)
+  (* Theorem dis_juxtaposition_associative {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 k3: Type} :
+    forall (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3 k3),
+    (b1 || b2) || b3 = b1 || (b2 || b3).
 
-(* Theorem dis_juxtaposition_associative {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 k3: Type} :
-  forall (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3 k3),
-  (b1 || b2) || b3 = b1 || (b2 || b3).
-
-Theorem dis_juxtaposition_commutative {s1 i1 r1 o1 s2 i2 r2 o2 : Type} :
-  forall (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2),
-  b1 || b2 = b2 || b1. *)
+  Theorem dis_juxtaposition_commutative {s1 i1 r1 o1 s2 i2 r2 o2 : Type} :
+    forall (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2),
+    b1 || b2 = b2 || b1. *)
 
 
 
@@ -701,96 +619,97 @@ Definition b1b2 {s1 i1 r1 o1 s2 i2 : Type}
 
 Check b1b2.
 
+(* IMPLEMENTATION OF A BIGRAPH *)
 
-Definition mySite : Type := {n:nat | n<=0}.
-Definition myInnername : Type := {n:nat | n<=0}.
-Definition myRoot : Type := {n:nat | n<=0}.
-Definition root0 : myRoot.
-Proof. unfold myRoot. exists 0. auto. Defined.
-Definition myOutername : Type := {n:nat | n<=0}.
-Definition outername0 : myOutername.
-Proof. unfold myOutername. exists 0. auto. Defined.
+  Definition mySite : Type := {n:nat | n<=0}.
+  Definition myInnername : Type := {n:nat | n<=0}.
+  Definition myRoot : Type := {n:nat | n<=0}.
+  Definition root0 : myRoot.
+  Proof. unfold myRoot. exists 0. auto. Defined.
+  Definition myOutername : Type := {n:nat | n<=0}.
+  Definition outername0 : myOutername.
+  Proof. unfold myOutername. exists 0. auto. Defined.
 
-Definition myNode : Type := {n:nat | n<=1}.
-Definition myEdge : Type := {n:nat | n<=1}.
-Definition edge0 : myEdge.
-Proof. unfold myEdge. exists 0. auto. Defined.
-Definition edge1 : myEdge.
-Proof. unfold myEdge. exists 1. auto. Defined.
-Definition myKind : Type := {n:nat | n<=0}.
+  Definition myNode : Type := {n:nat | n<=1}.
+  Definition myEdge : Type := {n:nat | n<=1}.
+  Definition edge0 : myEdge.
+  Proof. unfold myEdge. exists 0. auto. Defined.
+  Definition edge1 : myEdge.
+  Proof. unfold myEdge. exists 1. auto. Defined.
+  Definition myKind : Type := {n:nat | n<=0}.
 
-Definition myArity (k:myKind) : nat.
-Proof. exact 2.  Defined.
-Definition myControl (n:myNode) : myKind. 
-Proof. unfold myKind. exists 0. auto. Defined.
-Definition node0 : myNode.
-Proof. unfold myNode. exists 0. auto. Defined.
-Definition node1 : myNode.
-Proof. unfold myNode. exists 1. auto. Defined.
+  Definition myArity (k:myKind) : nat.
+  Proof. exact 2.  Defined.
+  Definition myControl (n:myNode) : myKind. 
+  Proof. unfold myKind. exists 0. auto. Defined.
+  Definition node0 : myNode.
+  Proof. unfold myNode. exists 0. auto. Defined.
+  Definition node1 : myNode.
+  Proof. unfold myNode. exists 1. auto. Defined.
 
 
-Definition myParent (ns : myNode + mySite) : myNode + myRoot :=
-  match ns with
-  | inl (exist _ n' prf) => 
-    match n' with
-      | 0 => inl node1
-      | S _ => inr root0
-    end
-  | inr s => inl node0
-  end. 
+  Definition myParent (ns : myNode + mySite) : myNode + myRoot :=
+    match ns with
+    | inl (exist _ n' prf) => 
+      match n' with
+        | 0 => inl node1
+        | S _ => inr root0
+      end
+    | inr s => inl node0
+    end. 
 
-Definition myLink (ip: myInnername +  (Port myNode myControl myArity)) :
-  myOutername + myEdge :=
-  match ip with 
-  | inl i => inr edge0
-  | inr (exist _ ((exist _ n' prf'), idp) prf) => 
-    match n',idp with
-      | 0,0 => inr edge0 
-      | 0,1 => inr edge1
-      | 1,0 => inr edge1
-      | _,_ => inl outername0
-    end
-  end.
+  Definition myLink (ip: myInnername +  (Port myNode myControl myArity)) :
+    myOutername + myEdge :=
+    match ip with 
+    | inl i => inr edge0
+    | inr (exist _ ((exist _ n' prf'), idp) prf) => 
+      match n',idp with
+        | 0,0 => inr edge0 
+        | 0,1 => inr edge1
+        | 1,0 => inr edge1
+        | _,_ => inl outername0
+      end
+    end.
 
-Lemma nat_le_dec : forall (n m : nat), {n <= m} + {~(n <= m)}.
-Proof. apply le_dec. Qed.
+  Lemma nat_le_dec : forall (n m : nat), {n <= m} + {~(n <= m)}.
+  Proof. apply le_dec. Qed.
 
-Definition eq_nat_le_dec : forall (x y : {n : nat | n <= 1}), {x = y} + {x <> y}.
-Proof. intros. Search ({_ = _} + {_ <> _}).
-  destruct x as [x Hx].
-  destruct y as [y Hy].
-  destruct (nat_le_dec x y) as [Hxy | Hxy].
-  - destruct (nat_le_dec y x) as [Hyx | Hyx].
-    + left. inversion Hx.
-      ++ inversion Hy. Admitted.
-      
-Definition myNd : EqDec myNode.
-Proof. unfold myNode. unfold EqDec. auto. Admitted.
-Definition myNf : finite myNode.
-Proof. Admitted.
-Definition myEd : EqDec myEdge.
-Proof. Admitted.
-Definition myEf : finite myEdge.
-Proof. Admitted.
-Definition myAp : acyclic myNode mySite myRoot myParent.
-Proof. Admitted.
+  Definition eq_nat_le_dec : forall (x y : {n : nat | n <= 1}), {x = y} + {x <> y}.
+  Proof. intros. Search ({_ = _} + {_ <> _}).
+    destruct x as [x Hx].
+    destruct y as [y Hy].
+    destruct (nat_le_dec x y) as [Hxy | Hxy].
+    - destruct (nat_le_dec y x) as [Hyx | Hyx].
+      + left. inversion Hx.
+        ++ inversion Hy. Admitted.
+        
+  Definition myNd : EqDec myNode.
+  Proof. unfold myNode. unfold EqDec. auto. Admitted.
+  Definition myNf : finite myNode.
+  Proof. Admitted.
+  Definition myEd : EqDec myEdge.
+  Proof. Admitted.
+  Definition myEf : finite myEdge.
+  Proof. Admitted.
+  Definition myAp : acyclic myNode mySite myRoot myParent.
+  Proof. Admitted.
 
-  
-Definition myBigraph : bigraph mySite myInnername myRoot myOutername :=
-  {|
-  node := myNode ;
-  edge := myEdge ;
-  kind := myKind ;
-  arity := myArity ;
-  control := myControl ;
-  parent := myParent ; 
-  link := myLink ;
-  nd := myNd ;
-  nf := myNf ;
-  ed := myEd ;
-  ef := myEf ;
-  ap := myAp ;
-|}.
+    
+  Definition myBigraph : bigraph mySite myInnername myRoot myOutername :=
+    {|
+    node := myNode ;
+    edge := myEdge ;
+    kind := myKind ;
+    arity := myArity ;
+    control := myControl ;
+    parent := myParent ; 
+    link := myLink ;
+    nd := myNd ;
+    nf := myNf ;
+    ed := myEd ;
+    ef := myEf ;
+    ap := myAp ;
+  |}.
     
   
 
