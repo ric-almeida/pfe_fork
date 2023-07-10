@@ -32,12 +32,17 @@ Module Bigraph.
 
 Inductive void : Type := .
 
-Record FinDecType : Type.
-
 Definition merge {A B : Type} (la : list A) (lb : list B) : list (A + B) :=
   (map inl la) ++ (map inr lb).
 
 Definition finite (A : Type) : Type := { l : list A | Listing l }.
+
+Record FinDecType : Type :=
+  {
+    type : Type ;
+    finite_type : finite type ;
+    dec_type : EqDec type
+  }.
 
 Definition acyclic (node site root : Type) (parent : node + site -> node + root) : Prop :=
   forall (n:node), Acc (fun n n' => parent (inl n) = (inl n')) n.
@@ -51,25 +56,23 @@ Record bigraph  (site: Type)
                 (outername: Type) : Type := 
   Big  
   { 
-    node : Type ;
+    node : FinDecType ;
     edge : Type ;
     kind : Type ;
     arity : kind -> nat ;
-    control : node -> kind ;
-    parent : node + site -> node + root ; 
-    link : innername + Port node control arity -> outername + edge; 
-    nd : EqDec node ;
-    nf : finite node ;
+    control : @type node -> kind ;
+    parent : @type node + site -> @type node + root ; 
+    link : innername + Port (@type node) control arity -> outername + edge; 
     ed : EqDec edge ;
     ef : finite edge ;
-    ap : acyclic node site root parent ;
+    ap : acyclic (@type node) site root parent ;
   }.
 
 
 
 (* GETTERS *)
   Definition get_node {s i r o : Type} (bg : bigraph s i r o) : Type := 
-  node s i r o bg.
+  @type (node s i r o bg).
   Definition get_edge {s i r o : Type} (bg : bigraph s i r o) : Type := 
   edge s i r o bg.
   Definition get_kind {s i r o : Type} (bg : bigraph s i r o) : Type := 
@@ -78,20 +81,20 @@ Record bigraph  (site: Type)
   (get_kind bg) -> nat := 
   arity s i r o bg.
   Definition get_control {s i r o : Type} (bg : bigraph s i r o) 
-  : node s i r o bg -> (get_kind bg) :=
+  : get_node bg -> (get_kind bg) :=
   @control s i r o bg.
   Definition get_parent {s i r o : Type} (bg : bigraph s i r o) : 
-  node s i r o bg + s -> node s i r o bg + r :=
+  get_node bg + s -> get_node bg + r :=
   @parent s i r o bg.
   Definition get_link {s i r o : Type} (bg : bigraph s i r o) : 
-  i + Port (node s i r o bg) (get_control bg) (get_arity bg) -> o + get_edge bg :=
+  i + Port (get_node bg) (get_control bg) (get_arity bg) -> o + get_edge bg :=
   @link s i r o bg. 
   Definition get_nd {s i r o : Type} (bg : bigraph s i r o) : 
   EqDec (get_node bg) :=
-  @nd s i r o bg.
+  @dec_type (node s i r o bg).
   Definition get_nf {s i r o : Type} (bg : bigraph s i r o) : 
   finite (get_node bg) :=
-  @nf s i r o bg.
+  @finite_type (node s i r o bg).
   Definition get_ed {s i r o : Type} (bg : bigraph s i r o) : 
   EqDec (get_edge bg) :=
   @ed s i r o bg.
@@ -245,7 +248,7 @@ Record bigraph  (site: Type)
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
     EqDec ((get_node b1) + (get_node b2)).
       Proof. 
-        apply EqDec_sum; destruct b1; destruct b2; assumption.  
+        apply EqDec_sum; destruct b1; destruct b2; destruct node0; destruct node1; assumption.  
       Defined.
 
   (* cannot generalise NoDup_map to injective functions bc one maps on la the other on lb *)
@@ -325,7 +328,7 @@ Record bigraph  (site: Type)
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
     finite ((get_node b1) + (get_node b2)). 
     Proof. 
-      apply finite_sum; destruct b1; destruct b2; assumption. 
+      apply finite_sum; destruct b1; destruct b2; destruct node0; destruct node1; assumption. 
     Qed.  
 
 
@@ -407,26 +410,37 @@ Record bigraph  (site: Type)
       destruct b2 ; auto.
     Qed.
   
+  Definition mk_dis_node {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : FinDecType :=
+    {|
+      type := (get_node b1) + (get_node b2) ;
+      dec_type := mk_new_nd b1 b2 ;
+      finite_type := mk_new_nf b1 b2
+    |}.
 
-Definition dis_juxtaposition {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
+
+    Definition dis_juxtaposition {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
 (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
   : bigraph (s1+s2)%type (i1+i2)%type (r1+r2)%type (o1+o2)%type :=
 {|
-  node := (get_node b1) + (get_node b2) ;
+  node := mk_dis_node b1 b2 ;
   edge := (get_edge b1) + (get_edge b2) ;
   kind := (get_kind b1) + (get_kind b2) ;
   arity := mk_dis_arity b1 b2 ;
   control := mk_dis_control b1 b2 ;
   parent := mk_dis_parent b1 b2 ; 
   link := mk_new_link b1 b2 ;
-  nd := mk_new_nd b1 b2 ;
-  nf := mk_new_nf b1 b2 ;
   ed := mk_new_ed b1 b2 ;
   ef := mk_new_ef b1 b2 ;
   ap := mk_dis_ap b1 b2 ;
 |}.
 
 Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativity).
+
+Lemma correct_node_type {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
+  get_node (b1 || b2) = ((get_node b1) + (get_node b2))%type.
+  Proof. auto. Qed.
 
 (* THEOREMS ONLY TRUE WHEN EQUALITY BETWEEN BIGRAPHS IS ACTUALLY AN ISOMORPHISM *)
   (* Theorem dis_juxtaposition_associative {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 k3: Type} :
@@ -572,20 +586,25 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
       + destruct b2 ; auto.
     - apply acyclic_comp_parent_right ; destruct b2 ; auto.
     Qed.
+  Definition mk_comp_node {s1 i1 r1 o1 s2 i2 r2 o2 : Type} 
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : FinDecType :=
+      {|
+        type := (get_node b1) + (get_node b2) ;
+        dec_type := mk_new_nd b1 b2 ;
+        finite_type := mk_new_nf b1 b2
+      |}.
 
-Definition composition {s1 i1 r1 o1 s2 i2 : Type} 
+    Definition composition {s1 i1 r1 o1 s2 i2 : Type} 
 (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) 
   : bigraph s2 i2 r1 o1 :=
 {|
-  node := (get_node b1) + (get_node b2) ;
+  node := mk_dis_node b1 b2;
   edge := (get_edge b1) + (get_edge b2) ;
   kind := (get_kind b1) + (get_kind b2) ;
   arity := mk_dis_arity b1 b2 ;
   control := mk_dis_control b1 b2 ;
   parent := mk_comp_parent b1 b2 ; 
   link := mk_comp_link b1 b2 ;
-  nd := mk_new_nd b1 b2 ;
-  nf := mk_new_nf b1 b2 ;
   ed := mk_new_ed b1 b2 ;
   ef := mk_new_ef b1 b2 ;
   ap := mk_comp_ap b1 b2 ;
@@ -714,14 +733,10 @@ Notation "b1 'o' b2" := (composition b1 b2) (at level 40, left associativity).
     control := myControl ;
     parent := myParent ; 
     link := myLink ;
-    nd := myNd ;
-    nf := myNf ;
     ed := myEd ;
     ef := myEf ;
     ap := myAp ;
   |}.
-
-  Definition DecFiniteType : Type. Admitted.
 
 
 
