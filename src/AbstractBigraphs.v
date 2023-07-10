@@ -32,6 +32,8 @@ Module Bigraph.
 
 Inductive void : Type := .
 
+Record FinDecType : Type.
+
 Definition merge {A B : Type} (la : list A) (lb : list B) : list (A + B) :=
   (map inl la) ++ (map inr lb).
 
@@ -618,15 +620,36 @@ Notation "b1 'o' b2" := (composition b1 b2) (at level 40, left associativity).
   Example node1 : myNode.
   Proof. unfold myNode. exists 1. auto. Defined.
 
-  Example myParent (ns : myNode + mySite) : myNode + myRoot :=
+  Theorem trivialxle1 : forall x:nat, x <= 1 -> x = 0 \/ x = 1.
+  Proof. intros. induction x. 
+  - left. auto.
+  - assert (forall n:nat, S n <= 1 -> n = 0).
+    + intros. inversion H0. ++ auto. ++ inversion H2.
+    + apply (H0 x) in H. right. auto.
+  Qed.
+
+  Example fromnode0or1 : forall n:myNode, proj1_sig n = 0 \/ proj1_sig n = 1.
+  Proof. destruct n. intros. unfold proj1_sig. 
+  apply trivialxle1 in l. apply l. Qed.
+
+  Example fromnode0or1' : forall n:myNode, n = node0 \/  n = node1.
+  Proof. intros. destruct n. destruct x.
+  Admitted.
+
+  Example myParent : myNode + mySite -> myNode + myRoot.
+  Proof. intros ns. 
+  destruct ns as [n | s].
+  - Admitted.
+
+  (* Example myParent (ns : myNode + mySite) : myNode + myRoot :=
     match ns with
     | inl (exist _ n' prf) => 
       match n' with
         | 0 => inl node1
-        | S _ => inr root0
+        | 1 => inr root0
       end
     | inr s => inl node0
-    end. 
+    end.  *)
 
   Example myLink (ip: myInnername +  (Port myNode myControl myArity)) :
     myOutername + myEdge :=
@@ -656,13 +679,30 @@ Notation "b1 'o' b2" := (composition b1 b2) (at level 40, left associativity).
   Example myNd : EqDec myNode.
   Proof. unfold myNode. unfold EqDec. auto. Admitted.
   Example myNf : finite myNode.
-  Proof. Admitted.
+  Proof. unfold finite. unfold myNode. Admitted.
   Example myEd : EqDec myEdge.
   Proof. Admitted.
   Example myEf : finite myEdge.
   Proof. Admitted.
+
+  Example myParent' (ns : myNode + mySite) : myNode + myRoot := 
+  match ns with 
+  | inl (exist _ 0 _) => inl node1
+  | inl (exist _ 1 _) => inr root0
+  | inr (exist _ 0 _) => inl node0
+  | _ => inr root0
+  end.
+
+
+  Example myAp' : acyclic myNode mySite myRoot myParent'.
+  Proof. unfold acyclic. intros. 
+  apply Acc_intro.
+  destruct y. Admitted.
+
   Example myAp : acyclic myNode mySite myRoot myParent.
-  Proof. Admitted.
+  Proof. unfold acyclic. intros. destruct myParent.
+  - left. exact node0. 
+  - apply Acc_intro. intros. Admitted.
 
     
   Example myBigraph : bigraph mySite myInnername myRoot myOutername :=
@@ -681,4 +721,155 @@ Notation "b1 'o' b2" := (composition b1 b2) (at level 40, left associativity).
     ap := myAp ;
   |}.
 
+  Definition DecFiniteType : Type. Admitted.
+
+
+
 End Bigraph.
+
+
+Module EJCP.
+
+
+Inductive myZ : Type :=
+  | z : Z -> myZ
+  | plusinf : myZ
+  | moinsinf : myZ.
+
+Record intervalle : Type :=
+  {
+    inf : Z ;
+    sup : Z 
+  }.
+
+Definition plus_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
+  {|
+    inf := @inf int1 + @inf int2 ;
+    sup := @sup int1 + @sup int2 
+  |}.
+
+Notation "i1 '+i' i2" := (plus_inter i1 i2) (at level 40, left associativity).
+
+Definition moins_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
+  {|
+    inf := @inf int1 - @sup int2 ;
+    sup := @sup int1 - @inf int2 
+  |}.
+
+
+Notation "i1 '-i' i2" := (moins_inter i1 i2) (at level 40, left associativity).
+
+Search (_ < _).
+
+Definition my_min (a b : Z) : Z := 
+  if Z.ltb a b then b else a.
+
+Definition my_max (a b : Z) : Z :=
+  if Z.gtb a b then b else a.
+
+Definition fois_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
+  let ac := Z.mul (@inf int1) (@inf int2) in
+  let ad := Z.mul (@inf int1) (@sup int2) in
+  let bc := Z.mul (@sup int1) (@inf int2) in
+  let bd := Z.mul (@sup int1) (@sup int2) in
+  {|
+    inf := my_min (my_min (ac) (ad)) (my_min (bc) (bd)) ;
+    sup := my_max (my_max (ac) (ad)) (my_max (bc) (bd)) ;
+  |}.
+
+Notation "i1 '*i' i2" := (fois_inter i1 i2) (at level 40, left associativity).
+
+
+Definition div_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
+  let ac := Z.div (@inf int1) (@inf int2) in
+  let ad := Z.div (@inf int1) (@sup int2) in
+  let bc := Z.div (@sup int1) (@inf int2) in
+  let bd := Z.div (@sup int1) (@sup int2) in
+  {|
+    inf := my_min (my_min (ac) (ad)) (my_min (bc) (bd)) ;
+    sup := my_max (my_max (ac) (ad)) (my_max (bc) (bd)) ;
+  |}.
+
+
+Notation "i1 '/i' i2" := (div_inter i1 i2) (at level 40, left associativity).
+
+Definition inter_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
+  {|
+    inf := my_max (@inf int1) (@inf int2);
+    sup := my_min (@sup int1) (@sup int2)
+  |}.
+
+
+Notation "i1 '/\i' i2" := (inter_inter i1 i2) (at level 40, left associativity).
+
+Definition union_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
+  {|
+    inf := my_min (@inf int1) (@inf int2);
+    sup := my_max (@sup int1) (@sup int2)
+  |}.
+
+Notation "i1 '\/i' i2" := (union_inter i1 i2) (at level 40, left associativity).
+Definition eqb_inter (int1 : intervalle) (int2 : intervalle) : bool :=
+  Z.eqb (@inf int1) (@inf int2) &&
+  Z.eqb (@sup int1) (@sup int2).
+Notation "i1 '=i?' i2" := (eqb_inter i1 i2) (at level 40, left associativity).
+
+
+Definition eq_inter (int1 : intervalle) (int2 : intervalle) : Prop :=
+  Z.eq (@inf int1) (@inf int2) /\
+  Z.eq (@sup int1) (@sup int2).
+Notation "i1 '=i' i2" := (eq_inter i1 i2) (at level 40, left associativity).
+
+Inductive nodeAST :=
+| zAST : Z -> nodeAST
+| interAST : intervalle -> nodeAST
+| plusAST : intervalle -> nodeAST
+| moinsAST : intervalle -> nodeAST
+| foisAST : intervalle -> nodeAST
+| divAST : intervalle -> nodeAST
+| infAST : intervalle -> nodeAST
+| supAST : intervalle -> nodeAST.
+
+Inductive AST :=
+| EmptyAST : AST
+| rootAST : nodeAST -> AST -> AST -> AST.
+
+Fixpoint top_down (inter:intervalle) (ast:AST) : intervalle :=
+  match ast with 
+  | EmptyAST => inter
+  | rootAST n ast_left ast_right => 
+    match n with =>
+    | zAST z => inter /\i {| inf := z ; sup := z|} 
+    | interAST inter' => inter
+    | plusAST inter' => top_down (u /\i (r -i v)) ast_left
+    | moinsAST : nodeAST
+    | foisAST : nodeAST
+    | divAST : nodeAST
+    | infAST : nodeAST
+    | supAST : nodeAST.
+    end
+  end.
+
+(*Lemma inverse : forall (u : intervalle) (v : intervalle) (r : intervalle),
+  r =i(u +i v) -> u =i (u /\i (r -i v)) /\ v =i (v /\i (r -i u)).
+Proof.
+  intros.
+  unfold eq_inter in H.
+  unfold Z.eq in H.
+  unfold plus_inter in H.
+  simpl in H.
+  destruct H as [Hinf Hsup].
+  split.
+  - unfold eq_inter.
+    split.
+    + unfold Z.eq.     
+      unfold inter_inter. 
+      unfold moins_inter.
+      simpl.
+      unfold my_max.
+      induction Z.gtb.
+      ++  *)
+
+
+ 
+End EJCP.
