@@ -82,7 +82,7 @@ Record bigraph  (site: FinDecType)
   : get_node bg -> (get_kind bg) :=
   @control s i r o bg.
   Definition get_parent {s i r o : FinDecType} (bg : bigraph s i r o) : 
-  get_node bg + (@type s) -> get_node bg + (@type r) :=
+  (get_node bg) + (@type s) -> (get_node bg) + (@type r) :=
   @parent s i r o bg.
   Definition get_link {s i r o : FinDecType} (bg : bigraph s i r o) : 
   (@type i) + Port (get_node bg) (get_control bg) (get_arity bg) -> (@type o) + get_edge bg :=
@@ -268,13 +268,10 @@ Record bigraph  (site: FinDecType)
         @type (sum_FinDecType r1 r2) :=
     let p1 := get_parent b1 in
     let p2 := get_parent b2 in
-    let n1 := get_node b1 in
-    let n2 := get_node b2 in
-    let s1_t := @type s1 in 
-    let s2_t := @type s2 in 
-    let r1_t := @type r1 in 
-    let r2_t := @type r2 in 
-    let new_parent (p : (n1 + n2) + (s1_t + s2_t)) : (n1 + n2) + (r1_t + r2_t) :=
+    let n1pn2 := @type (sum_FinDecType (@node s1 i1 r1 o1 b1) (@node s2 i2 r2 o2 b2)) in
+    let s1ps2 := @type (sum_FinDecType s1 s2) in 
+    let r1pr2 := @type (sum_FinDecType r1 r2) in 
+    let new_parent (p : (n1pn2) + (s1ps2)) : (n1pn2) + (r1pr2) :=
       match p with
       | inl (inl n1) => match p1 (inl n1) with (* p1 : n1 + s1 -> n1 + r1 *)
                         | inl n1' => inl (inl n1')
@@ -373,10 +370,13 @@ Record bigraph  (site: FinDecType)
         apply Hindn1'.
         simpl in Hn1'.
         unfold get_parent in *. 
-        set (p1 := parent s1 i1 r1 o1 b1 (inl n1')).
+        set (p1 := parent s1 i1 r1 o1 b1 (inl n1')). (*TODO FIXME*)
         fold p1 in Hn1'.
         change (p1 = inl n1).
-        destruct p1;  congruence.
+        unfold get_node in n1. 
+        destruct p1. 
+        ++  injection Hn1'. intros. rewrite H. reflexivity. 
+        ++  congruence.
       + intro Hn2'.
         simpl in Hn2'.
         unfold get_parent in *. 
@@ -408,7 +408,9 @@ Record bigraph  (site: FinDecType)
         set (p2 := parent s2 i2 r2 o2 b2 (inl n2')).
         fold p2 in Hn2'.
         change (p2 = inl n2).
-        destruct p2 ; congruence.
+        destruct p2. 
+          ++ injection Hn2'. intros. rewrite H. reflexivity.
+          ++ congruence.
     Qed.
 
   Definition mk_dis_ap {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
@@ -462,12 +464,14 @@ Lemma correct_node_type {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
 (* MAKERS FOR COMPOSITION *)
   Definition mk_comp_parent {s1 i1 r1 o1 s2 i2 : FinDecType} 
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) :
-    ((get_node b1) + (get_node b2)) + s2 -> ((get_node b1) + (get_node b2)) + r1 :=
+    @type (sum_FinDecType (@node s1 i1 r1 o1 b1) (@node s2 i2 s1 i1 b2))
+     + (@type s2) 
+     -> @type (sum_FinDecType (@node s1 i1 r1 o1 b1) (@node s2 i2 s1 i1 b2)) 
+        + (@type r1) :=
     let p1 := get_parent b1 in
     let p2 := get_parent b2 in
-    let node1 := get_node b1 in 
-    let node2 := get_node b2 in
-    let new_parent (p : (node1 + node2) + s2) : (node1 + node2) + r1 :=
+    let n1pn2 := @type (sum_FinDecType (@node s1 i1 r1 o1 b1) (@node s2 i2 s1 i1 b2)) in
+    let new_parent (p : (n1pn2) + (@type s2)) : (n1pn2) + (@type r1) :=
       match p with
       | inl (inl n1) => match p1 (inl n1) with (* p1 : n1 + s1 -> n1 + r1 *)
                         | inl n1' => inl (inl n1')
@@ -492,8 +496,8 @@ Lemma correct_node_type {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
 
   Definition mk_comp_link {s1 i1 r1 o1 s2 i2 : FinDecType} 
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) :
-    i2 + Port ((get_node b1) + get_node b2) (mk_dis_control b1 b2) (mk_dis_arity b1 b2)  
-    -> o1 + ((get_edge b1) + (get_edge b2)) :=
+    (@type i2) + Port ((get_node b1) + get_node b2) (mk_dis_control b1 b2) (mk_dis_arity b1 b2)  
+    -> (@type o1) + ((get_edge b1) + (get_edge b2)) :=
       let n1 := get_node b1 in
       let n2 := get_node b2 in
       let c := mk_dis_control b1 b2 in
@@ -502,7 +506,7 @@ Lemma correct_node_type {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
       let e2 := get_edge b2 in
       let l1 := get_link b1 in
       let l2 := get_link b2 in
-      let new_link (ip : i2 + p) : o1 + (e1 + e2) :=
+      let new_link (ip : (@type i2) + p) : (@type o1) + (e1 + e2) :=
         match ip with 
         | inr p =>  let p' := mk_dis_port b1 b2 p in
                     match p' with 
@@ -528,6 +532,7 @@ Lemma correct_node_type {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
         end
       in new_link.
 
+
   Theorem acyclic_comp_parent_right : forall {s1 i1 r1 o1 s2 i2 : FinDecType} 
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1)
     (n2 : get_node b2),
@@ -537,31 +542,32 @@ Lemma correct_node_type {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
       intros.
       induction H as (n2, _, Hindn2').
       apply Acc_intro.
+      unfold get_node in n2. 
       destruct y as [n1' | n2'].
       + intro Hn1'.
         unfold mk_comp_parent in Hn1'.
         unfold get_parent in *.
         set (p1 := parent s1 i1 r1 o1 b1 (inl n1')).
         fold p1 in Hn1'.
-        destruct (p1); congruence.
+        destruct (p1); congruence. 
       + intro Hn2'.
-      apply Hindn2'.
-      unfold mk_comp_parent in Hn2'.
-      unfold get_parent in *.
-      set (p2 := parent s2 i2 s1 i1 b2 (inl n2')).
-      fold p2 in Hn2'.
-      change (p2 = inl n2).
-      destruct p2.
-      ++ congruence.
-      ++ set (p2' := parent s1 i1 r1 o1 b1 (inr s)).
-      fold p2' in Hn2'. destruct p2'; congruence. 
-    Qed.
+        apply Hindn2'.
+        unfold mk_comp_parent in Hn2'.
+        unfold get_parent in *.
+        set (p2 := parent s2 i2 s1 i1 b2 (inl n2')).
+        fold p2 in Hn2'.
+        change (p2 = inl n2).
+        destruct p2.
+        ++  injection Hn2'. intros. rewrite H. reflexivity.
+        ++  set (p2' := parent s1 i1 r1 o1 b1).
+            fold p2' in Hn2'. destruct p2'; congruence.
+    Qed.  
 
   Theorem acyclic_comp_parent_left : forall {s1 i1 r1 o1 s2 i2 : FinDecType} 
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1)
     (n1: get_node b1),
       Acc (fun n n' => (get_parent b1) (inl n) = inl n') n1 -> 
-      acyclic (get_node b2) s2 s1 (get_parent b2) ->
+      acyclic (get_node b2) (@type s2) (@type s1) (get_parent b2) ->
       Acc (fun n n' => (mk_comp_parent b1 b2) (inl n) = inl n') (inl n1).
     Proof.
       intros s1 i1 r1 o1 s2 i2 b1 b2 n1 H a.
@@ -575,7 +581,9 @@ Lemma correct_node_type {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
         set (p1 := parent s1 i1 r1 o1 b1 (inl n1')).
         fold p1 in Hn1'.
         change (p1 = inl n1).
-        destruct (p1); congruence.
+        destruct (p1). 
+        ++ injection Hn1'. intros. rewrite H. reflexivity.
+        ++ congruence.
       + intro Hn2'.
         apply acyclic_comp_parent_right.
         apply a.
@@ -583,7 +591,7 @@ Lemma correct_node_type {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
 
   Definition mk_comp_ap {s1 i1 r1 o1 s2 i2 : FinDecType} 
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) :
-    acyclic ((get_node b1) + (get_node b2)) s2 r1 (mk_comp_parent b1 b2).
+    acyclic ((get_node b1) + (get_node b2)) (@type s2) (@type r1) (mk_comp_parent b1 b2).
     Proof. 
     unfold acyclic ; intros [n1 | n2].
     - apply acyclic_comp_parent_left.
@@ -591,27 +599,19 @@ Lemma correct_node_type {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
       + destruct b2 ; auto.
     - apply acyclic_comp_parent_right ; destruct b2 ; auto.
     Qed.
-  Definition mk_comp_node {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
-    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : FinDecType :=
-      {|
-        type := (get_node b1) + (get_node b2) ;
-        dec_type := mk_new_nd b1 b2 ;
-        finite_type := mk_new_nf b1 b2
-      |}.
+
 
 Definition composition {s1 i1 r1 o1 s2 i2 : FinDecType} 
 (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) 
   : bigraph s2 i2 r1 o1 :=
 {|
-  node := mk_dis_node b1 b2;
-  edge := (get_edge b1) + (get_edge b2) ;
-  kind := (get_kind b1) + (get_kind b2) ;
+  node := sum_FinDecType (@node s1 i1 r1 o1 b1) (@node s2 i2 s1 i1 b2);
+  edge := sum_FinDecType (@edge s1 i1 r1 o1 b1) (@edge s2 i2 s1 i1 b2);
+  kind := sum_FinDecType (@kind s1 i1 r1 o1 b1) (@kind s2 i2 s1 i1 b2);
   arity := mk_dis_arity b1 b2 ;
   control := mk_dis_control b1 b2 ;
   parent := mk_comp_parent b1 b2 ; 
   link := mk_comp_link b1 b2 ;
-  ed := mk_new_ed b1 b2 ;
-  ef := mk_new_ef b1 b2 ;
   ap := mk_comp_ap b1 b2 ;
 |}.
 
@@ -738,8 +738,6 @@ Notation "b1 'o' b2" := (composition b1 b2) (at level 40, left associativity).
     control := myControl ;
     parent := myParent ; 
     link := myLink ;
-    ed := myEd ;
-    ef := myEf ;
     ap := myAp ;
   |}.
 
