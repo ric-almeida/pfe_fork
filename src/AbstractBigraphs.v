@@ -12,6 +12,9 @@ Require Import Coq.Strings.String.
 Require Import Coq.Logic.FinFun.
 Require Import Coq.Logic.Decidable.
 Require Import Lia.
+Require Import FunctionalExtensionality.
+Require Import PropExtensionality.
+Require Import Coq.Setoids.Setoid.
 
 
 Set Warnings "-parsing".
@@ -47,6 +50,22 @@ Record FinDecType : Type :=
 Definition acyclic (node site root : Type) (parent : node + site -> node + root) : Prop :=
   forall (n:node), Acc (fun n n' => parent (inl n) = (inl n')) n.
 
+Definition acyclic' (node site root : Type) (parent : node + site -> node + root) : Prop :=
+  forall (n:node), Acc (fun n n' => parent (inl n') = (inl n)) n.
+
+Theorem ac (n s r : Type) (p : n + s -> n + r) : 
+  acyclic n s r p <-> acyclic' n s r p. 
+  Proof.
+    split; intros.
+    - unfold acyclic in H. 
+      unfold acyclic'.
+      intros.
+      apply Acc_intro. 
+      intros.
+      einduction H as (n1, _, Hindn1').
+      Admitted.
+
+
 Definition Port {kind : Type} (node : Type) (control : node -> kind) (arity : kind -> nat): Type :=
   { vi : node * nat | let (v, i) := vi in let k := control v in let a := arity k in i < a }.
 
@@ -66,6 +85,21 @@ Record bigraph  (site: FinDecType)
     ap : acyclic (@type node) (@type site) (@type root) parent ;
   }.
 
+  Record bigraph'  (site: FinDecType) 
+                (innername: FinDecType) 
+                (root: FinDecType) 
+                (outername: FinDecType)
+                (node: FinDecType)
+                (edge: FinDecType)
+                (kind: FinDecType) : Type := 
+  Big'  
+  { 
+    arity' : @type kind -> nat ;
+    control' : @type node -> @type kind ;
+    parent' : @type node + @type site -> @type node + @type root ; 
+    link' : @type innername + Port (@type node) control' arity' -> @type outername + @type edge; 
+    ap' : acyclic (@type node) (@type site) (@type root) parent' ;
+  }.
 
 
 (* GETTERS *)
@@ -133,6 +167,215 @@ Record bigraph  (site: FinDecType)
   acyclic (get_node bg) (@type s) (@type r) (get_parent bg) :=
   @ap s i r o bg.
 
+(* Working on equivalence *)
+Record MyRecord : Type := {
+  field1 : nat;
+  field2 : bool;
+  field3 : Type;
+  field4 : field3 -> nat
+}.
+
+
+Definition is_field3_the_same {t1 : Type}
+  (mr1 : MyRecord) (mr2 : MyRecord) :=
+  field3 mr1 = t1 /\ field3 mr2 = t1.
+
+
+(* Definition field4_equiv 
+  (mr1 : MyRecord) (mr2 : MyRecord) :=
+  is_field3_the_same mr1 mr2 ->  
+  forall x : field3 mr1, forall y : field3 mr2, 
+    x = y -> field4 mr1 x = field4 mr2 y. *)
+
+
+Inductive MyRecord_equiv : MyRecord -> MyRecord -> Prop :=
+  | MyRecord_equiv_intro :
+    forall r1 r2,
+    field1 r1 = field1 r2 ->
+    MyRecord_equiv r1 r2.
+
+Lemma MyRecord_equiv_refl : forall r, MyRecord_equiv r r.
+Proof.
+  intros r.
+  constructor. reflexivity.
+Qed.
+
+Lemma MyRecord_equiv_sym : forall r1 r2,
+  MyRecord_equiv r1 r2 -> MyRecord_equiv r2 r1.
+Proof.
+  intros r1 r2 H.
+  inversion H. constructor.
+  symmetry. assumption.
+Qed.
+
+Lemma MyRecord_equiv_trans : forall r1 r2 r3,
+  MyRecord_equiv r1 r2 -> MyRecord_equiv r2 r3 -> MyRecord_equiv r1 r3.
+Proof.
+  intros r1 r2 r3 H1 H2.
+  inversion H1. inversion H2.
+  constructor.
+  transitivity (field1 r2); assumption.
+Qed.
+
+Add Parametric Relation: (MyRecord) (MyRecord_equiv)
+    reflexivity proved by (MyRecord_equiv_refl)
+    symmetry proved by (MyRecord_equiv_sym)
+    transitivity proved by (MyRecord_equiv_trans)
+      as MyRecord_equiv_rel.
+
+Lemma same_filelds_same_record:
+  forall (g g': MyRecord),
+  field1 g = field1 g' ->
+  field2 g = true
+    -> field2 g' = true
+    -> MyRecord_equiv g g'.
+Proof.
+  induction g; induction g'.
+  simpl.
+  intros H H0 H2. split. simpl. apply H. 
+Qed.
+
+(* Instance MyRecord_Setoid : Setoid MyRecord :=
+  {
+    equiv := MyRecord_equiv;
+    setoid_equiv := MyRecord_equiv;
+    setoid_refl := MyRecord_equiv_refl;
+    setoid_sym := MyRecord_equiv_sym;
+    setoid_trans := MyRecord_equiv_trans;
+  }. *)
+Inductive bigraph_type_equality {s i r o : FinDecType} : bigraph s i r o -> bigraph s i r o -> Prop :=
+  | bigraph_type_equality_intro : forall b1 b2,
+    get_node b1 = get_node b2 ->
+    get_edge b1 = get_edge b2 ->
+    get_kind b1 = get_kind b2 ->
+    bigraph_type_equality b1 b2.
+
+Lemma bigraph_type_equality_refl {s i r o : FinDecType} : 
+  forall (b : bigraph s i r o), bigraph_type_equality b b.
+Proof.
+  intros b.
+  constructor; reflexivity.
+Qed.
+
+Lemma bigraph_type_equality_sym {s i r o : FinDecType} : 
+forall (b1 b2 : bigraph s i r o),
+bigraph_type_equality b1 b2 -> bigraph_type_equality b2 b1.
+Proof.
+  intros b1 b2 H.
+  inversion H. constructor ;
+  symmetry; assumption.
+Qed.
+
+Lemma bigraph_type_equality_trans {s i r o : FinDecType} : 
+forall (b1 b2 b3 : bigraph s i r o),
+bigraph_type_equality b1 b2 -> bigraph_type_equality b2 b3 -> bigraph_type_equality b1 b3.
+Proof.
+  intros b1 b2 b3 H1 H2.
+  inversion H1. inversion H2.
+  constructor.
+  - rewrite H. rewrite H6. reflexivity.
+  - rewrite H0. rewrite H7. reflexivity.
+  - rewrite H3. rewrite H8. reflexivity.
+Qed.
+
+Definition bigraph_parent_site_equality {s i r o : FinDecType} (b1 : bigraph s i r o) (b2 : bigraph s i r o) : Prop :=
+  forall site:(@type s), 
+  match (get_parent b1 (inr site)) with
+  | inr root1 => match (get_parent b2 (inr site)) with
+                |inr root2 => root1 = root2 
+                | _ => False
+                end
+  | _ => False
+  end.
+
+Definition cast {A B: Type} (H : A = B ): A -> B. 
+Proof. intros. rewrite <- H. apply X. Qed.
+
+Definition equiv_inter_type' {A B: Type} {H:A=B} (a:A) (b:B) : Prop.
+Proof. destruct H. exact (a=b). Defined.
+
+Definition eq_Type (A:Type) (B:Type) : A = B. Admitted.
+(*:=
+  match eq_dec A B with
+  | left eq_proof => eq_proof
+  | right _ => eq_refl
+  end. *)
+
+Definition equiv_inter_type {A B: Type} (a:A) (b:B) : Prop. 
+Proof. destruct (eq_Type A B). exact (a=b). Defined.
+
+Lemma equiv_inter_type_refl {A : Type} (a:A) : equiv_inter_type a a.
+Proof. unfold equiv_inter_type. 
+Admitted.
+
+Lemma equiv_inter_type_sym {A B : Type} (a:A) (b:B) : 
+  equiv_inter_type a b -> equiv_inter_type b a.
+Admitted.
+-
+Lemma equiv_inter_type_trans {A B C : Type} (a:A) (b:B) (c:C): 
+  equiv_inter_type a b -> equiv_inter_type b c -> equiv_inter_type a c.
+Admitted.
+
+(* Add Parametric Relation (A:Type) : (equiv_inter_type A A)
+    reflexivity proved by (equiv_inter_type_refl)
+    symmetry proved by (equiv_inter_type_sym)
+    transitivity proved by (equiv_inter_type_trans)
+      as equiv_inter_type_rel. *)
+
+Definition parent_node_equiv 
+  {s i r o : FinDecType} 
+  (b1 : bigraph s i r o) (b2 : bigraph s i r o) := 
+  forall n1:get_node b1, forall n2:get_node b2,
+  equiv_inter_type n1 n2 -> 
+    equiv_inter_type (get_parent b1 (inl n1)) (get_parent b2 (inl n2)).
+
+Definition parent_site_equiv 
+  {s i r o : FinDecType} 
+  (b1 : bigraph s i r o) (b2 : bigraph s i r o) := 
+  forall site:(@type s), 
+    equiv_inter_type (get_parent b1 (inr site)) (get_parent b2 (inr site)).
+
+
+Definition parent_equiv {s i r o : FinDecType} 
+  (b1 : bigraph s i r o) (b2 : bigraph s i r o) := 
+  parent_node_equiv b1 b2 /\ parent_site_equiv b1 b2.
+
+Definition parent_equiv' {s i r o n e k: FinDecType} 
+  (b1 : bigraph' s i r o n e k) (b2 : bigraph' s i r o n e k) := 
+  forall k_:(@type k), arity' s i r o n e k b1 k_ = arity' s i r o n e k b2 k_.
+
+Definition bigraph_equality {s i r o : FinDecType} (b1 : bigraph s i r o) (b2 : bigraph s i r o) : Prop :=
+  bigraph_type_equality b1 b2 /\ parent_equiv b1 b2.
+
+Lemma bigraph_equality_refl {s i r o : FinDecType} : 
+  forall (b : bigraph s i r o), bigraph_equality b b.
+Proof.
+  intros b.
+  constructor. 
+  - apply bigraph_type_equality_refl. 
+  - constructor. 
+    + unfold parent_node_equiv. intros. Admitted.
+    (* rewrite H. apply equiv_inter_type_refl.
+    constructor. 
+    reflexivity.
+Qed. *)
+
+Lemma bigraph_equality_sym {s i r o : FinDecType} : 
+forall (b1 b2 : bigraph s i r o),
+bigraph_equality b1 b2 -> bigraph_equality b2 b1.
+Proof.
+  intros b1 b2 H.
+  inversion H. Admitted.
+
+
+Lemma bigraph_equality_trans {s i r o : FinDecType} : 
+forall (b1 b2 b3 : bigraph s i r o),
+bigraph_equality b1 b2 -> bigraph_equality b2 b3 -> bigraph_equality b1 b3.
+Proof.
+  intros b1 b2 b3 H1 H2.
+  inversion H1. inversion H2.
+  constructor.
+  - Admitted.
 
 (* MAKERS FOR DISJOINT JUXTAPOSITION   *)
   (* cannot generalise NoDup_map to injective functions bc one maps on la the other on lb *)
@@ -444,6 +687,7 @@ Definition dis_juxtaposition {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
 
 Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativity).
 
+
 Lemma correct_node_type {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   get_node (b1 || b2) = ((get_node b1) + (get_node b2))%type.
@@ -618,7 +862,75 @@ Definition composition {s1 i1 r1 o1 s2 i2 : FinDecType}
 Notation "b1 'o' b2" := (composition b1 b2) (at level 40, left associativity).
 
 (* IMPLEMENTATION OF A BIGRAPH *)
-  Example mySite : Type := {n:nat | n<=0}.
+  Lemma voidFinite : finite void.
+  Proof. unfold finite. exists []. constructor. + constructor. + unfold Full.
+  intros. destruct a. Qed.
+  
+  Lemma voidDec : EqDec void.
+  Proof. unfold EqDec. intros. destruct x. Qed. 
+
+  Definition voidFinDecType : FinDecType :=
+    {|
+      type := void ;
+      finite_type := voidFinite;
+      dec_type := voidDec
+    |}.
+
+  Lemma unitFinite : finite unit.
+  Proof. unfold finite. exists [tt]. constructor. + apply NoDup_cons.
+  ++ intros contra. contradiction.
+  ++ constructor.
+  + unfold Full.
+  intros. destruct a. unfold In. auto. Qed.
+  
+  Lemma unitDec : EqDec unit.
+  Proof. unfold EqDec. intros. destruct x. destruct y. left. auto. Qed. 
+
+  Definition unitFinDecType : FinDecType :=
+    {|
+      type := unit ;
+      finite_type := unitFinite;
+      dec_type := unitDec
+    |}.
+
+  Example acyclic_unit : 
+    acyclic (@type unitFinDecType) (@type voidFinDecType) (@type unitFinDecType) (fun _ => inl tt).
+    Proof. unfold acyclic. intros. Admitted.
+  Example vft : (@type voidFinDecType). Proof. unfold voidFinDecType. simpl. Admitted. 
+  (* Example my_control (n:FinDecType) : FinDecType. *)
+  Example myUnitBigraph : bigraph voidFinDecType voidFinDecType unitFinDecType voidFinDecType :=
+    {|
+    node := unitFinDecType ;
+    edge := voidFinDecType ;
+    kind := unitFinDecType ;
+    arity := (fun _ => 1) ;
+    control := (fun _ => tt) ;
+    parent := (fun _ => inl tt) ; 
+    link := (fun _ => inr vft ) ;
+    ap := acyclic_unit ;
+  |}.
+
+  (* Theorem ensemblefinite (N:nat) : finite {n:nat | n<N}.
+  Proof. intros. unfold finite.  
+  induction N.
+  - exists []. unfold Listing. split. 
+    + constructor.
+    + unfold Full. intros. destruct a. contradiction l.
+    
+    constructor. edestruct NoDup. auto.  
+  exists ([exist (fun n : nat => n < N) N (N<N)]). Admitted.
+
+  Theorem ensembledec (N:nat) : EqDec {n:nat | n<N}.
+  Proof.  unfold EqDec. intros. destruct x. destruct y. Admitted.
+
+  Example site : FinDecType := 
+  {|
+    type := {n:nat | n<1} ;
+    finite_type := ensemblefinite 1;
+    dec_type := ensembledec 1
+  |}.
+
+
   Example myInnername : Type := {n:nat | n<=0}.
   Example myRoot : Type := {n:nat | n<=0}.
   Example root0 : myRoot.
@@ -739,7 +1051,7 @@ Notation "b1 'o' b2" := (composition b1 b2) (at level 40, left associativity).
     parent := myParent ; 
     link := myLink ;
     ap := myAp ;
-  |}.
+  |}. *)
 
 
 
@@ -749,144 +1061,144 @@ End Bigraph.
 Module EJCP.
 
 
-Inductive myZ : Type :=
-  | z : Z -> myZ
-  | plusinf : myZ
-  | moinsinf : myZ.
+  Inductive myZ : Type :=
+    | z : Z -> myZ
+    | plusinf : myZ
+    | moinsinf : myZ.
 
-Record intervalle : Type :=
-  {
-    inf : Z ;
-    sup : Z 
-  }.
+  Record intervalle : Type :=
+    {
+      inf : Z ;
+      sup : Z 
+    }.
 
-Definition plus_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
-  {|
-    inf := @inf int1 + @inf int2 ;
-    sup := @sup int1 + @sup int2 
-  |}.
+  Definition plus_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
+    {|
+      inf := @inf int1 + @inf int2 ;
+      sup := @sup int1 + @sup int2 
+    |}.
 
-Notation "i1 '+i' i2" := (plus_inter i1 i2) (at level 40, left associativity).
+  Notation "i1 '+i' i2" := (plus_inter i1 i2) (at level 40, left associativity).
 
-Definition moins_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
-  {|
-    inf := @inf int1 - @sup int2 ;
-    sup := @sup int1 - @inf int2 
-  |}.
-
-
-Notation "i1 '-i' i2" := (moins_inter i1 i2) (at level 40, left associativity).
-
-Search (_ < _).
-
-Definition my_min (a b : Z) : Z := 
-  if Z.ltb a b then b else a.
-
-Definition my_max (a b : Z) : Z :=
-  if Z.gtb a b then b else a.
-
-Definition fois_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
-  let ac := Z.mul (@inf int1) (@inf int2) in
-  let ad := Z.mul (@inf int1) (@sup int2) in
-  let bc := Z.mul (@sup int1) (@inf int2) in
-  let bd := Z.mul (@sup int1) (@sup int2) in
-  {|
-    inf := my_min (my_min (ac) (ad)) (my_min (bc) (bd)) ;
-    sup := my_max (my_max (ac) (ad)) (my_max (bc) (bd)) ;
-  |}.
-
-Notation "i1 '*i' i2" := (fois_inter i1 i2) (at level 40, left associativity).
+  Definition moins_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
+    {|
+      inf := @inf int1 - @sup int2 ;
+      sup := @sup int1 - @inf int2 
+    |}.
 
 
-Definition div_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
-  let ac := Z.div (@inf int1) (@inf int2) in
-  let ad := Z.div (@inf int1) (@sup int2) in
-  let bc := Z.div (@sup int1) (@inf int2) in
-  let bd := Z.div (@sup int1) (@sup int2) in
-  {|
-    inf := my_min (my_min (ac) (ad)) (my_min (bc) (bd)) ;
-    sup := my_max (my_max (ac) (ad)) (my_max (bc) (bd)) ;
-  |}.
+  Notation "i1 '-i' i2" := (moins_inter i1 i2) (at level 40, left associativity).
+
+  Search (_ < _).
+
+  Definition my_min (a b : Z) : Z := 
+    if Z.ltb a b then b else a.
+
+  Definition my_max (a b : Z) : Z :=
+    if Z.gtb a b then b else a.
+
+  Definition fois_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
+    let ac := Z.mul (@inf int1) (@inf int2) in
+    let ad := Z.mul (@inf int1) (@sup int2) in
+    let bc := Z.mul (@sup int1) (@inf int2) in
+    let bd := Z.mul (@sup int1) (@sup int2) in
+    {|
+      inf := my_min (my_min (ac) (ad)) (my_min (bc) (bd)) ;
+      sup := my_max (my_max (ac) (ad)) (my_max (bc) (bd)) ;
+    |}.
+
+  Notation "i1 '*i' i2" := (fois_inter i1 i2) (at level 40, left associativity).
 
 
-Notation "i1 '/i' i2" := (div_inter i1 i2) (at level 40, left associativity).
-
-Definition inter_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
-  {|
-    inf := my_max (@inf int1) (@inf int2);
-    sup := my_min (@sup int1) (@sup int2)
-  |}.
-
-
-Notation "i1 '/\i' i2" := (inter_inter i1 i2) (at level 40, left associativity).
-
-Definition union_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
-  {|
-    inf := my_min (@inf int1) (@inf int2);
-    sup := my_max (@sup int1) (@sup int2)
-  |}.
-
-Notation "i1 '\/i' i2" := (union_inter i1 i2) (at level 40, left associativity).
-Definition eqb_inter (int1 : intervalle) (int2 : intervalle) : bool :=
-  Z.eqb (@inf int1) (@inf int2) &&
-  Z.eqb (@sup int1) (@sup int2).
-Notation "i1 '=i?' i2" := (eqb_inter i1 i2) (at level 40, left associativity).
+  Definition div_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
+    let ac := Z.div (@inf int1) (@inf int2) in
+    let ad := Z.div (@inf int1) (@sup int2) in
+    let bc := Z.div (@sup int1) (@inf int2) in
+    let bd := Z.div (@sup int1) (@sup int2) in
+    {|
+      inf := my_min (my_min (ac) (ad)) (my_min (bc) (bd)) ;
+      sup := my_max (my_max (ac) (ad)) (my_max (bc) (bd)) ;
+    |}.
 
 
-Definition eq_inter (int1 : intervalle) (int2 : intervalle) : Prop :=
-  Z.eq (@inf int1) (@inf int2) /\
-  Z.eq (@sup int1) (@sup int2).
-Notation "i1 '=i' i2" := (eq_inter i1 i2) (at level 40, left associativity).
+  Notation "i1 '/i' i2" := (div_inter i1 i2) (at level 40, left associativity).
 
-Inductive nodeAST :=
-| zAST : Z -> nodeAST
-| interAST : intervalle -> nodeAST
-| plusAST : intervalle -> nodeAST
-| moinsAST : intervalle -> nodeAST
-| foisAST : intervalle -> nodeAST
-| divAST : intervalle -> nodeAST
-| infAST : intervalle -> nodeAST
-| supAST : intervalle -> nodeAST.
+  Definition inter_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
+    {|
+      inf := my_max (@inf int1) (@inf int2);
+      sup := my_min (@sup int1) (@sup int2)
+    |}.
 
-Inductive AST :=
-| EmptyAST : AST
-| rootAST : nodeAST -> AST -> AST -> AST.
 
-Fixpoint top_down (inter:intervalle) (ast:AST) : intervalle :=
-  match ast with 
-  | EmptyAST => inter
-  | rootAST n ast_left ast_right => 
-    match n with =>
-    | zAST z => inter /\i {| inf := z ; sup := z|} 
-    | interAST inter' => inter
-    | plusAST inter' => top_down (u /\i (r -i v)) ast_left
-    | moinsAST : nodeAST
-    | foisAST : nodeAST
-    | divAST : nodeAST
-    | infAST : nodeAST
-    | supAST : nodeAST.
-    end
-  end.
+  Notation "i1 '/\i' i2" := (inter_inter i1 i2) (at level 40, left associativity).
 
-(*Lemma inverse : forall (u : intervalle) (v : intervalle) (r : intervalle),
-  r =i(u +i v) -> u =i (u /\i (r -i v)) /\ v =i (v /\i (r -i u)).
-Proof.
-  intros.
-  unfold eq_inter in H.
-  unfold Z.eq in H.
-  unfold plus_inter in H.
-  simpl in H.
-  destruct H as [Hinf Hsup].
-  split.
-  - unfold eq_inter.
+  Definition union_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
+    {|
+      inf := my_min (@inf int1) (@inf int2);
+      sup := my_max (@sup int1) (@sup int2)
+    |}.
+
+  Notation "i1 '\/i' i2" := (union_inter i1 i2) (at level 40, left associativity).
+  Definition eqb_inter (int1 : intervalle) (int2 : intervalle) : bool :=
+    Z.eqb (@inf int1) (@inf int2) &&
+    Z.eqb (@sup int1) (@sup int2).
+  Notation "i1 '=i?' i2" := (eqb_inter i1 i2) (at level 40, left associativity).
+
+
+  Definition eq_inter (int1 : intervalle) (int2 : intervalle) : Prop :=
+    Z.eq (@inf int1) (@inf int2) /\
+    Z.eq (@sup int1) (@sup int2).
+  Notation "i1 '=i' i2" := (eq_inter i1 i2) (at level 40, left associativity).
+
+  Inductive nodeAST :=
+  | zAST : Z -> nodeAST
+  | interAST : intervalle -> nodeAST
+  | plusAST : intervalle -> nodeAST
+  | moinsAST : intervalle -> nodeAST
+  | foisAST : intervalle -> nodeAST
+  | divAST : intervalle -> nodeAST
+  | infAST : intervalle -> nodeAST
+  | supAST : intervalle -> nodeAST.
+
+  Inductive AST :=
+  | EmptyAST : AST
+  | rootAST : nodeAST -> AST -> AST -> AST.
+
+  (* Fixpoint top_down (inter:intervalle) (ast:AST) : intervalle :=
+    match ast with 
+    | EmptyAST => inter
+    | rootAST n ast_left ast_right => 
+      match n with 
+      | zAST z => inter /\i {| inf := z ; sup := z|} 
+      | interAST inter' => inter
+      | plusAST inter' => top_down (u /\i (r -i v)) ast_left
+      | moinsAST : nodeAST
+      | foisAST : nodeAST
+      | divAST : nodeAST
+      | infAST : nodeAST
+      | supAST : nodeAST
+      end
+    end. *)
+
+  (*Lemma inverse : forall (u : intervalle) (v : intervalle) (r : intervalle),
+    r =i(u +i v) -> u =i (u /\i (r -i v)) /\ v =i (v /\i (r -i u)).
+  Proof.
+    intros.
+    unfold eq_inter in H.
+    unfold Z.eq in H.
+    unfold plus_inter in H.
+    simpl in H.
+    destruct H as [Hinf Hsup].
     split.
-    + unfold Z.eq.     
-      unfold inter_inter. 
-      unfold moins_inter.
-      simpl.
-      unfold my_max.
-      induction Z.gtb.
-      ++  *)
+    - unfold eq_inter.
+      split.
+      + unfold Z.eq.     
+        unfold inter_inter. 
+        unfold moins_inter.
+        simpl.
+        unfold my_max.
+        induction Z.gtb.
+        ++  *)
 
 
  
