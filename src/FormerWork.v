@@ -146,3 +146,51 @@ Definition parent_equiv {s i r o : FinDecType}
 Definition parent_equiv' {s i r o n e k: FinDecType} 
   (b1 : bigraph' s i r o n e k) (b2 : bigraph' s i r o n e k) := 
   forall k_:(@type k), arity' s i r o n e k b1 k_ = arity' s i r o n e k b2 k_
+
+
+
+  Inductive bigraph_type_equality {s i r o : FinDecType} : bigraph s i r o -> bigraph s i r o -> Prop :=
+  | bigraph_type_equality_intro : forall b1 b2,
+    get_node b1 = get_node b2 ->
+    get_edge b1 = get_edge b2 ->
+    get_kind b1 = get_kind b2 ->
+    bigraph_type_equality b1 b2.
+
+Lemma bigraph_type_equality_refl {s i r o : FinDecType} : 
+  forall (b : bigraph s i r o), bigraph_type_equality b b.
+  Proof.
+    intros b.
+    constructor; reflexivity.
+  Qed.
+
+Lemma bigraph_type_equality_sym {s i r o : FinDecType} : 
+forall (b1 b2 : bigraph s i r o),
+bigraph_type_equality b1 b2 -> bigraph_type_equality b2 b1.
+  Proof.
+    intros b1 b2 H.
+    inversion H. constructor ;
+    symmetry; assumption.
+  Qed.
+
+Lemma bigraph_type_equality_trans {s i r o : FinDecType} : 
+forall (b1 b2 b3 : bigraph s i r o),
+bigraph_type_equality b1 b2 -> bigraph_type_equality b2 b3 -> bigraph_type_equality b1 b3.
+Proof.
+  intros b1 b2 b3 H1 H2.
+  inversion H1. inversion H2.
+  constructor.
+  - rewrite H. rewrite H6. reflexivity.
+  - rewrite H0. rewrite H7. reflexivity.
+  - rewrite H3. rewrite H8. reflexivity.
+Qed.
+
+
+Definition cast {A B: Type} (H : A = B ): A -> B. 
+Proof. intros. rewrite <- H. apply X. Defined.
+
+Definition rcast {A B: Type} (H : A = B ): B -> A. 
+Proof. intros. rewrite -> H. apply X. Defined.
+
+Lemma equal_is_bij {A B: Type} : 
+A = B -> bijection A B.
+Proof. intros H. rewrite <- H. apply bijection_id. Qed. 

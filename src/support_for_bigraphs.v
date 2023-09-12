@@ -374,10 +374,6 @@ Record bijection (A B : Type) := mkBijection
 Definition bijection_inv {A B} (bij : bijection A B) : bijection B A :=
  (mkBijection B A (bij.(backward A B)) (bij.(forward A B)) (bij.(bof_id A B)) (bij.(fob_id A B))).
 
-Lemma bijection_forward_equals_inv_backward {A B} (bij : bijection A B) :
-  bij.(forward A B) = (bijection_inv bij).(backward B A).
-  Proof. unfold bijection_inv. simpl. reflexivity. Qed.
-
 
 Definition bijection_id {A} : bijection A A :=
  (mkBijection A A id id eq_refl eq_refl).
@@ -643,6 +639,45 @@ apply bij_eq.
 reflexivity.
 reflexivity.
 Qed.
+
+(******** Section Cecile ********)
+Lemma bijection_forward_equals_inv_backward {A B} (bij : bijection A B) :
+    bij.(forward A B) = (bijection_inv bij).(backward B A).
+    Proof. unfold bijection_inv. simpl. reflexivity. Qed.
+
+  Lemma bijection_forward_inv_equals_backward {A B} (bij : bijection A B) :
+    (bijection_inv bij).(forward B A) = bij.(backward A B).
+    Proof. unfold bijection_inv. simpl. reflexivity. Qed.
+  
+  Lemma bof_a_eq_a {A B} (bij : bijection A B) (a:A) :
+    a = backward A B bij (forward A B bij a).
+    Proof. change (a = (backward A B bij <o> forward A B bij) a). rewrite (bof_id A B bij). 
+    unfold id. reflexivity. Qed.
+
+  Lemma fob_a_eq_a {A B} (bij : bijection A B) (b:B) :
+    b = forward A B bij (backward A B bij b).
+    Proof. change (b = (forward A B bij <o> backward A B bij) b). rewrite (fob_id A B bij). 
+    unfold id. reflexivity. Qed. 
+
+  Theorem bij_preserve_equality {A} (bij : bijection A A) (a:A) (b:A) :
+    a = b <-> bij.(forward A A) a = bij.(forward A A) b.
+    Proof. split.
+    - intros. rewrite H. reflexivity.
+    - intros. 
+      set (x := bij.(forward A A) a).
+      assert (a = bij.(backward A A) x).
+      + change (a = backward A A bij (bij.(forward A A) a)). apply bof_a_eq_a.
+      + rewrite H0 in H. rewrite <- fob_a_eq_a in H.
+        rewrite H in H0. rewrite <- (@bof_a_eq_a A A bij) in H0. apply H0. Qed.
+
+  Lemma fx_eq_by {A B} (bij:bijection A B) (a:A) (b:B) :
+    a = backward A B bij b <-> b = forward A B bij a.
+    Proof. split.
+    - intros. rewrite H. apply fob_a_eq_a. 
+    - intros. rewrite H. apply bof_a_eq_a. Qed. 
+
+(**********************)
+
 
 Definition fin (n : nat) := { p | p < n }.
 
