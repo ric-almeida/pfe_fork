@@ -1,0 +1,142 @@
+DIGEST ab5aab5e1b4b744a13c58505decfc6ed
+FDecidable
+R24:28 Coq.Arith.Arith <> <> lib
+R30:35 Coq.ZArith.ZArith <> <> lib
+R37:41 Coq.micromega.Psatz <> <> lib
+R43:46 Coq.Bool.Bool <> <> lib
+R72:77 Coq.Strings.String <> <> lib
+R79:82 Coq.Lists.List <> <> lib
+R84:99 Coq.Program.Equality <> <> lib
+R101:110 Coq.Program.Wf <> <> lib
+R128:136 Coq.Relations.Relations <> <> lib
+R154:159 Coq.funind.Recdef <> <> lib
+R178:188 Coq.Structures.OrderedType <> <> lib
+R208:221 Coq.Lists.List <> <> lib
+R239:255 Coq.NArith.NArith <> <> lib
+R273:290 Coq.Strings.String <> <> lib
+R319:323 Coq.Program.Basics <> apply def
+not 304:304 <> :::x_'@@'_x
+mod 790:793 <> ADec
+ax 807:807 ADec A
+ax 827:835 ADec eq_dec_As
+R855:855 Decidable ADec A defax
+R859:859 Coq.Init.Specif <> ::type_scope:'{'_x_'}'_'+'_'{'_x_'}' not
+R867:871 Coq.Init.Specif <> ::type_scope:'{'_x_'}'_'+'_'{'_x_'}' not
+R881:881 Coq.Init.Specif <> ::type_scope:'{'_x_'}'_'+'_'{'_x_'}' not
+R862:864 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R860:861 Decidable <> a1 var
+R865:866 Decidable <> a2 var
+R872:873 Coq.Init.Logic <> ::type_scope:'~'_x not
+R876:878 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R874:875 Decidable <> a1 var
+R879:880 Decidable <> a2 var
+def 896:900 ADec eq_As
+R911:911 Decidable ADec A defax
+R930:932 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R928:929 Decidable <> a1 var
+R933:934 Decidable <> a2 var
+prf 946:954 ADec eq_As_dec
+R973:973 Decidable ADec A defax
+R981:982 Coq.Init.Specif <> ::type_scope:'{'_x_'}'_'+'_'{'_x_'}' not
+R990:996 Coq.Init.Specif <> ::type_scope:'{'_x_'}'_'+'_'{'_x_'}' not
+R1006:1007 Coq.Init.Specif <> ::type_scope:'{'_x_'}'_'+'_'{'_x_'}' not
+R985:987 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R983:984 Decidable <> a1 var
+R988:989 Decidable <> a2 var
+R997:998 Coq.Init.Logic <> ::type_scope:'~'_x not
+R1001:1003 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R999:1000 Decidable <> a1 var
+R1004:1005 Decidable <> a2 var
+R1036:1044 Decidable ADec eq_dec_As defax
+R1036:1044 Decidable ADec eq_dec_As defax
+def 1113:1119 ADec eq_As_b
+R1130:1130 Decidable ADec A defax
+R1135:1138 Coq.Init.Datatypes <> bool ind
+R1151:1159 Decidable ADec eq_dec_As defax
+R1151:1159 Decidable ADec eq_dec_As defax
+R1181:1184 Coq.Init.Datatypes <> true constr
+R1181:1184 Coq.Init.Datatypes <> true constr
+R1195:1199 Coq.Init.Datatypes <> false constr
+R1195:1199 Coq.Init.Datatypes <> false constr
+prf 1220:1236 ADec eqAb_eqA_reflects
+R1256:1256 Decidable ADec A defax
+R1264:1270 Coq.Bool.Bool <> reflect ind
+R1287:1293 Decidable ADec eq_As_b def
+R1298:1299 Decidable <> a2 var
+R1295:1296 Decidable <> a1 var
+R1273:1277 Decidable ADec eq_As def
+R1282:1283 Decidable <> a2 var
+R1279:1280 Decidable <> a1 var
+R1325:1331 Decidable ADec eq_As_b def
+R1344:1352 Decidable ADec eq_As_dec thm
+R1344:1352 Decidable ADec eq_As_dec thm
+R1386:1394 Decidable ADec eq_dec_As defax
+R1471:1479 Decidable ADec eq_dec_As defax
+prf 1557:1566 ADec eq_As_refl
+R1581:1581 Decidable ADec A defax
+R1589:1593 Decidable ADec eq_As def
+R1597:1597 Decidable <> n var
+R1595:1595 Decidable <> n var
+R1622:1626 Decidable ADec eq_As def
+prf 1657:1665 ADec eq_As_sym
+R1685:1685 Decidable ADec A defax
+R1705:1708 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1709:1713 Decidable ADec eq_As def
+R1718:1719 Decidable <> a1 var
+R1715:1716 Decidable <> a2 var
+R1694:1698 Decidable ADec eq_As def
+R1703:1704 Decidable <> a2 var
+R1700:1701 Decidable <> a1 var
+R1744:1748 Decidable ADec eq_As def
+R1758:1762 Decidable ADec eq_As def
+prf 1809:1819 ADec eq_As_trans
+R1841:1841 Decidable ADec A defax
+R1850:1850 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1862:1866 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1867:1867 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1879:1884 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1896:1896 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1885:1889 Decidable ADec eq_As def
+R1894:1895 Decidable <> a3 var
+R1891:1892 Decidable <> a1 var
+R1868:1872 Decidable ADec eq_As def
+R1877:1878 Decidable <> a3 var
+R1874:1875 Decidable <> a2 var
+R1851:1855 Decidable ADec eq_As def
+R1860:1861 Decidable <> a2 var
+R1857:1858 Decidable <> a1 var
+R1921:1925 Decidable ADec eq_As def
+R1936:1940 Decidable ADec eq_As def
+prf 2002:2012 ADec eq_eq_eq_As
+R2032:2032 Decidable ADec A defax
+R2048:2052 Coq.Init.Logic <> ::type_scope:x_'<->'_x not
+R2043:2045 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R2041:2042 Decidable <> a1 var
+R2046:2047 Decidable <> a2 var
+R2053:2057 Decidable ADec eq_As def
+R2062:2063 Decidable <> a2 var
+R2059:2060 Decidable <> a1 var
+R2115:2118 Decidable ADec <> mod
+mod 2179:2183 <> AADec
+def 2210:2211 AADec AA
+R2224:2224 Coq.Init.Datatypes <> ::type_scope:x_'*'_x not
+R2223:2223 Decidable ADec A defax
+R2225:2225 Decidable ADec A defax
+prf 2238:2247 AADec eq_AAs_dec
+R2268:2269 Decidable AADec AA def
+R2277:2278 Coq.Init.Specif <> ::type_scope:'{'_x_'}'_'+'_'{'_x_'}' not
+R2288:2294 Coq.Init.Specif <> ::type_scope:'{'_x_'}'_'+'_'{'_x_'}' not
+R2306:2307 Coq.Init.Specif <> ::type_scope:'{'_x_'}'_'+'_'{'_x_'}' not
+R2282:2284 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R2279:2281 Decidable <> aa1 var
+R2285:2287 Decidable <> aa2 var
+R2295:2296 Coq.Init.Logic <> ::type_scope:'~'_x not
+R2300:2302 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R2297:2299 Decidable <> aa1 var
+R2303:2305 Decidable <> aa2 var
+R2351:2359 Decidable ADec eq_dec_As defax
+R2381:2389 Decidable ADec eq_dec_As defax
+R2351:2359 Decidable ADec eq_dec_As defax
+R2381:2389 Decidable ADec eq_dec_As defax
+R2381:2389 Decidable ADec eq_dec_As defax
+R2532:2536 Decidable AADec <> mod

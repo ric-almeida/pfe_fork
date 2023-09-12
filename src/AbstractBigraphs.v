@@ -17,6 +17,9 @@ Require Import PropExtensionality.
 Require Import Coq.Setoids.Setoid.
 
 
+From MyProofs Require Import support_for_bigraphs.
+
+(* Require Import support_for_bigraphs. *)
 Set Warnings "-parsing".
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
@@ -83,22 +86,6 @@ Record bigraph  (site: FinDecType)
     parent : @type node + @type site -> @type node + @type root ; 
     link : @type innername + Port (@type node) control arity -> @type outername + @type edge; 
     ap : acyclic (@type node) (@type site) (@type root) parent ;
-  }.
-
-  Record bigraph'  (site: FinDecType) 
-                (innername: FinDecType) 
-                (root: FinDecType) 
-                (outername: FinDecType)
-                (node: FinDecType)
-                (edge: FinDecType)
-                (kind: FinDecType) : Type := 
-  Big'  
-  { 
-    arity' : @type kind -> nat ;
-    control' : @type node -> @type kind ;
-    parent' : @type node + @type site -> @type node + @type root ; 
-    link' : @type innername + Port (@type node) control' arity' -> @type outername + @type edge; 
-    ap' : acyclic (@type node) (@type site) (@type root) parent' ;
   }.
 
 
@@ -168,214 +155,283 @@ Record bigraph  (site: FinDecType)
   @ap s i r o bg.
 
 (* Working on equivalence *)
-Record MyRecord : Type := {
-  field1 : nat;
-  field2 : bool;
-  field3 : Type;
-  field4 : field3 -> nat
-}.
+  Inductive bigraph_type_equality {s i r o : FinDecType} : bigraph s i r o -> bigraph s i r o -> Prop :=
+    | bigraph_type_equality_intro : forall b1 b2,
+      get_node b1 = get_node b2 ->
+      get_edge b1 = get_edge b2 ->
+      get_kind b1 = get_kind b2 ->
+      bigraph_type_equality b1 b2.
+
+  Lemma bigraph_type_equality_refl {s i r o : FinDecType} : 
+    forall (b : bigraph s i r o), bigraph_type_equality b b.
+    Proof.
+      intros b.
+      constructor; reflexivity.
+    Qed.
+
+  Lemma bigraph_type_equality_sym {s i r o : FinDecType} : 
+  forall (b1 b2 : bigraph s i r o),
+  bigraph_type_equality b1 b2 -> bigraph_type_equality b2 b1.
+    Proof.
+      intros b1 b2 H.
+      inversion H. constructor ;
+      symmetry; assumption.
+    Qed.
+
+  Lemma bigraph_type_equality_trans {s i r o : FinDecType} : 
+  forall (b1 b2 b3 : bigraph s i r o),
+  bigraph_type_equality b1 b2 -> bigraph_type_equality b2 b3 -> bigraph_type_equality b1 b3.
+  Proof.
+    intros b1 b2 b3 H1 H2.
+    inversion H1. inversion H2.
+    constructor.
+    - rewrite H. rewrite H6. reflexivity.
+    - rewrite H0. rewrite H7. reflexivity.
+    - rewrite H3. rewrite H8. reflexivity.
+  Qed.
+
+  Definition bigraph_arity_equality {s i r o : FinDecType} 
+  (b1 : bigraph s i r o) (b2 : bigraph s i r o) 
+  (bij_k : bijection (get_kind b1) (get_kind b2)): Prop :=
+    forall k1:get_kind b1, let k2 := bij_k.(forward (get_kind b1) (get_kind b2)) k1 in 
+    get_arity b1 k1 = get_arity b2 k2.
+
+  Definition bigraph_control_equality {s i r o : FinDecType} 
+  (b1 : bigraph s i r o) (b2 : bigraph s i r o) 
+  (bij_n : bijection (get_node b1) (get_node b2))
+  (bij_k : bijection (get_kind b1) (get_kind b2)) : Prop :=
+    forall n1:get_node b1, 
+    let kind1 := get_control b1 n1 in
+    let n2 := bij_n.(forward (get_node b1) (get_node b2)) n1 in 
+    let kind2 := get_control b2 n2 in
+    bij_k.(forward (get_kind b1) (get_kind b2)) kind1 = kind2.
+
+  Definition bigraph_parent_site_equality {s i r o : FinDecType} 
+  (b1 : bigraph s i r o) (b2 : bigraph s i r o) 
+  (bij_n : bijection (get_node b1) (get_node b2)) : Prop :=
+    forall site:(@type s), 
+    match (get_parent b1 (inr site)),(get_parent b2 (inr site)) with
+    | inr root1, inr root2  => root1 = root2
+    | inl node1, inl node2  => bij_n.(forward (get_node b1) (get_node b2)) node1 = node2
+    | _, _ => False
+    end.
+
+  Definition bigraph_parent_node_equality {s i r o : FinDecType} 
+  (b1 : bigraph s i r o) (b2 : bigraph s i r o) 
+  (bij_n : bijection (get_node b1) (get_node b2)): Prop :=
+    forall n1:get_node b1, 
+    let n2 := bij_n.(forward (get_node b1) (get_node b2)) n1 in 
+    match (get_parent b1 (inl n1)),(get_parent b2 (inl n2)) with
+    | inr root1, inr root2  => root1 = root2
+    | inl node1, inl node2  => bij_n.(forward (get_node b1) (get_node b2)) node1 = node2
+    | _, _ => False
+    end.
+
+  Definition bigraph_parent_equality {s i r o : FinDecType} 
+    (b1 : bigraph s i r o) (b2 : bigraph s i r o) 
+    (bij_n : bijection (get_node b1) (get_node b2)): Prop :=
+    bigraph_parent_node_equality b1 b2 bij_n /\ bigraph_parent_site_equality b1 b2 bij_n.
+
+  Definition bigraph_link_innername_equality {s i r o : FinDecType} 
+  (b1 : bigraph s i r o) (b2 : bigraph s i r o) 
+  (bij_e : bijection (get_edge b1) (get_edge b2)) : Prop :=
+    forall inner:(@type i), 
+    match (get_link b1 (inl inner)),(get_link b2 (inl inner)) with
+    | inr edge1, inr edge2  => bij_e.(forward (get_edge b1) (get_edge b2)) edge1 = edge2
+    | inl outer1, inl outer2  => outer1 = outer2
+    | _, _ => False
+    end.
+
+  Definition bigraph_link_port_equality {s i r o : FinDecType} 
+  (b1 : bigraph s i r o) (b2 : bigraph s i r o) 
+  (bij_p : bijection (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2))) 
+  (bij_e : bijection (get_edge b1) (get_edge b2)): Prop :=
+    forall p1:(Port (get_node b1) (get_control b1) (get_arity b1)), 
+    let p2 := bij_p.(forward (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2))) p1 in
+    match (get_link b1 (inr p1)),(get_link b2 (inr p2)) with
+    | inr edge1, inr edge2  => bij_e.(forward (get_edge b1) (get_edge b2)) edge1 = edge2
+    | inl outer1, inl outer2  => outer1 = outer2
+    | _, _ => False
+    end.
+
+  Definition bigraph_link_equality {s i r o : FinDecType} 
+    (b1 : bigraph s i r o) (b2 : bigraph s i r o) 
+    (bij_e : bijection (get_edge b1) (get_edge b2))
+    (bij_p : bijection (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2))) : Prop :=
+    bigraph_link_innername_equality b1 b2 bij_e /\ bigraph_link_port_equality b1 b2 bij_p bij_e.
+  
+  Definition cast {A B: Type} (H : A = B ): A -> B. 
+  Proof. intros. rewrite <- H. apply X. Defined.
+
+  Definition rcast {A B: Type} (H : A = B ): B -> A. 
+  Proof. intros. rewrite -> H. apply X. Defined.
+
+  Lemma equal_is_bij {A B: Type} : 
+  A = B -> bijection A B.
+  Proof. intros H. rewrite <- H. apply bijection_id. Qed. 
 
 
-Definition is_field3_the_same {t1 : Type}
-  (mr1 : MyRecord) (mr2 : MyRecord) :=
-  field3 mr1 = t1 /\ field3 mr2 = t1.
+  Definition bigraph_equality {s i r o : FinDecType} 
+  (b1 : bigraph s i r o) (b2 : bigraph s i r o)
+  (bij_n : bijection (get_node b1) (get_node b2))
+  (bij_e : bijection (get_edge b1) (get_edge b2))
+  (bij_k : bijection (get_kind b1) (get_kind b2))
+  (bij_p : bijection (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2))) : Prop :=
+    bigraph_type_equality b1 b2 /\ 
+    bigraph_arity_equality b1 b2 bij_k /\ 
+    bigraph_control_equality b1 b2 bij_n bij_k/\ 
+    bigraph_parent_equality b1 b2 bij_n /\ 
+    bigraph_link_equality b1 b2 bij_e bij_p.
 
+  Lemma arity_refl {s i r o : FinDecType} (b : bigraph s i r o) :
+    let bij_k := bijection_id  in
+    bigraph_arity_equality b b bij_k.
+  Proof. unfold bigraph_arity_equality. (* auto. *) 
+  intros. unfold bijection_id. simpl. unfold id. reflexivity. Qed.
 
-(* Definition field4_equiv 
-  (mr1 : MyRecord) (mr2 : MyRecord) :=
-  is_field3_the_same mr1 mr2 ->  
-  forall x : field3 mr1, forall y : field3 mr2, 
-    x = y -> field4 mr1 x = field4 mr2 y. *)
+  Lemma control_refl {s i r o : FinDecType} (b : bigraph s i r o) :
+    let bij_n := bijection_id  in
+    let bij_k := bijection_id  in
+    bigraph_control_equality b b bij_n bij_k.
+  Proof. unfold bigraph_control_equality. (* auto. *) 
+  intros. unfold bijection_id. simpl. unfold id. reflexivity. Qed.
 
+  Lemma parent_refl {s i r o : FinDecType} (b : bigraph s i r o) :
+    let bij_n := bijection_id  in
+    bigraph_parent_equality b b bij_n.
+  Proof. unfold bigraph_parent_equality. split. (* auto. *) 
+    + unfold bigraph_parent_node_equality. intros.
+    unfold bijection_id. simpl. unfold id. 
+    set (pn1 := get_parent b (inl n1)). 
+    destruct pn1 as [pn1 | pr1]; reflexivity.
+    + unfold bigraph_parent_site_equality. intros.
+    unfold bijection_id. simpl. unfold id. 
+    set (ps1 := get_parent b (inr site)). 
+    destruct ps1 as [pn1 | pr1]; reflexivity. Qed.
 
-Inductive MyRecord_equiv : MyRecord -> MyRecord -> Prop :=
-  | MyRecord_equiv_intro :
-    forall r1 r2,
-    field1 r1 = field1 r2 ->
-    MyRecord_equiv r1 r2.
+  Lemma link_refl {s i r o : FinDecType} (b : bigraph s i r o) :
+    let bij_e := bijection_id  in
+    let bij_p := bijection_id  in
+    bigraph_link_equality b b bij_e bij_p.
+  Proof. unfold bigraph_link_equality. split.
+    + unfold bigraph_link_innername_equality. intros.
+    unfold bijection_id. simpl. unfold id. 
+    set (li1 := get_link b (inl inner)). 
+    destruct li1 as [lo1 | le1]; reflexivity.
+    + unfold bigraph_link_port_equality. intros.
+    unfold bijection_id. simpl. unfold id. 
+    set (lp1 := get_link b (inr p1)). 
+    destruct lp1 as [lo1 | le1]; reflexivity. Qed.
 
-Lemma MyRecord_equiv_refl : forall r, MyRecord_equiv r r.
-Proof.
-  intros r.
-  constructor. reflexivity.
-Qed.
-
-Lemma MyRecord_equiv_sym : forall r1 r2,
-  MyRecord_equiv r1 r2 -> MyRecord_equiv r2 r1.
-Proof.
-  intros r1 r2 H.
-  inversion H. constructor.
-  symmetry. assumption.
-Qed.
-
-Lemma MyRecord_equiv_trans : forall r1 r2 r3,
-  MyRecord_equiv r1 r2 -> MyRecord_equiv r2 r3 -> MyRecord_equiv r1 r3.
-Proof.
-  intros r1 r2 r3 H1 H2.
-  inversion H1. inversion H2.
-  constructor.
-  transitivity (field1 r2); assumption.
-Qed.
-
-Add Parametric Relation: (MyRecord) (MyRecord_equiv)
-    reflexivity proved by (MyRecord_equiv_refl)
-    symmetry proved by (MyRecord_equiv_sym)
-    transitivity proved by (MyRecord_equiv_trans)
-      as MyRecord_equiv_rel.
-
-Lemma same_filelds_same_record:
-  forall (g g': MyRecord),
-  field1 g = field1 g' ->
-  field2 g = true
-    -> field2 g' = true
-    -> MyRecord_equiv g g'.
-Proof.
-  induction g; induction g'.
-  simpl.
-  intros H H0 H2. split. simpl. apply H. 
-Qed.
-
-(* Instance MyRecord_Setoid : Setoid MyRecord :=
-  {
-    equiv := MyRecord_equiv;
-    setoid_equiv := MyRecord_equiv;
-    setoid_refl := MyRecord_equiv_refl;
-    setoid_sym := MyRecord_equiv_sym;
-    setoid_trans := MyRecord_equiv_trans;
-  }. *)
-Inductive bigraph_type_equality {s i r o : FinDecType} : bigraph s i r o -> bigraph s i r o -> Prop :=
-  | bigraph_type_equality_intro : forall b1 b2,
-    get_node b1 = get_node b2 ->
-    get_edge b1 = get_edge b2 ->
-    get_kind b1 = get_kind b2 ->
-    bigraph_type_equality b1 b2.
-
-Lemma bigraph_type_equality_refl {s i r o : FinDecType} : 
-  forall (b : bigraph s i r o), bigraph_type_equality b b.
-Proof.
-  intros b.
-  constructor; reflexivity.
-Qed.
-
-Lemma bigraph_type_equality_sym {s i r o : FinDecType} : 
-forall (b1 b2 : bigraph s i r o),
-bigraph_type_equality b1 b2 -> bigraph_type_equality b2 b1.
-Proof.
-  intros b1 b2 H.
-  inversion H. constructor ;
-  symmetry; assumption.
-Qed.
-
-Lemma bigraph_type_equality_trans {s i r o : FinDecType} : 
-forall (b1 b2 b3 : bigraph s i r o),
-bigraph_type_equality b1 b2 -> bigraph_type_equality b2 b3 -> bigraph_type_equality b1 b3.
-Proof.
-  intros b1 b2 b3 H1 H2.
-  inversion H1. inversion H2.
-  constructor.
-  - rewrite H. rewrite H6. reflexivity.
-  - rewrite H0. rewrite H7. reflexivity.
-  - rewrite H3. rewrite H8. reflexivity.
-Qed.
-
-Definition bigraph_parent_site_equality {s i r o : FinDecType} (b1 : bigraph s i r o) (b2 : bigraph s i r o) : Prop :=
-  forall site:(@type s), 
-  match (get_parent b1 (inr site)) with
-  | inr root1 => match (get_parent b2 (inr site)) with
-                |inr root2 => root1 = root2 
-                | _ => False
-                end
-  | _ => False
-  end.
-
-Definition cast {A B: Type} (H : A = B ): A -> B. 
-Proof. intros. rewrite <- H. apply X. Qed.
-
-Definition equiv_inter_type' {A B: Type} {H:A=B} (a:A) (b:B) : Prop.
-Proof. destruct H. exact (a=b). Defined.
-
-Definition eq_Type (A:Type) (B:Type) : A = B. Admitted.
-(*:=
-  match eq_dec A B with
-  | left eq_proof => eq_proof
-  | right _ => eq_refl
-  end. *)
-
-Definition equiv_inter_type {A B: Type} (a:A) (b:B) : Prop. 
-Proof. destruct (eq_Type A B). exact (a=b). Defined.
-
-Lemma equiv_inter_type_refl {A : Type} (a:A) : equiv_inter_type a a.
-Proof. unfold equiv_inter_type. 
-Admitted.
-
-Lemma equiv_inter_type_sym {A B : Type} (a:A) (b:B) : 
-  equiv_inter_type a b -> equiv_inter_type b a.
-Admitted.
--
-Lemma equiv_inter_type_trans {A B C : Type} (a:A) (b:B) (c:C): 
-  equiv_inter_type a b -> equiv_inter_type b c -> equiv_inter_type a c.
-Admitted.
-
-(* Add Parametric Relation (A:Type) : (equiv_inter_type A A)
-    reflexivity proved by (equiv_inter_type_refl)
-    symmetry proved by (equiv_inter_type_sym)
-    transitivity proved by (equiv_inter_type_trans)
-      as equiv_inter_type_rel. *)
-
-Definition parent_node_equiv 
-  {s i r o : FinDecType} 
-  (b1 : bigraph s i r o) (b2 : bigraph s i r o) := 
-  forall n1:get_node b1, forall n2:get_node b2,
-  equiv_inter_type n1 n2 -> 
-    equiv_inter_type (get_parent b1 (inl n1)) (get_parent b2 (inl n2)).
-
-Definition parent_site_equiv 
-  {s i r o : FinDecType} 
-  (b1 : bigraph s i r o) (b2 : bigraph s i r o) := 
-  forall site:(@type s), 
-    equiv_inter_type (get_parent b1 (inr site)) (get_parent b2 (inr site)).
-
-
-Definition parent_equiv {s i r o : FinDecType} 
-  (b1 : bigraph s i r o) (b2 : bigraph s i r o) := 
-  parent_node_equiv b1 b2 /\ parent_site_equiv b1 b2.
-
-Definition parent_equiv' {s i r o n e k: FinDecType} 
-  (b1 : bigraph' s i r o n e k) (b2 : bigraph' s i r o n e k) := 
-  forall k_:(@type k), arity' s i r o n e k b1 k_ = arity' s i r o n e k b2 k_.
-
-Definition bigraph_equality {s i r o : FinDecType} (b1 : bigraph s i r o) (b2 : bigraph s i r o) : Prop :=
-  bigraph_type_equality b1 b2 /\ parent_equiv b1 b2.
-
-Lemma bigraph_equality_refl {s i r o : FinDecType} : 
-  forall (b : bigraph s i r o), bigraph_equality b b.
-Proof.
-  intros b.
-  constructor. 
-  - apply bigraph_type_equality_refl. 
-  - constructor. 
-    + unfold parent_node_equiv. intros. Admitted.
-    (* rewrite H. apply equiv_inter_type_refl.
+  Lemma bigraph_equality_refl {s i r o : FinDecType} 
+    (b : bigraph s i r o) :
+    let bij_n := bijection_id  in
+    let bij_e := bijection_id  in
+    let bij_k := bijection_id  in
+    let bij_p := bijection_id  in
+    bigraph_equality b b bij_n bij_e bij_k bij_p.
+  Proof.
+    intros.
     constructor. 
-    reflexivity.
-Qed. *)
+    - apply bigraph_type_equality_refl. 
+    - split.  
+    + apply arity_refl. 
+    + split.
+    ++ apply control_refl.
+    ++ split. 
+    +++ apply parent_refl.
+    +++ apply link_refl.
+    Qed.
+      
+  Lemma bijection_forward_equals_inv_backward {A B} (bij : bijection A B) :
+    bij.(forward A B) = (bijection_inv bij).(backward B A).
+    Proof. unfold bijection_inv. simpl. reflexivity. Qed.
 
-Lemma bigraph_equality_sym {s i r o : FinDecType} : 
-forall (b1 b2 : bigraph s i r o),
-bigraph_equality b1 b2 -> bigraph_equality b2 b1.
-Proof.
-  intros b1 b2 H.
-  inversion H. Admitted.
+  Lemma bijection_forward_inv_equals_backward {A B} (bij : bijection A B) :
+    (bijection_inv bij).(forward B A) = bij.(backward A B).
+    Proof. unfold bijection_inv. simpl. reflexivity. Qed.
+  
+  Lemma bof_a_eq_a {A B} (bij : bijection A B) (a:A) :
+    a = backward A B bij (forward A B bij a).
+    Proof. change (a = (backward A B bij <o> forward A B bij) a). rewrite (bof_id A B bij). 
+    unfold id. reflexivity. Qed.
+
+  Lemma fob_a_eq_a {A B} (bij : bijection A B) (b:B) :
+    b = forward A B bij (backward A B bij b).
+    Proof. change (b = (forward A B bij <o> backward A B bij) b). rewrite (fob_id A B bij). 
+    unfold id. reflexivity. Qed. 
+
+  Theorem bij_preserve_equality {A} (bij : bijection A A) (a:A) (b:A) :
+  a = b <-> bij.(forward A A) a = bij.(forward A A) b.
+  Proof. split.
+  - intros. rewrite H. reflexivity.
+  - intros. 
+    set (x := bij.(forward A A) a).
+    assert (a = bij.(backward A A) x).
+    + change (a = backward A A bij (bij.(forward A A) a)). apply bof_a_eq_a.
+    + rewrite H0 in H. rewrite <- fob_a_eq_a in H.
+      rewrite H in H0. rewrite <- (@bof_a_eq_a A A bij) in H0. apply H0. Qed.
+
+  Lemma fx_eq_by {A B} (bij:bijection A B) (a:A) (b:B) :
+    a = backward A B bij b <-> b = forward A B bij a.
+    Proof. split.
+    - intros. rewrite H. apply fob_a_eq_a. 
+    - intros. rewrite H. apply bof_a_eq_a. Qed. (*TODO need help*)
+
+  Lemma arity_sym {s i r o : FinDecType}  
+    (b1 : bigraph s i r o) (b2 : bigraph s i r o) 
+    (bij_k : bijection (get_kind b1) (get_kind b2)) :
+    bigraph_arity_equality b1 b2 (bij_k) -> bigraph_arity_equality b2 b1 (bijection_inv bij_k).
+    Proof. unfold bigraph_arity_equality. intros H k2. 
+    rewrite bijection_forward_inv_equals_backward.
+    set (k2' := bij_k.(backward (get_kind b1) (get_kind b2)) k2). 
+    assert (k2 = forward (get_kind b1) (get_kind b2) bij_k k2').
+    - change (k2 = forward (get_kind b1) (get_kind b2) bij_k (backward (get_kind b1)
+    (get_kind b2) bij_k k2)). apply fob_a_eq_a.
+    - rewrite H0. symmetry. apply H with (k1 := k2'). Qed.
+      
+  
+  Lemma bigraph_equality_sym {s i r o : FinDecType} (b1 : bigraph s i r o) (b2 : bigraph s i r o)
+  (bij_n : bijection (get_node b1) (get_node b2))
+  (bij_e : bijection (get_edge b1) (get_edge b2))
+  (bij_k : bijection (get_kind b1) (get_kind b2))
+  (bij_p : bijection (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2))) : 
+    bigraph_equality b1 b2 bij_n bij_e bij_k bij_p 
+      -> bigraph_equality b2 b1 (bijection_inv bij_n) (bijection_inv bij_e) (bijection_inv bij_k) (bijection_inv bij_p).
+  Proof.
+    intros. inversion H.
+    unfold bigraph_equality. split.
+    Focus 2. split. - apply arity_sym. apply H1. Admitted.
+
+  Lemma arity_trans {s i r o : FinDecType}  
+    (b1 : bigraph s i r o) (b2 : bigraph s i r o) (b3 : bigraph s i r o) 
+    (bij_k12 : bijection (get_kind b1) (get_kind b2)) 
+    (bij_k23 : bijection (get_kind b2) (get_kind b3)):
+    bigraph_arity_equality b1 b2 (bij_k12) -> 
+      bigraph_arity_equality b2 b3 (bij_k23) ->
+        bigraph_arity_equality b1 b3 (bij_compose bij_k23 bij_k12).
+    Proof. unfold bigraph_arity_equality. intros H1 H2 k1.
+    simpl. unfold funcomp. rewrite <- H2. rewrite <- H1. reflexivity. Qed. 
 
 
-Lemma bigraph_equality_trans {s i r o : FinDecType} : 
-forall (b1 b2 b3 : bigraph s i r o),
-bigraph_equality b1 b2 -> bigraph_equality b2 b3 -> bigraph_equality b1 b3.
-Proof.
-  intros b1 b2 b3 H1 H2.
-  inversion H1. inversion H2.
-  constructor.
-  - Admitted.
+  Lemma bigraph_equality_trans {s i r o : FinDecType} 
+  (b1 : bigraph s i r o) (b2 : bigraph s i r o) (b3 : bigraph s i r o)
+  (bij_n12 : bijection (get_node b1) (get_node b2))
+  (bij_n23 : bijection (get_node b2) (get_node b3))
+  (bij_e12 : bijection (get_edge b1) (get_edge b2))
+  (bij_e23 : bijection (get_edge b2) (get_edge b3))
+  (bij_k12 : bijection (get_kind b1) (get_kind b2))
+  (bij_k23 : bijection (get_kind b2) (get_kind b3))
+  (bij_p12 : bijection (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2)))
+  (bij_p23 : bijection (Port (get_node b2) (get_control b2) (get_arity b2)) (Port (get_node b3) (get_control b3) (get_arity b3))) : 
+    bigraph_equality b1 b2 bij_n12 bij_e12 bij_k12 bij_p12 
+      -> bigraph_equality b2 b3 bij_n23 bij_e23 bij_k23 bij_p23 
+        -> bigraph_equality b1 b3 (bij_compose bij_n23 bij_n12) (bij_compose bij_e23 bij_e12) (bij_compose bij_k23 bij_k12) (bij_compose bij_p23 bij_p12) .
+  Proof.
+    intros H1 H2.
+    inversion H1. inversion H2.
+    constructor. Focus 2. split. 
+    - apply arity_trans. + apply H0. Admitted. 
 
 (* MAKERS FOR DISJOINT JUXTAPOSITION   *)
   (* cannot generalise NoDup_map to injective functions bc one maps on la the other on lb *)

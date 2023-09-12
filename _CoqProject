@@ -1,13 +1,5 @@
 -R src MyProofs
--I src/
-src/Decidable.v  
-src/Iterable.v   
-src/Innername.v  
-src/Outername.v           
-src/Root.v             
-src/Site.v  
-src/Edge.v         
-src/Node.v       
-src/Port.v     
+-I src/  
+src/support_for_bigraphs.v
 src/AbstractBigraphs.v
 

@@ -8,10 +8,27 @@ Require Import ProofIrrelevance.
 Require Import PropExtensionality.
 Require Import List.
 Require Import Euclid.
+Require Import Lists.List.
+Require Import Arith.
+Require Import List Setoid Compare_dec Morphisms FinFun PeanoNat.
+Import ListNotations. 
 
+Section parametric.
+  Variable T : Type.
+Theorem nth_error_map : forall U (f : T -> U) ls n,
+    nth_error (map f ls) n = match nth_error ls n with
+                               | None => None
+                               | Some x => Some (f x)
+                             end.
+  Proof.
+    induction ls; destruct n; simpl; auto.
+  Qed.
+
+
+  End parametric.
 Definition decidable (P : Prop) := { P } + { ~P }.
 
-Definition Injective { A B : Type } (f : A -> B) := forall x y, f x = f y -> x = y.
+Definition InjectiveXT { A B : Type } (f : A -> B) := forall x y, f x = f y -> x = y.
 
 Inductive closure {N I O : Type} (p : (N+I) -> (N+O)) (ni : N+I) : (N+O) -> Prop :=
 | One  : closure p ni (p ni)
@@ -25,9 +42,9 @@ Definition Acyclic {N I O} (p : N+I -> N+O) := forall ni no, closure p ni no -> 
 
 Definition SurjectiveList { N : Type } (l : list N) := forall n : N, In n l.
 
-Definition InjectiveList { N : Type } (l : list N) := forall i j, i < length l -> nth_error l i = nth_error l j -> i = j.
+Definition InjectiveXTList { N : Type } (l : list N) := forall i j, i < length l -> nth_error l i = nth_error l j -> i = j.
 
-Definition Finite (N : Type) : Type := { l : list N | SurjectiveList l /\ InjectiveList l }.
+Definition Finite (N : Type) : Type := { l : list N | SurjectiveList l /\ InjectiveXTList l }.
 
 Record forest (N I O : Type) : Type := mkForest
 {
@@ -353,8 +370,14 @@ Record bijection (A B : Type) := mkBijection
  bof_id   : backward <o> forward = id;
 }.
 
+
 Definition bijection_inv {A B} (bij : bijection A B) : bijection B A :=
  (mkBijection B A (bij.(backward A B)) (bij.(forward A B)) (bij.(bof_id A B)) (bij.(fob_id A B))).
+
+Lemma bijection_forward_equals_inv_backward {A B} (bij : bijection A B) :
+  bij.(forward A B) = (bijection_inv bij).(backward B A).
+  Proof. unfold bijection_inv. simpl. reflexivity. Qed.
+
 
 Definition bijection_id {A} : bijection A A :=
  (mkBijection A A id id eq_refl eq_refl).
@@ -1546,7 +1569,7 @@ intros n (x, Hx).
 reflexivity.
 Qed.
 
-Theorem inj_inj_fin_n_Sn : forall n, Injective (@inj_fin_n_Sn n).
+Theorem inj_inj_fin_n_Sn : forall n, InjectiveXT (@inj_fin_n_Sn n).
 Proof.
 intros until y.
 destruct x as (x, Hx); destruct y as (y, Hy).
@@ -1562,7 +1585,7 @@ rewrite H.
 apply in_eq.
 Qed.
 
-Lemma inj_option_map : forall A B (f : A -> B), Injective f -> Injective (option_map f).
+Lemma inj_option_map : forall A B (f : A -> B), InjectiveXT f -> InjectiveXT (option_map f).
 Proof.
 intros until y.
 destruct x as [x'|]; destruct y as [y'|]; simpl; try discriminate.
@@ -1571,7 +1594,7 @@ destruct x as [x'|]; destruct y as [y'|]; simpl; try discriminate.
 + reflexivity.
 Qed.
 
-Lemma injective_nodup : forall A (lA : list A), InjectiveList lA -> NoDup lA.
+Lemma injective_nodup : forall A (lA : list A), InjectiveXTList lA -> NoDup lA.
 Proof.
 intros A lA HlA.
 induction lA.
@@ -1591,7 +1614,7 @@ induction lA.
     * exact Hij.
 Qed.
 
-Lemma nodup_injective : forall A (lA : list A), NoDup lA -> InjectiveList lA.
+Lemma nodup_injective : forall A (lA : list A), NoDup lA -> InjectiveXTList lA.
 Proof.
 intros A lA HA.
 induction HA.
@@ -1613,6 +1636,8 @@ Lemma nth_error_nil : forall A (i : nat), nth_error (@nil A) i = None.
 Proof.
 destruct i; reflexivity.
 Qed.
+
+
 
 Theorem finite_fin : forall n, Finite (fin n).
 Proof.
@@ -1677,14 +1702,14 @@ induction n.
          exact H.
 Qed.
 
-Lemma inj_inl : forall A B, Injective (@inl A B).
+Lemma inj_inl : forall A B, InjectiveXT (@inl A B).
 Proof.
 intros A B x y Hxy.
 injection Hxy.
 exact (fun H => H).
 Qed.
 
-Lemma inj_inr : forall A B, Injective (@inr A B).
+Lemma inj_inr : forall A B, InjectiveXT (@inr A B).
 Proof.
 intros A B x y Hxy.
 injection Hxy.
@@ -1779,7 +1804,7 @@ split.
       exact Hi2.
 Qed.
 
-Lemma inj_proj1_sig : forall A (P : A -> Prop), Injective (@proj1_sig A P).
+Lemma inj_proj1_sig : forall A (P : A -> Prop), InjectiveXT (@proj1_sig A P).
 Proof.
 intros A P (a1, H1) (a2, H2) H12.
 apply subset_eq_compat.
@@ -2064,7 +2089,7 @@ induction lA; intros i Hi; simpl.
   destruct (DecP a).
   - destruct i as [|i'].
     * exact 0.
-    * exact (S (IHlA i' (Arith_prebase.lt_S_n _ _ Hi))).
+    * exact (S (IHlA i' (lt_S_n _ _ Hi))).
   - exact (S (IHlA i Hi)).
 Defined.
 
@@ -2097,7 +2122,7 @@ Fixpoint nth_error_filter_pred_fun_v1 { A : Type } (P : A -> Prop) (DecP : foral
   | cons a q => (fun i    => match DecP a with
                              | left  Pa  => match i return i < length (filter_pred P DecP (cons a q)) -> nat with
                                             | O    => (fun _  => 0)
-                                            | S i' => (fun Hi => let Hi' := Arith_prebase.lt_S_n _ _ (eq_rect _ (fun l => (S i') < length l) Hi _ (filter_pred_ok P DecP a Pa q))
+                                            | S i' => (fun Hi => let Hi' := lt_S_n _ _ (eq_rect _ (fun l => (S i') < length l) Hi _ (filter_pred_ok P DecP a Pa q))
                                                                  in S (nth_error_filter_pred_fun_v1 P DecP q i' Hi'))
                                             end
                              | right nPa => (fun Hi => let Hi := eq_rect _ (fun l => i < length l) Hi _ (filter_pred_ko P DecP a nPa q)
@@ -2127,7 +2152,7 @@ induction lA; simpl.
 + destruct (DecP a); simpl; intros i Hi.
   - destruct i as [|i']; simpl.
     * intuition. 
-    * destruct (IHlA i' (Arith_prebase.lt_S_n _ _ Hi)) as (Hij', (Hj, Hij'')).
+    * destruct (IHlA i' (lt_S_n _ _ Hi)) as (Hij', (Hj, Hij'')).
       intuition.
   - destruct (IHlA i Hi).
     intuition.
@@ -2251,6 +2276,16 @@ assert (prA ++ a :: qA = (prA ++ (a :: nil)) ++ qA).
   apply spec.
 Defined.
 
+
+Section ListsMoi.
+
+  Variable A : Type.
+Lemma in_elt : forall (x:A) l1 l2, In x (l1 ++ x :: l2).
+Proof.
+  intros x l1 l2. unfold In. simpl. Admitted.
+  
+End ListsMoi.
+
 Definition spec_image_list_cons { A B } (f : A -> B) a qA lB (spec : spec_image_list f qA lB) : spec_image_list f (cons a qA) (cons (f a) lB).
 Proof.
 intro prA.
@@ -2288,13 +2323,13 @@ apply Forall_cons.
   - exact spec.
 Defined.
 
-Definition spec_injective_list_nil { B } : InjectiveList (@nil B).
+Definition spec_injective_list_nil { B } : InjectiveXTList (@nil B).
 Proof.
 intros i j Hi.
 elim (Nat.nlt_0_r _ Hi).
 Defined.
 
-Definition spec_injective_list_cons { B } (lB : list B) b (Hb : ~In b lB) (spec : InjectiveList lB) : InjectiveList (cons b lB).
+Definition spec_injective_list_cons { B } (lB : list B) b (Hb : ~In b lB) (spec : InjectiveXTList lB) : InjectiveXTList (cons b lB).
 Proof.
 intros i j Hi.
 destruct i as [|i']; destruct j as [|j']; simpl.
@@ -2313,7 +2348,7 @@ destruct i as [|i']; destruct j as [|j']; simpl.
 Defined.
 
 Record SpecImage { A B } (f : A -> B) (lA : list A) (lB : list B) : Prop := {
-  inj : InjectiveList lB;
+  inj : InjectiveXTList lB;
   img : spec_image_list f lA lB;
   dom : spec_domain_list f lB lA;
 }.
@@ -2448,7 +2483,7 @@ induction l.
 Qed.
 
 Theorem inj_conversion_forall : forall { A B C } (P : C -> B -> A -> Prop) b (l : list A) (Hl : forall c, Forall (P c b) l),
-  InjectiveList l -> InjectiveList (conversion_forall P b l Hl).
+  InjectiveXTList l -> InjectiveXTList (conversion_forall P b l Hl).
 Proof.
 intros A B C P b l Hl HIl i j Hi Hij.
 apply HIl.
@@ -2477,7 +2512,7 @@ apply (Forall_forall _ _ _ Hdom).
 exact HalA.
 Qed.
 
-Theorem inj_image : forall A B (f : A -> B) (eqB : dec_eq B) (lA : list A), InjectiveList (image_dep A B f eqB lA).
+Theorem inj_image : forall A B (f : A -> B) (eqB : dec_eq B) (lA : list A), InjectiveXTList (image_dep A B f eqB lA).
 Proof.
 unfold image_dep.
 intros A B f eqB lA.
@@ -2501,8 +2536,6 @@ assert ((fun b => exists a, b = f a) = (fun b => forall c, spec_image f (c++lA) 
   apply propositional_extensionality.
   unfold spec_image.
   firstorder.
-  exists x.
-  intuition.
 + rewrite H.
   exists img.
   intuition.

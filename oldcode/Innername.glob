@@ -1,0 +1,18 @@
+DIGEST b21aec1c16e27f4353f99aaf31fcf5b2
+FInnername
+R24:28 Coq.Arith.Arith <> <> lib
+R30:35 Coq.ZArith.ZArith <> <> lib
+R37:41 Coq.micromega.Psatz <> <> lib
+R43:46 Coq.Bool.Bool <> <> lib
+R72:77 Coq.Strings.String <> <> lib
+R79:82 Coq.Lists.List <> <> lib
+R84:99 Coq.Program.Equality <> <> lib
+R101:110 Coq.Program.Wf <> <> lib
+R128:136 Coq.Relations.Relations <> <> lib
+R154:159 Coq.funind.Recdef <> <> lib
+R178:188 Coq.Structures.OrderedType <> <> lib
+R208:221 Coq.Lists.List <> <> lib
+R239:255 Coq.NArith.NArith <> <> lib
+R273:290 Coq.Strings.String <> <> lib
+R319:323 Coq.Program.Basics <> apply def
+not 304:304 <> :::x_'@@'_x
