@@ -194,3 +194,32 @@ Proof. intros. rewrite -> H. apply X. Defined.
 Lemma equal_is_bij {A B: Type} : 
 A = B -> bijection A B.
 Proof. intros H. rewrite <- H. apply bijection_id. Qed. 
+
+Definition bigraph_equality {s i r o : FinDecType} 
+(b1 : bigraph s i r o) (b2 : bigraph s i r o)
+(bij_n : bijection (get_node b1) (get_node b2))
+(bij_e : bijection (get_edge b1) (get_edge b2))
+(bij_k : bijection (get_kind b1) (get_kind b2))
+(bij_p : bijection (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2))) : Prop :=
+  bigraph_arity_equality b1 b2 bij_k /\ 
+  bigraph_control_equality b1 b2 bij_n bij_k/\ 
+  bigraph_parent_equality b1 b2 bij_n /\ 
+  bigraph_link_equality b1 b2 bij_e bij_p.
+
+  Lemma bigraph_equality_refl {s i r o : FinDecType} 
+    (b : bigraph s i r o) :
+    let bij_n := bijection_id  in
+    let bij_e := bijection_id  in
+    let bij_k := bijection_id  in
+    let bij_p := bijection_id  in
+    bigraph_equality b b bij_n bij_e bij_k bij_p.
+    Proof.
+      intros.
+      constructor.   
+      + apply arity_refl. 
+      + split.
+      ++ apply control_refl.
+      ++ split. 
+      +++ apply parent_refl.
+      +++ apply link_refl.
+      Qed.

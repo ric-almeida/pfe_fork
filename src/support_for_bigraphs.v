@@ -659,7 +659,18 @@ Lemma bijection_forward_equals_inv_backward {A B} (bij : bijection A B) :
     Proof. change (b = (forward A B bij <o> backward A B bij) b). rewrite (fob_id A B bij). 
     unfold id. reflexivity. Qed. 
 
-  Theorem bij_preserve_equality {A} (bij : bijection A A) (a:A) (b:A) :
+  Theorem bij_preserve_equality {A B} (bij : bijection A B) (x:A) (y:A) :
+    x = y <-> bij.(forward A B) x = bij.(forward A B) y.
+    Proof. split.
+    - intros. rewrite H. reflexivity.
+    - intros. 
+      set (x' := bij.(forward A B) x).
+      assert (x = bij.(backward A B) x').
+      + change (x = backward A B bij (bij.(forward A B) x)). apply bof_a_eq_a.
+      + rewrite H0 in H. rewrite <- fob_a_eq_a in H.
+        rewrite H in H0. rewrite <- (@bof_a_eq_a A B bij) in H0. apply H0. Qed.
+  
+  (* Theorem bij_preserve_equality {A} (bij : bijection A A) (a:A) (b:A) :
     a = b <-> bij.(forward A A) a = bij.(forward A A) b.
     Proof. split.
     - intros. rewrite H. reflexivity.
@@ -669,7 +680,7 @@ Lemma bijection_forward_equals_inv_backward {A B} (bij : bijection A B) :
       + change (a = backward A A bij (bij.(forward A A) a)). apply bof_a_eq_a.
       + rewrite H0 in H. rewrite <- fob_a_eq_a in H.
         rewrite H in H0. rewrite <- (@bof_a_eq_a A A bij) in H0. apply H0. Qed.
-
+     *)
   Lemma fx_eq_by {A B} (bij:bijection A B) (a:A) (b:B) :
     a = backward A B bij b <-> b = forward A B bij a.
     Proof. split.
