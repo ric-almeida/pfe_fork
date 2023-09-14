@@ -241,8 +241,8 @@ Record bigraph  (site: FinDecType)
   Lemma parent_refl {s i r o : FinDecType} (b : bigraph s i r o) :
     let bij_n := bijection_id  in
     bigraph_parent_equality b b bij_n.
-    Proof. unfold bigraph_parent_equality. split. (* auto. *) 
-      + unfold bigraph_parent_node_equality. intros.
+    Proof. unfold bigraph_parent_equality. split. 
+      + unfold bigraph_parent_node_equality. intros. 
       unfold bijection_id. simpl. unfold id. 
       set (pn1 := get_parent b (inl n1)). 
       destruct pn1 as [pn1 | pr1]; reflexivity.
@@ -280,13 +280,16 @@ Record bigraph  (site: FinDecType)
     (b1 : bigraph s i r o) (b2 : bigraph s i r o) 
     (bij_k : bijection (get_kind b1) (get_kind b2)) :
     bigraph_arity_equality b1 b2 (bij_k) -> bigraph_arity_equality b2 b1 (bijection_inv bij_k).
-    Proof. unfold bigraph_arity_equality. intros H k2. 
-    rewrite bijection_forward_inv_equals_backward.
-    set (k2' := bij_k.(backward (get_kind b1) (get_kind b2)) k2). (*TODO need help to use fx_eq_by*)
-    assert (k2 = forward (get_kind b1) (get_kind b2) bij_k k2').
-    - change (k2 = forward (get_kind b1) (get_kind b2) bij_k (backward (get_kind b1)
-    (get_kind b2) bij_k k2)). apply fob_a_eq_a.
-    - rewrite H0. symmetry. apply H with (k1 := k2'). Qed.
+    Proof. 
+      unfold bigraph_arity_equality. 
+      intros H k2. simpl.
+      set (k1 := bij_k.(backward (get_kind b1) (get_kind b2)) k2).
+      specialize (H k1). 
+      rewrite H. 
+      unfold k1.
+      rewrite <- (@fob_a_eq_a (get_kind b1) (get_kind b2) bij_k).
+      reflexivity.
+      Qed.
 
   Lemma control_sym {s i r o : FinDecType}  
     (b1 : bigraph s i r o) (b2 : bigraph s i r o) 
