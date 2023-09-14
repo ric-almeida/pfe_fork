@@ -365,8 +365,53 @@ Record bigraph  (site: FinDecType)
     (bij_p : bijection (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2))) :
     bigraph_link_equality b1 b2 (bij_e) (bij_p) -> bigraph_link_equality b2 b1 (bijection_inv bij_e) (bijection_inv bij_p).
     Proof.
-    intros H.
-    unfold bigraph_control_equality in *. simpl. Admitted.
+    intros [Hi Hp].
+    unfold bigraph_link_equality in *.
+    split.
+    - unfold bigraph_link_innername_equality in *. simpl.
+      intros inner. specialize (Hi inner). 
+      set (l2i := get_link b2 (inl inner)).
+      destruct l2i as [l2i_o | l2i_p] eqn:E.
+        + unfold l2i in E.
+          destruct (get_link b1 (inl inner)) as [l1i_o | l1i_e] eqn:E'.
+          ++  rewrite E in Hi. symmetry. apply Hi.
+          ++  rewrite E in Hi. apply Hi.
+        + unfold l2i in E.
+          destruct (get_link b1 (inl inner)) as [psn | psr] eqn:E'.
+          ++  rewrite E in Hi. apply Hi.
+          ++  rewrite E in Hi.
+              rewrite (bij_preserve_equality (bij_e)). 
+              rewrite <- (@fob_a_eq_a (get_edge b1) (get_edge b2) bij_e).
+              symmetry. apply Hi.
+    - unfold bigraph_link_port_equality in *. simpl.
+      intros port. 
+      set (l2p := get_link b2 (inr port)).
+      destruct l2p as [l2p_o | l2p_i] eqn:E.
+      + unfold l2p in E.
+        set (p1 := backward (Port (get_node b1) (get_control b1) (get_arity b1))
+        (Port (get_node b2) (get_control b2) (get_arity b2)) bij_p port).
+        specialize (Hp p1).
+        destruct (get_link b1 (inr p1)) as [l1p_o | l1p_e] eqn:E'.
+        ++  unfold p1 in Hp.
+            rewrite <- (@fob_a_eq_a (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2)) bij_p) in Hp.
+            rewrite E in Hp. symmetry. apply Hp.
+        ++  unfold p1 in Hp. rewrite <- (@fob_a_eq_a (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2)) bij_p) in Hp.
+            rewrite E in Hp. apply Hp.
+      + unfold l2p in E.
+        set (p1 := backward (Port (get_node b1) (get_control b1) (get_arity b1))
+        (Port (get_node b2) (get_control b2) (get_arity b2)) bij_p port).
+        specialize (Hp p1).
+        destruct (get_link b1 (inr p1)) as [lp1_o | lp1_e] eqn:E'.
+          ++  unfold p1 in Hp.
+              rewrite <- (@fob_a_eq_a (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2)) bij_p) in Hp.
+              rewrite E in Hp. apply Hp.
+          ++  unfold p1 in Hp.
+              rewrite <- (@fob_a_eq_a (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2)) bij_p) in Hp.
+              rewrite E in Hp. 
+              rewrite (bij_preserve_equality (bij_e)). 
+              rewrite <- (@fob_a_eq_a (get_edge b1) (get_edge b2) bij_e).
+              symmetry. apply Hp.
+    Qed.
   
   Lemma bigraph_equality_sym {s i r o : FinDecType} 
     (b1 : bigraph s i r o) (b2 : bigraph s i r o) :
