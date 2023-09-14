@@ -264,7 +264,7 @@ Record bigraph  (site: FinDecType)
       unfold bijection_id. simpl. unfold id. 
       set (lp1 := get_link b (inr p1)). 
       destruct lp1 as [lo1 | le1]; reflexivity. Qed.
-      
+
   Lemma bigraph_equality_refl' {s i r o : FinDecType} 
     (b : bigraph s i r o) :
     bigraph_equality b b.
@@ -410,12 +410,83 @@ Record bigraph  (site: FinDecType)
     bigraph_parent_equality b1 b2 (bij_n12) -> 
       bigraph_parent_equality b2 b3 (bij_n23) ->
         bigraph_parent_equality b1 b3 (bij_n23 <O> bij_n12).
-    Proof. unfold bigraph_parent_equality. intros [H1n H1s] [H2n H2s].
+    Proof. 
+      unfold bigraph_parent_equality.   intros [H12n H12s] [H23n H23s].
       split.
-      - unfold bigraph_parent_node_equality in *. intros n1. simpl.      
+      - unfold bigraph_parent_node_equality in *. intros n1. simpl.  
+        specialize (H12n n1).
         unfold funcomp. 
-        destruct (get_parent b1 (inl n1)).
-        + Admitted. 
+        set (p1n1 := get_parent b1 (inl n1)).
+        destruct p1n1 as [p1n1_n | p1n1_r] eqn:E.
+        + unfold p1n1 in E. rewrite E in H12n. 
+          set (n2 := forward (get_node b1) (get_node b2) bij_n12 n1).  
+          fold n2 in H12n.
+          specialize (H23n n2).
+          set (p2n2 := get_parent b2 (inl n2)).
+          fold p2n2 in H12n.
+          destruct p2n2 as [p2n2_n | p2n2_r] eqn:E' in H12n.
+          ++  unfold p2n2 in E'. 
+              rewrite E' in H23n.
+              destruct (get_parent b3 (inl (forward (get_node b2) (get_node b3) bij_n23 n2))) as [p3n3_n | p3n3_r].
+              +++ rewrite H12n. rewrite H23n. reflexivity.
+              +++ apply H23n.
+          ++  unfold p2n2 in E'. 
+              rewrite E' in H23n.
+              destruct (get_parent b3 (inl (forward (get_node b2) (get_node b3) bij_n23 n2))) as [p3n3_n | p3n3_r].
+              +++ exfalso. apply H23n. 
+              +++ apply H12n.
+        + unfold p1n1 in E. rewrite E in H12n. 
+        set (n2 := forward (get_node b1) (get_node b2) bij_n12 n1).  
+        fold n2 in H12n.
+        specialize (H23n n2).
+        set (p2n2 := get_parent b2 (inl n2)).
+        fold p2n2 in H12n.
+        destruct p2n2 as [p2n2_n | p2n2_r] eqn:E' in H12n.
+        ++  unfold p2n2 in E'. 
+            rewrite E' in H23n.
+            destruct (get_parent b3 (inl (forward (get_node b2) (get_node b3) bij_n23 n2))) as [p3n3_n | p3n3_r].
+            +++ apply H12n.
+            +++ exfalso. apply H23n.
+        ++  unfold p2n2 in E'. 
+            rewrite E' in H23n.
+            destruct (get_parent b3 (inl (forward (get_node b2) (get_node b3) bij_n23 n2))) as [p3n3_n | p3n3_r].
+            +++ apply H23n.  
+            +++ rewrite H12n. rewrite H23n. reflexivity.
+      - unfold bigraph_parent_site_equality in *. intros site. simpl.  
+        specialize (H12s site).
+        specialize (H23s site).
+        unfold funcomp. 
+        set (p1s := get_parent b1 (inr site)).
+        destruct p1s as [p1s_n | p1s_r] eqn:E.
+        + unfold p1s in E. rewrite E in H12s. 
+          set (p2s := get_parent b2 (inr site)).
+          fold p2s in H12s.
+          destruct p2s as [p2s_n | p2s_r] eqn:E' in H12s.
+          ++  unfold p2s in E'. 
+              rewrite E' in H23s.
+              destruct (get_parent b3 (inr site)) as [p3s_n | p3s_r].
+              +++ rewrite H12s. rewrite H23s. reflexivity.
+              +++ apply H23s.
+          ++  unfold p2s in E'. 
+              rewrite E' in H23s.
+              destruct (get_parent b3 (inr site)) as [p3s_n | p3s_r].
+              +++ exfalso. apply H23s. 
+              +++ apply H12s.
+        + unfold p1s in E. rewrite E in H12s. 
+          set (p2s := get_parent b2 (inr site)).
+          fold p2s in H12s.
+          destruct p2s as [p2s_n | p2s_r] eqn:E' in H12s.
+          ++  unfold p2s in E'. 
+              rewrite E' in H23s.
+              destruct (get_parent b3 (inr site)) as [p3s_n | p3s_r].
+              +++ apply H12s.
+              +++ exfalso. apply H23s.
+          ++  unfold p2s in E'. 
+              rewrite E' in H23s.
+              destruct (get_parent b3 (inr site)) as [p3n3_n | p3n3_r].
+              +++ apply H23s.  
+              +++ rewrite H12s. rewrite H23s. reflexivity.
+      Qed.
 
   Lemma link_trans {s i r o : FinDecType}  
     (b1 : bigraph s i r o) (b2 : bigraph s i r o) (b3 : bigraph s i r o) 
