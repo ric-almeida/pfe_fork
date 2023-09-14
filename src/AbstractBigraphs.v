@@ -542,9 +542,92 @@ Record bigraph  (site: FinDecType)
     bigraph_link_equality b1 b2 (bij_e12) (bij_p12) -> 
     bigraph_link_equality b2 b3 (bij_e23) (bij_p23) ->
     bigraph_link_equality b1 b3 (bij_e23 <O> bij_e12) (bij_p23 <O> bij_p12).
-    Proof. Admitted. 
-    (* unfold bigraph_control_equality. intros H1 H2 n1. *)
-    (* simpl. unfold funcomp. rewrite <- H2. rewrite <- H1. reflexivity. Qed.  *)
+    Proof. 
+      unfold bigraph_link_equality. intros [H12i H12p] [H23i H23p].
+      split.
+      - unfold bigraph_link_innername_equality in *. intros inner. simpl.  
+        specialize (H12i inner).
+        specialize (H23i inner).
+        unfold funcomp. 
+        set (l1i := get_link b1 (inl inner)).
+        destruct l1i as [l1i_o | l1i_e] eqn:E.
+        + unfold l1i in E. rewrite E in H12i. 
+          set (l2i := get_link b2 (inl inner)).
+          fold l2i in H12i.
+          destruct l2i as [l2i_o | l2i_e] eqn:E' in H12i.
+          ++  unfold l2i in E'. 
+              rewrite E' in H23i.
+              destruct (get_link b3 (inl inner)) as [l3i_o | l3i_e].
+              +++ rewrite H12i. rewrite H23i. reflexivity.
+              +++ apply H23i.
+          ++  unfold l2i in E'. 
+              rewrite E' in H23i.
+              destruct (get_link b3 (inl inner)) as [l3i_o | l3i_e].
+              +++ exfalso. apply H23i. 
+              +++ apply H12i.
+        + unfold l1i in E. rewrite E in H12i. 
+          set (l2i := get_link b2 (inl inner)).
+          fold l2i in H12i.
+          destruct l2i as [l2i_n | l2i_r] eqn:E' in H12i.
+          ++  unfold l2i in E'. 
+              rewrite E' in H23i.
+              destruct (get_link b3 (inl (inner))) as [l3i_o | l3i_e].
+              +++ apply H12i.
+              +++ exfalso. apply H23i.
+          ++  unfold l2i in E'. 
+              rewrite E' in H23i.
+              destruct (get_link b3 (inl (inner))) as [l3i_o | l3i_e].
+              +++ apply H23i.  
+              +++ rewrite H12i. rewrite H23i. reflexivity.
+        - unfold bigraph_link_port_equality in *. intros p1. simpl.  
+          specialize (H12p p1).
+          unfold funcomp. 
+          set (l1p := get_link b1 (inr p1)).
+          destruct l1p as [l1p_n | l1p_r] eqn:E.
+          + unfold l1p in E. rewrite E in H12p. 
+            set (p2 := forward (Port (get_node b1) (get_control b1) (get_arity b1))
+            (Port (get_node b2) (get_control b2) (get_arity b2)) bij_p12 p1).
+            specialize (H23p p2).
+            set (p3 := forward (Port (get_node b2) (get_control b2) (get_arity b2))
+            (Port (get_node b3) (get_control b3) (get_arity b3)) bij_p23 p2).
+            fold p2 in H12p.
+            fold p3 in H23p.
+            set (l2p2 := get_link b2 (inr p2)).
+            fold l2p2 in H12p.
+            destruct l2p2 as [l2p2_o | l2p2_e] eqn:E' in H12p.
+            ++  unfold l2p2 in E'. 
+                rewrite E' in H23p.
+                destruct (get_link b3 (inr p3)).
+                +++ rewrite H12p. rewrite H23p. reflexivity.
+                +++ apply H23p.
+            ++  unfold l2p2 in E'. 
+                rewrite E' in H23p.
+                destruct (get_link b3 (inr p3)).
+                +++ exfalso. apply H23p. 
+                +++ apply H12p.
+          + unfold l1p in E. rewrite E in H12p. 
+            set (p2 := forward (Port (get_node b1) (get_control b1) (get_arity b1))
+            (Port (get_node b2) (get_control b2) (get_arity b2)) bij_p12 p1).
+            specialize (H23p p2).
+            set (p3 := forward (Port (get_node b2) (get_control b2) (get_arity b2))
+            (Port (get_node b3) (get_control b3) (get_arity b3)) bij_p23 p2).
+            fold p2 in H12p.
+            fold p3 in H23p.
+            set (p2s := get_link b2 (inr p2)).
+            fold p2s in H12p.
+            destruct p2s as [p2s_n | p2s_r] eqn:E' in H12p.
+            ++  unfold p2s in E'. 
+                rewrite E' in H23p.
+                destruct (get_link b3 (inr p3)) as [p3s_n | p3s_r].
+                +++ apply H12p.
+                +++ exfalso. apply H23p.
+            ++  unfold p2s in E'. 
+                rewrite E' in H23p.
+                destruct (get_link b3 (inr p3)) as [p3n3_n | p3n3_r].
+                +++ apply H23p.  
+                +++ rewrite H12p. rewrite H23p. reflexivity.
+                Qed.
+
 
   Lemma bigraph_equality_trans {s i r o : FinDecType} 
     (b1 : bigraph s i r o) (b2 : bigraph s i r o) (b3 : bigraph s i r o):
