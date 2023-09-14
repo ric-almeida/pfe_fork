@@ -264,9 +264,7 @@ Record bigraph  (site: FinDecType)
       unfold bijection_id. simpl. unfold id. 
       set (lp1 := get_link b (inr p1)). 
       destruct lp1 as [lo1 | le1]; reflexivity. Qed.
-
-
-
+      
   Lemma bigraph_equality_refl' {s i r o : FinDecType} 
     (b : bigraph s i r o) :
     bigraph_equality b b.
@@ -307,7 +305,8 @@ Record bigraph  (site: FinDecType)
   Lemma parent_sym {s i r o : FinDecType}  
     (b1 : bigraph s i r o) (b2 : bigraph s i r o) 
     (bij_n : bijection (get_node b1) (get_node b2)) :
-    bigraph_parent_equality b1 b2 (bij_n) -> bigraph_parent_equality b2 b1 (bijection_inv bij_n).
+    bigraph_parent_equality b1 b2 (bij_n) -> 
+    bigraph_parent_equality b2 b1 (bijection_inv bij_n).
     Proof.
     intros [Hn Hs].
     unfold bigraph_parent_equality in *.
@@ -316,10 +315,48 @@ Record bigraph  (site: FinDecType)
       intros n2. 
       set (p2n2 := get_parent b2 (inl n2)).
       destruct p2n2 as [pn2 | pr2] eqn:E.
-      + set (n1 := (inl (backward (get_node b1) (get_node b2) bij_n n2))).  
-        destruct (get_parent b1 n1) as [pn2' | pr2'] eqn:E'.
-        ++ rewrite (bij_preserve_equality (bij_n)). 
-        rewrite <- (@fob_a_eq_a (get_node b1) (get_node b2) bij_n). Admitted.
+      + unfold p2n2 in E.
+        set (n1 := backward (get_node b1) (get_node b2) bij_n n2).
+        specialize (Hn n1).
+        destruct (get_parent b1 (inl n1)) as [pn2' | pr2'] eqn:E'.
+        ++  unfold n1 in Hn.
+            rewrite <- (@fob_a_eq_a (get_node b1) (get_node b2) bij_n) in Hn.
+            rewrite E in Hn.
+            rewrite (bij_preserve_equality (bij_n)). 
+            rewrite <- (@fob_a_eq_a (get_node b1) (get_node b2) bij_n).
+            symmetry.
+            apply Hn.
+        ++  unfold n1 in Hn.
+            rewrite <- (@fob_a_eq_a (get_node b1) (get_node b2) bij_n) in Hn.
+            rewrite E in Hn. apply Hn.
+      + unfold p2n2 in E.
+      set (n1 := backward (get_node b1) (get_node b2) bij_n n2).
+      specialize (Hn n1).
+      destruct (get_parent b1 (inl n1)) as [pn2' | pr2'] eqn:E'.
+        ++  unfold n1 in Hn.
+            rewrite <- (@fob_a_eq_a (get_node b1) (get_node b2) bij_n) in Hn.
+            rewrite E in Hn. apply Hn.
+        ++  unfold n1 in Hn.
+            rewrite <- (@fob_a_eq_a (get_node b1) (get_node b2) bij_n) in Hn.
+            rewrite E in Hn. rewrite Hn. reflexivity.
+    - unfold bigraph_parent_site_equality in *. simpl.
+    intros site. specialize (Hs site). 
+    set (p2s := get_parent b2 (inr site)).
+    destruct p2s as [p2n | p2r] eqn:E.
+      + unfold p2s in E.
+        destruct (get_parent b1 (inr site)) as [psn | psr] eqn:E'.
+        ++  rewrite E in Hs.
+            rewrite (bij_preserve_equality (bij_n)). 
+            rewrite <- (@fob_a_eq_a (get_node b1) (get_node b2) bij_n).
+            symmetry. apply Hs.
+        ++  rewrite E in Hs. apply Hs.
+      + unfold p2s in E.
+        destruct (get_parent b1 (inr site)) as [psn | psr] eqn:E'.
+        ++  rewrite E in Hs. apply Hs.
+        ++  rewrite E in Hs. symmetry. apply Hs.
+    Qed.
+    
+            
 
     
   Lemma link_sym {s i r o : FinDecType}  
