@@ -35,29 +35,29 @@ Import ListNotations.
 
 Module Bigraph.
 
+(* INTROS *)
+  Inductive void : Type := .
 
-Inductive void : Type := .
+  Definition merge {A B : Type} (la : list A) (lb : list B) : list (A + B) :=
+    (map inl la) ++ (map inr lb).
 
-Definition merge {A B : Type} (la : list A) (lb : list B) : list (A + B) :=
-  (map inl la) ++ (map inr lb).
+  Definition finite (A : Type) : Type := { l : list A | Listing l }.
 
-Definition finite (A : Type) : Type := { l : list A | Listing l }.
+  Record FinDecType : Type :=
+    {
+      type :> Type ;
+      finite_type : finite type ;
+      dec_type : EqDec type
+    }.
 
-Record FinDecType : Type :=
-  {
-    type : Type ;
-    finite_type : finite type ;
-    dec_type : EqDec type
-  }.
+  Definition acyclic (node site root : Type) (parent : node + site -> node + root) : Prop :=
+    forall (n:node), Acc (fun n n' => parent (inl n) = (inl n')) n.
 
-Definition acyclic (node site root : Type) (parent : node + site -> node + root) : Prop :=
-  forall (n:node), Acc (fun n n' => parent (inl n) = (inl n')) n.
+  Definition acyclic' (node site root : Type) (parent : node + site -> node + root) : Prop :=
+    forall (n:node), Acc (fun n n' => parent (inl n') = (inl n)) n.
 
-Definition acyclic' (node site root : Type) (parent : node + site -> node + root) : Prop :=
-  forall (n:node), Acc (fun n n' => parent (inl n') = (inl n)) n.
-
-Definition Port {kind : Type} (node : Type) (control : node -> kind) (arity : kind -> nat): Type :=
-  { vi : node * nat | let (v, i) := vi in let k := control v in let a := arity k in i < a }.
+  Definition Port {kind : Type} (node : Type) (control : node -> kind) (arity : kind -> nat): Type :=
+    { vi : node * nat | let (v, i) := vi in let k := control v in let a := arity k in i < a }.
 
 Record bigraph  (site: FinDecType) 
                 (innername: FinDecType) 
@@ -68,20 +68,20 @@ Record bigraph  (site: FinDecType)
     node : FinDecType ;
     edge : FinDecType ;
     kind : FinDecType ;
-    arity : @type kind -> nat ;
-    control : @type node -> @type kind ;
-    parent : @type node + @type site -> @type node + @type root ; 
-    link : @type innername + Port (@type node) control arity -> @type outername + @type edge; 
-    ap : acyclic (@type node) (@type site) (@type root) parent ;
+    arity : kind -> nat ;
+    control : node -> kind ;
+    parent : node + site -> node + root ; 
+    link : innername + Port node control arity -> outername + edge; 
+    ap : acyclic node site root parent ;
   }.
 
 (* GETTERS *)
   Definition get_node {s i r o : FinDecType} (bg : bigraph s i r o) : Type := 
-  @type (node s i r o bg).
+  node s i r o bg.
   Definition get_edge {s i r o : FinDecType} (bg : bigraph s i r o) : Type := 
-  @type (edge s i r o bg).
+  edge s i r o bg.
   Definition get_kind {s i r o : FinDecType} (bg : bigraph s i r o) : Type := 
-  @type (kind s i r o bg).
+  kind s i r o bg.
   Definition get_arity {s i r o : FinDecType} (bg : bigraph s i r o) : 
   (get_kind bg) -> nat := 
   arity s i r o bg.
@@ -89,10 +89,10 @@ Record bigraph  (site: FinDecType)
   : get_node bg -> (get_kind bg) :=
   @control s i r o bg.
   Definition get_parent {s i r o : FinDecType} (bg : bigraph s i r o) : 
-  (get_node bg) + (@type s) -> (get_node bg) + (@type r) :=
+  (get_node bg) + s -> (get_node bg) + r :=
   @parent s i r o bg.
   Definition get_link {s i r o : FinDecType} (bg : bigraph s i r o) : 
-  (@type i) + Port (get_node bg) (get_control bg) (get_arity bg) -> (@type o) + get_edge bg :=
+  i + Port (get_node bg) (get_control bg) (get_arity bg) -> o + get_edge bg :=
   @link s i r o bg. 
   Definition get_nd {s i r o : FinDecType} (bg : bigraph s i r o) : 
   EqDec (get_node bg) :=
@@ -113,34 +113,34 @@ Record bigraph  (site: FinDecType)
   finite (get_kind bg) :=
   @finite_type (kind s i r o bg).
   Definition get_sd {s i r o : FinDecType} (bg : bigraph s i r o) : 
-  EqDec (@type s) :=
+  EqDec s :=
   @dec_type s.
   Definition get_sf {s i r o : FinDecType} (bg : bigraph s i r o) : 
-  finite (@type s) :=
+  finite s :=
   @finite_type s.
   Definition get_id {s i r o : FinDecType} (bg : bigraph s i r o) : 
-  EqDec (@type i) :=
+  EqDec i :=
   @dec_type i.
   Definition get_if {s i r o : FinDecType} (bg : bigraph s i r o) : 
-  finite (@type i) :=
+  finite i :=
   @finite_type i.
   Definition get_rd {s i r o : FinDecType} (bg : bigraph s i r o) : 
-  EqDec (@type r) :=
+  EqDec r :=
   @dec_type r.
   Definition get_rf {s i r o : FinDecType} (bg : bigraph s i r o) : 
-  finite (@type r) :=
+  finite r :=
   @finite_type r.
   Definition get_od {s i r o : FinDecType} (bg : bigraph s i r o) : 
-  EqDec (@type o) :=
+  EqDec o :=
   @dec_type o.
   Definition get_of {s i r o : FinDecType} (bg : bigraph s i r o) : 
-  finite (@type o) :=
+  finite o :=
   @finite_type o.
   Definition get_ap {s i r o : FinDecType} (bg : bigraph s i r o) : 
-  acyclic (get_node bg) (@type s) (@type r) (get_parent bg) :=
+  acyclic (get_node bg) s r (get_parent bg) :=
   @ap s i r o bg.
 
-(* Working on equivalence *)
+(* EQUIVALENCE *)
   Definition bigraph_arity_equality {s i r o : FinDecType} 
     (b1 : bigraph s i r o) (b2 : bigraph s i r o) 
     (bij_k : bijection (get_kind b1) (get_kind b2)): Prop :=
@@ -160,7 +160,7 @@ Record bigraph  (site: FinDecType)
   Definition bigraph_parent_site_equality {s i r o : FinDecType} 
     (b1 : bigraph s i r o) (b2 : bigraph s i r o) 
     (bij_n : bijection (get_node b1) (get_node b2)) : Prop :=
-      forall site:(@type s), 
+      forall site:s, 
       match (get_parent b1 (inr site)),(get_parent b2 (inr site)) with
       | inr root1, inr root2  => root1 = root2
       | inl node1, inl node2  => bij_n.(forward (get_node b1) (get_node b2)) node1 = node2
@@ -186,7 +186,7 @@ Record bigraph  (site: FinDecType)
   Definition bigraph_link_innername_equality {s i r o : FinDecType} 
     (b1 : bigraph s i r o) (b2 : bigraph s i r o) 
     (bij_e : bijection (get_edge b1) (get_edge b2)) : Prop :=
-      forall inner:(@type i), 
+      forall inner:i, 
       match (get_link b1 (inl inner)),(get_link b2 (inl inner)) with
       | inr edge1, inr edge2  => bij_e.(forward (get_edge b1) (get_edge b2)) edge1 = edge2
       | inl outer1, inl outer2  => outer1 = outer2
@@ -211,7 +211,7 @@ Record bigraph  (site: FinDecType)
     (bij_p : bijection (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2))) : Prop :=
     bigraph_link_innername_equality b1 b2 bij_e /\ bigraph_link_port_equality b1 b2 bij_p bij_e.
 
-  Record bigraph_equality {s i r o : FinDecType} 
+Record bigraph_equality {s i r o : FinDecType} 
     (b1 : bigraph s i r o) (b2 : bigraph s i r o) : Prop :=
       BigEq 
       {
@@ -225,6 +225,108 @@ Record bigraph  (site: FinDecType)
         big_link_eq : bigraph_link_equality b1 b2 bij_e bij_p
       }.
 
+  Definition bigraph_arity_equality' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
+    (bij_k : bijection (get_kind b1) (get_kind b2)): Prop :=
+      forall k1:get_kind b1, let k2 := bij_k.(forward (get_kind b1) (get_kind b2)) k1 in 
+      get_arity b1 k1 = get_arity b2 k2.
+
+  Definition bigraph_control_equality' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
+    (bij_n : bijection (get_node b1) (get_node b2))
+    (bij_k : bijection (get_kind b1) (get_kind b2)) : Prop :=
+      forall n1:get_node b1, 
+      let kind1 := get_control b1 n1 in
+      let n2 := bij_n.(forward (get_node b1) (get_node b2)) n1 in 
+      let kind2 := get_control b2 n2 in
+      bij_k.(forward (get_kind b1) (get_kind b2)) kind1 = kind2.
+
+  Definition bigraph_parent_site_equality' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
+    (bij_s : bijection s1 s2)
+    (bij_r : bijection r1 r2)
+    (bij_n : bijection (get_node b1) (get_node b2)) : Prop :=
+      forall site1:s1, 
+      let site2 := forward s1 s2 bij_s site1 in
+      match (get_parent b1 (inr site1)),(get_parent b2 (inr site2)) with
+      | inr root1, inr root2  => forward r1 r2 bij_r root1 = root2
+      | inl node1, inl node2  => forward (get_node b1) (get_node b2) bij_n node1 = node2
+      | _, _ => False
+      end.
+
+  Definition bigraph_parent_node_equality' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
+    (bij_r : bijection r1 r2)
+    (bij_n : bijection (get_node b1) (get_node b2)): Prop :=
+      forall n1:get_node b1, 
+      let n2 := bij_n.(forward (get_node b1) (get_node b2)) n1 in 
+      match (get_parent b1 (inl n1)),(get_parent b2 (inl n2)) with
+      | inr root1, inr root2  => forward r1 r2 bij_r root1 = root2
+      | inl node1, inl node2  => forward (get_node b1) (get_node b2) bij_n node1 = node2
+      | _, _ => False
+      end.
+
+  Definition bigraph_parent_equality' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
+    (bij_s : bijection s1 s2)
+    (bij_r : bijection r1 r2)
+    (bij_n : bijection (get_node b1) (get_node b2)): Prop :=
+    bigraph_parent_node_equality' b1 b2 bij_r bij_n /\ bigraph_parent_site_equality' b1 b2 bij_s bij_r bij_n.
+
+  Definition bigraph_link_innername_equality' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
+    (bij_i : bijection i1 i2)
+    (bij_o : bijection o1 o2)
+    (bij_e : bijection (get_edge b1) (get_edge b2)) : Prop :=
+      forall inner1:i1,
+      let inner2 := forward i1 i2 bij_i inner1 in
+      match (get_link b1 (inl inner1)),(get_link b2 (inl inner2)) with
+      | inr edge1, inr edge2  => forward (get_edge b1) (get_edge b2) bij_e edge1 = edge2
+      | inl outer1, inl outer2  =>  forward o1 o2 bij_o outer1 = outer2
+      | _, _ => False
+      end.
+
+  Definition bigraph_link_port_equality' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
+    (bij_o : bijection o1 o2)
+    (bij_e : bijection (get_edge b1) (get_edge b2))
+    (bij_p : bijection (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2))) : Prop :=
+      forall p1:(Port (get_node b1) (get_control b1) (get_arity b1)), 
+      let p2 := bij_p.(forward (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2))) p1 in
+      match (get_link b1 (inr p1)),(get_link b2 (inr p2)) with
+      | inr edge1, inr edge2  => bij_e.(forward (get_edge b1) (get_edge b2)) edge1 = edge2
+      | inl outer1, inl outer2  => forward o1 o2 bij_o outer1 = outer2
+      | _, _ => False
+      end.
+
+  Definition bigraph_link_equality' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
+    (bij_i : bijection i1 i2)
+    (bij_o : bijection o1 o2)
+    (bij_e : bijection (get_edge b1) (get_edge b2))
+    (bij_p : bijection (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2))) : Prop :=
+    bigraph_link_innername_equality' b1 b2 bij_i bij_o bij_e /\ bigraph_link_port_equality' b1 b2 bij_o bij_e bij_p.
+
+
+Record bigraph_equality' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+(b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
+  BigEq'
+  {
+    bij_s : bijection s1 s2 ;
+    bij_i : bijection i1 i2 ;
+    bij_r : bijection r1 r2 ;
+    bij_o : bijection o1 o2 ;
+    bij_n : bijection (get_node b1) (get_node b2);
+    bij_e : bijection (get_edge b1) (get_edge b2);
+    bij_k : bijection (get_kind b1) (get_kind b2);
+    bij_p : bijection (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2)); 
+    big_arity_eq : bigraph_arity_equality' b1 b2 bij_k ; 
+    big_control_eq : bigraph_control_equality' b1 b2 bij_n bij_k ; 
+    big_parent_eq : bigraph_parent_equality' b1 b2 bij_s bij_r bij_n ;
+    big_link_eq : bigraph_link_equality' b1 b2 bij_i bij_o bij_e bij_p
+  }.
+  
+(* EQUIVALENCE IS RELATION*)
   Lemma arity_refl {s i r o : FinDecType} (b : bigraph s i r o) :
     let bij_k := bijection_id  in
     bigraph_arity_equality b b bij_k.
@@ -651,10 +753,13 @@ Record bigraph  (site: FinDecType)
 
   Definition sum_FinDecType (A B : FinDecType) : FinDecType :=
     {|
-      type := (@type A) + (@type B) ;
+      type := A + B ;
       dec_type := EqDec_sum (@dec_type A) (@dec_type B);
       finite_type := finite_sum (@finite_type A) (@finite_type B)
     |}.
+
+  Notation "A '+++' B" := (sum_FinDecType A B) (at level 50, left associativity).
+
 
   Definition mk_dis_arity {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
@@ -691,15 +796,15 @@ Record bigraph  (site: FinDecType)
 
   Definition mk_dis_parent {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
-    @type (sum_FinDecType (@node s1 i1 r1 o1 b1) (@node s2 i2 r2 o2 b2)) + 
-      @type (sum_FinDecType s1 s2) 
-        -> @type (sum_FinDecType (@node s1 i1 r1 o1 b1) (@node s2 i2 r2 o2 b2)) + 
-        @type (sum_FinDecType r1 r2) :=
+    ((@node s1 i1 r1 o1 b1) +++ (@node s2 i2 r2 o2 b2)) + 
+      (s1 +++ s2) 
+        -> ((@node s1 i1 r1 o1 b1) +++ (@node s2 i2 r2 o2 b2)) + 
+        (r1 +++ r2) :=
     let p1 := get_parent b1 in
     let p2 := get_parent b2 in
-    let n1pn2 := @type (sum_FinDecType (@node s1 i1 r1 o1 b1) (@node s2 i2 r2 o2 b2)) in
-    let s1ps2 := @type (sum_FinDecType s1 s2) in 
-    let r1pr2 := @type (sum_FinDecType r1 r2) in 
+    let n1pn2 := ((@node s1 i1 r1 o1 b1) +++ (@node s2 i2 r2 o2 b2)) in
+    let s1ps2 := (s1 +++ s2) in 
+    let r1pr2 := (r1 +++ r2) in 
     let new_parent (p : (n1pn2) + (s1ps2)) : (n1pn2) + (r1pr2) :=
       match p with
       | inl (inl n1) => match p1 (inl n1) with (* p1 : n1 + s1 -> n1 + r1 *)
@@ -748,10 +853,10 @@ Record bigraph  (site: FinDecType)
 
   Definition mk_new_link {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
-    @type (sum_FinDecType i1 i2)  + 
+    (i1 +++ i2)  + 
     Port ((get_node b1) + get_node b2) (mk_dis_control b1 b2) (mk_dis_arity b1 b2) 
-      -> @type (sum_FinDecType o1 o2) + 
-        @type (sum_FinDecType (@edge s1 i1 r1 o1 b1) (@edge s2 i2 r2 o2 b2)) :=
+      -> (o1 +++ o2) + 
+        ((@edge s1 i1 r1 o1 b1) +++ (@edge s2 i2 r2 o2 b2)) :=
       let n1 := get_node b1 in
       let n2 := get_node b2 in
       let c := mk_dis_control b1 b2 in
@@ -761,7 +866,7 @@ Record bigraph  (site: FinDecType)
       let e2 := get_edge b2 in
       let l1 := get_link b1 in
       let l2 := get_link b2 in
-      let new_link (ip : ((@type i1) + (@type i2)) + p) : ((@type o1) + (@type o2)) + (e1 + e2) :=
+      let new_link (ip : (i1 + i2) + p) : (o1 + o2) + (e1 + e2) :=
         match ip with 
         | inl (inl i1) => match l1 (inl i1) with (* l1 : i1 + p1 -> o1 + e1 *)
                           | inl o1 => inl (inl o1)
@@ -844,7 +949,7 @@ Record bigraph  (site: FinDecType)
 
   Definition mk_dis_ap {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
-    acyclic ((get_node b1) + (get_node b2)) ((@type s1) + (@type s2)) ((@type r1) + (@type r2)) (mk_dis_parent b1 b2).
+    acyclic ((get_node b1) + (get_node b2)) (s1 + s2) (r1 + r2) (mk_dis_parent b1 b2).
     Proof.
     unfold acyclic ; intros [n1 | n2].
     - apply acyclic_dis_parent_left.
@@ -859,11 +964,11 @@ Record bigraph  (site: FinDecType)
   
 Definition dis_juxtaposition {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
 (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
-  : bigraph (sum_FinDecType s1 s2) (sum_FinDecType i1 i2) (sum_FinDecType r1 r2) (sum_FinDecType o1 o2) :=
+  : bigraph (s1 +++  s2) (i1 +++ i2) (r1 +++ r2) (o1 +++ o2) :=
 {|
-  node := sum_FinDecType (@node s1 i1 r1 o1 b1) (@node s2 i2 r2 o2 b2);
-  edge := sum_FinDecType (@edge s1 i1 r1 o1 b1) (@edge s2 i2 r2 o2 b2);
-  kind := sum_FinDecType (@kind s1 i1 r1 o1 b1) (@kind s2 i2 r2 o2 b2);
+  node := (@node s1 i1 r1 o1 b1) +++ (@node s2 i2 r2 o2 b2);
+  edge := (@edge s1 i1 r1 o1 b1) +++ (@edge s2 i2 r2 o2 b2);
+  kind := (@kind s1 i1 r1 o1 b1) +++ (@kind s2 i2 r2 o2 b2);
   arity := mk_dis_arity b1 b2 ;
   control := mk_dis_control b1 b2 ;
   parent := mk_dis_parent b1 b2 ; 
@@ -871,37 +976,44 @@ Definition dis_juxtaposition {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
   ap := mk_dis_ap b1 b2 ;
 |}.
 
+
+(* Definition dis_juxtaposition' {s i r o : FinDecType} 
+(b1 : bigraph s i r o) (b2 : bigraph s i r o) 
+  : bigraph s i r o :=
+{|
+  node := (@node s i r o b1) +++ (@node s i r o b2);
+  edge := (@edge s i r o b1) +++ (@edge s i r o b2);
+  kind := (@kind s i r o b1) +++ (@kind s i r o b2);
+  arity := mk_dis_arity b1 b2 ;
+  control := mk_dis_control b1 b2 ;
+  parent := mk_dis_parent b1 b2 ; 
+  link := mk_new_link b1 b2 ;
+  ap := mk_dis_ap b1 b2 ;
+|}. *)
+
 Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativity).
 
-
-Lemma correct_node_type {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
-  get_node (b1 || b2) = ((get_node b1) + (get_node b2))%type.
-  Proof. auto. Qed.
-
 (* THEOREMS ONLY TRUE WHEN EQUALITY BETWEEN BIGRAPHS IS ACTUALLY AN ISOMORPHISM *)
-  (* Theorem dis_juxtaposition_associative {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 k3: FinDecType} :
-    forall (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3 k3),
-    (b1 || b2) || b3 = b1 || (b2 || b3).
+  (* Theorem dis_juxtaposition_associative {s i r o : FinDecType} :
+    forall (b1 : bigraph s i r o) (b2 : bigraph s i r o) (b3 : bigraph s i r o),
+    bigraph_equality ((b1 || b2) || b3) (b1 || (b2 || b3)).
 
   Theorem dis_juxtaposition_commutative {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} :
     forall (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2),
-    b1 || b2 = b2 || b1. *)
-
-
+    b1 || b2 = b2 || b1.  *)
 
 
 (* MAKERS FOR COMPOSITION *)
   Definition mk_comp_parent {s1 i1 r1 o1 s2 i2 : FinDecType} 
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) :
-    @type (sum_FinDecType (@node s1 i1 r1 o1 b1) (@node s2 i2 s1 i1 b2))
-     + (@type s2) 
-     -> @type (sum_FinDecType (@node s1 i1 r1 o1 b1) (@node s2 i2 s1 i1 b2)) 
-        + (@type r1) :=
+    ((@node s1 i1 r1 o1 b1) +++ (@node s2 i2 s1 i1 b2))
+     + s2 
+     -> ((@node s1 i1 r1 o1 b1) +++ (@node s2 i2 s1 i1 b2)) 
+        + r1 :=
     let p1 := get_parent b1 in
     let p2 := get_parent b2 in
-    let n1pn2 := @type (sum_FinDecType (@node s1 i1 r1 o1 b1) (@node s2 i2 s1 i1 b2)) in
-    let new_parent (p : (n1pn2) + (@type s2)) : (n1pn2) + (@type r1) :=
+    let n1pn2 := ((@node s1 i1 r1 o1 b1) +++ (@node s2 i2 s1 i1 b2)) in
+    let new_parent (p : (n1pn2) + s2) : (n1pn2) + r1 :=
       match p with
       | inl (inl n1) => match p1 (inl n1) with (* p1 : n1 + s1 -> n1 + r1 *)
                         | inl n1' => inl (inl n1')
@@ -926,8 +1038,8 @@ Lemma correct_node_type {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
 
   Definition mk_comp_link {s1 i1 r1 o1 s2 i2 : FinDecType} 
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) :
-    (@type i2) + Port ((get_node b1) + get_node b2) (mk_dis_control b1 b2) (mk_dis_arity b1 b2)  
-    -> (@type o1) + ((get_edge b1) + (get_edge b2)) :=
+    i2 + Port ((get_node b1) + get_node b2) (mk_dis_control b1 b2) (mk_dis_arity b1 b2)  
+    -> o1 + ((get_edge b1) + (get_edge b2)) :=
       let n1 := get_node b1 in
       let n2 := get_node b2 in
       let c := mk_dis_control b1 b2 in
@@ -936,7 +1048,7 @@ Lemma correct_node_type {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
       let e2 := get_edge b2 in
       let l1 := get_link b1 in
       let l2 := get_link b2 in
-      let new_link (ip : (@type i2) + p) : (@type o1) + (e1 + e2) :=
+      let new_link (ip : i2 + p) : o1 + (e1 + e2) :=
         match ip with 
         | inr p =>  let p' := mk_dis_port b1 b2 p in
                     match p' with 
@@ -997,7 +1109,7 @@ Lemma correct_node_type {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1)
     (n1: get_node b1),
       Acc (fun n n' => (get_parent b1) (inl n) = inl n') n1 -> 
-      acyclic (get_node b2) (@type s2) (@type s1) (get_parent b2) ->
+      acyclic (get_node b2) s2 s1 (get_parent b2) ->
       Acc (fun n n' => (mk_comp_parent b1 b2) (inl n) = inl n') (inl n1).
     Proof.
       intros s1 i1 r1 o1 s2 i2 b1 b2 n1 H a.
@@ -1021,7 +1133,7 @@ Lemma correct_node_type {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
 
   Definition mk_comp_ap {s1 i1 r1 o1 s2 i2 : FinDecType} 
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) :
-    acyclic ((get_node b1) + (get_node b2)) (@type s2) (@type r1) (mk_comp_parent b1 b2).
+    acyclic ((get_node b1) + (get_node b2)) s2 r1 (mk_comp_parent b1 b2).
     Proof. 
     unfold acyclic ; intros [n1 | n2].
     - apply acyclic_comp_parent_left.
@@ -1035,9 +1147,9 @@ Definition composition {s1 i1 r1 o1 s2 i2 : FinDecType}
 (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) 
   : bigraph s2 i2 r1 o1 :=
 {|
-  node := sum_FinDecType (@node s1 i1 r1 o1 b1) (@node s2 i2 s1 i1 b2);
-  edge := sum_FinDecType (@edge s1 i1 r1 o1 b1) (@edge s2 i2 s1 i1 b2);
-  kind := sum_FinDecType (@kind s1 i1 r1 o1 b1) (@kind s2 i2 s1 i1 b2);
+  node := (@node s1 i1 r1 o1 b1) +++ (@node s2 i2 s1 i1 b2);
+  edge := (@edge s1 i1 r1 o1 b1) +++ (@edge s2 i2 s1 i1 b2);
+  kind := (@kind s1 i1 r1 o1 b1) +++ (@kind s2 i2 s1 i1 b2);
   arity := mk_dis_arity b1 b2 ;
   control := mk_dis_control b1 b2 ;
   parent := mk_comp_parent b1 b2 ; 
@@ -1080,9 +1192,9 @@ Notation "b1 'o' b2" := (composition b1 b2) (at level 40, left associativity).
     |}.
 
   Example acyclic_unit : 
-    acyclic (@type unitFinDecType) (@type voidFinDecType) (@type unitFinDecType) (fun _ => inl tt).
+    acyclic unitFinDecType voidFinDecType unitFinDecType (fun _ => inl tt).
     Proof. unfold acyclic. intros. Admitted.
-  Example vft : (@type voidFinDecType). Proof. unfold voidFinDecType. simpl. Admitted. 
+  Example vft : voidFinDecType. Proof. unfold voidFinDecType. simpl. Admitted. 
   (* Example my_control (n:FinDecType) : FinDecType. *)
   Example myUnitBigraph : bigraph voidFinDecType voidFinDecType unitFinDecType voidFinDecType :=
     {|

@@ -223,3 +223,9 @@ Definition bigraph_equality {s i r o : FinDecType}
       +++ apply parent_refl.
       +++ apply link_refl.
       Qed.
+
+
+      Lemma correct_node_type {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+      (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
+      get_node (b1 || b2) = ((get_node b1) + (get_node b2))%type.
+      Proof. auto. Qed.
