@@ -224,7 +224,7 @@ Record bigraph_equality {s i r o : FinDecType}
         big_parent_eq : bigraph_parent_equality b1 b2 bij_n ;
         big_link_eq : bigraph_link_equality b1 b2 bij_e bij_p
       }.
-
+(* EQUIVALENCE' *)
   Definition bigraph_arity_equality' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
     (bij_k : bijection (get_kind b1) (get_kind b2)): Prop :=
@@ -307,7 +307,6 @@ Record bigraph_equality {s i r o : FinDecType}
     (bij_p : bijection (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2))) : Prop :=
     bigraph_link_innername_equality' b1 b2 bij_i bij_o bij_e /\ bigraph_link_port_equality' b1 b2 bij_o bij_e bij_p.
 
-
 Record bigraph_equality' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
 (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
   BigEq'
@@ -325,7 +324,7 @@ Record bigraph_equality' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
     big_parent_eq : bigraph_parent_equality' b1 b2 bij_s bij_r bij_n ;
     big_link_eq : bigraph_link_equality' b1 b2 bij_i bij_o bij_e bij_p
   }.
-  
+
 (* EQUIVALENCE IS RELATION*)
   Lemma arity_refl {s i r o : FinDecType} (b : bigraph s i r o) :
     let bij_k := bijection_id  in
@@ -367,7 +366,7 @@ Record bigraph_equality' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
       set (lp1 := get_link b (inr p1)). 
       destruct lp1 as [lo1 | le1]; reflexivity. Qed.
 
-  Lemma bigraph_equality_refl' {s i r o : FinDecType} 
+  Lemma bigraph_equality_refl {s i r o : FinDecType} 
     (b : bigraph s i r o) :
     bigraph_equality b b.
     Proof.
@@ -665,6 +664,389 @@ Record bigraph_equality' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
       + apply link_trans. apply big_link_eq. apply big_link_eq0.
       Qed.
 
+(* EQUIVALENCE' IS RELATION*)
+  Lemma arity_refl' {s i r o : FinDecType} (b : bigraph s i r o) :
+    let bij_k := bijection_id  in
+    bigraph_arity_equality' b b bij_k.
+    Proof. unfold bigraph_arity_equality'. (* auto. *) 
+    intros. unfold bijection_id. simpl. unfold id. reflexivity. Qed.
+
+  Lemma control_refl' {s i r o : FinDecType} (b : bigraph s i r o) :
+    let bij_n := bijection_id  in
+    let bij_k := bijection_id  in
+    bigraph_control_equality' b b bij_n bij_k.
+    Proof. unfold bigraph_control_equality'. (* auto. *) 
+    intros. unfold bijection_id. simpl. unfold id. reflexivity. Qed.
+
+  Lemma parent_refl' {s i r o : FinDecType} (b : bigraph s i r o) :
+    let bij_s := bijection_id  in
+    let bij_r := bijection_id  in
+    let bij_n := bijection_id  in
+    bigraph_parent_equality' b b bij_s bij_r bij_n.
+    Proof. unfold bigraph_parent_equality'. split. 
+      + unfold bigraph_parent_node_equality'. intros. 
+      unfold bijection_id. simpl. unfold id. 
+      set (pn1 := get_parent b (inl n1)). 
+      destruct pn1 as [pn1 | pr1]; reflexivity.
+      + unfold bigraph_parent_site_equality'. intros.
+      unfold bijection_id. simpl. unfold id. 
+      set (ps1 := get_parent b (inr site1)). 
+      destruct ps1 as [pn1 | pr1]; reflexivity. Qed.
+
+  Lemma link_refl' {s i r o : FinDecType} (b : bigraph s i r o) :
+    let bij_i := bijection_id  in
+    let bij_o := bijection_id  in
+    let bij_e := bijection_id  in
+    let bij_p := bijection_id  in
+    bigraph_link_equality' b b bij_i bij_o bij_e bij_p.
+    Proof. unfold bigraph_link_equality'. split.
+      + unfold bigraph_link_innername_equality'. intros.
+      unfold bijection_id. simpl. unfold id. 
+      set (li1 := get_link b (inl inner1)). 
+      destruct li1 as [lo1 | le1]; reflexivity.
+      + unfold bigraph_link_port_equality'. intros.
+      unfold bijection_id. simpl. unfold id. 
+      set (lp1 := get_link b (inr p1)). 
+      destruct lp1 as [lo1 | le1]; reflexivity. Qed.
+
+  Lemma bigraph_equality_refl' {s i r o : FinDecType} 
+    (b : bigraph s i r o) :
+    bigraph_equality' b b.
+    Proof.
+    apply (BigEq' s i r o s i r o b b (bijection_id) (bijection_id) (bijection_id) (bijection_id) (bijection_id) (bijection_id) (bijection_id) (bijection_id)).   
+    + apply arity_refl'. 
+    + apply control_refl'.
+    + apply parent_refl'.
+    + apply link_refl'.
+    Qed.
+
+  Lemma arity_sym' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}  
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
+    (bij_k : bijection (get_kind b1) (get_kind b2)) :
+    bigraph_arity_equality' b1 b2 (bij_k) -> bigraph_arity_equality' b2 b1 (bijection_inv bij_k).
+    Proof. 
+      unfold bigraph_arity_equality'. 
+      intros H k2. simpl.
+      set (k1 := bij_k.(backward (get_kind b1) (get_kind b2)) k2).
+      specialize (H k1). 
+      rewrite H. 
+      unfold k1.
+      rewrite <- (@fob_a_eq_a (get_kind b1) (get_kind b2) bij_k).
+      reflexivity.
+      Qed.
+
+  Lemma control_sym' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}  
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
+    (bij_n : bijection (get_node b1) (get_node b2))
+    (bij_k : bijection (get_kind b1) (get_kind b2)) :
+    bigraph_control_equality' b1 b2 (bij_n) (bij_k) 
+      -> bigraph_control_equality' b2 b1 (bijection_inv bij_n) (bijection_inv bij_k).
+    Proof.
+    intros H.
+    unfold bigraph_control_equality in *. intros n2. simpl.
+    rewrite (bij_preserve_equality (bij_k)).
+    rewrite H.
+    rewrite <- (@fob_a_eq_a (get_kind b1) (get_kind b2) bij_k).
+    rewrite <- (@fob_a_eq_a (get_node b1) (get_node b2) bij_n).
+    reflexivity. Qed.
+
+  Lemma parent_sym' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}  
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
+    (bij_s : bijection s1 s2) 
+    (bij_r : bijection r1 r2) 
+    (bij_n : bijection (get_node b1) (get_node b2)) :
+    bigraph_parent_equality' b1 b2 bij_s bij_r bij_n -> 
+      bigraph_parent_equality' b2 b1 (bijection_inv bij_s) (bijection_inv bij_r)(bijection_inv bij_n).
+    Proof.
+    intros [Hn Hs].
+    unfold bigraph_parent_equality' in *.
+    split.
+    - unfold bigraph_parent_node_equality' in *. simpl.
+      intros n2. 
+      set (p2n2 := get_parent b2 (inl n2)).
+      destruct p2n2 as [pn2 | pr2] eqn:E;
+      unfold p2n2 in E;
+      set (n1 := backward (get_node b1) (get_node b2) bij_n n2);
+      specialize (Hn n1);
+      destruct (get_parent b1 (inl n1)) as [pn2' | pr2'] eqn:E';
+      unfold n1 in Hn;
+      rewrite <- (@fob_a_eq_a (get_node b1) (get_node b2) bij_n) in Hn;
+      rewrite E in Hn.
+      + rewrite (bij_preserve_equality (bij_n)). 
+        rewrite <- (@fob_a_eq_a (get_node b1) (get_node b2) bij_n).
+        symmetry.
+        apply Hn.
+      + apply Hn.
+      + apply Hn.
+      + rewrite (bij_preserve_equality (bij_r)). 
+        rewrite <- (@fob_a_eq_a r1 r2 bij_r).
+        symmetry. 
+        apply Hn.
+    - unfold bigraph_parent_site_equality' in *. simpl.
+      intros site2.
+      set (p2s2 := get_parent b2 (inr site2)).
+      destruct p2s2 as [p2s2_n | p2s2_r] eqn:E;
+      unfold p2s2 in E;
+      set (site1 := backward s1 s2 bij_s site2);
+      specialize (Hs site1);
+      destruct (get_parent b1 (inr site1)) as [psn | psr] eqn:E';
+      unfold site1 in Hs;
+      rewrite <- (@fob_a_eq_a s1 s2 bij_s) in Hs;
+      rewrite E in Hs.
+      + rewrite (bij_preserve_equality (bij_n)). 
+        rewrite <- (@fob_a_eq_a (get_node b1) (get_node b2) bij_n).
+        symmetry. apply Hs.
+      + apply Hs.
+      + apply Hs.
+      + rewrite (bij_preserve_equality (bij_r)). 
+        rewrite <- (@fob_a_eq_a r1 r2 bij_r).
+        symmetry. 
+        apply Hs.
+    Qed.
+
+
+  Lemma link_sym' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}  
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
+    (bij_i : bijection i1 i2)
+    (bij_o : bijection o1 o2)
+    (bij_e : bijection (get_edge b1) (get_edge b2))
+    (bij_p : bijection (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2))) :
+    bigraph_link_equality' b1 b2 bij_i bij_o bij_e bij_p -> 
+      bigraph_link_equality' b2 b1 (bijection_inv bij_i) (bijection_inv bij_o) (bijection_inv bij_e) (bijection_inv bij_p).
+    Proof.
+    intros [Hi Hp].
+    unfold bigraph_link_equality' in *.
+    split.
+    - unfold bigraph_link_innername_equality' in *. simpl.
+      intros inner2.
+      set (l2i2 := get_link b2 (inl inner2)).
+      destruct l2i2 as [l2p_o | l2p_i] eqn:E;
+      unfold l2i2 in E;
+      set (inner1 := backward i1 i2 bij_i inner2);
+      specialize (Hi inner1);
+      destruct (get_link b1 (inl inner1)) as [l1i_o | l1i_e] eqn:E';
+      unfold inner1 in Hi;
+      rewrite <- (@fob_a_eq_a i1 i2 bij_i) in Hi;
+      rewrite E in Hi.
+      + rewrite (bij_preserve_equality (bij_o)). 
+        rewrite <- (@fob_a_eq_a o1 o2 bij_o).
+        symmetry. apply Hi.
+      + apply Hi.
+      + apply Hi.
+      + rewrite (bij_preserve_equality (bij_e)). 
+        rewrite <- (@fob_a_eq_a (get_edge b1) (get_edge b2) bij_e).
+        symmetry. apply Hi.
+    - unfold bigraph_link_port_equality' in *. simpl.
+      intros port. 
+      set (l2p := get_link b2 (inr port)).
+      destruct l2p as [l2p_o | l2p_i] eqn:E;
+      unfold l2p in E;
+      set (p1 := backward (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2)) bij_p port);
+      specialize (Hp p1);
+      destruct (get_link b1 (inr p1)) as [l1p_o | l1p_e] eqn:E';
+      unfold p1 in Hp;
+      rewrite <- (@fob_a_eq_a (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2)) bij_p) in Hp;
+      rewrite E in Hp.
+      + rewrite (bij_preserve_equality (bij_o)). 
+        rewrite <- (@fob_a_eq_a o1 o2 bij_o).
+        symmetry. apply Hp.
+      + apply Hp.
+      + apply Hp.
+      + rewrite (bij_preserve_equality (bij_e)). 
+        rewrite <- (@fob_a_eq_a (get_edge b1) (get_edge b2) bij_e).
+        symmetry. apply Hp.
+    Qed.
+  
+  Lemma bigraph_equality_sym' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}  
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
+    bigraph_equality' b1 b2
+        -> bigraph_equality' b2 b1.
+    Proof.
+      intros H. inversion H.
+      apply (BigEq' s2 i2 r2 o2 s1 i1 r1 o1 b2 b1 (bijection_inv bij_s) (bijection_inv bij_i) (bijection_inv bij_r) (bijection_inv bij_o) (bijection_inv bij_n) (bijection_inv bij_e) (bijection_inv bij_k) (bijection_inv bij_p)).
+      + apply arity_sym'. apply big_arity_eq.
+      + apply control_sym'. apply big_control_eq.
+      + apply parent_sym'. apply big_parent_eq.
+      + apply link_sym'. apply big_link_eq.
+      Qed.
+
+  Lemma arity_trans' {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}  
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) 
+    (bij_k12 : bijection (get_kind b1) (get_kind b2)) 
+    (bij_k23 : bijection (get_kind b2) (get_kind b3)):
+    bigraph_arity_equality' b1 b2 (bij_k12) -> 
+      bigraph_arity_equality' b2 b3 (bij_k23) ->
+        bigraph_arity_equality' b1 b3 (bij_k23 <O> bij_k12).
+    Proof. unfold bigraph_arity_equality'. intros H1 H2 k1.
+    simpl. unfold funcomp. rewrite <- H2. rewrite <- H1. reflexivity. Qed. 
+
+  Lemma control_trans' {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}  
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
+    (bij_n12 : bijection (get_node b1) (get_node b2)) 
+    (bij_n23 : bijection (get_node b2) (get_node b3)) 
+    (bij_k12 : bijection (get_kind b1) (get_kind b2)) 
+    (bij_k23 : bijection (get_kind b2) (get_kind b3)):
+    bigraph_control_equality' b1 b2 (bij_n12) (bij_k12) -> 
+      bigraph_control_equality' b2 b3 (bij_n23) (bij_k23) ->
+        bigraph_control_equality' b1 b3 (bij_n23 <O> bij_n12) (bij_k23 <O> bij_k12).
+    Proof. unfold bigraph_control_equality'. intros H1 H2 n1.
+    simpl. unfold funcomp. rewrite <- H2. rewrite <- H1. reflexivity. Qed. 
+
+  Lemma parent_trans' {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}  
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
+    (bij_s12 : bijection s1 s2) 
+    (bij_s23 : bijection s2 s3)
+    (bij_r12 : bijection r1 r2) 
+    (bij_r23 : bijection r2 r3)
+    (bij_n12 : bijection (get_node b1) (get_node b2)) 
+    (bij_n23 : bijection (get_node b2) (get_node b3)) :
+    bigraph_parent_equality' b1 b2 bij_s12 bij_r12 (bij_n12) -> 
+      bigraph_parent_equality' b2 b3 bij_s23 bij_r23 (bij_n23) ->
+        bigraph_parent_equality' b1 b3 (bij_s23 <O> bij_s12) (bij_r23 <O> bij_r12) (bij_n23 <O> bij_n12).
+    Proof. 
+      unfold bigraph_parent_equality'.
+      intros [H12n H12s] [H23n H23s].
+      split.
+      - unfold bigraph_parent_node_equality' in *. 
+        intros n1. simpl.
+        specialize (H12n n1).
+        unfold funcomp. 
+        set (p1n1 := get_parent b1 (inl n1)).
+        destruct p1n1 as [p1n1_n | p1n1_r] eqn:E;
+        unfold p1n1 in E;
+        rewrite E in H12n;
+        set (n2 := forward (get_node b1) (get_node b2) bij_n12 n1);  
+        fold n2 in H12n;
+        specialize (H23n n2);
+        set (p2n2 := get_parent b2 (inl n2));
+        fold p2n2 in H12n;
+        destruct p2n2 as [p2n2_n | p2n2_r] eqn:E' in H12n;
+        unfold p2n2 in E';
+        rewrite E' in H23n;
+        destruct (get_parent b3 (inl (forward (get_node b2) (get_node b3) bij_n23 n2))) as [p3n3_n | p3n3_r]. 
+        + rewrite H12n. rewrite H23n. reflexivity.
+        + apply H23n.
+        + exfalso. apply H23n. 
+        + apply H12n.
+        + apply H12n.
+        + exfalso. apply H23n.
+        + apply H23n.  
+        + rewrite H12n. rewrite H23n. reflexivity.
+      - unfold bigraph_parent_site_equality' in *. 
+        intros site1. simpl.
+        specialize (H12s site1).
+        unfold funcomp. 
+        set (p1s := get_parent b1 (inr site1)).
+        destruct p1s as [p1s_n | p1s_r] eqn:E;
+        unfold p1s in E; 
+        rewrite E in H12s; 
+        set (site2 := forward s1 s2 bij_s12 site1);
+        fold site2 in H12s;
+        specialize (H23s site2);
+        set (p2s2 := get_parent b2 (inr site2));
+        fold p2s2 in H12s;
+        destruct p2s2 as [p2s_n | p2s_r] eqn:E' in H12s;
+        unfold p2s2 in E'; 
+        rewrite E' in H23s;
+        destruct (get_parent b3 (inr (forward s2 s3 bij_s23 site2))) as [p3s_n | p3s_r].
+        + rewrite H12s. rewrite H23s. reflexivity.
+        + apply H23s.
+        + exfalso. apply H23s. 
+        + apply H12s.
+        + apply H12s.
+        + exfalso. apply H23s.
+        + apply H23s.  
+        + rewrite H12s. rewrite H23s. reflexivity.
+      Qed.
+
+  Lemma link_trans' {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}  
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
+    (bij_i12 : bijection i1 i2) 
+    (bij_i23 : bijection i2 i3) 
+    (bij_o12 : bijection o1 o2) 
+    (bij_o23 : bijection o2 o3) 
+    (bij_e12 : bijection (get_edge b1) (get_edge b2)) 
+    (bij_e23 : bijection (get_edge b2) (get_edge b3)) 
+    (bij_p12 : bijection (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2))) 
+    (bij_p23 : bijection (Port (get_node b2) (get_control b2) (get_arity b2)) (Port (get_node b3) (get_control b3) (get_arity b3))):
+    bigraph_link_equality' b1 b2 bij_i12 bij_o12 (bij_e12) (bij_p12) -> 
+    bigraph_link_equality' b2 b3 bij_i23 bij_o23 (bij_e23) (bij_p23) ->
+    bigraph_link_equality' b1 b3 (bij_i23 <O> bij_i12) (bij_o23 <O> bij_o12) (bij_e23 <O> bij_e12) (bij_p23 <O> bij_p12).
+    Proof. 
+      unfold bigraph_link_equality'. intros [H12i H12p] [H23i H23p].
+      split.
+      - unfold bigraph_link_innername_equality' in *. 
+        intros inner1. simpl.
+        specialize (H12i inner1).
+        unfold funcomp. 
+        set (l1i := get_link b1 (inl inner1)).
+        destruct l1i as [l1i_o | l1i_e] eqn:E;
+        unfold l1i in E;
+        rewrite E in H12i;
+        set (inner2 := forward i1 i2 bij_i12 inner1);
+        specialize (H23i inner2);
+        set (inner3 := forward i2 i3 bij_i23 inner2);
+        fold inner2 in H12i;
+        fold inner3 in H23i;
+        set (l2i := get_link b2 (inl inner2));
+        fold l2i in H12i;
+        destruct l2i as [l2i_o | l2i_e] eqn:E' in H12i;
+        unfold l2i in E'; 
+        rewrite E' in H23i;
+        destruct (get_link b3 (inl inner3)) as [l3i_o | l3i_e].
+        + rewrite H12i. rewrite H23i. reflexivity.
+        + apply H23i.
+        + exfalso. apply H23i. 
+        + apply H12i.
+        + apply H12i.
+        + exfalso. apply H23i.
+        + apply H23i.  
+        + rewrite H12i. rewrite H23i. reflexivity.
+      - unfold bigraph_link_port_equality' in *. intros p1. simpl.  
+        specialize (H12p p1).
+        unfold funcomp. 
+        set (l1p := get_link b1 (inr p1)).
+        destruct l1p as [l1p_n | l1p_r] eqn:E;
+        unfold l1p in E;
+        rewrite E in H12p; 
+        set (p2 := forward (Port (get_node b1) (get_control b1) (get_arity b1))
+        (Port (get_node b2) (get_control b2) (get_arity b2)) bij_p12 p1);
+        specialize (H23p p2);
+        set (p3 := forward (Port (get_node b2) (get_control b2) (get_arity b2))
+        (Port (get_node b3) (get_control b3) (get_arity b3)) bij_p23 p2);
+        fold p2 in H12p;
+        fold p3 in H23p;
+        set (l2p2 := get_link b2 (inr p2));
+        fold l2p2 in H12p;
+        destruct l2p2 as [l2p2_o | l2p2_e] eqn:E' in H12p;
+        unfold l2p2 in E'; 
+        rewrite E' in H23p;
+        destruct (get_link b3 (inr p3)).
+        + rewrite H12p. rewrite H23p. reflexivity.
+        + apply H23p.
+        + exfalso. apply H23p. 
+        + apply H12p.
+        + apply H12p.
+        + exfalso. apply H23p.
+        + apply H23p.  
+        + rewrite H12p. rewrite H23p. reflexivity.
+      Qed.
+
+
+  Lemma bigraph_equality_trans' {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}  
+    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3):
+      bigraph_equality' b1 b2
+        -> bigraph_equality' b2 b3  
+          -> bigraph_equality' b1 b3.
+    Proof.
+      intros H12 H23. inversion H12. inversion H23.
+      apply (BigEq' s1 i1 r1 o1 s3 i3 r3 o3 b1 b3 (bij_s0 <O> bij_s) (bij_i0 <O> bij_i) (bij_r0 <O> bij_r) (bij_o0 <O> bij_o) (bij_n0 <O> bij_n) (bij_e0 <O> bij_e) (bij_k0 <O> bij_k) (bij_p0 <O> bij_p)).
+      + apply arity_trans'. apply big_arity_eq. apply big_arity_eq0.
+      + apply control_trans'. apply big_control_eq. apply big_control_eq0.
+      + apply parent_trans'. apply big_parent_eq. apply big_parent_eq0.
+      + apply link_trans'. apply big_link_eq. apply big_link_eq0.
+      Qed.
+
 (* MAKERS FOR DISJOINT JUXTAPOSITION   *)
   (* cannot generalise NoDup_map to injective functions bc one maps on la the other on lb *)
   Lemma NoDup_map_inl {A B : Type} (la : list A) (lb : list B) :
@@ -790,8 +1172,6 @@ Record bigraph_equality' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
       | inr n2' => inr (c2 n2')
       end 
     in new_control.
-
-
 
 
   Definition mk_dis_parent {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
@@ -964,7 +1344,7 @@ Record bigraph_equality' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
   
 Definition dis_juxtaposition {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
 (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
-  : bigraph (s1 +++  s2) (i1 +++ i2) (r1 +++ r2) (o1 +++ o2) :=
+  : bigraph (s1 +++ s2) (i1 +++ i2) (r1 +++ r2) (o1 +++ o2) :=
 {|
   node := (@node s1 i1 r1 o1 b1) +++ (@node s2 i2 r2 o2 b2);
   edge := (@edge s1 i1 r1 o1 b1) +++ (@edge s2 i2 r2 o2 b2);
@@ -994,13 +1374,115 @@ Definition dis_juxtaposition {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
 Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativity).
 
 (* THEOREMS ONLY TRUE WHEN EQUALITY BETWEEN BIGRAPHS IS ACTUALLY AN ISOMORPHISM *)
-  (* Theorem dis_juxtaposition_associative {s i r o : FinDecType} :
-    forall (b1 : bigraph s i r o) (b2 : bigraph s i r o) (b3 : bigraph s i r o),
-    bigraph_equality ((b1 || b2) || b3) (b1 || (b2 || b3)).
+  Definition bij_assoc (A B C : Type) : bijection (A + B + C) (A + (B + C)).
+    Proof. 
+    apply (mkBijection 
+            ((A + B) + C)   
+            (A + (B + C))
+            (fun abc => match abc with
+              | inl ab => 
+                match ab with 
+                |inl a => inl a 
+                |inr b => ((@inr A (B + C)) (@inl B C b))
+                end
+              | inr c => inr (inr c)
+              end 
+            )
+            (fun abc => match abc with
+              | inl a => inl (inl a)
+              | inr bc => 
+                match bc with 
+                |inl b => inl (inr b) 
+                |inr c => inr c
+                end
+              end 
+            )).
+    - unfold funcomp. apply functional_extensionality.
+    intro abc. unfold id. destruct abc as [ a | [b | c]] ; auto.
+    - unfold funcomp. apply functional_extensionality.
+    intro abc. unfold id. destruct abc as [ [a | b] | c] ; auto. 
+    Defined.
 
-  Theorem dis_juxtaposition_commutative {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} :
+
+  Definition mk_port_l_assoc {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) 
+  (p : Port (get_node (b1 || b2 || b3)) (get_control (b1 || b2 || b3)) (get_arity (b1 || b2 || b3)))
+    : (Port (get_node (b1 || (b2 || b3))) (get_control (b1 || (b2 || b3))) (get_arity (b1 || (b2 || b3)))). 
+    Proof.
+
+    Admitted.
+
+  Definition bijection_port_assoc {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) :  
+  bijection
+    (Port (get_node (b1 || b2 || b3))
+       (get_control (b1 || b2 || b3))
+       (get_arity (b1 || b2 || b3)))
+    (Port (get_node (b1 || (b2 || b3)))
+       (get_control (b1 || (b2 || b3)))
+       (get_arity (b1 || (b2 || b3)))).
+       Admitted.
+
+
+
+
+  Theorem dis_juxtaposition_associative {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType} :
+    forall (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3),
+    bigraph_equality' ((b1 || b2) || b3) (b1 || (b2 || b3)).
+  Proof. intros.
+    apply (BigEq' 
+    (s1 +++ s2 +++ s3)
+    (i1 +++ i2 +++ i3) 
+    (r1 +++ r2 +++ r3)
+    (o1 +++ o2 +++ o3) 
+    (s1 +++ (s2 +++ s3))
+    (i1 +++ (i2 +++ i3))
+    (r1 +++ (r2 +++ r3))
+    (o1 +++ (o2 +++ o3))
+    ((b1 || b2) || b3) 
+    (b1 || (b2 || b3))
+    (bij_assoc s1 s2 s3)
+    (bij_assoc i1 i2 i3)
+    (bij_assoc r1 r2 r3)
+    (bij_assoc o1 o2 o3)
+    (bij_assoc (get_node b1) (get_node b2) (get_node b3))
+    (bij_assoc (get_edge b1) (get_edge b2) (get_edge b3))
+    (bij_assoc (get_kind b1) (get_kind b2) (get_kind b3))
+    (bijection_port_assoc b1 b2 b3)).
+  - unfold bij_assoc. unfold bigraph_arity_equality'. intros k123.
+    simpl. unfold mk_dis_arity. simpl. unfold mk_dis_arity. 
+    destruct (k123) as [[k1 | k2] | k3] eqn:E; reflexivity.
+  - unfold bij_assoc. unfold bigraph_control_equality'. intros n123.
+    simpl. unfold mk_dis_control. simpl. unfold mk_dis_control. 
+    destruct (n123) as [[n1 | n2] | n3] eqn:E; reflexivity.
+  - unfold bigraph_parent_equality'. split.
+    + unfold bij_assoc. unfold bigraph_parent_node_equality'. intros n123.
+      simpl. 
+      destruct (n123) as [[n1 | n2] | n3] eqn:E.
+      ++ destruct (get_parent b1 (inl n1)); reflexivity.
+      ++ destruct (get_parent b2 (inl n2)); reflexivity.
+      ++ destruct (get_parent b3 (inl n3)); reflexivity.
+    + unfold bij_assoc. unfold bigraph_parent_site_equality'. intros s123.
+      simpl. 
+      destruct (s123) as [[site1 | site2] | site3] eqn:E.
+      ++ destruct (get_parent b1 (inr site1)); reflexivity.
+      ++ destruct (get_parent b2 (inr site2)); reflexivity.
+      ++ destruct (get_parent b3 (inr site3)); reflexivity.
+  - unfold bigraph_link_equality'. split.
+  + unfold bij_assoc. unfold bigraph_link_innername_equality'. intros i123.
+    simpl. 
+    destruct (i123) as [[inner1 | inner2] | inner3] eqn:E.
+    ++ destruct (get_link b1 (inl inner1)); reflexivity.
+    ++ destruct (get_link b2 (inl inner2)); reflexivity.
+    ++ destruct (get_link b3 (inl inner3)); reflexivity.
+  + unfold bij_assoc. unfold bigraph_link_port_equality'. intros p123.
+    simpl. unfold mk_dis_port. simpl. unfold mk_dis_arity. simpl. unfold mk_dis_control. simpl.
+    destruct p123. simpl in *. Admitted.
+
+    
+  (* Theorem dis_juxtaposition_commutative {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} :
     forall (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2),
-    b1 || b2 = b2 || b1.  *)
+    b1 || b2 = b2 || b1.  *) 
 
 
 (* MAKERS FOR COMPOSITION *)
