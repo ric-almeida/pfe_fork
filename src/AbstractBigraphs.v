@@ -242,7 +242,7 @@ Record bigraph_equality {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
     big_link_eq : bigraph_link_equality b1 b2 bij_i bij_o bij_e bij_p
   }.
 
-(* EQUIVALENCE IS RELATION*)
+(* EQUIVALENCE IS RELATION *)
   Lemma arity_refl {s i r o : FinDecType} (b : bigraph s i r o) :
     let bij_k := bijection_id  in
     bigraph_arity_equality b b bij_k.
@@ -648,7 +648,16 @@ Record bigraph_equality {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
       Qed.
 
 
-(* Add Parametric Relation: (bigraph) (bigraph_equality)
+Record bigraph_packed : Type :=
+  {
+  s: FinDecType;
+  i: FinDecType;
+  r: FinDecType;
+  o: FinDecType;
+  big : bigraph s i r o
+  }. 
+
+(* Add Parametric Relation: (bigraph_packed) (bigraph_equality)
       reflexivity proved by (bigraph_equality_refl)
       symmetry proved by (bigraph_equality_sym)
       transitivity proved by (bigraph_equality_trans)
@@ -1166,15 +1175,19 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
     Proof. intros. unfold bigraph_link_port_equality.
       set (P12 := Port (get_node (b1 || b2)) (get_control (b1 || b2)) (get_arity (b1 || b2))).
       set (P21 := Port (get_node (b2 || b1)) (get_control (b2 || b1)) (get_arity (b2 || b1))).
+      
       intros p12.
       unfold dis_juxtaposition. simpl.
       destruct (mk_dis_port b1 b2 p12) as [p1 | p2] eqn:E.
       - (*p1*)
         destruct (get_link b1 (inr p1)) as [outer1 |edge1] eqn:E'.
         + (*link p1 = outer1 *)
-          set (p21 := mk_dis_port b2 b1 (mk_port_commu b1 b2 p12)).
+          (* set (p21 := mk_dis_port b2 b1 (mk_port_commu b1 b2 p12)). *)
+          unfold mk_port_commu.
 
-          destruct p21 as [p2' | p1'] eqn:E''. Focus 2.
+          destruct p21 as [p2' | p1'] eqn:E''. 
+          ++ destruct (get_link b2 (inr p2')).
+
           ++ destruct (get_link b1 (inr p1')) as [outer1' | edge1] eqn:E'''.
             +++  Admitted.
 
