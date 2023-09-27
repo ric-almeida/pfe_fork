@@ -211,7 +211,7 @@ Record bigraph  (site: FinDecType)
       forall p1:(Port (get_node b1) (get_control b1) (get_arity b1)), 
       let p2 := bij_p.(forward (Port (get_node b1) (get_control b1) (get_arity b1)) (Port (get_node b2) (get_control b2) (get_arity b2))) p1 in
       match (get_link b1 (inr p1)),(get_link b2 (inr p2)) with
-      | inr edge1, inr edge2  => bij_e.(forward (get_edge b1) (get_edge b2)) edge1 = edge2
+      | inr edge1, inr edge2  => forward (get_edge b1) (get_edge b2) bij_e edge1 = edge2
       | inl outer1, inl outer2  => forward o1 o2 bij_o outer1 = outer2
       | _, _ => False
       end.
@@ -1133,7 +1133,6 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
       - exists (inl n2, i12). apply P12.
     Defined. 
 
-
   Definition bijection_port_commu {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :  
     bijection
@@ -1150,19 +1149,185 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
         (fun p => mk_port_commu b1 b2 p)
         (fun p => mk_port_commu b2 b1 p)
       ).
-    - (* f <o> b = id *)
-      apply functional_extensionality. intros p. unfold id. unfold funcomp.
-      unfold mk_port_commu. simpl.
-      destruct p as [vi12 P12].
-      destruct vi12 as [[n1 | n2] i12] eqn:E;
-      simpl in P12; reflexivity.
-    - (* b <o> f = id *)
-      apply functional_extensionality. intros p. unfold id. unfold funcomp.
-      unfold mk_port_commu. simpl.
-      destruct p as [vi12 P12].
-      destruct vi12 as [[n1 | n2] i12] eqn:E;
-      simpl in P12; reflexivity.
+      - (* f <o> b = id *)
+        apply functional_extensionality. intros p. unfold id. unfold funcomp.
+        unfold mk_port_commu. simpl.
+        destruct p as [vi12 P12].
+        destruct vi12 as [[n1 | n2] i12] eqn:E;
+        simpl in P12; reflexivity.
+      - (* b <o> f = id *)
+        apply functional_extensionality. intros p. unfold id. unfold funcomp.
+        unfold mk_port_commu. simpl.
+        destruct p as [vi12 P12].
+        destruct vi12 as [[n1 | n2] i12] eqn:E;
+        simpl in P12; reflexivity.
     Defined.
+
+  Lemma dis_port_commu_commu {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+    (b1 : bigraph s1 i1 r1 o1) 
+    (b2 : bigraph s2 i2 r2 o2)
+    (p12 : Port (get_node (b1 || b2)) (get_control (b1 || b2)) (get_arity (b1 || b2))) : 
+    mk_port_commu b2 b1 (mk_port_commu b1 b2 p12) = p12.
+    Proof.
+      destruct p12 as [[[n1 | n2] i12] P12];
+      simpl in P12;
+      unfold mk_port_commu;
+      reflexivity. Qed.
+    
+  Lemma dis_port_commu {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+    (b1 : bigraph s1 i1 r1 o1) 
+    (b2 : bigraph s2 i2 r2 o2)
+    (p12 : Port (get_node (b1 || b2)) (get_control (b1 || b2)) (get_arity (b1 || b2))) :
+    match mk_dis_port b2 b1 (mk_port_commu b1 b2 p12) with
+      | inl p2 => 
+        match (mk_dis_port b1 b2 p12) with
+        | inl p1' => False
+        | inr p2' => p2 = p2'
+        end
+      | inr p1 => 
+        match (mk_dis_port b1 b2 p12) with
+        | inl p1' => p1 = p1'
+        | inr p2' => False
+        end
+    end.
+    Proof.
+    destruct p12 as [[[n1 | n2] i12] P12]; simpl; reflexivity.
+    Qed.
+(* 
+  Lemma dis_port_commu_same_link {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+    (b1 : bigraph s1 i1 r1 o1) 
+    (b2 : bigraph s2 i2 r2 o2)
+    (p12 : Port (get_node (b1 || b2)) (get_control (b1 || b2)) (get_arity (b1 || b2))) :
+    match mk_dis_port b2 b1 (mk_port_commu b1 b2 p12) with
+    | inr p1 => 
+      match (get_link b1 (inr p1)) with
+      | inl outer1 => 
+      match 
+        outer1 =
+          forward o1 o2 bij_o 
+            (
+              get_link
+            )
+      | inr e1 => False
+      end
+    | inl p2 => 
+      match get_link b2 (inr p2) with
+      | inl o2 => bij_o (get_link b1 (bij_p p2)) = o2
+      | inr e2 => p2 = p2'
+      end
+    end.
+    Proof. Admitted. *)
+
+  Lemma link_preserved_commu {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+  (b1 : bigraph s1 i1 r1 o1) 
+  (b2 : bigraph s2 i2 r2 o2)
+  (p12 : Port (get_node (b1 || b2)) (get_control (b1 || b2)) (get_arity (b1 || b2))) : 
+    match get_link (b2 || b1) (inr (mk_port_commu b1 b2 p12)) with 
+      | inl outer21 => 
+        match (get_link (b1 || b2) (inr p12)) with 
+        | inl outer12 => forward (o1 +++ o2) (o2 +++ o1)
+        bij_sum_comm outer12 = outer21
+        | inr _ => False
+        end
+      | inr edge21 => 
+        match (get_link (b1 || b2) (inr p12)) with 
+        | inl _ => False
+        | inr edge12 => 
+          forward (get_edge (b1||b2)) (get_edge (b2||b1))
+          bij_sum_comm edge12 = edge21
+        end
+      end.
+  Proof. Admitted. 
+
+  Lemma outer_commu {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+  (b1 : bigraph s1 i1 r1 o1) 
+  (b2 : bigraph s2 i2 r2 o2) 
+  (p12 : Port (get_node (b1 || b2)) (get_control (b1 || b2)) (get_arity (b1 || b2))):
+  let oe12 := get_link (b1 || b2) (inr p12) in
+  let oe21 := get_link (b2 || b1) (inr (mk_port_commu b1 b2 p12)) in
+  match oe12 with 
+  | inl o12 =>
+    match oe21 with 
+    | inl o21 =>
+      forward 
+        (o1 +++ o2)
+        (o2 +++ o1) 
+        bij_sum_comm 
+        o12 = o21
+    | inr _ => False
+    end
+  | inr e12 =>
+    match oe21 with 
+    | inl _ => False
+    | inr e21 =>
+      forward 
+        (get_edge (b1 || b2))
+        (get_edge (b2 || b1)) 
+        bij_sum_comm 
+        e12 = e21
+    end
+  end.
+  Proof. intros.
+  destruct oe12 as [o1o2 | e1e2] eqn:E12.
+  - destruct oe21 as [o2o1 | e2e1] eqn:E21.
+  + Admitted. 
+
+  Lemma outer_commu' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+  (b1 : bigraph s1 i1 r1 o1) 
+  (b2 : bigraph s2 i2 r2 o2) 
+  (p12 : Port (get_node (b1 || b2)) (get_control (b1 || b2)) (get_arity (b1 || b2))):
+  let oe12 := get_link (b1 || b2) (inr p12) in
+  let oe21 := get_link (b2 || b1) (inr (mk_port_commu b1 b2 p12)) in
+  match oe12 with 
+  | inl o12 =>
+    match o12 with 
+    | inl o1 =>  
+      match oe21 with 
+      | inl o21 =>
+        match o21 with 
+        | inl _ => False
+        | inr o1' => o1 = o1'
+        end
+      | inr _ => False
+      end
+    | inr o2 => 
+      match oe21 with 
+      | inl o21 =>
+        match o21 with 
+        | inl o2' => o2 = o2'
+        | inr o1' => False
+        end
+      | inr _ => False
+      end
+    end
+  | inr e12 =>
+    match e12 with 
+    | inl e1 =>  
+      match oe21 with 
+      | inl o21 => False        
+      | inr e21 => 
+        match e21 with 
+        | inl _ => False
+        | inr e1' => e1 = e1'
+        end
+      end
+    | inr e2 => 
+      match oe21 with 
+      | inl o21 => False
+      | inr e21 => 
+        match e21 with 
+        | inl e2' => e2 = e2'
+        | inr e1' => False
+        end
+      end
+    end
+  end.
+  Proof. intros.
+  destruct oe12 as [o12|e12].
+  - destruct o12 as [outer1|outer2];
+    destruct oe21 as [o21|e21].
+    + destruct o21 as [outer2'|outer1'].
+      ++ 
 
   Theorem dis_juxtaposition_port_commutative {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} :
     forall (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2),
@@ -1172,17 +1337,47 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
       (bij_sum_comm)
       (bij_sum_comm)
       (bijection_port_commu b1 b2).
-    Proof. intros. unfold bigraph_link_port_equality.
-      set (P12 := Port (get_node (b1 || b2)) (get_control (b1 || b2)) (get_arity (b1 || b2))).
+    Proof. intros b1 b2. unfold bigraph_link_port_equality.
+      (* set (P12 := Port (get_node (b1 || b2)) (get_control (b1 || b2)) (get_arity (b1 || b2))).
       set (P21 := Port (get_node (b2 || b1)) (get_control (b2 || b1)) (get_arity (b2 || b1))).
-      
+       *)
       intros p12.
+      (* set (p21 := forward
+        (Port (get_node (b1 || b2)) (get_control (b1 || b2)) (get_arity (b1 || b2)))
+        (Port (get_node (b2 || b1)) (get_control (b2 || b1)) (get_arity (b2 || b1)))
+        (bijection_port_commu b1 b2) p12).
+        simpl in p21. *)
+      destruct (get_link (b1 || b2) (inr p12)) as [o12 | e12] eqn:E'.
+      - 
+      (* set (l21 := get_link (b2 || b1) (inr p21))  *)
+      destruct (get_link (b2 || b1) (inr (forward
+      (Port (get_node (b1 || b2))
+         (get_control (b1 || b2))
+         (get_arity (b1 || b2)))
+      (Port (get_node (b2 || b1))
+         (get_control (b2 || b1))
+         (get_arity (b2 || b1)))
+      (bijection_port_commu b1 b2) p12))) as [o21 | e21] eqn:E.
+      + simpl.
+      assert (o21 = forward (o1+o2) (o2+o1) bij_sum_comm o12). Focus 2.
+      ++ simpl in H. symmetry. apply H.
+      ++ simpl. 
+       simpl in E.         
+      destruct get_link (b2 || b1) (inr p21)
+      unfold p21 in E. simpl in E.
+      unfold bijection_port_commu. simpl.
+
+      set (l12 := get_link (b1 || b2) (inr p12)).
       unfold dis_juxtaposition. simpl.
       destruct (mk_dis_port b1 b2 p12) as [p1 | p2] eqn:E.
       - (*p1*)
         destruct (get_link b1 (inr p1)) as [outer1 |edge1] eqn:E'.
         + (*link p1 = outer1 *)
           (* set (p21 := mk_dis_port b2 b1 (mk_port_commu b1 b2 p12)). *)
+          apply dis_port_commu. rewrite dis_port_commu_rewrite. 
+          rewrite (bij_preserve_equality (bijection_port_commu b1 b2)).
+          simpl.
+          destruct (dis_port_commu b1 b2).
           unfold mk_port_commu.
 
           destruct p21 as [p2' | p1'] eqn:E''. 
