@@ -1217,6 +1217,22 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
       end
     end.
     Proof. Admitted. *)
+    
+  Lemma dis_port_commu_prop {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+    (b1 : bigraph s1 i1 r1 o1) 
+    (b2 : bigraph s2 i2 r2 o2)
+    (p12 : Port (get_node (b1 || b2)) (get_control (b1 || b2)) (get_arity (b1 || b2))) 
+    (prop1 : Port (get_node b1) (get_control b1) (get_arity b1)-> Prop)
+    (prop2 : Port (get_node b2) (get_control b2) (get_arity b2)-> Prop):
+    match mk_dis_port b1 b2 p12 with
+    | inl p1 => prop1 p1
+    | inr p2 => prop2 p2
+    end
+      ->  match mk_dis_port b2 b1 (mk_port_commu b1 b2 p12) with
+          | inl p2 => prop2 p2
+          | inr p1 => prop1 p1
+          end.
+    Proof. intros H. Admitted. 
 
   Lemma link_preserved_commu {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
   (b1 : bigraph s1 i1 r1 o1) 
@@ -1323,11 +1339,23 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
     end
   end.
   Proof. intros.
-  destruct oe12 as [o12|e12].
-  - destruct o12 as [outer1|outer2];
-    destruct oe21 as [o21|e21].
-    + destruct o21 as [outer2'|outer1'].
-      ++ 
+  simpl in oe12.
+  simpl in oe21.
+  exfalso.
+
+  rewrite <- (dis_port_commu b1 b2 p12) in oe21.
+  unfold mk_port_commu in oe21.
+  simpl in oe21.
+  set (p21 := (mk_port_commu b1 b2 p12)).
+  destruct (mk_dis_port b1 b2 p12) as [p1 | p2] eqn:P1P2.
+  destruct (mk_dis_port b2 b1 p12) as [p1 | p2] eqn:P1P2.
+  - destruct (get_link b1 (inr p1)) as [l1p1_o | l1p1_e] eqn:L1P1.
+  + destruct oe12 as [o12|e12] eqn:OE12.
+  ++ destruct o12 as [outer1|outer2] eqn:O12;
+  destruct oe21 as [o21|e21] eqn:OE21.
+  +++ destruct o21 as [outer2'|outer1'] eqn:O21.
+  ++++   auto. 
+  Admitted.
 
   Theorem dis_juxtaposition_port_commutative {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} :
     forall (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2),
