@@ -1397,6 +1397,35 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
       - (*p1*)
         destruct (get_link b1 (inr p1)) as [outer1 |edge1] eqn:E'.
         + (*link p1 = outer1 *) (*HELLP*)
+        change (
+              match
+                mk_dis_port b2 b1 (mk_port_commu b1 b2 p12)
+              with
+              | inl p2' =>
+                  match get_link b2 (inr p2') with
+                  | inl o2' => match @inl (o2+o1) ((get_edge b2)+(get_edge b1)) (inl o2') with
+                              | inl outer2 => inr outer1 = outer2
+                              | inr _ => False
+                              end
+                  | inr e2 => match @inr ((get_edge b1)+o1) ((get_edge b2)+o2) (inl e2) with
+                              | inl outer2 => inr outer1 = outer2
+                              | inr _ => False
+                              end 
+                  end
+              | inr p1' =>
+                  match get_link b1 (inr p1') with
+                  | inl o1' => match @inl (o2+o1) ((get_edge b2)+(get_edge b1)) (inr o1') with
+                              | inl outer2 => inr outer1 = outer2
+                              | inr _ => False
+                              end 
+                  | inr e1' => match @inr (o2+o1) ((get_edge b2)+(get_edge b1)) (inr e1') with
+                              | inl outer2 => inr outer1 = outer2
+                              | inr _ => False
+                              end 
+                  end
+              end
+          ).
+
           destruct (
             match mk_dis_port b2 b1 (mk_port_commu b1 b2 p12) with
             | inl p0 =>
@@ -1453,34 +1482,7 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
 
 
 
-          (* change (
-              match
-                mk_dis_port b2 b1 (mk_port_commu b1 b2 p12)
-              with
-              | inl p2' =>
-                  match get_link b2 (inr p2') with
-                  | inl o2' => match @inl (o2+o1) ((get_edge b2)+(get_edge b1)) (inl o2') with
-                              | inl outer2 => inr outer1 = outer2
-                              | inr _ => False
-                              end
-                  | inr e2 => match @inr ((get_edge b1)+o1) ((get_edge b2)+o2) (inl e2) with
-                              | inl outer2 => inr outer1 = outer2
-                              | inr _ => False
-                              end 
-                  end
-              | inr p1' =>
-                  match get_link b1 (inr p1') with
-                  | inl o1' => match @inl (o2+o1) ((get_edge b2)+(get_edge b1)) (inr o1') with
-                              | inl outer2 => inr outer1 = outer2
-                              | inr _ => False
-                              end 
-                  | inr e1' => match @inr (o2+o1) ((get_edge b2)+(get_edge b1)) (inr e1') with
-                              | inl outer2 => inr outer1 = outer2
-                              | inr _ => False
-                              end 
-                  end
-              end
-          ). *)
+          
           
           apply (dis_port_commu_prop b1 b2 p12 prop1 prop2).
           (* set (p21 := mk_dis_port b2 b1 (mk_port_commu b1 b2 p12)). *)
