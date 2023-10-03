@@ -653,3 +653,35 @@ Proof.
   + apply parent_trans. apply big_parent_eq. apply big_parent_eq0.
   + apply link_trans. apply big_link_eq. apply big_link_eq0.
   Qed.
+
+
+  Lemma dis_port_commu_commu {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+  (b1 : bigraph s1 i1 r1 o1) 
+  (b2 : bigraph s2 i2 r2 o2)
+  (p12 : Port (get_node (b1 || b2)) (get_control (b1 || b2)) (get_arity (b1 || b2))) : 
+  mk_port_commu b2 b1 (mk_port_commu b1 b2 p12) = p12.
+  Proof.
+    destruct p12 as [[[n1 | n2] i12] P12];
+    simpl in P12;
+    unfold mk_port_commu;
+    reflexivity. Qed.
+
+    Lemma dis_port_commu {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+    (b1 : bigraph s1 i1 r1 o1) 
+    (b2 : bigraph s2 i2 r2 o2)
+    (p12 : Port (get_node (b1 || b2)) (get_control (b1 || b2)) (get_arity (b1 || b2))) :
+    match mk_dis_port b2 b1 (mk_port_commu b1 b2 p12) with
+      | inl p2 => 
+        match (mk_dis_port b1 b2 p12) with
+        | inl p1' => False
+        | inr p2' => p2 = p2'
+        end
+      | inr p1 => 
+        match (mk_dis_port b1 b2 p12) with
+        | inl p1' => p1 = p1'
+        | inr p2' => False
+        end
+    end.
+    Proof.
+    destruct p12 as [[[n1 | n2] i12] P12]; simpl; reflexivity.
+    Qed.

@@ -1063,6 +1063,464 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
         simpl in P123; reflexivity.
       Defined.
 
+  Lemma rearrange_match_outer1 {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}
+    {b1 : bigraph s1 i1 r1 o1} 
+    {b2 : bigraph s2 i2 r2 o2} 
+    {b3 : bigraph s3 i3 r3 o3}
+    (p123 : Port (get_node b1) (get_control b1) (get_arity b1) + Port (get_node (b2 || b3)) (get_control (b2 || b3)) (get_arity (b2 || b3)))
+    (outer1 : o1) :
+    match
+      match p123 with
+      | inl p1 =>
+          match get_link b1 (inr p1) with
+          | inl outer1' => inl (inl outer1')
+          | inr e1 => inr (inl e1)
+          end
+      | inr p23 =>
+          match
+            match mk_dis_port b2 b3 p23 with
+            | inl p2 =>
+                match get_link b2 (inr p2) with
+                | inl outer2 => inl (inl outer2)
+                | inr e1 => inr (inl e1)
+                end
+            | inr p3 =>
+                match get_link b3 (inr p3) with
+                | inl outer3 => inl (inr outer3)
+                | inr e2 => inr (inr e2)
+                end
+            end
+          with
+          | inl outer23 => inl (inr outer23)
+          | inr e23 => inr (inr e23)
+          end
+      end
+    with
+    | inl outer2 => inl outer1 = outer2
+    | inr _ => False
+    end
+      <->
+        match p123 with
+        | inl p1 =>
+            match get_link b1 (inr p1) with
+            | inl outer1' => @inl o1 (o2+o3) outer1 = inl outer1'
+            | inr e1 => False
+            end
+        | inr p23 =>
+            match mk_dis_port b2 b3 p23 with
+            | inl p2 =>
+                match get_link b2 (inr p2) with
+                | inl outer2 => inl outer1 = inr (@inl o2 o3 outer2)
+                | inr e1 => False
+                end
+            | inr p3 =>
+                match get_link b3 (inr p3) with
+                | inl outer3 => inl outer1 = inr (@inr o2 o3 outer3)
+                | inr e2 => False
+                end
+            end
+        end.
+    Proof. split.
+    - intros H. destruct p123 as [p1 | p23]. 
+      + destruct (get_link b1 (inr p1)); apply H.
+      + destruct (mk_dis_port b2 b3 p23) as [p2 | p3].
+        ++ destruct (get_link b2 (inr p2)); apply H.
+        ++ destruct (get_link b3 (inr p3)); apply H.
+    - intros H. destruct p123 as [p1 | p23]. 
+      + destruct (get_link b1 (inr p1)); apply H.
+      + destruct (mk_dis_port b2 b3 p23) as [p2 | p3].
+        ++ destruct (get_link b2 (inr p2)); apply H.
+        ++ destruct (get_link b3 (inr p3)); apply H.
+    Qed.
+  
+  Lemma rearrange_match_outer2 {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}
+    {b1 : bigraph s1 i1 r1 o1} 
+    {b2 : bigraph s2 i2 r2 o2} 
+    {b3 : bigraph s3 i3 r3 o3}
+    (p123 : Port (get_node b1) (get_control b1) (get_arity b1) + Port (get_node (b2 || b3)) (get_control (b2 || b3)) (get_arity (b2 || b3)))
+    (outer2 : o2) :
+    match
+      match p123 with
+      | inl p1 =>
+          match get_link b1 (inr p1) with
+          | inl outer1' => inl (inl outer1')
+          | inr e1 => inr (inl e1)
+          end
+      | inr p23 =>
+          match
+            match mk_dis_port b2 b3 p23 with
+            | inl p2 =>
+                match get_link b2 (inr p2) with
+                | inl outer2' => inl (inl outer2')
+                | inr e1 => inr (inl e1)
+                end
+            | inr p3 =>
+                match get_link b3 (inr p3) with
+                | inl outer3 => inl (inr outer3)
+                | inr e2 => inr (inr e2)
+                end
+            end
+          with
+          | inl outer23 => inl (inr outer23)
+          | inr e23 => inr (inr e23)
+          end
+      end
+    with
+    | inl outer2' => inr (inl outer2) = outer2'
+    | inr _ => False
+    end
+      <->
+        match p123 with
+        | inl p1 =>
+            match get_link b1 (inr p1) with
+            | inl outer1' => inr (@inl o2 o3 outer2) = inl outer1'
+            | inr e1 => False
+            end
+        | inr p23 =>
+            match mk_dis_port b2 b3 p23 with
+            | inl p2 =>
+                match get_link b2 (inr p2) with
+                | inl outer2' => @inr o1 (o2 + o3) (inl outer2) = inr (@inl o2 o3 outer2')
+                | inr e1 => False
+                end
+            | inr p3 =>
+                match get_link b3 (inr p3) with
+                | inl outer3 => @inr o1 (o2 + o3) (inl outer2) = inr (@inr o2 o3 outer3)
+                | inr e2 => False
+                end
+            end
+        end.
+    Proof. split.
+    - intros H. destruct p123 as [p1 | p23]. 
+      + destruct (get_link b1 (inr p1)); apply H.
+      + destruct (mk_dis_port b2 b3 p23) as [p2 | p3].
+        ++ destruct (get_link b2 (inr p2)); apply H.
+        ++ destruct (get_link b3 (inr p3)); apply H.
+    - intros H. destruct p123 as [p1 | p23]. 
+      + destruct (get_link b1 (inr p1)); apply H.
+      + destruct (mk_dis_port b2 b3 p23) as [p2 | p3].
+        ++ destruct (get_link b2 (inr p2)); apply H.
+        ++ destruct (get_link b3 (inr p3)); apply H.
+    Qed.
+    
+  Lemma rearrange_match_outer3 {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}
+    {b1 : bigraph s1 i1 r1 o1} 
+    {b2 : bigraph s2 i2 r2 o2} 
+    {b3 : bigraph s3 i3 r3 o3}
+    (p123 : Port (get_node b1) (get_control b1) (get_arity b1) + Port (get_node (b2 || b3)) (get_control (b2 || b3)) (get_arity (b2 || b3)))
+    (outer3 : o3) :
+    match
+      match p123 with
+      | inl p1 =>
+          match get_link b1 (inr p1) with
+          | inl outer1' => inl (inl outer1')
+          | inr e1 => inr (inl e1)
+          end
+      | inr p23 =>
+          match
+            match mk_dis_port b2 b3 p23 with
+            | inl p2 =>
+                match get_link b2 (inr p2) with
+                | inl outer2' => inl (inl outer2')
+                | inr e1 => inr (inl e1)
+                end
+            | inr p3 =>
+                match get_link b3 (inr p3) with
+                | inl outer3' => inl (inr outer3')
+                | inr e2 => inr (inr e2)
+                end
+            end
+          with
+          | inl outer23 => inl (inr outer23)
+          | inr e23 => inr (inr e23)
+          end
+      end
+    with
+    | inl outer2' => inr (inr outer3) = outer2'
+    | inr _ => False
+    end
+      <->
+        match p123 with
+        | inl p1 =>
+            match get_link b1 (inr p1) with
+            | inl outer1' => inr (@inr o2 o3 outer3) = inl outer1'
+            | inr e1 => False
+            end
+        | inr p23 =>
+            match mk_dis_port b2 b3 p23 with
+            | inl p2 =>
+                match get_link b2 (inr p2) with
+                | inl outer2' => @inr o1 (o2 + o3) (inr outer3) = inr (@inl o2 o3 outer2')
+                | inr e1 => False
+                end
+            | inr p3 =>
+                match get_link b3 (inr p3) with
+                | inl outer3' => @inr o1 (o2 + o3) (inr outer3) = inr (@inr o2 o3 outer3')
+                | inr e2 => False
+                end
+            end
+        end.
+    Proof. split.
+    - intros H. destruct p123 as [p1 | p23]. 
+      + destruct (get_link b1 (inr p1)); apply H.
+      + destruct (mk_dis_port b2 b3 p23) as [p2 | p3].
+        ++ destruct (get_link b2 (inr p2)); apply H.
+        ++ destruct (get_link b3 (inr p3)); apply H.
+    - intros H. destruct p123 as [p1 | p23]. 
+      + destruct (get_link b1 (inr p1)); apply H.
+      + destruct (mk_dis_port b2 b3 p23) as [p2 | p3].
+        ++ destruct (get_link b2 (inr p2)); apply H.
+        ++ destruct (get_link b3 (inr p3)); apply H.
+    Qed.
+
+
+  Lemma rearrange_match_edge1 {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}
+    {b1 : bigraph s1 i1 r1 o1} 
+    {b2 : bigraph s2 i2 r2 o2} 
+    {b3 : bigraph s3 i3 r3 o3}
+    (p123 : Port (get_node b1) (get_control b1) (get_arity b1) + Port (get_node (b2 || b3)) (get_control (b2 || b3)) (get_arity (b2 || b3)))
+    (edge1 : get_edge b1) :
+    match
+      match p123 with
+      | inl p1 =>
+          match get_link b1 (inr p1) with
+          | inl outer1' => inl (inl outer1')
+          | inr e1 => inr (inl e1)
+          end
+      | inr p23 =>
+          match
+            match mk_dis_port b2 b3 p23 with
+            | inl p2 =>
+                match get_link b2 (inr p2) with
+                | inl outer2 => inl (inl outer2)
+                | inr e1 => inr (inl e1)
+                end
+            | inr p3 =>
+                match get_link b3 (inr p3) with
+                | inl outer3 => inl (inr outer3)
+                | inr e2 => inr (inr e2)
+                end
+            end
+          with
+          | inl outer23 => inl (inr outer23)
+          | inr e23 => inr (inr e23)
+          end
+      end
+    with
+    | inl _ => False
+    | inr edge2 => inl edge1 = edge2
+    end
+      <->
+      match p123 with
+      | inl p1 =>
+          match get_link b1 (inr p1) with
+          | inl outer1' => False
+          | inr e1 => @inl (get_edge b1) ((get_edge b2) + (get_edge b3)) edge1 = inl e1
+          end
+      | inr p23 =>
+          match mk_dis_port b2 b3 p23 with
+          | inl p2 =>
+              match get_link b2 (inr p2) with
+              | inl outer2 => False
+              | inr e1 =>  inl edge1 = inr (@inl (get_edge b2) ((get_edge b3)) e1)
+              end
+          | inr p3 =>
+              match get_link b3 (inr p3) with
+              | inl outer3 => False
+              | inr e2 => inl edge1 = inr (@inr (get_edge b2) (get_edge b3) e2)
+              end
+          end
+      end.
+    Proof. split.
+    - intros H. destruct p123 as [p1 | p23]. 
+      + destruct (get_link b1 (inr p1)); apply H.
+      + destruct (mk_dis_port b2 b3 p23) as [p2 | p3].
+        ++ destruct (get_link b2 (inr p2)); apply H.
+        ++ destruct (get_link b3 (inr p3)); apply H.
+    - intros H. destruct p123 as [p1 | p23]. 
+      + destruct (get_link b1 (inr p1)); apply H.
+      + destruct (mk_dis_port b2 b3 p23) as [p2 | p3].
+        ++ destruct (get_link b2 (inr p2)); apply H.
+        ++ destruct (get_link b3 (inr p3)); apply H.
+    Qed.
+
+  Lemma rearrange_match_edge2 {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}
+    {b1 : bigraph s1 i1 r1 o1} 
+    {b2 : bigraph s2 i2 r2 o2} 
+    {b3 : bigraph s3 i3 r3 o3}
+    (p123 : Port (get_node b1) (get_control b1) (get_arity b1) + Port (get_node (b2 || b3)) (get_control (b2 || b3)) (get_arity (b2 || b3)))
+    (edge2 : get_edge b2) :
+    match
+      match p123 with
+      | inl p1 =>
+          match get_link b1 (inr p1) with
+          | inl outer1' => inl (inl outer1')
+          | inr e1 => inr (inl e1)
+          end
+      | inr p23 =>
+          match
+            match mk_dis_port b2 b3 p23 with
+            | inl p2 =>
+                match get_link b2 (inr p2) with
+                | inl outer2 => inl (inl outer2)
+                | inr e1 => inr (inl e1)
+                end
+            | inr p3 =>
+                match get_link b3 (inr p3) with
+                | inl outer3 => inl (inr outer3)
+                | inr e2 => inr (inr e2)
+                end
+            end
+          with
+          | inl outer23 => inl (inr outer23)
+          | inr e23 => inr (inr e23)
+          end
+      end
+    with
+    | inl _ => False
+    | inr edge2' => inr (inl edge2) = edge2'
+    end
+      <->
+      match p123 with
+      | inl p1 =>
+          match get_link b1 (inr p1) with
+          | inl outer1' => False
+          | inr e1 => inr (@inl (get_edge b2) (get_edge b3) edge2) = inl e1
+          end
+      | inr p23 =>
+          match mk_dis_port b2 b3 p23 with
+          | inl p2 =>
+              match get_link b2 (inr p2) with
+              | inl outer2 => False
+              | inr e1 =>  @inr (get_edge b1) ((get_edge b2) + (get_edge b3)) (inl edge2) = inr (@inl (get_edge b2) ((get_edge b3)) e1)
+              end
+          | inr p3 =>
+              match get_link b3 (inr p3) with
+              | inl outer3 => False
+              | inr e2 => @inr (get_edge b1) ((get_edge b2) + (get_edge b3)) (inl edge2) = inr (@inr (get_edge b2) (get_edge b3) e2)
+              end
+          end
+      end.
+    Proof. split.
+    - intros H. destruct p123 as [p1 | p23]. 
+      + destruct (get_link b1 (inr p1)); apply H.
+      + destruct (mk_dis_port b2 b3 p23) as [p2 | p3].
+        ++ destruct (get_link b2 (inr p2)); apply H.
+        ++ destruct (get_link b3 (inr p3)); apply H.
+    - intros H. destruct p123 as [p1 | p23]. 
+      + destruct (get_link b1 (inr p1)); apply H.
+      + destruct (mk_dis_port b2 b3 p23) as [p2 | p3].
+        ++ destruct (get_link b2 (inr p2)); apply H.
+        ++ destruct (get_link b3 (inr p3)); apply H.
+    Qed.
+
+  Lemma rearrange_match_edge3 {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}
+    {b1 : bigraph s1 i1 r1 o1} 
+    {b2 : bigraph s2 i2 r2 o2} 
+    {b3 : bigraph s3 i3 r3 o3}
+    (p123 : Port (get_node b1) (get_control b1) (get_arity b1) + Port (get_node (b2 || b3)) (get_control (b2 || b3)) (get_arity (b2 || b3)))
+    (edge3 : get_edge b3) :
+    match
+      match p123 with
+      | inl p1 =>
+          match get_link b1 (inr p1) with
+          | inl outer1' => inl (inl outer1')
+          | inr e1 => inr (inl e1)
+          end
+      | inr p23 =>
+          match
+            match mk_dis_port b2 b3 p23 with
+            | inl p2 =>
+                match get_link b2 (inr p2) with
+                | inl outer2 => inl (inl outer2)
+                | inr e1 => inr (inl e1)
+                end
+            | inr p3 =>
+                match get_link b3 (inr p3) with
+                | inl outer3 => inl (inr outer3)
+                | inr e2 => inr (inr e2)
+                end
+            end
+          with
+          | inl outer23 => inl (inr outer23)
+          | inr e23 => inr (inr e23)
+          end
+      end
+    with
+    | inl _ => False
+    | inr edge2' => inr (inr edge3) = edge2'
+    end
+      <->
+      match p123 with
+      | inl p1 =>
+          match get_link b1 (inr p1) with
+          | inl outer1' => False
+          | inr e1 => inr (@inr (get_edge b2) (get_edge b3) edge3) = inl e1
+          end
+      | inr p23 =>
+          match mk_dis_port b2 b3 p23 with
+          | inl p2 =>
+              match get_link b2 (inr p2) with
+              | inl outer2 => False
+              | inr e1 =>  @inr (get_edge b1) ((get_edge b2) + (get_edge b3)) (inr edge3) = inr (@inl (get_edge b2) ((get_edge b3)) e1)
+              end
+          | inr p3 =>
+              match get_link b3 (inr p3) with
+              | inl outer3 => False
+              | inr e2 => @inr (get_edge b1) ((get_edge b2) + (get_edge b3)) (inr edge3) = inr (@inr (get_edge b2) (get_edge b3) e2)
+              end
+          end
+      end.
+    Proof. split.
+    - intros H. destruct p123 as [p1 | p23]. 
+      + destruct (get_link b1 (inr p1)); apply H.
+      + destruct (mk_dis_port b2 b3 p23) as [p2 | p3].
+        ++ destruct (get_link b2 (inr p2)); apply H.
+        ++ destruct (get_link b3 (inr p3)); apply H.
+    - intros H. destruct p123 as [p1 | p23]. 
+      + destruct (get_link b1 (inr p1)); apply H.
+      + destruct (mk_dis_port b2 b3 p23) as [p2 | p3].
+        ++ destruct (get_link b2 (inr p2)); apply H.
+        ++ destruct (get_link b3 (inr p3)); apply H.
+    Qed.
+
+  Lemma dis_port_assoc_prop {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}
+    {b1 : bigraph s1 i1 r1 o1} 
+    {b2 : bigraph s2 i2 r2 o2} 
+    {b3 : bigraph s3 i3 r3 o3}
+    (p123 : Port
+    (get_node (b1 || b2 || b3))
+    (get_control
+      (b1 || b2 || b3))
+    (get_arity (b1 || b2 || b3)))
+    (prop1 : Port (get_node b1) (get_control b1) (get_arity b1) -> Prop)
+    (prop2 : Port (get_node b2) (get_control b2) (get_arity b2) -> Prop)
+    (prop3 : Port (get_node b3) (get_control b3) (get_arity b3) -> Prop):
+    match mk_dis_port (b1 || b2) b3 p123 with
+      | inl p12 => 
+        match mk_dis_port b1 b2 p12 with 
+        | inl p1 => prop1 p1
+        | inr p2 => prop2 p2
+        end
+      | inr p3 => prop3 p3
+      end
+        ->  match mk_dis_port b1 (b2 || b3) (mk_port_l_assoc b1 b2 b3 p123) with
+            | inl p1 => prop1 p1
+            | inr p23 => 
+              match mk_dis_port b2 b3 p23 with 
+              | inl p2 => prop2 p2
+              | inr p3 => prop3 p3
+              end
+            end.
+      Proof. intros H.
+      destruct p123 as [[[[n1 | n2] | n3] i123] P123];
+      simpl in P123; 
+      unfold mk_dis_port in H.
+      - unfold mk_port_l_assoc. unfold mk_dis_port. apply H.
+      - unfold mk_port_l_assoc. unfold mk_dis_port. apply H.
+      - unfold mk_port_l_assoc. unfold mk_dis_port. apply H.
+      Qed.
+
   Theorem dis_juxtaposition_port_associative {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType} :
     forall (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3),
     bigraph_link_port_equality 
@@ -1071,7 +1529,219 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
       (bij_assoc o1 o2 o3)
       (bij_assoc (get_edge b1) (get_edge b2) (get_edge b3))
       (bijection_port_assoc b1 b2 b3).
-    Proof. Admitted. (* TODO: What I need to prove now*)
+    Proof. intros b1 b2 b3.
+    unfold bigraph_link_port_equality.
+    intros p.
+    simpl.
+    destruct (mk_dis_port (b1 || b2) b3 p) as [p12 | p3] eqn:E.
+    - destruct (mk_dis_port b1 b2 p12) as [p1 | p2] eqn:E'.
+      + destruct (get_link b1 (inr p1)) as [outer1 | edge1] eqn:Eim1.
+        ++ set (p123 := mk_dis_port b1 (b2 || b3) (mk_port_l_assoc b1 b2 b3 p)).
+          rewrite (rearrange_match_outer1 p123 outer1).
+          set (prop1 := 
+            fun p1 =>  match get_link b1 (inr p1) with
+            | inl outer1' => inl outer1 = inl outer1'
+            | inr _ => False
+            end).
+          set (prop2 := 
+            fun p2 => match get_link b2 (inr p2) with
+            | inl outer2 => inl outer1 = inr (inl outer2)
+            | inr _ => False
+            end).
+          set (prop3 := 
+            fun p3 => match get_link b3 (inr p3) with
+            | inl outer3 => inl outer1 = inr (inr outer3)
+            | inr _ => False
+            end).
+          apply (dis_port_assoc_prop p prop1 prop2 prop3).
+          destruct (mk_dis_port (b1 || b2) b3 p) as [p12' | p3'] eqn:E''.
+            +++ destruct (mk_dis_port b1 b2 p12') as [p1' | p2'] eqn:E'''.
+              ++++ unfold prop1. 
+                inversion E. 
+                rewrite <- H0 in E'. 
+                rewrite E' in E'''.
+                inversion E'''.
+                rewrite <- H1.
+                destruct (get_link b1 (inr p1)) as [outer1'|edge1'].
+                  +++++ inversion Eim1. reflexivity.
+                  +++++ inversion Eim1.
+              ++++ unfold prop2. 
+                inversion E. 
+                rewrite <- H0 in E'. 
+                rewrite E' in E'''.
+                inversion E'''.
+            +++ unfold prop3. 
+            inversion E. 
+        ++ set (p123 := mk_dis_port b1 (b2 || b3) (mk_port_l_assoc b1 b2 b3 p)).
+          rewrite (rearrange_match_edge1 p123 edge1).
+          set (prop1 := 
+            fun p1 =>  match get_link b1 (inr p1) with
+            | inl _ => False
+            | inr e1 => inl edge1 = inl e1
+            end).
+          set (prop2 := 
+            fun p2 =>  match get_link b2 (inr p2) with
+            | inl _ => False
+            | inr e1 => inl edge1 = inr (inl e1)
+            end).
+          set (prop3 := 
+            fun p3 => match get_link b3 (inr p3) with
+            | inl _ => False
+            | inr e2 => inl edge1 = inr (inr e2)
+            end).
+          apply (dis_port_assoc_prop p prop1 prop2 prop3).
+          destruct (mk_dis_port (b1 || b2) b3 p) as [p12' | p3'] eqn:E''.
+            +++ destruct (mk_dis_port b1 b2 p12') as [p1' | p2'] eqn:E'''.
+                ++++ unfold prop1. 
+                  inversion E. 
+                  rewrite <- H0 in E'. 
+                  rewrite E' in E'''.
+                  inversion E'''.
+                  rewrite <- H1.
+                  destruct (get_link b1 (inr p1)) as [outer1'|edge1'].
+                    +++++ inversion Eim1.
+                    +++++ inversion Eim1.  reflexivity.
+                ++++ unfold prop2. 
+                  inversion E. 
+                  rewrite <- H0 in E'. 
+                  rewrite E' in E'''.
+                  inversion E'''.
+              +++ unfold prop3. 
+                inversion E. 
+      + destruct (get_link b2 (inr p2)) as [outer2 | edge2] eqn:Eim1.
+        ++ set (p123 := mk_dis_port b1 (b2 || b3) (mk_port_l_assoc b1 b2 b3 p)).
+        rewrite (rearrange_match_outer2 p123 outer2).
+        set (prop1 := 
+          fun p1 =>  match get_link b1 (inr p1) with
+          | inl outer1' =>
+              inr (inl outer2) = inl outer1'
+          | inr _ => False
+          end).
+        set (prop2 := 
+          fun p2 => match get_link b2 (inr p2) with
+          | inl outer2' => inr (inl outer2) = inr (inl outer2')
+          | inr _ => False
+          end).
+        set (prop3 := 
+          fun p3 => match get_link b3 (inr p3) with
+          | inl outer3 => inr (inl outer2) = inr (inr outer3)
+          | inr _ => False
+          end).
+        apply (dis_port_assoc_prop p prop1 prop2 prop3).
+        destruct (mk_dis_port (b1 || b2) b3 p) as [p12' | p3'] eqn:E''.
+          +++ destruct (mk_dis_port b1 b2 p12') as [p1' | p2'] eqn:E'''.
+            ++++ unfold prop1. 
+              inversion E. 
+              rewrite <- H0 in E'. 
+              rewrite E' in E'''.
+              inversion E'''.
+            ++++ unfold prop2. 
+              inversion E. 
+              rewrite <- H0 in E'. 
+              rewrite E' in E'''.
+              inversion E'''.
+              rewrite <- H1.
+              destruct (get_link b2 (inr p2)) as [outer2'|edge2'].
+                +++++ inversion Eim1. reflexivity.
+                +++++ inversion Eim1.
+          +++ unfold prop3. 
+          inversion E.
+        ++ set (p123 := mk_dis_port b1 (b2 || b3) (mk_port_l_assoc b1 b2 b3 p)).
+        rewrite (rearrange_match_edge2 p123 edge2).
+        set (prop1 := 
+          fun p1 => match get_link b1 (inr p1) with
+          | inl _ => False
+          | inr e1 => inr (inl edge2) = inl e1
+          end).
+        set (prop2 := 
+          fun p2 => match get_link b2 (inr p2) with
+          | inl _ => False
+          | inr e1 => inr (inl edge2) = inr (inl e1)
+          end).
+        set (prop3 := 
+          fun p3 => match get_link b3 (inr p3) with
+          | inl _ => False
+          | inr e2 => inr (inl edge2) = inr (inr e2)
+          end).
+        apply (dis_port_assoc_prop p prop1 prop2 prop3).
+        destruct (mk_dis_port (b1 || b2) b3 p) as [p12' | p3'] eqn:E''.
+          +++ destruct (mk_dis_port b1 b2 p12') as [p1' | p2'] eqn:E'''.
+            ++++ unfold prop1. 
+              inversion E. 
+              rewrite <- H0 in E'. 
+              rewrite E' in E'''.
+              inversion E'''.
+            ++++ unfold prop2. 
+              inversion E. 
+              rewrite <- H0 in E'. 
+              rewrite E' in E'''.
+              inversion E'''.
+              rewrite <- H1.
+              destruct (get_link b2 (inr p2)) as [outer2'|edge2'].
+                +++++ inversion Eim1. 
+                +++++ inversion Eim1. reflexivity.
+          +++ unfold prop3. 
+          inversion E.
+    - destruct (get_link b3 (inr p3)) as [outer3 | edge3] eqn:Eim1.
+      + set (p123 := mk_dis_port b1 (b2 || b3) (mk_port_l_assoc b1 b2 b3 p)).
+      rewrite (rearrange_match_outer3 p123 outer3).
+      set (prop1 := 
+        fun p1 =>  match get_link b1 (inr p1) with
+        | inl outer1' => inr (inr outer3) = inl outer1'
+        | inr _ => False
+        end).
+      set (prop2 := 
+        fun p2 => match get_link b2 (inr p2) with
+        | inl outer2' => inr (inr outer3) = inr (inl outer2')
+        | inr _ => False
+        end).
+      set (prop3 := 
+        fun p3 => match get_link b3 (inr p3) with
+        | inl outer3' => inr (inr outer3) = inr (inr outer3')
+        | inr _ => False
+        end).
+      apply (dis_port_assoc_prop p prop1 prop2 prop3).
+      destruct (mk_dis_port (b1 || b2) b3 p) as [p12' | p3'] eqn:E''.
+        ++ destruct (mk_dis_port b1 b2 p12') as [p1' | p2'] eqn:E'''.
+          +++ unfold prop1. 
+            inversion E. 
+          +++ unfold prop2. 
+            inversion E. 
+        ++ unfold prop3. 
+        inversion E.
+        destruct (get_link b3 (inr p3)) as [outer3'|edge3'].
+          +++ inversion Eim1. reflexivity.
+          +++ inversion Eim1.
+      + set (p123 := mk_dis_port b1 (b2 || b3) (mk_port_l_assoc b1 b2 b3 p)).
+      rewrite (rearrange_match_edge3 p123 edge3).
+      set (prop1 := 
+        fun p1 => match get_link b1 (inr p1) with
+        | inl _ => False
+        | inr e1 => inr (inr edge3) = inl e1
+        end).
+      set (prop2 := 
+        fun p2 => match get_link b2 (inr p2) with
+        | inl _ => False
+        | inr e1 => inr (inr edge3) = inr (inl e1)
+        end).
+      set (prop3 := 
+        fun p3 => match get_link b3 (inr p3) with
+        | inl _ => False
+        | inr e2 => inr (inr edge3) = inr (inr e2)
+        end).
+      apply (dis_port_assoc_prop p prop1 prop2 prop3).
+      destruct (mk_dis_port (b1 || b2) b3 p) as [p12' | p3'] eqn:E''.
+        ++ destruct (mk_dis_port b1 b2 p12') as [p1' | p2'] eqn:E'''.
+          +++ unfold prop1. 
+            inversion E. 
+          +++ unfold prop2. 
+            inversion E. 
+        ++ unfold prop3.
+          inversion E.
+          destruct (get_link b3 (inr p3)) as [outer3'|edge3'].
+            +++ inversion Eim1. 
+            +++ inversion Eim1. reflexivity. 
+    Qed.
 
   Theorem dis_juxtaposition_associative {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType} :
     forall (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3),
@@ -1163,36 +1833,8 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
         simpl in P12; reflexivity.
     Defined.
 
-  Lemma dis_port_commu_commu {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
-    (b1 : bigraph s1 i1 r1 o1) 
-    (b2 : bigraph s2 i2 r2 o2)
-    (p12 : Port (get_node (b1 || b2)) (get_control (b1 || b2)) (get_arity (b1 || b2))) : 
-    mk_port_commu b2 b1 (mk_port_commu b1 b2 p12) = p12.
-    Proof.
-      destruct p12 as [[[n1 | n2] i12] P12];
-      simpl in P12;
-      unfold mk_port_commu;
-      reflexivity. Qed.
+
     
-  Lemma dis_port_commu {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
-    (b1 : bigraph s1 i1 r1 o1) 
-    (b2 : bigraph s2 i2 r2 o2)
-    (p12 : Port (get_node (b1 || b2)) (get_control (b1 || b2)) (get_arity (b1 || b2))) :
-    match mk_dis_port b2 b1 (mk_port_commu b1 b2 p12) with
-      | inl p2 => 
-        match (mk_dis_port b1 b2 p12) with
-        | inl p1' => False
-        | inr p2' => p2 = p2'
-        end
-      | inr p1 => 
-        match (mk_dis_port b1 b2 p12) with
-        | inl p1' => p1 = p1'
-        | inr p2' => False
-        end
-    end.
-    Proof.
-    destruct p12 as [[[n1 | n2] i12] P12]; simpl; reflexivity.
-    Qed.
 
     
   Lemma dis_port_commu_prop {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
@@ -1251,7 +1893,7 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
             | inr edge1 => False
             end
         end.
-        Proof. split.
+    Proof. split.
         - intros H. destruct p21 as [p2 | p1]. 
           + destruct (get_link b2 (inr p2)); apply H.
           + destruct (get_link b1 (inr p1)); apply H.
