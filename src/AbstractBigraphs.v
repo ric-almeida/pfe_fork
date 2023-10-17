@@ -32,10 +32,11 @@ Local Open Scope bool_scope.
 Import ListNotations.  
 
 
-
+(* This module implements bigraphs and basic operations on bigraphs *)
 Module Bigraph.
 
-(* INTROS *)
+(* This section defines the Type bigraph *)
+Section IntroBigraphs.
   Inductive void : Type := .
 
   Definition merge {A B : Type} (la : list A) (lb : list B) : list (A + B) :=
@@ -63,7 +64,7 @@ Record bigraph  (site: FinDecType)
                 (innername: FinDecType) 
                 (root: FinDecType) 
                 (outername: FinDecType) : Type := 
-  Big  
+  mkBig  
   { 
     node : FinDecType ;
     edge : FinDecType ;
@@ -74,8 +75,10 @@ Record bigraph  (site: FinDecType)
     link : innername + Port node control arity -> outername + edge; 
     ap : acyclic node site root parent ;
   }.
+End IntroBigraphs.
 
-(* GETTERS *)
+(* This section is just getters to lightenn some notations *)
+Section GettersBigraphs.
   Definition get_node {s i r o : FinDecType} (bg : bigraph s i r o) : Type := 
   node s i r o bg.
   Definition get_edge {s i r o : FinDecType} (bg : bigraph s i r o) : Type := 
@@ -139,9 +142,18 @@ Record bigraph  (site: FinDecType)
   Definition get_ap {s i r o : FinDecType} (bg : bigraph s i r o) : 
   acyclic (get_node bg) s r (get_parent bg) :=
   @ap s i r o bg.
+End GettersBigraphs.
 
-
-(* EQUIVALENCE *)
+(* This section defines the equivalence relation between bigraphs. 
+We say there's an equivalence between two types if we give a bijection 
+(cf support_for_bigraphs) between the two types. To define the equivalence 
+between bigraphs, we want an equivalence between each Type and between 
+each function.
+To do that, we make definitions of equivalence between each function. 
+We coerce the Record bigraph_equality into a Prop, which means that we can
+access the bjections, but also that their existence means the Prop is True.
+Note that our equivalence is heterogeneous. *)
+Section EquivalenceBigraphs.
   Definition bigraph_arity_equality {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
     (bij_k : bijection (get_kind b1) (get_kind b2)): Prop :=
@@ -241,8 +253,15 @@ Record bigraph_equality {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
     big_parent_eq : bigraph_parent_equality b1 b2 bij_s bij_r bij_n ;
     big_link_eq : bigraph_link_equality b1 b2 bij_i bij_o bij_e bij_p
   }.
+End EquivalenceBigraphs.
 
-(* EQUIVALENCE IS RELATION *)
+(* This section is still a WIP. We have proven that our relation bigraph_equality
+is reflexive, symmetric and transitive. This is going to be useful to be able to 
+rewrite bigraphs at will. 
+The issue however is that a parametric relation asks for two objects of the exact
+same Type and our equality is heterogeneous. The solution we will implement is to 
+create a "packed bigraph" Type that will hold the interfaces inside of it. *)
+Section EquivalenceIsRelation.
   Lemma arity_refl {s i r o : FinDecType} (b : bigraph s i r o) :
     let bij_k := bijection_id  in
     bigraph_arity_equality b b bij_k.
@@ -656,14 +675,18 @@ Record bigraph_packed : Type :=
   o: FinDecType;
   big : bigraph s i r o
   }. 
-
-(* Add Parametric Relation: (bigraph_packed) (bigraph_equality)
+(* TODO *)
+  (* Add Parametric Relation: (bigraph_packed) (bigraph_equality)
       reflexivity proved by (bigraph_equality_refl)
       symmetry proved by (bigraph_equality_sym)
       transitivity proved by (bigraph_equality_trans)
         as bigraph_equality_rel. *)
+End EquivalenceIsRelation.
 
-(* MAKERS FOR DISJOINT JUXTAPOSITION   *)
+(* This section deals with the operation of disjoint juxtaposition. This is the act
+of putting two bigraphs with disjoint interfaces "next" to one another. 
+After the definition, we prove associativity and commutativity of dis_juxtaposition *)
+Section DisjointJuxtaposition.
   (* cannot generalise NoDup_map to injective functions bc one maps on la the other on lb *)
   Lemma NoDup_map_inl {A B : Type} (la : list A) (lb : list B) :
     NoDup la -> NoDup (map (@inl A B) la).
@@ -954,9 +977,6 @@ Record bigraph_packed : Type :=
       destruct b2 ; auto.
     Qed.
   
-
-
-
   
 Definition dis_juxtaposition {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
 (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
@@ -2184,16 +2204,21 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
         + apply dis_juxtaposition_port_commutative.
     Qed. 
 
-(* MAKERS FOR COMPOSITION *)
+End DisjointJuxtaposition.
+
+(* This section deals with the operation of composition. This is the act
+of putting a bigraph inside another one. To do b1 o b2, the outerface of 
+b2 needs to be the innerface of b1. WIP: or just a bijection? *)
+Section CompositionBigraphs.
   Definition mk_comp_parent {s1 i1 r1 o1 s2 i2 : FinDecType} 
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) :
-    ((@node s1 i1 r1 o1 b1) +++ (@node s2 i2 s1 i1 b2))
+    (sum_FinDecType (@node s1 i1 r1 o1 b1) (@node s2 i2 s1 i1 b2))
      + s2 
-     -> ((@node s1 i1 r1 o1 b1) +++ (@node s2 i2 s1 i1 b2)) 
+     -> (sum_FinDecType (@node s1 i1 r1 o1 b1)  (@node s2 i2 s1 i1 b2)) 
         + r1 :=
     let p1 := get_parent b1 in
     let p2 := get_parent b2 in
-    let n1pn2 := ((@node s1 i1 r1 o1 b1) +++ (@node s2 i2 s1 i1 b2)) in
+    let n1pn2 := (sum_FinDecType (@node s1 i1 r1 o1 b1)  (@node s2 i2 s1 i1 b2)) in
     let new_parent (p : (n1pn2) + s2) : (n1pn2) + r1 :=
       match p with
       | inl (inl n1) => match p1 (inl n1) with (* p1 : n1 + s1 -> n1 + r1 *)
@@ -2328,9 +2353,9 @@ Definition composition {s1 i1 r1 o1 s2 i2 : FinDecType}
 (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) 
   : bigraph s2 i2 r1 o1 :=
 {|
-  node := (@node s1 i1 r1 o1 b1) +++ (@node s2 i2 s1 i1 b2);
-  edge := (@edge s1 i1 r1 o1 b1) +++ (@edge s2 i2 s1 i1 b2);
-  kind := (@kind s1 i1 r1 o1 b1) +++ (@kind s2 i2 s1 i1 b2);
+  node := sum_FinDecType (@node s1 i1 r1 o1 b1) (@node s2 i2 s1 i1 b2); (* TODO vois pourquoi +++ fonctionne pas ici *)
+  edge := sum_FinDecType (@edge s1 i1 r1 o1 b1) (@edge s2 i2 s1 i1 b2);
+  kind := sum_FinDecType (@kind s1 i1 r1 o1 b1) (@kind s2 i2 s1 i1 b2);
   arity := mk_dis_arity b1 b2 ;
   control := mk_dis_control b1 b2 ;
   parent := mk_comp_parent b1 b2 ; 
@@ -2339,8 +2364,12 @@ Definition composition {s1 i1 r1 o1 s2 i2 : FinDecType}
 |}.
 
 Notation "b1 'o' b2" := (composition b1 b2) (at level 40, left associativity).
+End CompositionBigraphs.
 
-(* IMPLEMENTATION OF A BIGRAPH *)
+
+
+(* This section is a WIP. Mainly used to test stuff. *)
+Section PlaygroundBigraphs.
   Lemma voidFinite : finite void.
   Proof. unfold finite. exists []. constructor. + constructor. + unfold Full.
   intros. destruct a. Qed.
@@ -2534,151 +2563,5 @@ Notation "b1 'o' b2" := (composition b1 b2) (at level 40, left associativity).
 
 
 
+End PlaygroundBigraphs.
 End Bigraph.
-
-
-Module EJCP.
-
-
-  Inductive myZ : Type :=
-    | z : Z -> myZ
-    | plusinf : myZ
-    | moinsinf : myZ.
-
-  Record intervalle : Type :=
-    {
-      inf : Z ;
-      sup : Z 
-    }.
-
-  Definition plus_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
-    {|
-      inf := @inf int1 + @inf int2 ;
-      sup := @sup int1 + @sup int2 
-    |}.
-
-  Notation "i1 '+i' i2" := (plus_inter i1 i2) (at level 40, left associativity).
-
-  Definition moins_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
-    {|
-      inf := @inf int1 - @sup int2 ;
-      sup := @sup int1 - @inf int2 
-    |}.
-
-
-  Notation "i1 '-i' i2" := (moins_inter i1 i2) (at level 40, left associativity).
-
-  Search (_ < _).
-
-  Definition my_min (a b : Z) : Z := 
-    if Z.ltb a b then b else a.
-
-  Definition my_max (a b : Z) : Z :=
-    if Z.gtb a b then b else a.
-
-  Definition fois_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
-    let ac := Z.mul (@inf int1) (@inf int2) in
-    let ad := Z.mul (@inf int1) (@sup int2) in
-    let bc := Z.mul (@sup int1) (@inf int2) in
-    let bd := Z.mul (@sup int1) (@sup int2) in
-    {|
-      inf := my_min (my_min (ac) (ad)) (my_min (bc) (bd)) ;
-      sup := my_max (my_max (ac) (ad)) (my_max (bc) (bd)) ;
-    |}.
-
-  Notation "i1 '*i' i2" := (fois_inter i1 i2) (at level 40, left associativity).
-
-
-  Definition div_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
-    let ac := Z.div (@inf int1) (@inf int2) in
-    let ad := Z.div (@inf int1) (@sup int2) in
-    let bc := Z.div (@sup int1) (@inf int2) in
-    let bd := Z.div (@sup int1) (@sup int2) in
-    {|
-      inf := my_min (my_min (ac) (ad)) (my_min (bc) (bd)) ;
-      sup := my_max (my_max (ac) (ad)) (my_max (bc) (bd)) ;
-    |}.
-
-
-  Notation "i1 '/i' i2" := (div_inter i1 i2) (at level 40, left associativity).
-
-  Definition inter_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
-    {|
-      inf := my_max (@inf int1) (@inf int2);
-      sup := my_min (@sup int1) (@sup int2)
-    |}.
-
-
-  Notation "i1 '/\i' i2" := (inter_inter i1 i2) (at level 40, left associativity).
-
-  Definition union_inter (int1 : intervalle) (int2 : intervalle) : intervalle :=
-    {|
-      inf := my_min (@inf int1) (@inf int2);
-      sup := my_max (@sup int1) (@sup int2)
-    |}.
-
-  Notation "i1 '\/i' i2" := (union_inter i1 i2) (at level 40, left associativity).
-  Definition eqb_inter (int1 : intervalle) (int2 : intervalle) : bool :=
-    Z.eqb (@inf int1) (@inf int2) &&
-    Z.eqb (@sup int1) (@sup int2).
-  Notation "i1 '=i?' i2" := (eqb_inter i1 i2) (at level 40, left associativity).
-
-
-  Definition eq_inter (int1 : intervalle) (int2 : intervalle) : Prop :=
-    Z.eq (@inf int1) (@inf int2) /\
-    Z.eq (@sup int1) (@sup int2).
-  Notation "i1 '=i' i2" := (eq_inter i1 i2) (at level 40, left associativity).
-
-  Inductive nodeAST :=
-  | zAST : Z -> nodeAST
-  | interAST : intervalle -> nodeAST
-  | plusAST : intervalle -> nodeAST
-  | moinsAST : intervalle -> nodeAST
-  | foisAST : intervalle -> nodeAST
-  | divAST : intervalle -> nodeAST
-  | infAST : intervalle -> nodeAST
-  | supAST : intervalle -> nodeAST.
-
-  Inductive AST :=
-  | EmptyAST : AST
-  | rootAST : nodeAST -> AST -> AST -> AST.
-
-  (* Fixpoint top_down (inter:intervalle) (ast:AST) : intervalle :=
-    match ast with 
-    | EmptyAST => inter
-    | rootAST n ast_left ast_right => 
-      match n with 
-      | zAST z => inter /\i {| inf := z ; sup := z|} 
-      | interAST inter' => inter
-      | plusAST inter' => top_down (u /\i (r -i v)) ast_left
-      | moinsAST : nodeAST
-      | foisAST : nodeAST
-      | divAST : nodeAST
-      | infAST : nodeAST
-      | supAST : nodeAST
-      end
-    end. *)
-
-  (*Lemma inverse : forall (u : intervalle) (v : intervalle) (r : intervalle),
-    r =i(u +i v) -> u =i (u /\i (r -i v)) /\ v =i (v /\i (r -i u)).
-  Proof.
-    intros.
-    unfold eq_inter in H.
-    unfold Z.eq in H.
-    unfold plus_inter in H.
-    simpl in H.
-    destruct H as [Hinf Hsup].
-    split.
-    - unfold eq_inter.
-      split.
-      + unfold Z.eq.     
-        unfold inter_inter. 
-        unfold moins_inter.
-        simpl.
-        unfold my_max.
-        induction Z.gtb.
-        ++  *)
-
-
- 
-End EJCP.
