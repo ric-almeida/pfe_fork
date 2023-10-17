@@ -1902,7 +1902,7 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
           + destruct (get_link b1 (inr p1)); apply H.
     Qed.
 
-  Lemma rearrange_match_outer2 {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
+  Lemma rearrange_match_outer2' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
     {b1 : bigraph s1 i1 r1 o1} {b2 : bigraph s2 i2 r2 o2}
     (p21:Port (get_node b2) (get_control b2) (get_arity b2) + Port (get_node b1) (get_control b1) (get_arity b1)) 
     (outer2:o2):
@@ -1988,7 +1988,7 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
         + destruct (get_link b1 (inr p1)). ++ apply H. ++ symmetry. apply H.
     Qed.
 
-  Lemma rearrange_match_edge2 {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
+  Lemma rearrange_match_edge2' {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
     {b1 : bigraph s1 i1 r1 o1} {b2 : bigraph s2 i2 r2 o2}
     (p21:Port (get_node b2) (get_control b2) (get_arity b2) + Port (get_node b1) (get_control b1) (get_arity b1)) 
     (edge2:get_edge b2):
@@ -2091,7 +2091,7 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
       set (p21:= mk_dis_port b2 b1 (mk_port_commu b1 b2 p12)).
       destruct (get_link b2 (inr p2)) as [outer2 |edge2] eqn:E'.
         + (*link p2 = outer2 *)
-          apply (rearrange_match_outer2 p21 outer2).
+          apply (rearrange_match_outer2' p21 outer2).
           set (prop1 := 
             fun p1 =>  match get_link b1 (inr p1) with
             | inl outer1 => inl outer2 = inr outer1
@@ -2110,7 +2110,7 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
               +++ inversion E'. reflexivity.
               +++ inversion E'.
           + 
-          apply (rearrange_match_edge2 p21 edge2).
+          apply (rearrange_match_edge2' p21 edge2).
           set (prop1 := 
             fun p1 =>  match get_link b1 (inr p1) with
             | inl _ => False
