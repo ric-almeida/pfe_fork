@@ -1,0 +1,2444 @@
+\documentclass[12pt]{report}
+\usepackage[]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{fullpage}
+\usepackage{coqdoc}
+\usepackage{amsmath,amssymb}
+\usepackage{url}
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% This file has been automatically generated with the command
+%% coqdoc -g --latex --lib-subtitles src/AbstractBigraphs.v 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\coqlibrary{AbstractBigraphs}{Library }{AbstractBigraphs}
+
+\begin{coqdoccode}
+\coqdocnoindent
+\coqdockw{From} \coqdocvar{Coq} \coqdockw{Require} \coqdockw{Import} \coqdocvar{Arith} \coqdocvar{ZArith} \coqdocvar{Psatz} \coqdocvar{Bool}\coqdoceol
+\coqdocindent{12.00em}
+\coqdocvar{String} \coqdocvar{List} \coqdocvar{Program.Equality} \coqdocvar{Program.Wf}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Require} \coqdockw{Import} \coqdocvar{Relations}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Require} \coqdockw{Import} \coqdocvar{Recdef}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Require} \coqdockw{Import} \coqdocvar{OrderedType}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Require} \coqdockw{Import} \coqdocvar{Coq.Lists.List}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Require} \coqdockw{Import} \coqdocvar{Coq.NArith.NArith}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Require} \coqdockw{Import} \coqdocvar{Coq.Strings.String}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Require} \coqdockw{Import} \coqdocvar{Coq.Logic.FinFun}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Require} \coqdockw{Import} \coqdocvar{Coq.Logic.Decidable}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Require} \coqdockw{Import} \coqdocvar{Lia}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Require} \coqdockw{Import} \coqdocvar{FunctionalExtensionality}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Require} \coqdockw{Import} \coqdocvar{PropExtensionality}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Require} \coqdockw{Import} \coqdocvar{Coq.Setoids.Setoid}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{From} \coqdocvar{MyProofs} \coqdockw{Require} \coqdockw{Import} \coqdocvar{support\_for\_bigraphs}.\coqdoceol
+\coqdocemptyline
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Local Open} \coqdockw{Scope} \coqdocvar{string\_scope}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Local Open} \coqdockw{Scope} \coqdocvar{list\_scope}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Local Open} \coqdockw{Scope} \coqdocvar{nat\_scope}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Local Open} \coqdockw{Scope} \coqdocvar{bool\_scope}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Import} \coqdocvar{ListNotations}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+This module implements bigraphs and basic operations on bigraphs \begin{coqdoccode}
+\coqdocnoindent
+\coqdockw{Module} \coqdocvar{Bigraph}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+\section{Definition of a bigraph}
+
+
+This section defines the Type bigraph \begin{coqdoccode}
+\coqdocnoindent
+\coqdockw{Section} \coqdocvar{IntroBigraphs}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Inductive} \coqdocvar{void} : \coqdockw{Type} := .\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{merge} \{\coqdocvar{A} \coqdocvar{B} : \coqdockw{Type}\} (\coqdocvar{la} : \coqdocvar{list} \coqdocvar{A}) (\coqdocvar{lb} : \coqdocvar{list} \coqdocvar{B}) : \coqdocvar{list} (\coqdocvar{A} + \coqdocvar{B}) :=\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{map} \coqdocvar{inl} \coqdocvar{la}) ++ (\coqdocvar{map} \coqdocvar{inr} \coqdocvar{lb}).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{finite} (\coqdocvar{A} : \coqdockw{Type}) : \coqdockw{Type} := \{ \coqdocvar{l} : \coqdocvar{list} \coqdocvar{A} \ensuremath{|} \coqdocvar{Listing} \coqdocvar{l} \}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Record} \coqdocvar{FinDecType} : \coqdockw{Type} :=\coqdoceol
+\coqdocindent{2.00em}
+\{\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{type} :> \coqdockw{Type} ;\coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{finite\_type} : \coqdocvar{finite} \coqdockw{type} ;\coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{dec\_type} : \coqdocvar{EqDec} \coqdockw{type}\coqdoceol
+\coqdocindent{2.00em}
+\}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{acyclic} (\coqdocvar{node} \coqdocvar{site} \coqdocvar{root} : \coqdockw{Type}) (\coqdocvar{parent} : \coqdocvar{node} + \coqdocvar{site} \ensuremath{\rightarrow} \coqdocvar{node} + \coqdocvar{root}) : \coqdockw{Prop} :=\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{\ensuremath{\forall}} (\coqdocvar{n}:\coqdocvar{node}), \coqdocvar{Acc} (\coqdockw{fun} \coqdocvar{n} \coqdocvar{n'} \ensuremath{\Rightarrow} \coqdocvar{parent} (\coqdocvar{inl} \coqdocvar{n}) = (\coqdocvar{inl} \coqdocvar{n'})) \coqdocvar{n}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{acyclic'} (\coqdocvar{node} \coqdocvar{site} \coqdocvar{root} : \coqdockw{Type}) (\coqdocvar{parent} : \coqdocvar{node} + \coqdocvar{site} \ensuremath{\rightarrow} \coqdocvar{node} + \coqdocvar{root}) : \coqdockw{Prop} :=\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{\ensuremath{\forall}} (\coqdocvar{n}:\coqdocvar{node}), \coqdocvar{Acc} (\coqdockw{fun} \coqdocvar{n} \coqdocvar{n'} \ensuremath{\Rightarrow} \coqdocvar{parent} (\coqdocvar{inl} \coqdocvar{n'}) = (\coqdocvar{inl} \coqdocvar{n})) \coqdocvar{n}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{Port} \{\coqdocvar{kind} : \coqdockw{Type}\} (\coqdocvar{node} : \coqdockw{Type}) (\coqdocvar{control} : \coqdocvar{node} \ensuremath{\rightarrow} \coqdocvar{kind}) (\coqdocvar{arity} : \coqdocvar{kind} \ensuremath{\rightarrow} \coqdocvar{nat}): \coqdockw{Type} :=\coqdoceol
+\coqdocindent{2.00em}
+\{ \coqdocvar{vi} : \coqdocvar{node} \ensuremath{\times} \coqdocvar{nat} \ensuremath{|} \coqdockw{let} (\coqdocvar{v}, \coqdocvar{i}) := \coqdocvar{vi} \coqdoctac{in} \coqdockw{let} \coqdocvar{k} := \coqdocvar{control} \coqdocvar{v} \coqdoctac{in} \coqdockw{let} \coqdocvar{a} := \coqdocvar{arity} \coqdocvar{k} \coqdoctac{in} \coqdocvar{i} < \coqdocvar{a} \}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Record} \coqdocvar{bigraph}  (\coqdocvar{site}: \coqdocvar{FinDecType}) \coqdoceol
+\coqdocindent{8.00em}
+(\coqdocvar{innername}: \coqdocvar{FinDecType}) \coqdoceol
+\coqdocindent{8.00em}
+(\coqdocvar{root}: \coqdocvar{FinDecType}) \coqdoceol
+\coqdocindent{8.00em}
+(\coqdocvar{outername}: \coqdocvar{FinDecType}) : \coqdockw{Type} := \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{mkBig}  \coqdoceol
+\coqdocindent{1.00em}
+\{ \coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{node} : \coqdocvar{FinDecType} ;\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{edge} : \coqdocvar{FinDecType} ;\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{kind} : \coqdocvar{FinDecType} ;\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{arity} : \coqdocvar{kind} \ensuremath{\rightarrow} \coqdocvar{nat} ;\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{control} : \coqdocvar{node} \ensuremath{\rightarrow} \coqdocvar{kind} ;\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{parent} : \coqdocvar{node} + \coqdocvar{site} \ensuremath{\rightarrow} \coqdocvar{node} + \coqdocvar{root} ; \coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{link} : \coqdocvar{innername} + \coqdocvar{Port} \coqdocvar{node} \coqdocvar{control} \coqdocvar{arity} \ensuremath{\rightarrow} \coqdocvar{outername} + \coqdocvar{edge}; \coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{ap} : \coqdocvar{acyclic} \coqdocvar{node} \coqdocvar{site} \coqdocvar{root} \coqdocvar{parent} ;\coqdoceol
+\coqdocindent{1.00em}
+\}.\coqdoceol
+\coqdocnoindent
+\coqdockw{End} \coqdocvar{IntroBigraphs}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+\section{Getters}
+
+
+This section is just getters to lightenn some notations \begin{coqdoccode}
+\coqdocnoindent
+\coqdockw{Section} \coqdocvar{GettersBigraphs}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_node} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdockw{Type} := \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{node} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} \coqdocvar{bg}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_edge} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdockw{Type} := \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{edge} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} \coqdocvar{bg}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_kind} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdockw{Type} := \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{kind} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} \coqdocvar{bg}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_arity} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdoceol
+\coqdocindent{1.00em}
+(\coqdocvar{get\_kind} \coqdocvar{bg}) \ensuremath{\rightarrow} \coqdocvar{nat} := \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{arity} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} \coqdocvar{bg}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_control} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) \coqdoceol
+\coqdocindent{1.00em}
+: \coqdocvar{get\_node} \coqdocvar{bg} \ensuremath{\rightarrow} (\coqdocvar{get\_kind} \coqdocvar{bg}) :=\coqdoceol
+\coqdocindent{1.00em}
+@\coqdocvar{control} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} \coqdocvar{bg}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_parent} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdoceol
+\coqdocindent{1.00em}
+(\coqdocvar{get\_node} \coqdocvar{bg}) + \coqdocvar{s} \ensuremath{\rightarrow} (\coqdocvar{get\_node} \coqdocvar{bg}) + \coqdocvar{r} :=\coqdoceol
+\coqdocindent{1.00em}
+@\coqdocvar{parent} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} \coqdocvar{bg}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_link} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{i} + \coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{bg}) (\coqdocvar{get\_control} \coqdocvar{bg}) (\coqdocvar{get\_arity} \coqdocvar{bg}) \ensuremath{\rightarrow} \coqdocvar{o} + \coqdocvar{get\_edge} \coqdocvar{bg} :=\coqdoceol
+\coqdocindent{1.00em}
+@\coqdocvar{link} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} \coqdocvar{bg}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_nd} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{EqDec} (\coqdocvar{get\_node} \coqdocvar{bg}) :=\coqdoceol
+\coqdocindent{1.00em}
+@\coqdocvar{dec\_type} (\coqdocvar{node} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} \coqdocvar{bg}).\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_nf} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{finite} (\coqdocvar{get\_node} \coqdocvar{bg}) :=\coqdoceol
+\coqdocindent{1.00em}
+@\coqdocvar{finite\_type} (\coqdocvar{node} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} \coqdocvar{bg}).\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_ed} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{EqDec} (\coqdocvar{get\_edge} \coqdocvar{bg}) :=\coqdoceol
+\coqdocindent{1.00em}
+@\coqdocvar{dec\_type} (\coqdocvar{edge} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} \coqdocvar{bg}).\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_ef} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{finite} (\coqdocvar{get\_edge} \coqdocvar{bg}) :=\coqdoceol
+\coqdocindent{1.00em}
+@\coqdocvar{finite\_type} (\coqdocvar{edge} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} \coqdocvar{bg}).\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_kd} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{EqDec} (\coqdocvar{get\_kind} \coqdocvar{bg}) :=\coqdoceol
+\coqdocindent{1.00em}
+@\coqdocvar{dec\_type} (\coqdocvar{kind} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} \coqdocvar{bg}).\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_kf} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{finite} (\coqdocvar{get\_kind} \coqdocvar{bg}) :=\coqdoceol
+\coqdocindent{1.00em}
+@\coqdocvar{finite\_type} (\coqdocvar{kind} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} \coqdocvar{bg}).\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_sd} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{EqDec} \coqdocvar{s} :=\coqdoceol
+\coqdocindent{1.00em}
+@\coqdocvar{dec\_type} \coqdocvar{s}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_sf} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{finite} \coqdocvar{s} :=\coqdoceol
+\coqdocindent{1.00em}
+@\coqdocvar{finite\_type} \coqdocvar{s}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_id} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{EqDec} \coqdocvar{i} :=\coqdoceol
+\coqdocindent{1.00em}
+@\coqdocvar{dec\_type} \coqdocvar{i}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_if} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{finite} \coqdocvar{i} :=\coqdoceol
+\coqdocindent{1.00em}
+@\coqdocvar{finite\_type} \coqdocvar{i}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_rd} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{EqDec} \coqdocvar{r} :=\coqdoceol
+\coqdocindent{1.00em}
+@\coqdocvar{dec\_type} \coqdocvar{r}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_rf} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{finite} \coqdocvar{r} :=\coqdoceol
+\coqdocindent{1.00em}
+@\coqdocvar{finite\_type} \coqdocvar{r}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_od} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{EqDec} \coqdocvar{o} :=\coqdoceol
+\coqdocindent{1.00em}
+@\coqdocvar{dec\_type} \coqdocvar{o}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_of} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{finite} \coqdocvar{o} :=\coqdoceol
+\coqdocindent{1.00em}
+@\coqdocvar{finite\_type} \coqdocvar{o}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{get\_ap} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{bg} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) : \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{acyclic} (\coqdocvar{get\_node} \coqdocvar{bg}) \coqdocvar{s} \coqdocvar{r} (\coqdocvar{get\_parent} \coqdocvar{bg}) :=\coqdoceol
+\coqdocindent{1.00em}
+@\coqdocvar{ap} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} \coqdocvar{bg}.\coqdoceol
+\coqdocnoindent
+\coqdockw{End} \coqdocvar{GettersBigraphs}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+\section{Equivalence between two bigraphs}
+
+
+This section defines the equivalence relation between bigraphs. 
+We say there's an equivalence between two types if we give a bijection 
+(cf support\_for\_bigraphs) between the two types. To define the equivalence 
+between bigraphs, we want an equivalence between each Type and between 
+each function.
+To do that, we make definitions of equivalence between each function. 
+We coerce the Record bigraph\_equality into a Prop, which means that we can
+access the bjections, but also that their existence means the Prop is True.
+Note that our equivalence is heterogeneous. \begin{coqdoccode}
+\coqdocnoindent
+\coqdockw{Section} \coqdocvar{EquivalenceBigraphs}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{bigraph\_arity\_equality} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_k} : \coqdocvar{bijection} (\coqdocvar{get\_kind} \coqdocvar{b1}) (\coqdocvar{get\_kind} \coqdocvar{b2})): \coqdockw{Prop} :=\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{\ensuremath{\forall}} \coqdocvar{k1}:\coqdocvar{get\_kind} \coqdocvar{b1}, \coqdockw{let} \coqdocvar{k2} := \coqdocvar{bij\_k}.(\coqdocvar{forward} (\coqdocvar{get\_kind} \coqdocvar{b1}) (\coqdocvar{get\_kind} \coqdocvar{b2})) \coqdocvar{k1} \coqdoctac{in} \coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{get\_arity} \coqdocvar{b1} \coqdocvar{k1} = \coqdocvar{get\_arity} \coqdocvar{b2} \coqdocvar{k2}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{bigraph\_control\_equality} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_n} : \coqdocvar{bijection} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_node} \coqdocvar{b2}))\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_k} : \coqdocvar{bijection} (\coqdocvar{get\_kind} \coqdocvar{b1}) (\coqdocvar{get\_kind} \coqdocvar{b2})) : \coqdockw{Prop} :=\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{\ensuremath{\forall}} \coqdocvar{n1}:\coqdocvar{get\_node} \coqdocvar{b1}, \coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{kind1} := \coqdocvar{get\_control} \coqdocvar{b1} \coqdocvar{n1} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{n2} := \coqdocvar{forward} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_node} \coqdocvar{b2}) \coqdocvar{bij\_n} \coqdocvar{n1} \coqdoctac{in} \coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{kind2} := \coqdocvar{get\_control} \coqdocvar{b2} \coqdocvar{n2} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{forward} (\coqdocvar{get\_kind} \coqdocvar{b1}) (\coqdocvar{get\_kind} \coqdocvar{b2}) \coqdocvar{bij\_k} \coqdocvar{kind1} = \coqdocvar{kind2}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{bigraph\_parent\_site\_equality} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_s} : \coqdocvar{bijection} \coqdocvar{s1} \coqdocvar{s2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_r} : \coqdocvar{bijection} \coqdocvar{r1} \coqdocvar{r2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_n} : \coqdocvar{bijection} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_node} \coqdocvar{b2})) : \coqdockw{Prop} :=\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{\ensuremath{\forall}} \coqdocvar{site1}:\coqdocvar{s1}, \coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{site2} := \coqdocvar{forward} \coqdocvar{s1} \coqdocvar{s2} \coqdocvar{bij\_s} \coqdocvar{site1} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} (\coqdocvar{get\_parent} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{site1})),(\coqdocvar{get\_parent} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{site2})) \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{root1}, \coqdocvar{inr} \coqdocvar{root2}  \ensuremath{\Rightarrow} \coqdocvar{forward} \coqdocvar{r1} \coqdocvar{r2} \coqdocvar{bij\_r} \coqdocvar{root1} = \coqdocvar{root2}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{node1}, \coqdocvar{inl} \coqdocvar{node2}  \ensuremath{\Rightarrow} \coqdocvar{forward} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_node} \coqdocvar{b2}) \coqdocvar{bij\_n} \coqdocvar{node1} = \coqdocvar{node2}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{\_}, \coqdocvar{\_} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{bigraph\_parent\_node\_equality} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_r} : \coqdocvar{bijection} \coqdocvar{r1} \coqdocvar{r2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_n} : \coqdocvar{bijection} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_node} \coqdocvar{b2})): \coqdockw{Prop} :=\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{\ensuremath{\forall}} \coqdocvar{n1}:\coqdocvar{get\_node} \coqdocvar{b1}, \coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{n2} := \coqdocvar{bij\_n}.(\coqdocvar{forward} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_node} \coqdocvar{b2})) \coqdocvar{n1} \coqdoctac{in} \coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} (\coqdocvar{get\_parent} \coqdocvar{b1} (\coqdocvar{inl} \coqdocvar{n1})),(\coqdocvar{get\_parent} \coqdocvar{b2} (\coqdocvar{inl} \coqdocvar{n2})) \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{root1}, \coqdocvar{inr} \coqdocvar{root2}  \ensuremath{\Rightarrow} \coqdocvar{forward} \coqdocvar{r1} \coqdocvar{r2} \coqdocvar{bij\_r} \coqdocvar{root1} = \coqdocvar{root2}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{node1}, \coqdocvar{inl} \coqdocvar{node2}  \ensuremath{\Rightarrow} \coqdocvar{forward} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_node} \coqdocvar{b2}) \coqdocvar{bij\_n} \coqdocvar{node1} = \coqdocvar{node2}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{\_}, \coqdocvar{\_} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{bigraph\_parent\_equality} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_s} : \coqdocvar{bijection} \coqdocvar{s1} \coqdocvar{s2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_r} : \coqdocvar{bijection} \coqdocvar{r1} \coqdocvar{r2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_n} : \coqdocvar{bijection} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_node} \coqdocvar{b2})): \coqdockw{Prop} :=\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_parent\_node\_equality} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{bij\_r} \coqdocvar{bij\_n} \ensuremath{\land} \coqdocvar{bigraph\_parent\_site\_equality} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{bij\_s} \coqdocvar{bij\_r} \coqdocvar{bij\_n}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{bigraph\_link\_innername\_equality} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_i} : \coqdocvar{bijection} \coqdocvar{i1} \coqdocvar{i2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_o} : \coqdocvar{bijection} \coqdocvar{o1} \coqdocvar{o2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_e} : \coqdocvar{bijection} (\coqdocvar{get\_edge} \coqdocvar{b1}) (\coqdocvar{get\_edge} \coqdocvar{b2})) : \coqdockw{Prop} :=\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{\ensuremath{\forall}} \coqdocvar{inner1}:\coqdocvar{i1},\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{inner2} := \coqdocvar{forward} \coqdocvar{i1} \coqdocvar{i2} \coqdocvar{bij\_i} \coqdocvar{inner1} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} (\coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inl} \coqdocvar{inner1})),(\coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inl} \coqdocvar{inner2})) \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge1}, \coqdocvar{inr} \coqdocvar{edge2}  \ensuremath{\Rightarrow} \coqdocvar{forward} (\coqdocvar{get\_edge} \coqdocvar{b1}) (\coqdocvar{get\_edge} \coqdocvar{b2}) \coqdocvar{bij\_e} \coqdocvar{edge1} = \coqdocvar{edge2}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1}, \coqdocvar{inl} \coqdocvar{outer2}  \ensuremath{\Rightarrow}  \coqdocvar{forward} \coqdocvar{o1} \coqdocvar{o2} \coqdocvar{bij\_o} \coqdocvar{outer1} = \coqdocvar{outer2}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{\_}, \coqdocvar{\_} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{bigraph\_link\_port\_equality} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_o} : \coqdocvar{bijection} \coqdocvar{o1} \coqdocvar{o2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_e} : \coqdocvar{bijection} (\coqdocvar{get\_edge} \coqdocvar{b1}) (\coqdocvar{get\_edge} \coqdocvar{b2}))\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_p} : \coqdocvar{bijection} (\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1})) (\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{get\_control} \coqdocvar{b2}) (\coqdocvar{get\_arity} \coqdocvar{b2}))) : \coqdockw{Prop} :=\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{\ensuremath{\forall}} \coqdocvar{p1}:(\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1})), \coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{p2} := \coqdocvar{bij\_p}.(\coqdocvar{forward} (\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1})) (\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{get\_control} \coqdocvar{b2}) (\coqdocvar{get\_arity} \coqdocvar{b2}))) \coqdocvar{p1} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} (\coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1})),(\coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2})) \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge1}, \coqdocvar{inr} \coqdocvar{edge2}  \ensuremath{\Rightarrow} \coqdocvar{forward} (\coqdocvar{get\_edge} \coqdocvar{b1}) (\coqdocvar{get\_edge} \coqdocvar{b2}) \coqdocvar{bij\_e} \coqdocvar{edge1} = \coqdocvar{edge2}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1}, \coqdocvar{inl} \coqdocvar{outer2}  \ensuremath{\Rightarrow} \coqdocvar{forward} \coqdocvar{o1} \coqdocvar{o2} \coqdocvar{bij\_o} \coqdocvar{outer1} = \coqdocvar{outer2}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{\_}, \coqdocvar{\_} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{bigraph\_link\_equality} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_i} : \coqdocvar{bijection} \coqdocvar{i1} \coqdocvar{i2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_o} : \coqdocvar{bijection} \coqdocvar{o1} \coqdocvar{o2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_e} : \coqdocvar{bijection} (\coqdocvar{get\_edge} \coqdocvar{b1}) (\coqdocvar{get\_edge} \coqdocvar{b2}))\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_p} : \coqdocvar{bijection} (\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1})) (\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{get\_control} \coqdocvar{b2}) (\coqdocvar{get\_arity} \coqdocvar{b2}))) : \coqdockw{Prop} :=\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_link\_innername\_equality} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{bij\_i} \coqdocvar{bij\_o} \coqdocvar{bij\_e} \ensuremath{\land} \coqdocvar{bigraph\_link\_port\_equality} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{bij\_o} \coqdocvar{bij\_e} \coqdocvar{bij\_p}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Record} \coqdocvar{bigraph\_equality} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocnoindent
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) : \coqdockw{Prop} :=\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{BigEq'}\coqdoceol
+\coqdocindent{1.00em}
+\{\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bij\_s} : \coqdocvar{bijection} \coqdocvar{s1} \coqdocvar{s2} ;\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bij\_i} : \coqdocvar{bijection} \coqdocvar{i1} \coqdocvar{i2} ;\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bij\_r} : \coqdocvar{bijection} \coqdocvar{r1} \coqdocvar{r2} ;\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bij\_o} : \coqdocvar{bijection} \coqdocvar{o1} \coqdocvar{o2} ;\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bij\_n} : \coqdocvar{bijection} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_node} \coqdocvar{b2});\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bij\_e} : \coqdocvar{bijection} (\coqdocvar{get\_edge} \coqdocvar{b1}) (\coqdocvar{get\_edge} \coqdocvar{b2});\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bij\_k} : \coqdocvar{bijection} (\coqdocvar{get\_kind} \coqdocvar{b1}) (\coqdocvar{get\_kind} \coqdocvar{b2});\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bij\_p} : \coqdocvar{bijection} (\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1})) (\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{get\_control} \coqdocvar{b2}) (\coqdocvar{get\_arity} \coqdocvar{b2})); \coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{big\_arity\_eq} : \coqdocvar{bigraph\_arity\_equality} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{bij\_k} ; \coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{big\_control\_eq} : \coqdocvar{bigraph\_control\_equality} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{bij\_n} \coqdocvar{bij\_k} ; \coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{big\_parent\_eq} : \coqdocvar{bigraph\_parent\_equality} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{bij\_s} \coqdocvar{bij\_r} \coqdocvar{bij\_n} ;\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{big\_link\_eq} : \coqdocvar{bigraph\_link\_equality} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{bij\_i} \coqdocvar{bij\_o} \coqdocvar{bij\_e} \coqdocvar{bij\_p}\coqdoceol
+\coqdocindent{1.00em}
+\}.\coqdoceol
+\coqdocnoindent
+\coqdockw{End} \coqdocvar{EquivalenceBigraphs}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+\section{Proving our equivalence is a relation}
+
+\subsection{On the heterogeneous type}
+
+
+In this section, we prove that our relation bigraph\_equality is reflexive, 
+symmetric and transitive. This is going to be useful to be able to rewrite 
+bigraphs at will. \begin{coqdoccode}
+\coqdocnoindent
+\coqdockw{Section} \coqdocvar{EquivalenceIsRelation}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{arity\_refl} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{b} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{bij\_k} := \coqdocvar{bijection\_id}  \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_arity\_equality} \coqdocvar{b} \coqdocvar{b} \coqdocvar{bij\_k}.\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{control\_refl} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{b} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{bij\_n} := \coqdocvar{bijection\_id}  \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{bij\_k} := \coqdocvar{bijection\_id}  \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_control\_equality} \coqdocvar{b} \coqdocvar{b} \coqdocvar{bij\_n} \coqdocvar{bij\_k}.\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{parent\_refl} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{b} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{bij\_s} := \coqdocvar{bijection\_id}  \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{bij\_r} := \coqdocvar{bijection\_id}  \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{bij\_n} := \coqdocvar{bijection\_id}  \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_parent\_equality} \coqdocvar{b} \coqdocvar{b} \coqdocvar{bij\_s} \coqdocvar{bij\_r} \coqdocvar{bij\_n}.\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{link\_refl} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} (\coqdocvar{b} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{bij\_i} := \coqdocvar{bijection\_id}  \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{bij\_o} := \coqdocvar{bijection\_id}  \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{bij\_e} := \coqdocvar{bijection\_id}  \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{bij\_p} := \coqdocvar{bijection\_id}  \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_link\_equality} \coqdocvar{b} \coqdocvar{b} \coqdocvar{bij\_i} \coqdocvar{bij\_o} \coqdocvar{bij\_e} \coqdocvar{bij\_p}.\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Theorem} \coqdocvar{bigraph\_equality\_refl} \{\coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_equality} \coqdocvar{b} \coqdocvar{b}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{arity\_sym} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\}  \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_k} : \coqdocvar{bijection} (\coqdocvar{get\_kind} \coqdocvar{b1}) (\coqdocvar{get\_kind} \coqdocvar{b2})) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_arity\_equality} \coqdocvar{b1} \coqdocvar{b2} (\coqdocvar{bij\_k}) \ensuremath{\rightarrow} \coqdocvar{bigraph\_arity\_equality} \coqdocvar{b2} \coqdocvar{b1} (\coqdocvar{bijection\_inv} \coqdocvar{bij\_k}).\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{control\_sym} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\}  \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_n} : \coqdocvar{bijection} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_node} \coqdocvar{b2}))\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_k} : \coqdocvar{bijection} (\coqdocvar{get\_kind} \coqdocvar{b1}) (\coqdocvar{get\_kind} \coqdocvar{b2})) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_control\_equality} \coqdocvar{b1} \coqdocvar{b2} (\coqdocvar{bij\_n}) (\coqdocvar{bij\_k}) \coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{\rightarrow} \coqdocvar{bigraph\_control\_equality} \coqdocvar{b2} \coqdocvar{b1} (\coqdocvar{bijection\_inv} \coqdocvar{bij\_n}) (\coqdocvar{bijection\_inv} \coqdocvar{bij\_k}).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{parent\_sym} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\}  \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_s} : \coqdocvar{bijection} \coqdocvar{s1} \coqdocvar{s2}) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_r} : \coqdocvar{bijection} \coqdocvar{r1} \coqdocvar{r2}) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_n} : \coqdocvar{bijection} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_node} \coqdocvar{b2})) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_parent\_equality} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{bij\_s} \coqdocvar{bij\_r} \coqdocvar{bij\_n} \ensuremath{\rightarrow} \coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{bigraph\_parent\_equality} \coqdocvar{b2} \coqdocvar{b1} (\coqdocvar{bijection\_inv} \coqdocvar{bij\_s}) (\coqdocvar{bijection\_inv} \coqdocvar{bij\_r})(\coqdocvar{bijection\_inv} \coqdocvar{bij\_n}).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{link\_sym} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\}  \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_i} : \coqdocvar{bijection} \coqdocvar{i1} \coqdocvar{i2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_o} : \coqdocvar{bijection} \coqdocvar{o1} \coqdocvar{o2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_e} : \coqdocvar{bijection} (\coqdocvar{get\_edge} \coqdocvar{b1}) (\coqdocvar{get\_edge} \coqdocvar{b2}))\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_p} : \coqdocvar{bijection} (\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1})) (\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{get\_control} \coqdocvar{b2}) (\coqdocvar{get\_arity} \coqdocvar{b2}))) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_link\_equality} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{bij\_i} \coqdocvar{bij\_o} \coqdocvar{bij\_e} \coqdocvar{bij\_p} \ensuremath{\rightarrow} \coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{bigraph\_link\_equality} \coqdocvar{b2} \coqdocvar{b1} (\coqdocvar{bijection\_inv} \coqdocvar{bij\_i}) (\coqdocvar{bijection\_inv} \coqdocvar{bij\_o}) (\coqdocvar{bijection\_inv} \coqdocvar{bij\_e}) (\coqdocvar{bijection\_inv} \coqdocvar{bij\_p}).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Theorem} \coqdocvar{bigraph\_equality\_sym} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\}  \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_equality} \coqdocvar{b1} \coqdocvar{b2}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{\rightarrow} \coqdocvar{bigraph\_equality} \coqdocvar{b2} \coqdocvar{b1}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{arity\_trans} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3} : \coqdocvar{FinDecType}\}  \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) (\coqdocvar{b3} : \coqdocvar{bigraph} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3}) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_k12} : \coqdocvar{bijection} (\coqdocvar{get\_kind} \coqdocvar{b1}) (\coqdocvar{get\_kind} \coqdocvar{b2})) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_k23} : \coqdocvar{bijection} (\coqdocvar{get\_kind} \coqdocvar{b2}) (\coqdocvar{get\_kind} \coqdocvar{b3})):\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_arity\_equality} \coqdocvar{b1} \coqdocvar{b2} (\coqdocvar{bij\_k12}) \ensuremath{\rightarrow} \coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{bigraph\_arity\_equality} \coqdocvar{b2} \coqdocvar{b3} (\coqdocvar{bij\_k23}) \ensuremath{\rightarrow}\coqdoceol
+\coqdocindent{4.00em}
+\coqdocvar{bigraph\_arity\_equality} \coqdocvar{b1} \coqdocvar{b3} (\coqdocvar{bij\_k23} <\coqdocvar{O}> \coqdocvar{bij\_k12}).\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{control\_trans} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3} : \coqdocvar{FinDecType}\}  \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) (\coqdocvar{b3} : \coqdocvar{bigraph} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_n12} : \coqdocvar{bijection} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_node} \coqdocvar{b2})) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_n23} : \coqdocvar{bijection} (\coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{get\_node} \coqdocvar{b3})) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_k12} : \coqdocvar{bijection} (\coqdocvar{get\_kind} \coqdocvar{b1}) (\coqdocvar{get\_kind} \coqdocvar{b2})) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_k23} : \coqdocvar{bijection} (\coqdocvar{get\_kind} \coqdocvar{b2}) (\coqdocvar{get\_kind} \coqdocvar{b3})):\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_control\_equality} \coqdocvar{b1} \coqdocvar{b2} (\coqdocvar{bij\_n12}) (\coqdocvar{bij\_k12}) \ensuremath{\rightarrow} \coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{bigraph\_control\_equality} \coqdocvar{b2} \coqdocvar{b3} (\coqdocvar{bij\_n23}) (\coqdocvar{bij\_k23}) \ensuremath{\rightarrow}\coqdoceol
+\coqdocindent{4.00em}
+\coqdocvar{bigraph\_control\_equality} \coqdocvar{b1} \coqdocvar{b3} (\coqdocvar{bij\_n23} <\coqdocvar{O}> \coqdocvar{bij\_n12}) (\coqdocvar{bij\_k23} <\coqdocvar{O}> \coqdocvar{bij\_k12}).\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{parent\_trans} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3} : \coqdocvar{FinDecType}\}  \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) (\coqdocvar{b3} : \coqdocvar{bigraph} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_s12} : \coqdocvar{bijection} \coqdocvar{s1} \coqdocvar{s2}) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_s23} : \coqdocvar{bijection} \coqdocvar{s2} \coqdocvar{s3})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_r12} : \coqdocvar{bijection} \coqdocvar{r1} \coqdocvar{r2}) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_r23} : \coqdocvar{bijection} \coqdocvar{r2} \coqdocvar{r3})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_n12} : \coqdocvar{bijection} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_node} \coqdocvar{b2})) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_n23} : \coqdocvar{bijection} (\coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{get\_node} \coqdocvar{b3})) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_parent\_equality} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{bij\_s12} \coqdocvar{bij\_r12} (\coqdocvar{bij\_n12}) \ensuremath{\rightarrow} \coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{bigraph\_parent\_equality} \coqdocvar{b2} \coqdocvar{b3} \coqdocvar{bij\_s23} \coqdocvar{bij\_r23} (\coqdocvar{bij\_n23}) \ensuremath{\rightarrow}\coqdoceol
+\coqdocindent{4.00em}
+\coqdocvar{bigraph\_parent\_equality} \coqdocvar{b1} \coqdocvar{b3} (\coqdocvar{bij\_s23} <\coqdocvar{O}> \coqdocvar{bij\_s12}) (\coqdocvar{bij\_r23} <\coqdocvar{O}> \coqdocvar{bij\_r12}) (\coqdocvar{bij\_n23} <\coqdocvar{O}> \coqdocvar{bij\_n12}).\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{link\_trans} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3} : \coqdocvar{FinDecType}\}  \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) (\coqdocvar{b3} : \coqdocvar{bigraph} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_i12} : \coqdocvar{bijection} \coqdocvar{i1} \coqdocvar{i2}) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_i23} : \coqdocvar{bijection} \coqdocvar{i2} \coqdocvar{i3}) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_o12} : \coqdocvar{bijection} \coqdocvar{o1} \coqdocvar{o2}) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_o23} : \coqdocvar{bijection} \coqdocvar{o2} \coqdocvar{o3}) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_e12} : \coqdocvar{bijection} (\coqdocvar{get\_edge} \coqdocvar{b1}) (\coqdocvar{get\_edge} \coqdocvar{b2})) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_e23} : \coqdocvar{bijection} (\coqdocvar{get\_edge} \coqdocvar{b2}) (\coqdocvar{get\_edge} \coqdocvar{b3})) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_p12} : \coqdocvar{bijection} (\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1})) (\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{get\_control} \coqdocvar{b2}) (\coqdocvar{get\_arity} \coqdocvar{b2}))) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{bij\_p23} : \coqdocvar{bijection} (\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{get\_control} \coqdocvar{b2}) (\coqdocvar{get\_arity} \coqdocvar{b2})) (\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b3}) (\coqdocvar{get\_control} \coqdocvar{b3}) (\coqdocvar{get\_arity} \coqdocvar{b3}))):\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_link\_equality} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{bij\_i12} \coqdocvar{bij\_o12} (\coqdocvar{bij\_e12}) (\coqdocvar{bij\_p12}) \ensuremath{\rightarrow} \coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_link\_equality} \coqdocvar{b2} \coqdocvar{b3} \coqdocvar{bij\_i23} \coqdocvar{bij\_o23} (\coqdocvar{bij\_e23}) (\coqdocvar{bij\_p23}) \ensuremath{\rightarrow}\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_link\_equality} \coqdocvar{b1} \coqdocvar{b3} (\coqdocvar{bij\_i23} <\coqdocvar{O}> \coqdocvar{bij\_i12}) (\coqdocvar{bij\_o23} <\coqdocvar{O}> \coqdocvar{bij\_o12}) (\coqdocvar{bij\_e23} <\coqdocvar{O}> \coqdocvar{bij\_e12}) (\coqdocvar{bij\_p23} <\coqdocvar{O}> \coqdocvar{bij\_p12}).\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Theorem} \coqdocvar{bigraph\_equality\_trans} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3} : \coqdocvar{FinDecType}\}  \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) (\coqdocvar{b3} : \coqdocvar{bigraph} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3}):\coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{bigraph\_equality} \coqdocvar{b1} \coqdocvar{b2}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{\rightarrow} \coqdocvar{bigraph\_equality} \coqdocvar{b2} \coqdocvar{b3}  \coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{\rightarrow} \coqdocvar{bigraph\_equality} \coqdocvar{b1} \coqdocvar{b3}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+\subsection{On the packed type}
+
+
+The issue with the previous relation is that a parametric relation asks for two 
+objects of the exact same Type and our equality is heterogeneous. The solution we 
+will implement is to create a ``packed bigraph'' Type that will hold the interfaces 
+inside of it. This is a WIP. \begin{coqdoccode}
+\coqdocnoindent
+\coqdockw{Record} \coqdocvar{bigraph\_packed} : \coqdockw{Type} :=\coqdoceol
+\coqdocindent{1.00em}
+\{\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{s}: \coqdocvar{FinDecType};\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{i}: \coqdocvar{FinDecType};\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{r}: \coqdocvar{FinDecType};\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{o}: \coqdocvar{FinDecType};\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{big} : \coqdocvar{bigraph} \coqdocvar{s} \coqdocvar{i} \coqdocvar{r} \coqdocvar{o}\coqdoceol
+\coqdocindent{1.00em}
+\}.\coqdoceol
+\coqdocnoindent
+\coqdockw{End} \coqdocvar{EquivalenceIsRelation}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+\section{Disjoint juxtaposition}
+
+
+This section deals with the operation of disjoint juxtaposition. This is the act
+of putting two bigraphs with disjoint interfaces ``next'' to one another. 
+After the definition, we prove associativity and commutativity of dis\_juxtaposition \begin{coqdoccode}
+\coqdocnoindent
+\coqdockw{Section} \coqdocvar{DisjointJuxtaposition}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{NoDup\_map\_inl} \{\coqdocvar{A} \coqdocvar{B} : \coqdockw{Type}\} (\coqdocvar{la} : \coqdocvar{list} \coqdocvar{A}) (\coqdocvar{lb} : \coqdocvar{list} \coqdocvar{B}) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{NoDup} \coqdocvar{la} \ensuremath{\rightarrow} \coqdocvar{NoDup} (\coqdocvar{map} (@\coqdocvar{inl} \coqdocvar{A} \coqdocvar{B}) \coqdocvar{la}).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{NoDup\_map\_inr} \{\coqdocvar{A} \coqdocvar{B} : \coqdockw{Type}\} (\coqdocvar{la} : \coqdocvar{list} \coqdocvar{A}) (\coqdocvar{lb} : \coqdocvar{list} \coqdocvar{B}) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{NoDup} \coqdocvar{lb} \ensuremath{\rightarrow} \coqdocvar{NoDup} (\coqdocvar{map} (@\coqdocvar{inr} \coqdocvar{A} \coqdocvar{B}) \coqdocvar{lb}).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Theorem} \coqdocvar{noDup\_app} \{\coqdocvar{A}: \coqdockw{Type}\} : \coqdockw{\ensuremath{\forall}} (\coqdocvar{l}:\coqdocvar{list} \coqdocvar{A}) (\coqdocvar{l'}:\coqdocvar{list} \coqdocvar{A}),\coqdoceol
+\coqdocindent{2.00em}
+(\coqdockw{\ensuremath{\forall}} \coqdocvar{x}, \coqdocvar{In} \coqdocvar{x} \coqdocvar{l} \ensuremath{\rightarrow} \ensuremath{\lnot} \coqdocvar{In} \coqdocvar{x} \coqdocvar{l'}) \ensuremath{\rightarrow} \coqdocvar{NoDup} \coqdocvar{l} \ensuremath{\rightarrow} \coqdocvar{NoDup} \coqdocvar{l'} \ensuremath{\rightarrow} \coqdocvar{NoDup} (\coqdocvar{l} ++ \coqdocvar{l'}).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Theorem} \coqdocvar{noDup\_merge} \{\coqdocvar{A} \coqdocvar{B}: \coqdockw{Type}\}: \coqdockw{\ensuremath{\forall}} (\coqdocvar{la}: \coqdocvar{list} \coqdocvar{A}) (\coqdocvar{lb}: \coqdocvar{list} \coqdocvar{B}), \coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{NoDup} \coqdocvar{la} \ensuremath{\rightarrow} \coqdocvar{NoDup} \coqdocvar{lb} \ensuremath{\rightarrow} \coqdocvar{NoDup} (\coqdocvar{merge} \coqdocvar{la} \coqdocvar{lb}).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Theorem} \coqdocvar{full\_merge} \{\coqdocvar{A} \coqdocvar{B}: \coqdockw{Type}\}: \coqdockw{\ensuremath{\forall}} (\coqdocvar{la}: \coqdocvar{list} \coqdocvar{A}) (\coqdocvar{lb}: \coqdocvar{list} \coqdocvar{B}), \coqdocvar{Full} \coqdocvar{la} \ensuremath{\rightarrow} \coqdocvar{Full} \coqdocvar{lb} \ensuremath{\rightarrow} \coqdocvar{Full} (\coqdocvar{merge} \coqdocvar{la} \coqdocvar{lb}).\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Theorem} \coqdocvar{listing\_merge} \{\coqdocvar{A} \coqdocvar{B} : \coqdockw{Type}\}: \coqdockw{\ensuremath{\forall}} (\coqdocvar{la}: \coqdocvar{list} \coqdocvar{A}) (\coqdocvar{lb}: \coqdocvar{list} \coqdocvar{B}), \coqdocvar{Listing} \coqdocvar{la} \ensuremath{\rightarrow} \coqdocvar{Listing} \coqdocvar{lb} \ensuremath{\rightarrow} \coqdocvar{Listing} (\coqdocvar{merge} \coqdocvar{la} \coqdocvar{lb}).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{finite\_sum} \{\coqdocvar{A} \coqdocvar{B} : \coqdockw{Type}\} (\coqdocvar{fa} : \coqdocvar{finite} \coqdocvar{A}) (\coqdocvar{fb} : \coqdocvar{finite} \coqdocvar{B}) : \coqdocvar{finite} (\coqdocvar{A} + \coqdocvar{B}).\coqdoceol
+ \coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{EqDec\_sum} \{\coqdocvar{A} \coqdocvar{B} : \coqdockw{Type}\} (\coqdocvar{ea} : \coqdocvar{EqDec} \coqdocvar{A}) (\coqdocvar{eb} : \coqdocvar{EqDec} \coqdocvar{B}) : \coqdocvar{EqDec} (\coqdocvar{A} + \coqdocvar{B}).\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{sum\_FinDecType} (\coqdocvar{A} \coqdocvar{B} : \coqdocvar{FinDecType}) : \coqdocvar{FinDecType} :=\coqdoceol
+\coqdocindent{2.00em}
+\{|\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{type} := \coqdocvar{A} + \coqdocvar{B} ;\coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{dec\_type} := \coqdocvar{EqDec\_sum} (@\coqdocvar{dec\_type} \coqdocvar{A}) (@\coqdocvar{dec\_type} \coqdocvar{B});\coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{finite\_type} := \coqdocvar{finite\_sum} (@\coqdocvar{finite\_type} \coqdocvar{A}) (@\coqdocvar{finite\_type} \coqdocvar{B})\coqdoceol
+\coqdocindent{2.00em}
+|\}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Notation} "A '+++' B" := (\coqdocvar{sum\_FinDecType} \coqdocvar{A} \coqdocvar{B}) (\coqdoctac{at} \coqdockw{level} 50, \coqdoctac{left} \coqdockw{associativity}).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{mk\_dis\_arity} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) :\coqdoceol
+\coqdocindent{2.00em}
+((\coqdocvar{get\_kind} \coqdocvar{b1}) + (\coqdocvar{get\_kind} \coqdocvar{b2})) \ensuremath{\rightarrow} \coqdocvar{nat} :=\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{k1} := \coqdocvar{get\_kind} \coqdocvar{b1} \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{k2} := \coqdocvar{get\_kind} \coqdocvar{b2} \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{a1} := \coqdocvar{get\_arity} \coqdocvar{b1} \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{a2} := \coqdocvar{get\_arity} \coqdocvar{b2} \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{new\_arity} (\coqdocvar{k} : \coqdocvar{k1}+\coqdocvar{k2}) : \coqdocvar{nat} :=\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqdocvar{k} \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{k1'} \ensuremath{\Rightarrow} \coqdocvar{a1} \coqdocvar{k1'}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{k2'} \ensuremath{\Rightarrow} \coqdocvar{a2} \coqdocvar{k2'}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{2.00em}
+\coqdoctac{in} \coqdocvar{new\_arity}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{mk\_dis\_control} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) :\coqdoceol
+\coqdocindent{2.00em}
+((\coqdocvar{get\_node} \coqdocvar{b1}) + (\coqdocvar{get\_node} \coqdocvar{b2})) \ensuremath{\rightarrow} ((\coqdocvar{get\_kind} \coqdocvar{b1})+(\coqdocvar{get\_kind} \coqdocvar{b2}))\%\coqdockw{type} :=\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{c1} := \coqdocvar{get\_control} \coqdocvar{b1} \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{c2} := \coqdocvar{get\_control} \coqdocvar{b2} \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{n1} := \coqdocvar{get\_node} \coqdocvar{b1} \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{n2} := \coqdocvar{get\_node} \coqdocvar{b2} \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{k1} := \coqdocvar{get\_kind} \coqdocvar{b1} \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{k2} := \coqdocvar{get\_kind} \coqdocvar{b2} \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{new\_control} (\coqdocvar{n} : \coqdocvar{n1}+\coqdocvar{n2}) : (\coqdocvar{k1}+\coqdocvar{k2}) := \coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqdocvar{n} \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{n1'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{c1} \coqdocvar{n1'})\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{n2'} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{c2} \coqdocvar{n2'})\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end} \coqdoceol
+\coqdocindent{2.00em}
+\coqdoctac{in} \coqdocvar{new\_control}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{mk\_dis\_parent} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) :\coqdoceol
+\coqdocindent{2.00em}
+((@\coqdocvar{node} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{b1}) +++ (@\coqdocvar{node} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{b2})) + \coqdoceol
+\coqdocindent{3.00em}
+(\coqdocvar{s1} +++ \coqdocvar{s2}) \coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{\rightarrow} ((@\coqdocvar{node} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{b1}) +++ (@\coqdocvar{node} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{b2})) + \coqdoceol
+\coqdocindent{4.00em}
+(\coqdocvar{r1} +++ \coqdocvar{r2}) :=\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{p1} := \coqdocvar{get\_parent} \coqdocvar{b1} \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{p2} := \coqdocvar{get\_parent} \coqdocvar{b2} \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{n1pn2} := ((@\coqdocvar{node} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{b1}) +++ (@\coqdocvar{node} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{b2})) \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{s1ps2} := (\coqdocvar{s1} +++ \coqdocvar{s2}) \coqdoctac{in} \coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{r1pr2} := (\coqdocvar{r1} +++ \coqdocvar{r2}) \coqdoctac{in} \coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{new\_parent} (\coqdocvar{p} : (\coqdocvar{n1pn2}) + (\coqdocvar{s1ps2})) : (\coqdocvar{n1pn2}) + (\coqdocvar{r1pr2}) :=\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqdocvar{p} \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{n1}) \ensuremath{\Rightarrow} \coqdockw{match} \coqdocvar{p1} (\coqdocvar{inl} \coqdocvar{n1}) \coqdockw{with} \coqdoceol
+\coqdocindent{12.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{n1'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{n1'})\coqdoceol
+\coqdocindent{12.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{r1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{r1})\coqdoceol
+\coqdocindent{12.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{s2}) \ensuremath{\Rightarrow} \coqdockw{match} \coqdocvar{p2} (\coqdocvar{inl} \coqdocvar{s2}) \coqdockw{with}\coqdoceol
+\coqdocindent{12.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{n2'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{n2'})\coqdoceol
+\coqdocindent{12.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{r2} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{r2})\coqdoceol
+\coqdocindent{12.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{s1}) \ensuremath{\Rightarrow} \coqdockw{match} \coqdocvar{p1} (\coqdocvar{inr} \coqdocvar{s1}) \coqdockw{with}\coqdoceol
+\coqdocindent{12.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{n1'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{n1'})\coqdoceol
+\coqdocindent{12.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{r1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{r1})\coqdoceol
+\coqdocindent{12.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{s2}) \ensuremath{\Rightarrow} \coqdockw{match} \coqdocvar{p2} (\coqdocvar{inr} \coqdocvar{s2}) \coqdockw{with}\coqdoceol
+\coqdocindent{12.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{n2'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{n2'})\coqdoceol
+\coqdocindent{12.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{r2} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{r2})\coqdoceol
+\coqdocindent{12.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{2.00em}
+\coqdoctac{in} \coqdocvar{new\_parent}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{mk\_dis\_port} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{p}:\coqdocvar{Port} ((\coqdocvar{get\_node} \coqdocvar{b1}) + \coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{mk\_dis\_control} \coqdocvar{b1} \coqdocvar{b2}) (\coqdocvar{mk\_dis\_arity} \coqdocvar{b1} \coqdocvar{b2})) :\coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1}) +\coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{get\_control} \coqdocvar{b2}) (\coqdocvar{get\_arity} \coqdocvar{b2}).\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{mk\_new\_link} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) :\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{i1} +++ \coqdocvar{i2})  + \coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{Port} ((\coqdocvar{get\_node} \coqdocvar{b1}) + \coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{mk\_dis\_control} \coqdocvar{b1} \coqdocvar{b2}) (\coqdocvar{mk\_dis\_arity} \coqdocvar{b1} \coqdocvar{b2}) \coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{\rightarrow} (\coqdocvar{o1} +++ \coqdocvar{o2}) + \coqdoceol
+\coqdocindent{4.00em}
+((@\coqdocvar{edge} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{b1}) +++ (@\coqdocvar{edge} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{b2})) :=\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{n1} := \coqdocvar{get\_node} \coqdocvar{b1} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{n2} := \coqdocvar{get\_node} \coqdocvar{b2} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{c} := \coqdocvar{mk\_dis\_control} \coqdocvar{b1} \coqdocvar{b2} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{a} := \coqdocvar{mk\_dis\_arity} \coqdocvar{b1} \coqdocvar{b2} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{p} := \coqdocvar{Port} (\coqdocvar{n1} + \coqdocvar{n2}) \coqdocvar{c} \coqdocvar{a} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{e1} := \coqdocvar{get\_edge} \coqdocvar{b1} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{e2} := \coqdocvar{get\_edge} \coqdocvar{b2} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{l1} := \coqdocvar{get\_link} \coqdocvar{b1} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{l2} := \coqdocvar{get\_link} \coqdocvar{b2} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{new\_link} (\coqdocvar{ip} : (\coqdocvar{i1} + \coqdocvar{i2}) + \coqdocvar{p}) : (\coqdocvar{o1} + \coqdocvar{o2}) + (\coqdocvar{e1} + \coqdocvar{e2}) :=\coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{match} \coqdocvar{ip} \coqdockw{with} \coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{i1}) \ensuremath{\Rightarrow} \coqdockw{match} \coqdocvar{l1} (\coqdocvar{inl} \coqdocvar{i1}) \coqdockw{with} \coqdoceol
+\coqdocindent{13.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{o1} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{o1})\coqdoceol
+\coqdocindent{13.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e1})\coqdoceol
+\coqdocindent{13.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{i2}) \ensuremath{\Rightarrow} \coqdockw{match} \coqdocvar{l2} (\coqdocvar{inl} \coqdocvar{i2}) \coqdockw{with}\coqdoceol
+\coqdocindent{13.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{o2} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{o2})\coqdoceol
+\coqdocindent{13.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e2} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{e2})\coqdoceol
+\coqdocindent{13.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p} \ensuremath{\Rightarrow}  \coqdockw{let} \coqdocvar{p'} := \coqdocvar{mk\_dis\_port} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{p} \coqdoctac{in}\coqdoceol
+\coqdocindent{10.00em}
+\coqdockw{match} \coqdocvar{p'} \coqdockw{with} \coqdoceol
+\coqdocindent{10.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p1} \ensuremath{\Rightarrow} \coqdockw{match} (\coqdocvar{l1} (\coqdocvar{inr} \coqdocvar{p1})) \coqdockw{with} \coqdoceol
+\coqdocindent{16.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{o1} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{o1})\coqdoceol
+\coqdocindent{16.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e1})\coqdoceol
+\coqdocindent{16.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{10.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p2} \ensuremath{\Rightarrow} \coqdockw{match} (\coqdocvar{l2} (\coqdocvar{inr} \coqdocvar{p2})) \coqdockw{with} \coqdoceol
+\coqdocindent{16.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{o2} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{o2})\coqdoceol
+\coqdocindent{16.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e2} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{e2})\coqdoceol
+\coqdocindent{16.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{10.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{in} \coqdocvar{new\_link}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Theorem} \coqdocvar{acyclic\_dis\_parent\_left} : \coqdockw{\ensuremath{\forall}} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{n1}: \coqdocvar{get\_node} \coqdocvar{b1}),\coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{Acc} (\coqdockw{fun} \coqdocvar{n} \coqdocvar{n'} \ensuremath{\Rightarrow} (\coqdocvar{get\_parent} \coqdocvar{b1}) (\coqdocvar{inl} \coqdocvar{n}) = \coqdocvar{inl} \coqdocvar{n'}) \coqdocvar{n1} \coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{\rightarrow} \coqdocvar{Acc} (\coqdockw{fun} \coqdocvar{n} \coqdocvar{n'} \ensuremath{\Rightarrow} (\coqdocvar{mk\_dis\_parent} \coqdocvar{b1} \coqdocvar{b2}) (\coqdocvar{inl} \coqdocvar{n}) = \coqdocvar{inl} \coqdocvar{n'}) (\coqdocvar{inl} \coqdocvar{n1}).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Theorem} \coqdocvar{acyclic\_dis\_parent\_right} : \coqdockw{\ensuremath{\forall}} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{n2}: \coqdocvar{get\_node} \coqdocvar{b2}),\coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{Acc} (\coqdockw{fun} \coqdocvar{n} \coqdocvar{n'} \ensuremath{\Rightarrow} (\coqdocvar{get\_parent} \coqdocvar{b2}) (\coqdocvar{inl} \coqdocvar{n}) = \coqdocvar{inl} \coqdocvar{n'}) \coqdocvar{n2} \coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{\rightarrow} \coqdocvar{Acc} (\coqdockw{fun} \coqdocvar{n} \coqdocvar{n'} \ensuremath{\Rightarrow} (\coqdocvar{mk\_dis\_parent} \coqdocvar{b1} \coqdocvar{b2}) (\coqdocvar{inl} \coqdocvar{n}) = \coqdocvar{inl} \coqdocvar{n'}) (\coqdocvar{inr} \coqdocvar{n2}).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{mk\_dis\_ap} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{acyclic} ((\coqdocvar{get\_node} \coqdocvar{b1}) + (\coqdocvar{get\_node} \coqdocvar{b2})) (\coqdocvar{s1} + \coqdocvar{s2}) (\coqdocvar{r1} + \coqdocvar{r2}) (\coqdocvar{mk\_dis\_parent} \coqdocvar{b1} \coqdocvar{b2}).\coqdoceol
+\coqdocemptyline
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Definition} \coqdocvar{dis\_juxtaposition} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocnoindent
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) \coqdoceol
+\coqdocindent{1.00em}
+: \coqdocvar{bigraph} (\coqdocvar{s1} +++ \coqdocvar{s2}) (\coqdocvar{i1} +++ \coqdocvar{i2}) (\coqdocvar{r1} +++ \coqdocvar{r2}) (\coqdocvar{o1} +++ \coqdocvar{o2}) :=\coqdoceol
+\coqdocnoindent
+\{|\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{node} := (@\coqdocvar{node} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{b1}) +++ (@\coqdocvar{node} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{b2});\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{edge} := (@\coqdocvar{edge} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{b1}) +++ (@\coqdocvar{edge} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{b2});\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{kind} := (@\coqdocvar{kind} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{b1}) +++ (@\coqdocvar{kind} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{b2});\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{arity} := \coqdocvar{mk\_dis\_arity} \coqdocvar{b1} \coqdocvar{b2} ;\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{control} := \coqdocvar{mk\_dis\_control} \coqdocvar{b1} \coqdocvar{b2} ;\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{parent} := \coqdocvar{mk\_dis\_parent} \coqdocvar{b1} \coqdocvar{b2} ; \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{link} := \coqdocvar{mk\_new\_link} \coqdocvar{b1} \coqdocvar{b2} ;\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{ap} := \coqdocvar{mk\_dis\_ap} \coqdocvar{b1} \coqdocvar{b2} ;\coqdoceol
+\coqdocnoindent
+|\}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Notation} "b1 '||' b2" := (\coqdocvar{dis\_juxtaposition} \coqdocvar{b1} \coqdocvar{b2}) (\coqdoctac{at} \coqdockw{level} 50, \coqdoctac{left} \coqdockw{associativity}).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{bij\_assoc} (\coqdocvar{A} \coqdocvar{B} \coqdocvar{C} : \coqdockw{Type}) : \coqdocvar{bijection} (\coqdocvar{A} + \coqdocvar{B} + \coqdocvar{C}) (\coqdocvar{A} + (\coqdocvar{B} + \coqdocvar{C})).\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{mk\_port\_l\_assoc} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3} : \coqdocvar{FinDecType}\}\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) (\coqdocvar{b3} : \coqdocvar{bigraph} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3}) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{p} : \coqdocvar{Port} (\coqdocvar{get\_node} (\coqdocvar{b1} || \coqdocvar{b2} || \coqdocvar{b3})) (\coqdocvar{get\_control} (\coqdocvar{b1} || \coqdocvar{b2} || \coqdocvar{b3})) (\coqdocvar{get\_arity} (\coqdocvar{b1} || \coqdocvar{b2} || \coqdocvar{b3})))\coqdoceol
+\coqdocindent{3.00em}
+: (\coqdocvar{Port} (\coqdocvar{get\_node} (\coqdocvar{b1} || (\coqdocvar{b2} || \coqdocvar{b3}))) (\coqdocvar{get\_control} (\coqdocvar{b1} || (\coqdocvar{b2} || \coqdocvar{b3}))) (\coqdocvar{get\_arity} (\coqdocvar{b1} || (\coqdocvar{b2} || \coqdocvar{b3})))).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{mk\_port\_r\_assoc} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3} : \coqdocvar{FinDecType}\}\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) (\coqdocvar{b3} : \coqdocvar{bigraph} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3}) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{p} : \coqdocvar{Port} (\coqdocvar{get\_node} (\coqdocvar{b1} || (\coqdocvar{b2} || \coqdocvar{b3}))) (\coqdocvar{get\_control} (\coqdocvar{b1} || (\coqdocvar{b2} || \coqdocvar{b3}))) (\coqdocvar{get\_arity} (\coqdocvar{b1} || (\coqdocvar{b2} || \coqdocvar{b3}))))\coqdoceol
+\coqdocindent{3.00em}
+: (\coqdocvar{Port} (\coqdocvar{get\_node} (\coqdocvar{b1} || \coqdocvar{b2} || \coqdocvar{b3})) (\coqdocvar{get\_control} (\coqdocvar{b1} || \coqdocvar{b2} || \coqdocvar{b3})) (\coqdocvar{get\_arity} (\coqdocvar{b1} || \coqdocvar{b2} || \coqdocvar{b3}))).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{bijection\_port\_assoc} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3} : \coqdocvar{FinDecType}\}\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) (\coqdocvar{b3} : \coqdocvar{bigraph} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3}) :  \coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bijection}\coqdoceol
+\coqdocindent{3.00em}
+(\coqdocvar{Port} (\coqdocvar{get\_node} (\coqdocvar{b1} || \coqdocvar{b2} || \coqdocvar{b3}))\coqdoceol
+\coqdocindent{4.00em}
+(\coqdocvar{get\_control} (\coqdocvar{b1} || \coqdocvar{b2} || \coqdocvar{b3}))\coqdoceol
+\coqdocindent{4.00em}
+(\coqdocvar{get\_arity} (\coqdocvar{b1} || \coqdocvar{b2} || \coqdocvar{b3})))\coqdoceol
+\coqdocindent{3.00em}
+(\coqdocvar{Port} (\coqdocvar{get\_node} (\coqdocvar{b1} || (\coqdocvar{b2} || \coqdocvar{b3})))\coqdoceol
+\coqdocindent{4.00em}
+(\coqdocvar{get\_control} (\coqdocvar{b1} || (\coqdocvar{b2} || \coqdocvar{b3})))\coqdoceol
+\coqdocindent{4.00em}
+(\coqdocvar{get\_arity} (\coqdocvar{b1} || (\coqdocvar{b2} || \coqdocvar{b3})))).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{rearrange\_match\_outer1} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3} : \coqdocvar{FinDecType}\}\coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}\} \coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}\} \coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b3} : \coqdocvar{bigraph} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3}\}\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{p123} : \coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1}) + \coqdocvar{Port} (\coqdocvar{get\_node} (\coqdocvar{b2} || \coqdocvar{b3})) (\coqdocvar{get\_control} (\coqdocvar{b2} || \coqdocvar{b3})) (\coqdocvar{get\_arity} (\coqdocvar{b2} || \coqdocvar{b3})))\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{outer1} : \coqdocvar{o1}) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{match}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqdocvar{p123} \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{outer1'})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e1})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p23} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{mk\_dis\_port} \coqdocvar{b2} \coqdocvar{b3} \coqdocvar{p23} \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{outer2})\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e1})\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p3} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b3} (\coqdocvar{inr} \coqdocvar{p3}) \coqdockw{with}\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer3} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{outer3})\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e2} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{e2})\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer23} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{outer23})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e23} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{e23})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{with}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2} \ensuremath{\Rightarrow} \coqdocvar{inl} \coqdocvar{outer1} = \coqdocvar{outer2}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{\_} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{\leftrightarrow}\coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{match} \coqdocvar{p123} \coqdockw{with}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1'} \ensuremath{\Rightarrow} @\coqdocvar{inl} \coqdocvar{o1} (\coqdocvar{o2}+\coqdocvar{o3}) \coqdocvar{outer1} = \coqdocvar{inl} \coqdocvar{outer1'}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p23} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{mk\_dis\_port} \coqdocvar{b2} \coqdocvar{b3} \coqdocvar{p23} \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2} \ensuremath{\Rightarrow} \coqdocvar{inl} \coqdocvar{outer1} = \coqdocvar{inr} (@\coqdocvar{inl} \coqdocvar{o2} \coqdocvar{o3} \coqdocvar{outer2})\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p3} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b3} (\coqdocvar{inr} \coqdocvar{p3}) \coqdockw{with}\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer3} \ensuremath{\Rightarrow} \coqdocvar{inl} \coqdocvar{outer1} = \coqdocvar{inr} (@\coqdocvar{inr} \coqdocvar{o2} \coqdocvar{o3} \coqdocvar{outer3})\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e2} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{end}.\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{rearrange\_match\_outer2} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3} : \coqdocvar{FinDecType}\}\coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}\} \coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}\} \coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b3} : \coqdocvar{bigraph} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3}\}\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{p123} : \coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1}) + \coqdocvar{Port} (\coqdocvar{get\_node} (\coqdocvar{b2} || \coqdocvar{b3})) (\coqdocvar{get\_control} (\coqdocvar{b2} || \coqdocvar{b3})) (\coqdocvar{get\_arity} (\coqdocvar{b2} || \coqdocvar{b3})))\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{outer2} : \coqdocvar{o2}) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{match}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqdocvar{p123} \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{outer1'})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e1})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p23} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{mk\_dis\_port} \coqdocvar{b2} \coqdocvar{b3} \coqdocvar{p23} \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{outer2'})\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e1})\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p3} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b3} (\coqdocvar{inr} \coqdocvar{p3}) \coqdockw{with}\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer3} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{outer3})\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e2} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{e2})\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer23} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{outer23})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e23} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{e23})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{with}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2'} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{outer2}) = \coqdocvar{outer2'}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{\_} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{\leftrightarrow}\coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{match} \coqdocvar{p123} \coqdockw{with}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1'} \ensuremath{\Rightarrow} \coqdocvar{inr} (@\coqdocvar{inl} \coqdocvar{o2} \coqdocvar{o3} \coqdocvar{outer2}) = \coqdocvar{inl} \coqdocvar{outer1'}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p23} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{mk\_dis\_port} \coqdocvar{b2} \coqdocvar{b3} \coqdocvar{p23} \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2'} \ensuremath{\Rightarrow} @\coqdocvar{inr} \coqdocvar{o1} (\coqdocvar{o2} + \coqdocvar{o3}) (\coqdocvar{inl} \coqdocvar{outer2}) = \coqdocvar{inr} (@\coqdocvar{inl} \coqdocvar{o2} \coqdocvar{o3} \coqdocvar{outer2'})\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p3} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b3} (\coqdocvar{inr} \coqdocvar{p3}) \coqdockw{with}\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer3} \ensuremath{\Rightarrow} @\coqdocvar{inr} \coqdocvar{o1} (\coqdocvar{o2} + \coqdocvar{o3}) (\coqdocvar{inl} \coqdocvar{outer2}) = \coqdocvar{inr} (@\coqdocvar{inr} \coqdocvar{o2} \coqdocvar{o3} \coqdocvar{outer3})\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e2} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{end}.\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{rearrange\_match\_outer3} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3} : \coqdocvar{FinDecType}\}\coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}\} \coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}\} \coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b3} : \coqdocvar{bigraph} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3}\}\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{p123} : \coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1}) + \coqdocvar{Port} (\coqdocvar{get\_node} (\coqdocvar{b2} || \coqdocvar{b3})) (\coqdocvar{get\_control} (\coqdocvar{b2} || \coqdocvar{b3})) (\coqdocvar{get\_arity} (\coqdocvar{b2} || \coqdocvar{b3})))\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{outer3} : \coqdocvar{o3}) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{match}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqdocvar{p123} \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{outer1'})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e1})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p23} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{mk\_dis\_port} \coqdocvar{b2} \coqdocvar{b3} \coqdocvar{p23} \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{outer2'})\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e1})\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p3} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b3} (\coqdocvar{inr} \coqdocvar{p3}) \coqdockw{with}\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer3'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{outer3'})\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e2} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{e2})\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer23} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{outer23})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e23} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{e23})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{with}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2'} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{outer3}) = \coqdocvar{outer2'}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{\_} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{\leftrightarrow}\coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{match} \coqdocvar{p123} \coqdockw{with}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1'} \ensuremath{\Rightarrow} \coqdocvar{inr} (@\coqdocvar{inr} \coqdocvar{o2} \coqdocvar{o3} \coqdocvar{outer3}) = \coqdocvar{inl} \coqdocvar{outer1'}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p23} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{mk\_dis\_port} \coqdocvar{b2} \coqdocvar{b3} \coqdocvar{p23} \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2'} \ensuremath{\Rightarrow} @\coqdocvar{inr} \coqdocvar{o1} (\coqdocvar{o2} + \coqdocvar{o3}) (\coqdocvar{inr} \coqdocvar{outer3}) = \coqdocvar{inr} (@\coqdocvar{inl} \coqdocvar{o2} \coqdocvar{o3} \coqdocvar{outer2'})\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p3} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b3} (\coqdocvar{inr} \coqdocvar{p3}) \coqdockw{with}\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer3'} \ensuremath{\Rightarrow} @\coqdocvar{inr} \coqdocvar{o1} (\coqdocvar{o2} + \coqdocvar{o3}) (\coqdocvar{inr} \coqdocvar{outer3}) = \coqdocvar{inr} (@\coqdocvar{inr} \coqdocvar{o2} \coqdocvar{o3} \coqdocvar{outer3'})\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e2} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{end}.\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{rearrange\_match\_edge1} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3} : \coqdocvar{FinDecType}\}\coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}\} \coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}\} \coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b3} : \coqdocvar{bigraph} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3}\}\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{p123} : \coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1}) + \coqdocvar{Port} (\coqdocvar{get\_node} (\coqdocvar{b2} || \coqdocvar{b3})) (\coqdocvar{get\_control} (\coqdocvar{b2} || \coqdocvar{b3})) (\coqdocvar{get\_arity} (\coqdocvar{b2} || \coqdocvar{b3})))\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{edge1} : \coqdocvar{get\_edge} \coqdocvar{b1}) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{match}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqdocvar{p123} \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{outer1'})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e1})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p23} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{mk\_dis\_port} \coqdocvar{b2} \coqdocvar{b3} \coqdocvar{p23} \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{outer2})\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e1})\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p3} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b3} (\coqdocvar{inr} \coqdocvar{p3}) \coqdockw{with}\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer3} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{outer3})\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e2} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{e2})\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer23} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{outer23})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e23} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{e23})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{with}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{\_} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge2} \ensuremath{\Rightarrow} \coqdocvar{inl} \coqdocvar{edge1} = \coqdocvar{edge2}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{\leftrightarrow}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqdocvar{p123} \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1'} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} @\coqdocvar{inl} (\coqdocvar{get\_edge} \coqdocvar{b1}) ((\coqdocvar{get\_edge} \coqdocvar{b2}) + (\coqdocvar{get\_edge} \coqdocvar{b3})) \coqdocvar{edge1} = \coqdocvar{inl} \coqdocvar{e1}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p23} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{mk\_dis\_port} \coqdocvar{b2} \coqdocvar{b3} \coqdocvar{p23} \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{7.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{7.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{7.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow}  \coqdocvar{inl} \coqdocvar{edge1} = \coqdocvar{inr} (@\coqdocvar{inl} (\coqdocvar{get\_edge} \coqdocvar{b2}) ((\coqdocvar{get\_edge} \coqdocvar{b3})) \coqdocvar{e1})\coqdoceol
+\coqdocindent{7.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p3} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{7.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b3} (\coqdocvar{inr} \coqdocvar{p3}) \coqdockw{with}\coqdoceol
+\coqdocindent{7.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer3} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{7.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e2} \ensuremath{\Rightarrow} \coqdocvar{inl} \coqdocvar{edge1} = \coqdocvar{inr} (@\coqdocvar{inr} (\coqdocvar{get\_edge} \coqdocvar{b2}) (\coqdocvar{get\_edge} \coqdocvar{b3}) \coqdocvar{e2})\coqdoceol
+\coqdocindent{7.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}.\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{rearrange\_match\_edge2} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3} : \coqdocvar{FinDecType}\}\coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}\} \coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}\} \coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b3} : \coqdocvar{bigraph} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3}\}\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{p123} : \coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1}) + \coqdocvar{Port} (\coqdocvar{get\_node} (\coqdocvar{b2} || \coqdocvar{b3})) (\coqdocvar{get\_control} (\coqdocvar{b2} || \coqdocvar{b3})) (\coqdocvar{get\_arity} (\coqdocvar{b2} || \coqdocvar{b3})))\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{edge2} : \coqdocvar{get\_edge} \coqdocvar{b2}) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{match}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqdocvar{p123} \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{outer1'})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e1})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p23} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{mk\_dis\_port} \coqdocvar{b2} \coqdocvar{b3} \coqdocvar{p23} \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{outer2})\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e1})\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p3} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b3} (\coqdocvar{inr} \coqdocvar{p3}) \coqdockw{with}\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer3} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{outer3})\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e2} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{e2})\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer23} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{outer23})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e23} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{e23})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{with}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{\_} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge2'} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{edge2}) = \coqdocvar{edge2'}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{\leftrightarrow}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqdocvar{p123} \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1'} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (@\coqdocvar{inl} (\coqdocvar{get\_edge} \coqdocvar{b2}) (\coqdocvar{get\_edge} \coqdocvar{b3}) \coqdocvar{edge2}) = \coqdocvar{inl} \coqdocvar{e1}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p23} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{mk\_dis\_port} \coqdocvar{b2} \coqdocvar{b3} \coqdocvar{p23} \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{7.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{7.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{7.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow}  @\coqdocvar{inr} (\coqdocvar{get\_edge} \coqdocvar{b1}) ((\coqdocvar{get\_edge} \coqdocvar{b2}) + (\coqdocvar{get\_edge} \coqdocvar{b3})) (\coqdocvar{inl} \coqdocvar{edge2}) = \coqdocvar{inr} (@\coqdocvar{inl} (\coqdocvar{get\_edge} \coqdocvar{b2}) ((\coqdocvar{get\_edge} \coqdocvar{b3})) \coqdocvar{e1})\coqdoceol
+\coqdocindent{7.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p3} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{7.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b3} (\coqdocvar{inr} \coqdocvar{p3}) \coqdockw{with}\coqdoceol
+\coqdocindent{7.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer3} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{7.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e2} \ensuremath{\Rightarrow} @\coqdocvar{inr} (\coqdocvar{get\_edge} \coqdocvar{b1}) ((\coqdocvar{get\_edge} \coqdocvar{b2}) + (\coqdocvar{get\_edge} \coqdocvar{b3})) (\coqdocvar{inl} \coqdocvar{edge2}) = \coqdocvar{inr} (@\coqdocvar{inr} (\coqdocvar{get\_edge} \coqdocvar{b2}) (\coqdocvar{get\_edge} \coqdocvar{b3}) \coqdocvar{e2})\coqdoceol
+\coqdocindent{7.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}.\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{rearrange\_match\_edge3} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3} : \coqdocvar{FinDecType}\}\coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}\} \coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}\} \coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b3} : \coqdocvar{bigraph} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3}\}\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{p123} : \coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1}) + \coqdocvar{Port} (\coqdocvar{get\_node} (\coqdocvar{b2} || \coqdocvar{b3})) (\coqdocvar{get\_control} (\coqdocvar{b2} || \coqdocvar{b3})) (\coqdocvar{get\_arity} (\coqdocvar{b2} || \coqdocvar{b3})))\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{edge3} : \coqdocvar{get\_edge} \coqdocvar{b3}) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{match}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqdocvar{p123} \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{outer1'})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e1})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p23} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{mk\_dis\_port} \coqdocvar{b2} \coqdocvar{b3} \coqdocvar{p23} \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{outer2})\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e1})\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p3} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b3} (\coqdocvar{inr} \coqdocvar{p3}) \coqdockw{with}\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer3} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{outer3})\coqdoceol
+\coqdocindent{8.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e2} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{e2})\coqdoceol
+\coqdocindent{8.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer23} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{outer23})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e23} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{e23})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{with}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{\_} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge2'} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{edge3}) = \coqdocvar{edge2'}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{\leftrightarrow}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqdocvar{p123} \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1'} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (@\coqdocvar{inr} (\coqdocvar{get\_edge} \coqdocvar{b2}) (\coqdocvar{get\_edge} \coqdocvar{b3}) \coqdocvar{edge3}) = \coqdocvar{inl} \coqdocvar{e1}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p23} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{mk\_dis\_port} \coqdocvar{b2} \coqdocvar{b3} \coqdocvar{p23} \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{7.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{7.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{7.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow}  @\coqdocvar{inr} (\coqdocvar{get\_edge} \coqdocvar{b1}) ((\coqdocvar{get\_edge} \coqdocvar{b2}) + (\coqdocvar{get\_edge} \coqdocvar{b3})) (\coqdocvar{inr} \coqdocvar{edge3}) = \coqdocvar{inr} (@\coqdocvar{inl} (\coqdocvar{get\_edge} \coqdocvar{b2}) ((\coqdocvar{get\_edge} \coqdocvar{b3})) \coqdocvar{e1})\coqdoceol
+\coqdocindent{7.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p3} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{7.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b3} (\coqdocvar{inr} \coqdocvar{p3}) \coqdockw{with}\coqdoceol
+\coqdocindent{7.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer3} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{7.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e2} \ensuremath{\Rightarrow} @\coqdocvar{inr} (\coqdocvar{get\_edge} \coqdocvar{b1}) ((\coqdocvar{get\_edge} \coqdocvar{b2}) + (\coqdocvar{get\_edge} \coqdocvar{b3})) (\coqdocvar{inr} \coqdocvar{edge3}) = \coqdocvar{inr} (@\coqdocvar{inr} (\coqdocvar{get\_edge} \coqdocvar{b2}) (\coqdocvar{get\_edge} \coqdocvar{b3}) \coqdocvar{e2})\coqdoceol
+\coqdocindent{7.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}.\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{dis\_port\_assoc\_prop} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3} : \coqdocvar{FinDecType}\}\coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}\} \coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}\} \coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b3} : \coqdocvar{bigraph} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3}\}\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{p123} : \coqdocvar{Port}\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{get\_node} (\coqdocvar{b1} || \coqdocvar{b2} || \coqdocvar{b3}))\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{get\_control}\coqdoceol
+\coqdocindent{3.00em}
+(\coqdocvar{b1} || \coqdocvar{b2} || \coqdocvar{b3}))\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{get\_arity} (\coqdocvar{b1} || \coqdocvar{b2} || \coqdocvar{b3})))\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{prop1} : \coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1}) \ensuremath{\rightarrow} \coqdockw{Prop})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{prop2} : \coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{get\_control} \coqdocvar{b2}) (\coqdocvar{get\_arity} \coqdocvar{b2}) \ensuremath{\rightarrow} \coqdockw{Prop})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{prop3} : \coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b3}) (\coqdocvar{get\_control} \coqdocvar{b3}) (\coqdocvar{get\_arity} \coqdocvar{b3}) \ensuremath{\rightarrow} \coqdockw{Prop}):\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{match} \coqdocvar{mk\_dis\_port} (\coqdocvar{b1} || \coqdocvar{b2}) \coqdocvar{b3} \coqdocvar{p123} \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p12} \ensuremath{\Rightarrow} \coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{match} \coqdocvar{mk\_dis\_port} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{p12} \coqdockw{with} \coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p1} \ensuremath{\Rightarrow} \coqdocvar{prop1} \coqdocvar{p1}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p2} \ensuremath{\Rightarrow} \coqdocvar{prop2} \coqdocvar{p2}\coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p3} \ensuremath{\Rightarrow} \coqdocvar{prop3} \coqdocvar{p3}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{\rightarrow}  \coqdockw{match} \coqdocvar{mk\_dis\_port} \coqdocvar{b1} (\coqdocvar{b2} || \coqdocvar{b3}) (\coqdocvar{mk\_port\_l\_assoc} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{b3} \coqdocvar{p123}) \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p1} \ensuremath{\Rightarrow} \coqdocvar{prop1} \coqdocvar{p1}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p23} \ensuremath{\Rightarrow} \coqdoceol
+\coqdocindent{7.00em}
+\coqdockw{match} \coqdocvar{mk\_dis\_port} \coqdocvar{b2} \coqdocvar{b3} \coqdocvar{p23} \coqdockw{with} \coqdoceol
+\coqdocindent{7.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow} \coqdocvar{prop2} \coqdocvar{p2}\coqdoceol
+\coqdocindent{7.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p3} \ensuremath{\Rightarrow} \coqdocvar{prop3} \coqdocvar{p3}\coqdoceol
+\coqdocindent{7.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}.\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{dis\_juxtaposition\_port\_associative} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3} : \coqdocvar{FinDecType}\} :\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{\ensuremath{\forall}} (\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) (\coqdocvar{b3} : \coqdocvar{bigraph} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3}),\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_link\_port\_equality} \coqdoceol
+\coqdocindent{3.00em}
+((\coqdocvar{b1} || \coqdocvar{b2}) || \coqdocvar{b3})  \coqdoceol
+\coqdocindent{3.00em}
+(\coqdocvar{b1} || (\coqdocvar{b2} || \coqdocvar{b3})) \coqdoceol
+\coqdocindent{3.00em}
+(\coqdocvar{bij\_assoc} \coqdocvar{o1} \coqdocvar{o2} \coqdocvar{o3})\coqdoceol
+\coqdocindent{3.00em}
+(\coqdocvar{bij\_assoc} (\coqdocvar{get\_edge} \coqdocvar{b1}) (\coqdocvar{get\_edge} \coqdocvar{b2}) (\coqdocvar{get\_edge} \coqdocvar{b3}))\coqdoceol
+\coqdocindent{3.00em}
+(\coqdocvar{bijection\_port\_assoc} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{b3}).\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Theorem} \coqdocvar{dis\_juxtaposition\_associative} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3} : \coqdocvar{FinDecType}\} :\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{\ensuremath{\forall}} (\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) (\coqdocvar{b3} : \coqdocvar{bigraph} \coqdocvar{s3} \coqdocvar{i3} \coqdocvar{r3} \coqdocvar{o3}),\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_equality} ((\coqdocvar{b1} || \coqdocvar{b2}) || \coqdocvar{b3}) (\coqdocvar{b1} || (\coqdocvar{b2} || \coqdocvar{b3})).\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{mk\_port\_commu} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\}\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{p} : \coqdocvar{Port} (\coqdocvar{get\_node} (\coqdocvar{b1} || \coqdocvar{b2})) (\coqdocvar{get\_control} (\coqdocvar{b1} || \coqdocvar{b2})) (\coqdocvar{get\_arity} (\coqdocvar{b1} || \coqdocvar{b2})))\coqdoceol
+\coqdocindent{3.00em}
+: (\coqdocvar{Port} (\coqdocvar{get\_node} (\coqdocvar{b2} || \coqdocvar{b1})) (\coqdocvar{get\_control} (\coqdocvar{b2} || \coqdocvar{b1})) (\coqdocvar{get\_arity} (\coqdocvar{b2} || \coqdocvar{b1}))).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{bijection\_port\_commu} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\}\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}) :  \coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bijection}\coqdoceol
+\coqdocindent{3.00em}
+(\coqdocvar{Port} (\coqdocvar{get\_node} (\coqdocvar{b1} || \coqdocvar{b2}))\coqdoceol
+\coqdocindent{4.00em}
+(\coqdocvar{get\_control} (\coqdocvar{b1} || \coqdocvar{b2}))\coqdoceol
+\coqdocindent{4.00em}
+(\coqdocvar{get\_arity} (\coqdocvar{b1} || \coqdocvar{b2})))\coqdoceol
+\coqdocindent{3.00em}
+(\coqdocvar{Port} (\coqdocvar{get\_node} (\coqdocvar{b2} || \coqdocvar{b1}))\coqdoceol
+\coqdocindent{4.00em}
+(\coqdocvar{get\_control} (\coqdocvar{b2} || \coqdocvar{b1}))\coqdoceol
+\coqdocindent{4.00em}
+(\coqdocvar{get\_arity} (\coqdocvar{b2} || \coqdocvar{b1}))).\coqdoceol
+ \coqdocemptyline
+\coqdocemptyline
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{dis\_port\_commu\_prop} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}\} \coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}\}\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{p12} : \coqdocvar{Port} (\coqdocvar{get\_node} (\coqdocvar{b1} || \coqdocvar{b2})) (\coqdocvar{get\_control} (\coqdocvar{b1} || \coqdocvar{b2})) (\coqdocvar{get\_arity} (\coqdocvar{b1} || \coqdocvar{b2}))) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{prop1} : \coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1})-> \coqdockw{Prop})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{prop2} : \coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{get\_control} \coqdocvar{b2}) (\coqdocvar{get\_arity} \coqdocvar{b2})-> \coqdockw{Prop}):\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{match} \coqdocvar{mk\_dis\_port} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{p12} \coqdockw{with}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p1} \ensuremath{\Rightarrow} \coqdocvar{prop1} \coqdocvar{p1}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p2} \ensuremath{\Rightarrow} \coqdocvar{prop2} \coqdocvar{p2}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{\rightarrow}  \coqdockw{match} \coqdocvar{mk\_dis\_port} \coqdocvar{b2} \coqdocvar{b1} (\coqdocvar{mk\_port\_commu} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{p12}) \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow} \coqdocvar{prop2} \coqdocvar{p2}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p1} \ensuremath{\Rightarrow} \coqdocvar{prop1} \coqdocvar{p1}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}.\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{rearrange\_match\_outer} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\}\coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}\} \{\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}\}\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{p21}:\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{get\_control} \coqdocvar{b2}) (\coqdocvar{get\_arity} \coqdocvar{b2}) + \coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1})) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{outer1}:\coqdocvar{o1}):\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{match}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqdocvar{p21} \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{outer2})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge2} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{edge2})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{outer1'})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{edge1})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{with}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2} \ensuremath{\Rightarrow} \coqdocvar{inr} \coqdocvar{outer1} = \coqdocvar{outer2}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{\_} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{\leftrightarrow} \coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{match} \coqdocvar{p21} \coqdockw{with}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2} \ensuremath{\Rightarrow} \coqdocvar{inr} \coqdocvar{outer1} = \coqdocvar{inl} \coqdocvar{outer2}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge2} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1'} \ensuremath{\Rightarrow} @\coqdocvar{inr} \coqdocvar{o2} \coqdocvar{o1} \coqdocvar{outer1} = \coqdocvar{inr} \coqdocvar{outer1'}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge1} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{end}.\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{rearrange\_match\_outer2'} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\}\coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}\} \{\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}\}\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{p21}:\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{get\_control} \coqdocvar{b2}) (\coqdocvar{get\_arity} \coqdocvar{b2}) + \coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1})) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{outer2}:\coqdocvar{o2}):\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{match}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqdocvar{p21} \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{outer2})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge2} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{edge2})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{outer1'})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{edge1})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{with}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2'} \ensuremath{\Rightarrow} \coqdocvar{inl} \coqdocvar{outer2} = \coqdocvar{outer2'}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{\_} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{\leftrightarrow} \coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{match} \coqdocvar{p21} \coqdockw{with}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2'} \ensuremath{\Rightarrow} @\coqdocvar{inl} \coqdocvar{o2} \coqdocvar{o1} \coqdocvar{outer2} = \coqdocvar{inl} \coqdocvar{outer2'}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge2} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1} \ensuremath{\Rightarrow} @\coqdocvar{inl} \coqdocvar{o2} \coqdocvar{o1} \coqdocvar{outer2} = \coqdocvar{inr} \coqdocvar{outer1}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge1} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{end}.\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{rearrange\_match\_edge} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\}\coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}\} \{\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}\}\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{p21}:\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{get\_control} \coqdocvar{b2}) (\coqdocvar{get\_arity} \coqdocvar{b2}) + \coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1})) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{edge1}:\coqdocvar{get\_edge} \coqdocvar{b1}):\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{match}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqdocvar{p21} \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{o2} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{o2})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e2} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e2})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{o1} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{o1})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{e1})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{with}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{\_} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge2} \ensuremath{\Rightarrow} \coqdocvar{inr} \coqdocvar{edge1} = \coqdocvar{edge2}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{\leftrightarrow} \coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{match} \coqdocvar{p21} \coqdockw{with}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge2} \ensuremath{\Rightarrow} \coqdocvar{inl} \coqdocvar{edge1} = \coqdocvar{inr} \coqdocvar{edge2}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge1'} \ensuremath{\Rightarrow} @\coqdocvar{inr} (\coqdocvar{get\_edge} \coqdocvar{b2}) (\coqdocvar{get\_edge} \coqdocvar{b1}) \coqdocvar{edge1'} = \coqdocvar{inr} \coqdocvar{edge1}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{end}.\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{rearrange\_match\_edge2'} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\}\coqdoceol
+\coqdocindent{2.00em}
+\{\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}\} \{\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}\}\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{p21}:\coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{get\_control} \coqdocvar{b2}) (\coqdocvar{get\_arity} \coqdocvar{b2}) + \coqdocvar{Port} (\coqdocvar{get\_node} \coqdocvar{b1}) (\coqdocvar{get\_control} \coqdocvar{b1}) (\coqdocvar{get\_arity} \coqdocvar{b1})) \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{edge2}:\coqdocvar{get\_edge} \coqdocvar{b2}):\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{match}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqdocvar{p21} \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{o2} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{o2})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e2} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e2})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{o1} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{o1})\coqdoceol
+\coqdocindent{5.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{e1})\coqdoceol
+\coqdocindent{5.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{with}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{\_} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge2'} \ensuremath{\Rightarrow} \coqdocvar{inl} \coqdocvar{edge2} = \coqdocvar{edge2'}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{\leftrightarrow} \coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{match} \coqdocvar{p21} \coqdockw{with}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p2} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b2} (\coqdocvar{inr} \coqdocvar{p2}) \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer2} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge2'} \ensuremath{\Rightarrow} @\coqdocvar{inl} (\coqdocvar{get\_edge} \coqdocvar{b2}) (\coqdocvar{get\_edge} \coqdocvar{b1}) \coqdocvar{edge2} = \coqdocvar{inl} \coqdocvar{edge2'}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p1} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{match} \coqdocvar{get\_link} \coqdocvar{b1} (\coqdocvar{inr} \coqdocvar{p1}) \coqdockw{with}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{outer1} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocindent{6.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{edge1'} \ensuremath{\Rightarrow} @\coqdocvar{inr} (\coqdocvar{get\_edge} \coqdocvar{b2}) (\coqdocvar{get\_edge} \coqdocvar{b1}) \coqdocvar{edge1'} = \coqdocvar{inl} \coqdocvar{edge2}\coqdoceol
+\coqdocindent{6.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{end}.\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdocvar{dis\_juxtaposition\_port\_commutative} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} :\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{\ensuremath{\forall}} (\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}),\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_link\_port\_equality} \coqdoceol
+\coqdocindent{3.00em}
+(\coqdocvar{b1} || \coqdocvar{b2})  \coqdoceol
+\coqdocindent{3.00em}
+(\coqdocvar{b2} || \coqdocvar{b1}) \coqdoceol
+\coqdocindent{3.00em}
+(\coqdocvar{bij\_sum\_comm})\coqdoceol
+\coqdocindent{3.00em}
+(\coqdocvar{bij\_sum\_comm})\coqdoceol
+\coqdocindent{3.00em}
+(\coqdocvar{bijection\_port\_commu} \coqdocvar{b1} \coqdocvar{b2}).\coqdoceol
+ \coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Theorem} \coqdocvar{dis\_juxtaposition\_commutative} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2} : \coqdocvar{FinDecType}\} :\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{\ensuremath{\forall}} (\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r2} \coqdocvar{o2}),\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{bigraph\_equality} (\coqdocvar{b1} || \coqdocvar{b2}) (\coqdocvar{b2} || \coqdocvar{b1}).\coqdoceol
+ \coqdocemptyline
+\coqdocnoindent
+\coqdockw{End} \coqdocvar{DisjointJuxtaposition}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+\section{Composition}
+
+
+This section deals with the operation of composition. This is the act
+of putting a bigraph inside another one. To do b1 o b2, the outerface of 
+b2 needs to be the innerface of b1. WIP: or just a bijection? \begin{coqdoccode}
+\coqdocnoindent
+\coqdockw{Section} \coqdocvar{CompositionBigraphs}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{mk\_comp\_parent} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{s1} \coqdocvar{i1}) :\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{sum\_FinDecType} (@\coqdocvar{node} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{b1}) (@\coqdocvar{node} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{b2}))\coqdoceol
+\coqdocindent{2.50em}
++ \coqdocvar{s2} \coqdoceol
+\coqdocindent{2.50em}
+\ensuremath{\rightarrow} (\coqdocvar{sum\_FinDecType} (@\coqdocvar{node} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{b1})  (@\coqdocvar{node} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{b2})) \coqdoceol
+\coqdocindent{4.00em}
++ \coqdocvar{r1} :=\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{p1} := \coqdocvar{get\_parent} \coqdocvar{b1} \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{p2} := \coqdocvar{get\_parent} \coqdocvar{b2} \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{n1pn2} := (\coqdocvar{sum\_FinDecType} (@\coqdocvar{node} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{b1})  (@\coqdocvar{node} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{b2})) \coqdoctac{in}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{let} \coqdocvar{new\_parent} (\coqdocvar{p} : (\coqdocvar{n1pn2}) + \coqdocvar{s2}) : (\coqdocvar{n1pn2}) + \coqdocvar{r1} :=\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqdocvar{p} \coqdockw{with}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{n1}) \ensuremath{\Rightarrow} \coqdockw{match} \coqdocvar{p1} (\coqdocvar{inl} \coqdocvar{n1}) \coqdockw{with} \coqdoceol
+\coqdocindent{12.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{n1'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{n1'})\coqdoceol
+\coqdocindent{12.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{r1} \ensuremath{\Rightarrow} \coqdocvar{inr} \coqdocvar{r1}\coqdoceol
+\coqdocindent{12.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{n2}) \ensuremath{\Rightarrow} \coqdockw{match} \coqdocvar{p2} (\coqdocvar{inl} \coqdocvar{n2}) \coqdockw{with} \coqdoceol
+\coqdocindent{12.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{n2'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{n2'})\coqdoceol
+\coqdocindent{12.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{r2s1} \ensuremath{\Rightarrow} \coqdockw{match} \coqdocvar{p1} (\coqdocvar{inr} \coqdocvar{r2s1}) \coqdockw{with} \coqdoceol
+\coqdocindent{19.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{n1} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{n1})\coqdoceol
+\coqdocindent{19.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{r1} \ensuremath{\Rightarrow} \coqdocvar{inr} \coqdocvar{r1}\coqdoceol
+\coqdocindent{19.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{12.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{s2} \ensuremath{\Rightarrow} \coqdockw{match} \coqdocvar{p2} (\coqdocvar{inr} \coqdocvar{s2}) \coqdockw{with}\coqdoceol
+\coqdocindent{9.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{n2} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inr} \coqdocvar{n2})\coqdoceol
+\coqdocindent{9.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{r2s1} \ensuremath{\Rightarrow} \coqdockw{match} \coqdocvar{p1} (\coqdocvar{inr} \coqdocvar{r2s1}) \coqdockw{with} \coqdoceol
+\coqdocindent{16.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{n1'} \ensuremath{\Rightarrow} \coqdocvar{inl} (\coqdocvar{inl} \coqdocvar{n1'})\coqdoceol
+\coqdocindent{16.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{r1} \ensuremath{\Rightarrow} \coqdocvar{inr} \coqdocvar{r1}\coqdoceol
+\coqdocindent{16.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{9.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{2.00em}
+\coqdoctac{in} \coqdocvar{new\_parent}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{mk\_comp\_link} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{s1} \coqdocvar{i1}) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{i2} + \coqdocvar{Port} ((\coqdocvar{get\_node} \coqdocvar{b1}) + \coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{mk\_dis\_control} \coqdocvar{b1} \coqdocvar{b2}) (\coqdocvar{mk\_dis\_arity} \coqdocvar{b1} \coqdocvar{b2})  \coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{\rightarrow} \coqdocvar{o1} + ((\coqdocvar{get\_edge} \coqdocvar{b1}) + (\coqdocvar{get\_edge} \coqdocvar{b2})) :=\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{n1} := \coqdocvar{get\_node} \coqdocvar{b1} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{n2} := \coqdocvar{get\_node} \coqdocvar{b2} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{c} := \coqdocvar{mk\_dis\_control} \coqdocvar{b1} \coqdocvar{b2} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{p} := \coqdocvar{Port} ((\coqdocvar{get\_node} \coqdocvar{b1}) + \coqdocvar{get\_node} \coqdocvar{b2}) (\coqdocvar{mk\_dis\_control} \coqdocvar{b1} \coqdocvar{b2}) (\coqdocvar{mk\_dis\_arity} \coqdocvar{b1} \coqdocvar{b2})  \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{e1} := \coqdocvar{get\_edge} \coqdocvar{b1} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{e2} := \coqdocvar{get\_edge} \coqdocvar{b2} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{l1} := \coqdocvar{get\_link} \coqdocvar{b1} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{l2} := \coqdocvar{get\_link} \coqdocvar{b2} \coqdoctac{in}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} \coqdocvar{new\_link} (\coqdocvar{ip} : \coqdocvar{i2} + \coqdocvar{p}) : \coqdocvar{o1} + (\coqdocvar{e1} + \coqdocvar{e2}) :=\coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{match} \coqdocvar{ip} \coqdockw{with} \coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p} \ensuremath{\Rightarrow}  \coqdockw{let} \coqdocvar{p'} := \coqdocvar{mk\_dis\_port} \coqdocvar{b1} \coqdocvar{b2} \coqdocvar{p} \coqdoctac{in}\coqdoceol
+\coqdocindent{10.00em}
+\coqdockw{match} \coqdocvar{p'} \coqdockw{with} \coqdoceol
+\coqdocindent{10.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{p1} \ensuremath{\Rightarrow} \coqdockw{match} (\coqdocvar{l1} (\coqdocvar{inr} \coqdocvar{p1})) \coqdockw{with} \coqdoceol
+\coqdocindent{16.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{o1} \ensuremath{\Rightarrow} \coqdocvar{inl} \coqdocvar{o1}\coqdoceol
+\coqdocindent{16.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e1})\coqdoceol
+\coqdocindent{16.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{10.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{p2} \ensuremath{\Rightarrow} \coqdockw{match} (\coqdocvar{l2} (\coqdocvar{inr} \coqdocvar{p2})) \coqdockw{with} \coqdoceol
+\coqdocindent{16.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{o2i1} \ensuremath{\Rightarrow} \coqdockw{match} (\coqdocvar{l1} (\coqdocvar{inl} \coqdocvar{o2i1})) \coqdockw{with} \coqdoceol
+\coqdocindent{23.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{o1} \ensuremath{\Rightarrow} \coqdocvar{inl} \coqdocvar{o1}\coqdoceol
+\coqdocindent{23.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e1})\coqdoceol
+\coqdocindent{23.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{16.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e2} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{e2})\coqdoceol
+\coqdocindent{16.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{10.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{i} \ensuremath{\Rightarrow}  \coqdockw{match} \coqdocvar{l2} (\coqdocvar{inl} \coqdocvar{i}) \coqdockw{with}\coqdoceol
+\coqdocindent{10.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e2} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inr} \coqdocvar{e2})\coqdoceol
+\coqdocindent{10.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{o2i1} \ensuremath{\Rightarrow} \coqdockw{match} (\coqdocvar{l1} (\coqdocvar{inl} \coqdocvar{o2i1})) \coqdockw{with} \coqdoceol
+\coqdocindent{17.00em}
+\ensuremath{|} \coqdocvar{inl} \coqdocvar{o1} \ensuremath{\Rightarrow} \coqdocvar{inl} \coqdocvar{o1}\coqdoceol
+\coqdocindent{17.00em}
+\ensuremath{|} \coqdocvar{inr} \coqdocvar{e1} \ensuremath{\Rightarrow} \coqdocvar{inr} (\coqdocvar{inl} \coqdocvar{e1})\coqdoceol
+\coqdocindent{17.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{10.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{in} \coqdocvar{new\_link}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Theorem} \coqdocvar{acyclic\_comp\_parent\_right} : \coqdockw{\ensuremath{\forall}} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{s1} \coqdocvar{i1})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{n2} : \coqdocvar{get\_node} \coqdocvar{b2}),\coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{Acc} (\coqdockw{fun} \coqdocvar{n} \coqdocvar{n'} \ensuremath{\Rightarrow} (\coqdocvar{get\_parent} \coqdocvar{b2}) (\coqdocvar{inl} \coqdocvar{n}) = \coqdocvar{inl} \coqdocvar{n'}) \coqdocvar{n2} \ensuremath{\rightarrow}\coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{Acc} (\coqdockw{fun} \coqdocvar{n} \coqdocvar{n'} \ensuremath{\Rightarrow} (\coqdocvar{mk\_comp\_parent} \coqdocvar{b1} \coqdocvar{b2}) (\coqdocvar{inl} \coqdocvar{n}) = \coqdocvar{inl} \coqdocvar{n'}) (\coqdocvar{inr} \coqdocvar{n2}).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Theorem} \coqdocvar{acyclic\_comp\_parent\_left} : \coqdockw{\ensuremath{\forall}} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{s1} \coqdocvar{i1})\coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{n1}: \coqdocvar{get\_node} \coqdocvar{b1}),\coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{Acc} (\coqdockw{fun} \coqdocvar{n} \coqdocvar{n'} \ensuremath{\Rightarrow} (\coqdocvar{get\_parent} \coqdocvar{b1}) (\coqdocvar{inl} \coqdocvar{n}) = \coqdocvar{inl} \coqdocvar{n'}) \coqdocvar{n1} \ensuremath{\rightarrow} \coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{acyclic} (\coqdocvar{get\_node} \coqdocvar{b2}) \coqdocvar{s2} \coqdocvar{s1} (\coqdocvar{get\_parent} \coqdocvar{b2}) \ensuremath{\rightarrow}\coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{Acc} (\coqdockw{fun} \coqdocvar{n} \coqdocvar{n'} \ensuremath{\Rightarrow} (\coqdocvar{mk\_comp\_parent} \coqdocvar{b1} \coqdocvar{b2}) (\coqdocvar{inl} \coqdocvar{n}) = \coqdocvar{inl} \coqdocvar{n'}) (\coqdocvar{inl} \coqdocvar{n1}).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Definition} \coqdocvar{mk\_comp\_ap} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocindent{2.00em}
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{s1} \coqdocvar{i1}) :\coqdoceol
+\coqdocindent{2.00em}
+\coqdocvar{acyclic} ((\coqdocvar{get\_node} \coqdocvar{b1}) + (\coqdocvar{get\_node} \coqdocvar{b2})) \coqdocvar{s2} \coqdocvar{r1} (\coqdocvar{mk\_comp\_parent} \coqdocvar{b1} \coqdocvar{b2}).\coqdoceol
+ \coqdocemptyline
+\coqdocnoindent
+\coqdockw{Definition} \coqdocvar{composition} \{\coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{s2} \coqdocvar{i2} : \coqdocvar{FinDecType}\} \coqdoceol
+\coqdocnoindent
+(\coqdocvar{b1} : \coqdocvar{bigraph} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1}) (\coqdocvar{b2} : \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{s1} \coqdocvar{i1}) \coqdoceol
+\coqdocindent{1.00em}
+: \coqdocvar{bigraph} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{r1} \coqdocvar{o1} :=\coqdoceol
+\coqdocnoindent
+\{|\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{node} := \coqdocvar{sum\_FinDecType} (@\coqdocvar{node} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{b1}) (@\coqdocvar{node} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{b2}); \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{edge} := \coqdocvar{sum\_FinDecType} (@\coqdocvar{edge} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{b1}) (@\coqdocvar{edge} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{b2});\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{kind} := \coqdocvar{sum\_FinDecType} (@\coqdocvar{kind} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{r1} \coqdocvar{o1} \coqdocvar{b1}) (@\coqdocvar{kind} \coqdocvar{s2} \coqdocvar{i2} \coqdocvar{s1} \coqdocvar{i1} \coqdocvar{b2});\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{arity} := \coqdocvar{mk\_dis\_arity} \coqdocvar{b1} \coqdocvar{b2} ;\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{control} := \coqdocvar{mk\_dis\_control} \coqdocvar{b1} \coqdocvar{b2} ;\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{parent} := \coqdocvar{mk\_comp\_parent} \coqdocvar{b1} \coqdocvar{b2} ; \coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{link} := \coqdocvar{mk\_comp\_link} \coqdocvar{b1} \coqdocvar{b2} ;\coqdoceol
+\coqdocindent{1.00em}
+\coqdocvar{ap} := \coqdocvar{mk\_comp\_ap} \coqdocvar{b1} \coqdocvar{b2} ;\coqdoceol
+\coqdocnoindent
+|\}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Notation} "b1 'o' b2" := (\coqdocvar{composition} \coqdocvar{b1} \coqdocvar{b2}) (\coqdoctac{at} \coqdockw{level} 40, \coqdoctac{left} \coqdockw{associativity}).\coqdoceol
+\coqdocnoindent
+\coqdockw{End} \coqdocvar{CompositionBigraphs}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{End} \coqdocvar{Bigraph}.\coqdoceol
+\end{coqdoccode}
+\end{document}

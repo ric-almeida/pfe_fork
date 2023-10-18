@@ -32,10 +32,11 @@ Local Open Scope bool_scope.
 Import ListNotations.  
 
 
-(* This module implements bigraphs and basic operations on bigraphs *)
+(** This module implements bigraphs and basic operations on bigraphs *)
 Module Bigraph.
 
-(* This section defines the Type bigraph *)
+(** * Definition of a bigraph
+This section defines the Type bigraph *)
 Section IntroBigraphs.
   Inductive void : Type := .
 
@@ -77,7 +78,8 @@ Record bigraph  (site: FinDecType)
   }.
 End IntroBigraphs.
 
-(* This section is just getters to lightenn some notations *)
+(** * Getters
+This section is just getters to lightenn some notations *)
 Section GettersBigraphs.
   Definition get_node {s i r o : FinDecType} (bg : bigraph s i r o) : Type := 
   node s i r o bg.
@@ -144,7 +146,8 @@ Section GettersBigraphs.
   @ap s i r o bg.
 End GettersBigraphs.
 
-(* This section defines the equivalence relation between bigraphs. 
+(** * Equivalence between two bigraphs
+This section defines the equivalence relation between bigraphs. 
 We say there's an equivalence between two types if we give a bijection 
 (cf support_for_bigraphs) between the two types. To define the equivalence 
 between bigraphs, we want an equivalence between each Type and between 
@@ -166,9 +169,9 @@ Section EquivalenceBigraphs.
     (bij_k : bijection (get_kind b1) (get_kind b2)) : Prop :=
       forall n1:get_node b1, 
       let kind1 := get_control b1 n1 in
-      let n2 := bij_n.(forward (get_node b1) (get_node b2)) n1 in 
+      let n2 := forward (get_node b1) (get_node b2) bij_n n1 in 
       let kind2 := get_control b2 n2 in
-      bij_k.(forward (get_kind b1) (get_kind b2)) kind1 = kind2.
+      forward (get_kind b1) (get_kind b2) bij_k kind1 = kind2.
 
   Definition bigraph_parent_site_equality {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
@@ -255,12 +258,11 @@ Record bigraph_equality {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
   }.
 End EquivalenceBigraphs.
 
-(* This section is still a WIP. We have proven that our relation bigraph_equality
-is reflexive, symmetric and transitive. This is going to be useful to be able to 
-rewrite bigraphs at will. 
-The issue however is that a parametric relation asks for two objects of the exact
-same Type and our equality is heterogeneous. The solution we will implement is to 
-create a "packed bigraph" Type that will hold the interfaces inside of it. *)
+(** * Proving our equivalence is a relation *)
+(** ** On the heterogeneous type  
+In this section, we prove that our relation bigraph_equality is reflexive, 
+symmetric and transitive. This is going to be useful to be able to rewrite 
+bigraphs at will. *)
 Section EquivalenceIsRelation.
   Lemma arity_refl {s i r o : FinDecType} (b : bigraph s i r o) :
     let bij_k := bijection_id  in
@@ -310,7 +312,7 @@ Section EquivalenceIsRelation.
       set (lp1 := get_link b (inr p1)). 
       destruct lp1 as [lo1 | le1]; reflexivity. Qed.
 
-  Lemma bigraph_equality_refl {s i r o : FinDecType} 
+  Theorem bigraph_equality_refl {s i r o : FinDecType} 
     (b : bigraph s i r o) :
     bigraph_equality b b.
     Proof.
@@ -476,7 +478,7 @@ Section EquivalenceIsRelation.
         symmetry. apply Hp.
     Qed.
   
-  Lemma bigraph_equality_sym {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}  
+  Theorem bigraph_equality_sym {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}  
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
     bigraph_equality b1 b2
         -> bigraph_equality b2 b1.
@@ -652,7 +654,7 @@ Section EquivalenceIsRelation.
       Qed.
 
 
-  Lemma bigraph_equality_trans {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}  
+  Theorem bigraph_equality_trans {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}  
     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3):
       bigraph_equality b1 b2
         -> bigraph_equality b2 b3  
@@ -666,7 +668,11 @@ Section EquivalenceIsRelation.
       + apply link_trans. apply big_link_eq. apply big_link_eq0.
       Qed.
 
-
+(** ** On the packed type 
+The issue with the previous relation is that a parametric relation asks for two 
+objects of the exact same Type and our equality is heterogeneous. The solution we 
+will implement is to create a "packed bigraph" Type that will hold the interfaces 
+inside of it. This is a WIP. *)
 Record bigraph_packed : Type :=
   {
   s: FinDecType;
@@ -683,7 +689,8 @@ Record bigraph_packed : Type :=
         as bigraph_equality_rel. *)
 End EquivalenceIsRelation.
 
-(* This section deals with the operation of disjoint juxtaposition. This is the act
+(** * Disjoint juxtaposition
+This section deals with the operation of disjoint juxtaposition. This is the act
 of putting two bigraphs with disjoint interfaces "next" to one another. 
 After the definition, we prove associativity and commutativity of dis_juxtaposition *)
 Section DisjointJuxtaposition.
@@ -1541,7 +1548,7 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
       - unfold mk_port_l_assoc. unfold mk_dis_port. apply H.
       Qed.
 
-  Theorem dis_juxtaposition_port_associative {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType} :
+  Lemma dis_juxtaposition_port_associative {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType} :
     forall (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3),
     bigraph_link_port_equality 
       ((b1 || b2) || b3)  
@@ -2052,7 +2059,7 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
     Qed.
 
 
-  Theorem dis_juxtaposition_port_commutative {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} :
+  Lemma dis_juxtaposition_port_commutative {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} :
     forall (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2),
     bigraph_link_port_equality 
       (b1 || b2)  
@@ -2206,7 +2213,8 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
 
 End DisjointJuxtaposition.
 
-(* This section deals with the operation of composition. This is the act
+(** * Composition
+This section deals with the operation of composition. This is the act
 of putting a bigraph inside another one. To do b1 o b2, the outerface of 
 b2 needs to be the innerface of b1. WIP: or just a bijection? *)
 Section CompositionBigraphs.
@@ -2353,7 +2361,7 @@ Definition composition {s1 i1 r1 o1 s2 i2 : FinDecType}
 (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) 
   : bigraph s2 i2 r1 o1 :=
 {|
-  node := sum_FinDecType (@node s1 i1 r1 o1 b1) (@node s2 i2 s1 i1 b2); (* TODO vois pourquoi +++ fonctionne pas ici *)
+  node := sum_FinDecType (@node s1 i1 r1 o1 b1) (@node s2 i2 s1 i1 b2); (* TODO voir pourquoi +++ fonctionne pas ici *)
   edge := sum_FinDecType (@edge s1 i1 r1 o1 b1) (@edge s2 i2 s1 i1 b2);
   kind := sum_FinDecType (@kind s1 i1 r1 o1 b1) (@kind s2 i2 s1 i1 b2);
   arity := mk_dis_arity b1 b2 ;
@@ -2367,8 +2375,8 @@ Notation "b1 'o' b2" := (composition b1 b2) (at level 40, left associativity).
 End CompositionBigraphs.
 
 
-
-(* This section is a WIP. Mainly used to test stuff. *)
+(* begin hide *)
+(** * This section is a WIP. Mainly used to test stuff. *)
 Section PlaygroundBigraphs.
   Lemma voidFinite : finite void.
   Proof. unfold finite. exists []. constructor. + constructor. + unfold Full.
@@ -2564,4 +2572,5 @@ Section PlaygroundBigraphs.
 
 
 End PlaygroundBigraphs.
+(* end hide *)
 End Bigraph.

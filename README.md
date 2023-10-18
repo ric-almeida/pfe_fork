@@ -12,6 +12,9 @@ Then compile with
 
     make -f CoqMakefile
 
+To generate LaTeX documentation: 
+
+    coqdoc -g -toc --latex --lib-subtitles src/AbstractBigraphs.v
 
 To clean:
 
