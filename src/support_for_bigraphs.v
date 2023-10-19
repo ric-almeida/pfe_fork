@@ -2580,11 +2580,17 @@ assert ((fun b => exists a, b = f a) = (fun b => forall c, spec_image f (c++lA) 
 + apply functional_extensionality.
   intro b.
   apply propositional_extensionality.
-  unfold spec_image.
-  firstorder.
+  unfold spec_image. (*firstorder.*)
+  intuition.
+  ++ edestruct H. exists x. split. 
+    +++ intuition.
+    +++ apply H0. 
+  ++ edestruct H. exists x. apply H0. 
 + rewrite H.
   exists img.
   intuition.
+  Unshelve.
+  apply lA.
 Qed.
 
 
