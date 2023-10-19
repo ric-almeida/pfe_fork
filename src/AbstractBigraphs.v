@@ -2261,7 +2261,7 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
       - destruct v.
     Defined.
 
-  Definition mk_port_neutral_left {s i r o : FinDecType}
+  Definition mk_port_neutral_right_backward {s i r o : FinDecType}
     (b : bigraph s i r o) 
     (p : Port (get_node b) (get_control b) (get_arity b)):
     (Port (get_node (b || void_bigraph)) (get_control (b || void_bigraph)) (get_arity (b || void_bigraph))).
@@ -2285,14 +2285,14 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
           (Port (get_node (b || void_bigraph)) (get_control (b || void_bigraph)) (get_arity (b || void_bigraph)))
           (Port (get_node b) (get_control b) (get_arity b))
           (mk_port_neutral_right b)
-          (mk_port_neutral_left b)
+          (mk_port_neutral_right_backward b)
         ).
       - unfold funcomp. apply functional_extensionality. intros p.
-        unfold mk_port_neutral_left. simpl.
+        unfold mk_port_neutral_right_backward. simpl.
         unfold mk_port_neutral_right. simpl.
         destruct p as [[n ind] prf]. unfold id. reflexivity.
       - apply functional_extensionality. intros p. unfold id. unfold funcomp.
-        unfold mk_port_neutral_left. simpl.
+        unfold mk_port_neutral_right_backward. simpl.
         unfold mk_port_neutral_right. simpl.
         destruct p as [[[n | v] ind] prf].
         + reflexivity.
@@ -2362,10 +2362,135 @@ Notation "b1 '||' b2" := (dis_juxtaposition b1 b2) (at level 50, left associativ
             destruct lp as [lp_o | lp_e] eqn:Plp; reflexivity.
           ++ destruct v. Qed.
 
- 
-  Theorem neutral_left {s i r o : FinDecType} (b : bigraph s i r o) :
-    bigraph_equality (void_bigraph || b) b. Admitted.
+  Definition bijection_type_sum_neutral_left (A:Type) : 
+    bijection (void + A) A. 
+    Proof. 
+      apply (
+        mkBijection
+          (void +A) 
+          A
+          (fun av => match av with | inr a => a | inl v => match v with end end)
+          (fun a => inr a)
+        ).
+      - auto.
+      - apply functional_extensionality. intros. destruct x as [v | a].
+        + destruct v. 
+        + auto.
+    Defined.
+    
+  Definition mk_port_neutral_left {s i r o : FinDecType}
+    (b : bigraph s i r o) 
+    (p : Port (get_node (void_bigraph || b)) (get_control (void_bigraph || b)) (get_arity (void_bigraph || b))) :
+    (Port (get_node b) (get_control b) (get_arity b)).
+    Proof.
+      destruct p as [[[v | a] ind] prf];
+      simpl in prf;
+      unfold Port.
+      - destruct v.
+      - exists (a, ind). apply prf.
+    Defined.
+
+  Definition mk_port_neutral_left_backward {s i r o : FinDecType}
+    (b : bigraph s i r o) 
+    (p : Port (get_node b) (get_control b) (get_arity b)):
+    (Port (get_node (void_bigraph || b)) (get_control (void_bigraph || b)) (get_arity (void_bigraph || b))).
+    Proof.
+      destruct p as [[a ind] prf].
+      simpl in prf.
+      unfold Port.
+      unfold get_node. 
+      simpl. 
+      exists (inr a, ind). 
+      apply prf.
+    Defined.
+
+  Definition bijection_port_sum_neutral_left {s i r o : FinDecType}
+    (b : bigraph s i r o) : bijection
+    (Port (get_node (void_bigraph || b)) (get_control (void_bigraph || b)) (get_arity (void_bigraph || b)))
+    (Port (get_node b) (get_control b) (get_arity b)). 
+    Proof.
+      apply (
+        mkBijection
+          (Port (get_node (void_bigraph || b)) (get_control (void_bigraph || b)) (get_arity (void_bigraph || b)))
+          (Port (get_node b) (get_control b) (get_arity b))
+          (mk_port_neutral_left b)
+          (mk_port_neutral_left_backward b)
+        ).
+      - unfold funcomp. apply functional_extensionality. intros p.
+        unfold mk_port_neutral_right_backward. simpl.
+        unfold mk_port_neutral_right. simpl.
+        destruct p as [[n ind] prf]. unfold id. reflexivity.
+      - apply functional_extensionality. intros p. unfold id. unfold funcomp.
+        unfold mk_port_neutral_right_backward. simpl.
+        unfold mk_port_neutral_right. simpl.
+        destruct p as [[[v | n] ind] prf].
+        + destruct v.
+        + reflexivity.
+    Defined.
   
+  
+  Theorem neutral_left {s i r o : FinDecType} (b : bigraph s i r o) :
+    bigraph_equality (void_bigraph || b) b. 
+    Proof.
+      unfold dis_juxtaposition. simpl. 
+      apply (MkBigEq
+        (void_FDT +++ s)
+        (void_FDT +++ i)
+        (void_FDT +++ r)
+        (void_FDT +++ o)
+        s
+        i
+        r
+        o
+        (void_bigraph || b)
+        b
+        (bijection_type_sum_neutral_left s)
+        (bijection_type_sum_neutral_left i)
+        (bijection_type_sum_neutral_left r)
+        (bijection_type_sum_neutral_left o)
+        (bijection_type_sum_neutral_left (node s i r o b))
+        (bijection_type_sum_neutral_left (edge s i r o b))
+        (bijection_type_sum_neutral_left (kind s i r o b))
+        (bijection_port_sum_neutral_left b)
+      ).
+      - unfold bigraph_arity_equality. intros k. destruct k as [v | a].
+        + destruct v.
+        + simpl. auto.
+      - unfold bigraph_control_equality. intros n. destruct n as [v | a].
+        + destruct v.
+        + simpl. auto.
+      - unfold bigraph_parent_equality. split.
+        + unfold bigraph_parent_node_equality. intros n.
+          destruct n as [v | a].
+          ++ destruct v.
+          ++ simpl. 
+            set (pn := get_parent b (inl a)).
+            destruct pn as [pn_n | pn_r] eqn:Ppn; 
+            change (get_parent b (inl a)) with pn; 
+            rewrite Ppn;
+            reflexivity.
+        + unfold bigraph_parent_site_equality. intros site.
+          destruct site as [v | a].
+          ++ destruct v.
+          ++ simpl. 
+            set (ps := get_parent b (inr a)).
+            destruct ps as [pn_n | pn_r] eqn:Pps;
+            reflexivity.
+      - unfold bigraph_link_equality. split.
+        + unfold bigraph_link_innername_equality. intros inner.
+            destruct inner as [v | a].
+            ++ destruct v.
+            ++ simpl.  
+              set (li := get_link b (inl a)).
+              destruct li as [li_o | li_e] eqn:Pli;
+              reflexivity.
+          + unfold bigraph_link_port_equality. intros p.
+            destruct p as [[[v | a] ind] prf] eqn: Pp.
+            ++ destruct v.
+            ++ simpl in *.   
+              set (lp := get_link b (inr (exist (fun vi : get_node b * nat => let (v, i0) := vi in i0 < get_arity b (get_control b v)) (a, ind) prf))).
+              change (get_link b (inr (exist (fun vi : get_node b * nat => let (v, i0) := vi in i0 < get_arity b (get_control b v)) (a, ind) prf))) with lp.
+              destruct lp as [lp_o | lp_e] eqn:Plp; reflexivity. Qed.
 
 End DisjointJuxtaposition.
 
