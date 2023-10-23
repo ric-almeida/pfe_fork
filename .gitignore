@@ -10,3 +10,5 @@ src/*.aux
 src/*.glob
 src/*.vo*
 CoqMakefile
+*.tex
+*.html
