@@ -36,290 +36,292 @@ Definition FiniteParent {N I O} (p : N+I -> N+O) := forall n, Acc (fun n' n => p
 
 Definition Acyclic {N I O} (p : N+I -> N+O) := forall ni no, closure p ni no -> forall n, ni = inl n -> ~ no = inl n.
 
-Lemma eq_sigT_intro : forall {A} {P : A -> Type} {x y : A} {Px : P x} (Hxy : x = y), existT P x Px = existT P y (eq_rect x P Px y Hxy).
-Proof.
-intros A P x y Px Hxy.
-unfold eq_rect.
-destruct Hxy.
-reflexivity.
-Qed.
+Lemma eq_sigT_intro : forall {A} {P : A -> Type} {x y : A} {Px : P x} (Hxy : x = y), 
+  existT P x Px = existT P y (eq_rect x P Px y Hxy).
+  Proof.
+  intros A P x y Px Hxy.
+  unfold eq_rect.
+  destruct Hxy.
+  reflexivity.
+  Qed.
 
 Lemma eq_rect_pi : forall {A} {P : A -> Type} {x y : A} {Px : P x} {H H' : x = y},
   eq_rect x P Px y H = eq_rect x P Px y H'.
-Proof.
-intros A P x y Px H H'.
-rewrite (proof_irrelevance (x = y) H H').
-reflexivity.
-Qed.
+  Proof.
+  intros A P x y Px H H'.
+  rewrite (proof_irrelevance (x = y) H H').
+  reflexivity.
+  Qed.
 
 Lemma eq_rect_compose : forall {A} {P : A -> Type} {x y z : A} {Px : P x} {Hxy : x = y} {Hyz : y = z} {Hxz : x = z},
   eq_rect y P (eq_rect x P Px y Hxy) z Hyz = eq_rect x P Px z Hxz.
-Proof.
-intros A P x y z Px Hxy Hyz Hxz.
-unfold eq_rect.
-destruct Hxy.
-destruct Hyz.
-rewrite (proof_irrelevance (x = x) Hxz eq_refl).
-reflexivity.
-Qed.
+  Proof.
+  intros A P x y z Px Hxy Hyz Hxz.
+  unfold eq_rect.
+  destruct Hxy.
+  destruct Hyz.
+  rewrite (proof_irrelevance (x = x) Hxz eq_refl).
+  reflexivity.
+  Qed.
 
 Lemma eq_rect_map : forall {A B} {P : B -> Type} {f : A -> B} {a a' : A} {Pa : P (f a)} {Haa' : a = a'} {Hfaa' : f a = f a'},
   eq_rect a (fun a => P (f a)) Pa a' Haa' = eq_rect (f a) P Pa (f a') Hfaa'.
-Proof.
-intros A B P f a a' Pa Haa' Hfaa'.
-unfold eq_rect.
-destruct Haa'.
-rewrite (proof_irrelevance (f a = f a) Hfaa' eq_refl).
-reflexivity.
-Qed.
+  Proof.
+  intros A B P f a a' Pa Haa' Hfaa'.
+  unfold eq_rect.
+  destruct Haa'.
+  rewrite (proof_irrelevance (f a = f a) Hfaa' eq_refl).
+  reflexivity.
+  Qed.
 
 Lemma eq_rect_image_1 : forall {A} {P : A -> Type} {f : forall a, P a} {a a' : A} {Haa' : a = a'},
   @eq_rect A a P (f a) a' Haa' = f a'.
-Proof.
-intros A P f a a' Haa'.
-destruct Haa'.
-reflexivity.
-Qed.
+  Proof.
+  intros A P f a a' Haa'.
+  destruct Haa'.
+  reflexivity.
+  Qed.
 
 Lemma eq_rect_image_2 : forall {A} {P Q : A -> Type} {f : forall a, (P a -> Q a)} {a a' : A} {Pa : P a} {Haa' : a = a'},
   @eq_rect A a Q (f a Pa) a' Haa' = f a' (@eq_rect A a P Pa a' Haa').
-Proof.
-intros A P Q f a a' Pa Haa'.
-destruct Haa'.
-reflexivity.
-Qed.
+  Proof.
+  intros A P Q f a a' Pa Haa'.
+  destruct Haa'.
+  reflexivity.
+  Qed.
 
 Definition lt_n_S_stt := fun n m => (proj1 (Nat.succ_lt_mono n m)).
 
-Lemma injective_list_tl : forall A t (q : list A), InjectiveXTList (t::q) -> InjectiveXTList q.
-Proof.
-intros A t q Htq i j Hi Hij.
-assert (S i = S j) as Heq; [ | injection Heq; auto ].
-apply Htq.
-+ simpl.
-  apply lt_n_S_stt.
-  exact Hi.
-+ simpl.
-  exact Hij.
-Qed.
+Lemma injective_list_tl : forall A t (q : list A), 
+  InjectiveXTList (t::q) -> InjectiveXTList q.
+  Proof.
+  intros A t q Htq i j Hi Hij.
+  assert (S i = S j) as Heq; [ | injection Heq; auto ].
+  apply Htq.
+  + simpl.
+    apply lt_n_S_stt.
+    exact Hi.
+  + simpl.
+    exact Hij.
+  Qed.
 
 Lemma injective_list_hd : forall A t (q : list A), InjectiveXTList (t::q) -> ~In t q.
-Proof.
-intros A t q Hinj Hin.
-destruct (In_nth_error _ _ Hin) as (i, Hi).
-symmetry in Hi.
-generalize (Hinj 0 (S i) (Nat.lt_0_succ _) Hi).
-discriminate.
-Qed.
+  Proof.
+  intros A t q Hinj Hin.
+  destruct (In_nth_error _ _ Hin) as (i, Hi).
+  symmetry in Hi.
+  generalize (Hinj 0 (S i) (Nat.lt_0_succ _) Hi).
+  discriminate.
+  Qed.
 
 Lemma nodup_tl : forall {A} (t : A) (q : list A), NoDup (t::q) -> NoDup q.
-Proof.
-intros A t q Htq.
-inversion Htq.
-assumption.
-Qed.
+  Proof.
+  intros A t q Htq.
+  inversion Htq.
+  assumption.
+  Qed.
 
 Lemma in_map_inv : forall {A B} (f : A -> B) a (lA : list A), InjectiveXT f -> In (f a) (map f lA) -> In a lA.
-Proof.
-intros A B f a lA Hinjf Hfa.
-generalize (in_map_iff f lA (f a)).
-intuition.
-destruct H.
-destruct H.
-rewrite <- (Hinjf x a H).
-assumption.
-Qed.
+  Proof.
+  intros A B f a lA Hinjf Hfa.
+  generalize (in_map_iff f lA (f a)).
+  intuition.
+  destruct H.
+  destruct H.
+  rewrite <- (Hinjf x a H).
+  assumption.
+  Qed.
 
 Lemma in_map_inv_exists : forall {A B} (f : A -> B) b (lA : list A), In b (map f lA) -> exists a, f a = b /\ In a lA.
-Proof.
-induction lA; simpl.
-+ contradiction.
-+ intuition.
-  - exists a.
-    intuition.
-  - destruct H as (a', Ha').
-    exists a'.
-    intuition.
-Qed.
+  Proof.
+  induction lA; simpl.
+  + contradiction.
+  + intuition.
+    - exists a.
+      intuition.
+    - destruct H as (a', Ha').
+      exists a'.
+      intuition.
+  Qed.
 
 Lemma nodup_map : forall {A B} (f : A -> B) (lA : list A), InjectiveXT f -> NoDup lA -> NoDup (map f lA).
-Proof.
-induction lA; simpl.
-+ intros.
-  apply NoDup_nil.
-+ intros Hinjf HalA.
-  inversion HalA; subst; clear HalA.
-  apply NoDup_cons.
-  intro Hin_fa.
-  apply H1.
-  apply (in_map_inv f a lA Hinjf).
-  exact Hin_fa.
-  apply (IHlA Hinjf).
-  assumption.
-Qed.
+  Proof.
+  induction lA; simpl.
+  + intros.
+    apply NoDup_nil.
+  + intros Hinjf HalA.
+    inversion HalA; subst; clear HalA.
+    apply NoDup_cons.
+    intro Hin_fa.
+    apply H1.
+    apply (in_map_inv f a lA Hinjf).
+    exact Hin_fa.
+    apply (IHlA Hinjf).
+    assumption.
+  Qed.
 
 Lemma nodup_app : forall {A} (l1 l2 : list A), NoDup l1 -> NoDup l2 -> Forall (fun a1 => ~In a1 l2) l1 -> NoDup (l1 ++ l2).
-Proof.
-induction l1; simpl.
-+ auto.
-+ intros l2 Hal1 Hl2 Hal1l2.
-  inversion Hal1.
-  subst.
-  apply NoDup_cons.
-  - intro Hal1l2'.
-    destruct (in_app_or l1 l2 a Hal1l2').
-    * contradiction.
-    * inversion Hal1l2.
-      contradiction.
-  - apply IHl1.
-    * assumption.
-    * assumption.
-    * inversion Hal1l2.
-      assumption.
-Qed.
+  Proof.
+  induction l1; simpl.
+  + auto.
+  + intros l2 Hal1 Hl2 Hal1l2.
+    inversion Hal1.
+    subst.
+    apply NoDup_cons.
+    - intro Hal1l2'.
+      destruct (in_app_or l1 l2 a Hal1l2').
+      * contradiction.
+      * inversion Hal1l2.
+        contradiction.
+    - apply IHl1.
+      * assumption.
+      * assumption.
+      * inversion Hal1l2.
+        assumption.
+  Qed.
 
 Lemma nodup_flat_map : forall {A B} (lA : list A) (f : A -> list B),
   NoDup lA -> (forall a, NoDup (f a)) -> (forall a1 a2, a1 <> a2 -> Forall (fun a1 => ~In a1 (f a2)) (f a1)) -> NoDup (flat_map f lA).
-Proof.
-intros A B lA f.
-induction lA; simpl.
-+ intros.
-  apply NoDup_nil.
-+ intros HlA Hf1 Hf2.
-  apply nodup_app.
-  - apply Hf1.
-  - apply IHlA.
-    * inversion HlA.
-      assumption.
-    * exact Hf1.
-    * exact Hf2.
-  - apply Forall_Exists_neg.
-    intro Hfa.
-    generalize (Exists_exists (fun x : B => In x (flat_map f lA)) (f a)).
-    intuition.
-    clear H0.
-    destruct H as (b, (Hb1, Hb2)).
-    generalize (in_flat_map f lA b).
-    intuition.
-    clear H0.
-    destruct H as (a', (Ha1', Ha2')).
-    assert (a <> a') as Haa'.
-    * inversion HlA.
-      intro Haa'.
-      subst.
-      contradiction.
-    * generalize (Hf2 a a' Haa').
-      intro Hf.
-      generalize (Forall_forall (fun a1 : B => In a1 (f a') -> False) (f a)).
+  Proof.
+  intros A B lA f.
+  induction lA; simpl.
+  + intros.
+    apply NoDup_nil.
+  + intros HlA Hf1 Hf2.
+    apply nodup_app.
+    - apply Hf1.
+    - apply IHlA.
+      * inversion HlA.
+        assumption.
+      * exact Hf1.
+      * exact Hf2.
+    - apply Forall_Exists_neg.
+      intro Hfa.
+      generalize (Exists_exists (fun x : B => In x (flat_map f lA)) (f a)).
       intuition.
       clear H0.
-      apply (H b Hb1 Ha2').
-Qed.
+      destruct H as (b, (Hb1, Hb2)).
+      generalize (in_flat_map f lA b).
+      intuition.
+      clear H0.
+      destruct H as (a', (Ha1', Ha2')).
+      assert (a <> a') as Haa'.
+      * inversion HlA.
+        intro Haa'.
+        subst.
+        contradiction.
+      * generalize (Hf2 a a' Haa').
+        intro Hf.
+        generalize (Forall_forall (fun a1 : B => In a1 (f a') -> False) (f a)).
+        intuition.
+        clear H0.
+        apply (H b Hb1 Ha2').
+  Qed.
 
 Lemma nth_error_some : forall A (lA : list A) i (Hi : i < length lA), exists a, nth_error lA i = Some a.
-Proof.
-intros A lA i Hi.
-generalize (nth_error_Some lA i).
-intuition.
-destruct (nth_error lA i).
-+ exists a.
-  reflexivity.
-+ elim H.
-  reflexivity.
-Qed.
+  Proof.
+  intros A lA i Hi.
+  generalize (nth_error_Some lA i).
+  intuition.
+  destruct (nth_error lA i).
+  + exists a.
+    reflexivity.
+  + elim H.
+    reflexivity.
+  Qed.
 
 Lemma nth_error_none : forall A (lA : list A) i (Hi : length lA <= i), nth_error lA i = None.
-Proof.
-intros A lA i Hi.
-generalize (nth_error_None lA i).
-intuition.
-Qed.
+  Proof.
+  intros A lA i Hi.
+  generalize (nth_error_None lA i).
+  intuition.
+  Qed.
 
 Lemma dec_Forall : forall A (P : A -> Prop), (forall a, decidable (P a)) -> forall l, decidable (Forall P l).
-Proof.
-induction l; simpl.
-+ left.
-  auto.
-+ destruct (X a).
-  - destruct IHl.
-    * left.
-      auto.
-    * right.
+  Proof.
+  induction l; simpl.
+  + left.
+    auto.
+  + destruct (X a).
+    - destruct IHl.
+      * left.
+        auto.
+      * right.
+        intro H.
+        apply n.
+        inversion H.
+        assumption.
+    - right.
       intro H.
       apply n.
       inversion H.
       assumption.
-  - right.
-    intro H.
-    apply n.
-    inversion H.
-    assumption.
-Qed.
+  Qed.
 
 Lemma dec_Exists : forall A (P : A -> Prop), (forall a, decidable (P a)) -> forall l, decidable (Exists P l).
-Proof.
-induction l; simpl.
-+ right.
-  intro H.
-  inversion H.
-+ destruct (X a).
-  - left.
-    auto.
-  - destruct IHl.
-    * left.
+  Proof.
+  induction l; simpl.
+  + right.
+    intro H.
+    inversion H.
+  + destruct (X a).
+    - left.
       auto.
-    * right.
-      intro H.
-      inversion H.
-      ++ contradiction.
-      ++ contradiction.
-Qed.
+    - destruct IHl.
+      * left.
+        auto.
+      * right.
+        intro H.
+        inversion H.
+        ++ contradiction.
+        ++ contradiction.
+  Qed.
 
 Lemma injective_in_map_inv : forall A B (f : A -> B) a l, InjectiveXT f -> In (f a) (map f l) -> In a l.
-Proof.
-intros A B f a l Hinjf.
-induction l.
-+ auto.
-+ simpl.
-  intuition.
-Qed.
+  Proof.
+  intros A B f a l Hinjf.
+  induction l.
+  + auto.
+  + simpl.
+    intuition.
+  Qed.
 
 Inductive void : Type := .
 
 Definition void_univ_embedding {A : Type} : void -> A.
-Proof.
-intro v.
-elim v.
-Defined.
+  Proof.
+  intro v.
+  elim v.
+  Defined.
 
 Definition fin (n : nat) := { p | p < n }.
 
 Theorem le_lt_or_eq_dec : forall {n m : nat}, n <= m -> { n = m } + { n < m }.
-Proof.
-induction n.
-destruct m.
-left.
-reflexivity.
-right.
-apply Nat.lt_0_succ.
-intros.
-destruct m.
-elim (Nat.nle_succ_0 _ H).
-destruct (IHn _ (Le.le_S_n _ _ H)).
-left.
-apply f_equal.
-assumption.
-right.
-apply Lt.lt_n_S.
-assumption.
-Qed.
+  Proof.
+  induction n.
+  destruct m.
+  left.
+  reflexivity.
+  right.
+  apply Nat.lt_0_succ.
+  intros.
+  destruct m.
+  elim (Nat.nle_succ_0 _ H).
+  destruct (IHn _ (Le.le_S_n _ _ H)).
+  left.
+  apply f_equal.
+  assumption.
+  right.
+  apply Lt.lt_n_S.
+  assumption.
+  Qed.
 
 Definition fin_0_univ_embedding {A : Type} : fin 0 -> A.
-Proof.
-intro f.
-destruct f as (p, Hp).
-elim (Nat.nlt_0_r p Hp).
-Defined.
+  Proof.
+  intro f.
+  destruct f as (p, Hp).
+  elim (Nat.nlt_0_r p Hp).
+  Defined.
 Definition id {A : Type} := fun (x : A) => x.
 
 Definition funcomp {A B C : Type} (f : B -> C) (g : A -> B) := fun x => f (g x).
@@ -327,79 +329,74 @@ Definition funcomp {A B C : Type} (f : B -> C) (g : A -> B) := fun x => f (g x).
 Notation "f <o> g" := (funcomp f g) (at level 50).
 
 Lemma funcomp_simpl : forall {A B C} (f : A -> B) (g : B -> C) a, (g <o> f) a = g (f a).
-Proof.
-reflexivity.
-Qed.
+  Proof.
+  reflexivity.
+  Qed.
 
 Lemma map_comp : forall A B C (f :A -> B) (g : B -> C), (map g) <o> (map f) = map (g <o> f).
-Proof.
-intros A B C f g.
-apply functional_extensionality.
-unfold funcomp, id.
-induction x; simpl.
-+ reflexivity.
-+ rewrite IHx.
-  reflexivity.
-Qed.
+  Proof.
+  intros A B C f g.
+  apply functional_extensionality.
+  unfold funcomp, id.
+  induction x; simpl.
+  + reflexivity.
+  + rewrite IHx.
+    reflexivity.
+  Qed.
 
 Lemma map_id : forall A, map (@id A) = @id (list A).
-Proof.
-intros A.
-apply functional_extensionality.
-unfold id.
-induction x; simpl.
-+ reflexivity.
-+ rewrite IHx.
-  reflexivity.
-Qed.
+  Proof.
+  intros A.
+  apply functional_extensionality.
+  unfold id.
+  induction x; simpl.
+  + reflexivity.
+  + rewrite IHx.
+    reflexivity.
+  Qed.
 
 Theorem id_left_neutral : forall {A B : Type} (f : A -> B), id <o> f = f.
-Proof.
-intros A B f.
-reflexivity.
-Qed.
+  Proof.
+  intros A B f.
+  reflexivity.
+  Qed.
 
 Theorem id_right_neutral : forall {A B : Type} (f : A -> B), f <o> id = f.
-Proof.
-intros A B f.
-reflexivity.
-Qed.
+  Proof.
+  intros A B f.
+  reflexivity.
+  Qed.
 
 Theorem comp_assoc : forall {A B C D : Type} (h : A-> B) (g : B -> C) (f : C -> D), (f <o> g) <o> h = f <o> (g <o> h).
-Proof.
-intros.
-apply functional_extensionality.
-intros.
-reflexivity.
-Qed.
+  Proof.
+  intros.
+  apply functional_extensionality.
+  intros.
+  reflexivity.
+  Qed.
 
 Theorem comp_left_simpl : forall {A B C : Type} (f : B -> C) (g h : A -> B), g = h -> f <o> g = f <o> h.
-Proof.
-intros.
-rewrite H.
-reflexivity.
-Qed.
+  Proof.
+  intros.
+  rewrite H.
+  reflexivity.
+  Qed.
 
 Theorem comp_right_simpl : forall {A B C : Type} (f : A -> B) (g h : B -> C), g = h -> g <o> f = h <o> f.
-Proof.
-intros.
-rewrite H.
-reflexivity.
-Qed.
+  Proof.
+  intros.
+  rewrite H.
+  reflexivity.
+  Qed.
 
+(** parallel is used to define the parent and link function of two juxtapositionned bigraphs *)
 Definition parallel {A B C D : Type} (p : A -> B) (q : C -> D) (ac : A+C) : B+D :=
  match ac with
  | inl a => inl (p a)
  | inr c => inr (q c)
  end.
 
-(* New Cecile *)
-Definition join {A B C : Type} (p : A -> C) (q : B -> C) (ac : A+B) : C :=
-  match ac with
-  | inl a => (p a)
-  | inr b => (q b)
-  end.
-(* End New *)
+
 
 Notation "f ||| g" := (parallel f g) (at level 67).
 

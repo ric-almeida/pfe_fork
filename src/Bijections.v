@@ -335,6 +335,7 @@ reflexivity.
 reflexivity.
 Qed.
 
+(** Fait le parralèle  *)
 Definition bij_sum_compose : forall {A B C D : Type}, bijection A B -> bijection C D -> bijection (A+C) (B+D).
 Proof.
 intros A B C D bij_AB bij_CD.
@@ -726,7 +727,7 @@ apply bij_eq; simpl.
 Qed.
 
 Definition adjunction_bij {A B : Type} {P : A -> Type} {Q : B -> Type} (bij_AB : bijection A B) :
-                                (forall a, bijection (P a) (Q (bij_AB a))) -> (forall b, bijection (Q b) (P (backward bij_AB b))).
+  (forall a, bijection (P a) (Q (bij_AB a))) -> (forall b, bijection (Q b) (P (backward bij_AB b))).
 Proof.
 intros bij_PQ b.
 apply bijection_inv.
