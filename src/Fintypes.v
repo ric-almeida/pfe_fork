@@ -13,7 +13,7 @@ Require Import Lia.
 
 Import ListNotations.
 
-Require Import Basics.
+Require Import MyBasics.
 Require Import Bijections.
 
 Definition Finite (N : Type) : Type := { l : list N | SurjectiveList l /\ InjectiveXTList l }.

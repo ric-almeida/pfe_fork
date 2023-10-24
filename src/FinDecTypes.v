@@ -1,6 +1,4 @@
-(*
-  Finite types 
-*)
+(** Finite Decidable Types *)
 
 Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.
@@ -13,7 +11,7 @@ Require Import List Setoid Compare_dec Morphisms FinFun PeanoNat.
 Require Import Lia.
 
 Import ListNotations. 
-Require Import Basics.
+Require Import MyBasics.
 Require Import Fintypes.
 
 Record FinDecType : Type :=

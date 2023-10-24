@@ -1,5 +1,5 @@
-(*
-  Basic definitions and facts about:
+(** Basic definitions and facts
+  Deals with
   - functions, 
   - (iterated) sequential and parallel composition,
   - void, unit, sum, product types
@@ -27,8 +27,8 @@ Definition SurjectiveList { N : Type } (l : list N) := forall n : N, In n l.
 Definition InjectiveXTList { N : Type } (l : list N) := forall i j, i < length l -> nth_error l i = nth_error l j -> i = j.
 
 Inductive closure {N I O : Type} (p : (N+I) -> (N+O)) (ni : N+I) : (N+O) -> Prop :=
-| One  : closure p ni (p ni)
-| Add  : forall n', closure p ni (inl n') -> closure p ni (p (inl n')).
+  | One  : closure p ni (p ni)
+  | Add  : forall n', closure p ni (inl n') -> closure p ni (p (inl n')).
 
 Definition FiniteChild {N I O} (p : N+I -> N+O) := forall n, Acc (fun n n' => p (inl n) = inl n') n.
 

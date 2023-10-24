@@ -782,7 +782,6 @@ reflexivity.
 apply subset_eq_compat.
 destruct k.
 reflexivity.
-Search (~ _ < 0).
 elim (Nat.nlt_0_r _ (Lt.lt_S_n _ _ (Lt.lt_S_n _ _ Hk))).
 Defined.
 
@@ -972,7 +971,6 @@ elim (Nat.nlt_0_r _ Hb).
 apply subset_eq_compat.
 rewrite Nat.add_comm.
 rewrite Nat.mod_add.
-Search (_ mod _ = _).
 apply Nat.mod_small.
 exact Hb.
 intro Hp.

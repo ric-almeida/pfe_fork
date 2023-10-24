@@ -5,7 +5,7 @@
 Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.
 Require Import PropExtensionality.
-Require Import Basics.
+Require Import MyBasics.
 Require Import PeanoNat.
 Require Import Lia.
 Require Import List.
