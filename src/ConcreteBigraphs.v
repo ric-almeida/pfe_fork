@@ -119,7 +119,9 @@ Record bigraph  (site: FinDecType)
   }.
 End IntroBigraphs.
 
-(* GETTERS *)
+(** * Getters
+This section is just getters to lightenn some notations *)
+Section GettersBigraphs.
 Definition get_node {s i r o : FinDecType} (bg : bigraph s i r o) : FinDecType := 
   node s i r o bg.
 Definition get_edge {s i r o : FinDecType} (bg : bigraph s i r o) : FinDecType := 
@@ -130,10 +132,23 @@ Definition get_parent {s i r o : FinDecType} (bg : bigraph s i r o) : (type (get
   @parent s i r o bg.
 Definition get_link {s i r o : FinDecType} (bg : bigraph s i r o) : (type i) + Port (get_control bg) -> (type o) + type (get_edge bg) :=
   @link s i r o bg.
+End GettersBigraphs.
 
-Locate bijection.
-Check Bijections.bijection.
-
+(** * Equivalence between two bigraphs
+  This section defines the equivalence relation between bigraphs. 
+  We say there's an equivalence between two types if we give a bijection 
+  (cf support_for_bigraphs) between the two types. To define the equivalence 
+  between bigraphs, we want an equivalence between each Type and between 
+  each function.
+  To do that, we make definitions of equivalence between each function. 
+  We coerce the Record bigraph_equality into a Prop, which means that we can
+  access the bjections, but also that their existence means the Prop is True.
+  Note that our equivalence is heterogeneous. 
+  We prove that our relation bigraph_equality is reflexive, 
+  symmetric and transitive. This is going to be useful to be able to rewrite 
+  bigraphs at will. *)
+Section EquivalenceBigraphs.
+(** ** On the heterogeneous type *)
 Record bigraph_equality {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
   BigEq
@@ -257,7 +272,6 @@ Lemma bigraph_equality_trans {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}
     reflexivity.
   Qed.
 
-
 (** ** On the packed type 
   The issue with the previous relation is that a parametric relation asks for two 
   objects of the exact same Type and our equality is heterogeneous. The solution we 
@@ -292,6 +306,8 @@ Lemma bigraph_packed_equality_trans (bp1 bp2 bp3 : bigraph_packed) : bigraph_pac
   Proof.
   apply bigraph_equality_trans.
   Qed.
+  
+End EquivalenceBigraphs.
 
 Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
   reflexivity proved by (bigraph_packed_equality_refl)
@@ -299,6 +315,11 @@ Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
   transitivity proved by (bigraph_packed_equality_trans)
     as bigraph_packed_equality_rel.
 
+(** * Disjoint juxtaposition
+  This section deals with the operation of disjoint juxtaposition. This is the act
+  of putting two bigraphs with disjoint interfaces "next" to one another. 
+  After the definition, we prove associativity and commutativity of dis_juxtaposition *)
+Section DisjointJuxtaposition.
 Definition bigraph_juxtaposition {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
     : bigraph (findec_sum s1 s2) (findec_sum i1 i2) (findec_sum r1 r2) (findec_sum o1 o2).
@@ -618,6 +639,7 @@ Theorem bigraph_sum_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 
 
 Definition bigraph_packed_juxtaposition (b1 b2 : bigraph_packed) := 
   packing (bigraph_juxtaposition (big b1) (big b2)).
+End DisjointJuxtaposition.
 
 Add Parametric Morphism : bigraph_packed_juxtaposition with
  signature bigraph_packed_equality ==> bigraph_packed_equality ==> bigraph_packed_equality as juxtaposition_morphism.
@@ -636,7 +658,7 @@ Theorem bigraph_packed_empty_left_neutral : forall {s i r o} (b : bigraph s i r 
   Qed.
 
 Theorem bigraph_packed_sum_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2),
-  bigrb bigraph_empty)aph_packed_equality (bigraph_packed_juxtaposition b1 b2) (bigraph_packed_juxtaposition b2 b1).
+  bigraph_packed_equality (bigraph_packed_juxtaposition b1 b2) (bigraph_packed_juxtaposition b2 b1).
   Proof.
   unfold bigraph_packed_equality, bigraph_packed_juxtaposition.
   intros.
@@ -658,7 +680,5 @@ Lemma bigraph_empty_right_neutral : forall {s i r o} (b : bigraph s i r o), bigr
   rewrite bigraph_packed_empty_left_neutral.
   reflexivity.
   Qed.
-
-
 
 End Bigraphs.
