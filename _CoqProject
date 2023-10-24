@@ -1,5 +1,9 @@
 -R src MyProofs
 -I src/  
-src/support_for_bigraphs.v
-src/AbstractBigraphs.v
+src/Basics.v
+src/Bijections.v
+src/Findectypes.v
+src/Fintypes.v
+src/ToolsForBigraphs.v
+src/ConcreteBigraphs.v
 
