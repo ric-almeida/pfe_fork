@@ -31,7 +31,7 @@ Definition join {A B C : Type} (p : A -> C) (q : B -> C) (ac : A+B) : C :=
   | inr b => (q b)
   end.
 
-Definition bij_sum_port_forward { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa) :
+Definition bij_join_port_forward { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa) :
   Port c1 + Port c2 -> 
   Port (join c1 c2).
   Proof.
@@ -49,7 +49,7 @@ Definition bij_sum_port_forward { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa) 
     exact Hi2.
   Defined.
 
-Definition bij_sum_port_backward { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa)  :
+Definition bij_join_port_backward { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa)  :
   Port (join c1 c2) -> Port c1 + Port c2.
   Proof.
     destruct 1 as ([v1 | v2], (i, Hvi)).
@@ -63,13 +63,13 @@ Definition bij_sum_port_backward { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa)
       apply Hvi.
     Defined.
 
-Definition bij_sum_port { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa)  :
+Definition bij_join_port { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa)  :
   bijection (Port c1 + Port c2) (Port (join c1 c2)).
   Proof.
   apply 
     (mkBijection _ _ 
-    (bij_sum_port_forward c1 c2) 
-    (bij_sum_port_backward c1 c2)).
+    (bij_join_port_forward c1 c2) 
+    (bij_join_port_backward c1 c2)).
   + apply functional_extensionality.
     destruct x as ([v1|v2], (i, Hvi)).
     - reflexivity.
@@ -286,7 +286,6 @@ Record bigraph_packed : Type :=
   o: FinDecType;
   big : bigraph s i r o
   }.
-
 Coercion packing {s i r o} (b : bigraph s i r o) := 
   (mkPacked s i r o b).
 Definition bigraph_packed_equality (bp1 bp2 : bigraph_packed) := 
@@ -333,7 +332,7 @@ Definition bigraph_juxtaposition {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
             (join (get_control b1) (get_control b2))
             (bij_sum_shuffle <o> (parallel (get_parent b1) (get_parent b2)) <o> (bijection_inv bij_sum_shuffle))
             (bij_sum_shuffle <o> (parallel (get_link b1)   (get_link b2))   <o> (bijection_inv bij_sum_shuffle) <o> 
-              (bijection_inv (@bijection_id _ <+> (bij_sum_port (get_control b1) (get_control b2)))))
+              (bijection_inv (@bijection_id _ <+> (bij_join_port (get_control b1) (get_control b2)))))
       ).
   rewrite <- tensor_alt.
   apply finite_parent_tensor.
@@ -354,7 +353,7 @@ Definition bigraph_empty : bigraph findec_void findec_void findec_void findec_vo
   Defined.
 
 Notation "∅" := bigraph_empty.
-Lemma arity_empty_left_neutral : forall {s i r o} (b : bigraph s i r o) n, 
+Lemma arity_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o) n, 
         Arity (get_control (∅ || b) n) = Arity (get_control b (bij_void_sum_neutral n)).
   Proof.
   intros s i r o b n.
@@ -363,17 +362,18 @@ Lemma arity_empty_left_neutral : forall {s i r o} (b : bigraph s i r o) n,
   + reflexivity.
   Qed.
 
-Theorem bigraph_empty_left_neutral : forall {s i r o} (b : bigraph s i r o), bigraph_equality (bigraph_juxtaposition bigraph_empty b) b.
+Theorem bigraph_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o), 
+  bigraph_equality (bigraph_empty || b) b.
   Proof.
   intros s i r o b.
-  apply (BigEq _ _ _ _ _ _ _ _ (bigraph_juxtaposition bigraph_empty b) b
+  apply (BigEq _ _ _ _ _ _ _ _ (bigraph_empty || b) b
           bij_void_sum_neutral
           bij_void_sum_neutral
           bij_void_sum_neutral
           bij_void_sum_neutral
           bij_void_sum_neutral
           bij_void_sum_neutral
-          (fun n => bij_rew (P := fin) (arity_empty_left_neutral b n)) 
+          (fun n => bij_rew (P := fin) (arity_juxt_left_neutral b n)) 
         ).
   + apply functional_extensionality.
     intro x.
@@ -393,7 +393,7 @@ Theorem bigraph_empty_left_neutral : forall {s i r o} (b : bigraph s i r o), big
       destruct get_link; reflexivity.
     - unfold parallel, sum_shuffle, choice, funcomp, id.
       simpl.
-      unfold bij_sum_port_backward, bij_dep_sum_2_forward, bijection_inv, bij_dep_sum_1_forward.
+      unfold bij_join_port_backward, bij_dep_sum_2_forward, bijection_inv, bij_dep_sum_1_forward.
       simpl.
       unfold bij_rew_forward, eq_rect_r, funcomp.
       simpl.
@@ -406,7 +406,7 @@ Theorem bigraph_empty_left_neutral : forall {s i r o} (b : bigraph s i r o), big
       destruct get_link; reflexivity.
   Qed.
 
-Lemma arity_sum_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) n12,
+Lemma arity_juxt_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) n12,
   Arity (get_control (b1 || b2) n12) = Arity (get_control (b2 || b1) (bij_sum_comm n12)).
   Proof.
   intros until n12.
@@ -415,18 +415,18 @@ Lemma arity_sum_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o
   + reflexivity.
   Qed.
 
-Theorem bigraph_sum_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2),
-  bigraph_equality (bigraph_juxtaposition b1 b2) (bigraph_juxtaposition b2 b1).
+Theorem bigraph_juxt_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2),
+  bigraph_equality (b1 ||b2) (b2 || b1).
   Proof.
   intros.
-  apply (BigEq _ _ _ _ _ _ _ _ (bigraph_juxtaposition b1 b2) (bigraph_juxtaposition b2 b1)
+  apply (BigEq _ _ _ _ _ _ _ _ (b1 || b2) (b2 || b1)
           bij_sum_comm
           bij_sum_comm
           bij_sum_comm
           bij_sum_comm
           bij_sum_comm
           bij_sum_comm
-          (fun n12 => bij_rew (P := fin) (arity_sum_comm b1 b2 n12))
+          (fun n12 => bij_rew (P := fin) (arity_juxt_comm b1 b2 n12))
         ).
   + apply functional_extensionality.
     destruct x as [k2 | k1]; reflexivity.
@@ -459,7 +459,7 @@ Theorem bigraph_sum_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 
         destruct get_link; reflexivity.
   Qed.
 
-Lemma arity_sum_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) n12_3,
+Lemma arity_juxt_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) n12_3,
   Arity (get_control ((b1 || b2) || b3) n12_3) = Arity (get_control (b1 || (b2 || b3)) (bij_sum_assoc n12_3)).
   Proof.
   intros until n12_3.
@@ -469,18 +469,18 @@ Lemma arity_sum_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} (b1 : bigra
   + reflexivity.
   Qed.
 
-Theorem bigraph_sum_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3),
-  bigraph_equality (bigraph_juxtaposition (bigraph_juxtaposition b1 b2) b3) (bigraph_juxtaposition b1 (bigraph_juxtaposition b2 b3)).
+Theorem bigraph_juxt_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3),
+  bigraph_equality ((b1 || b2) || b3) (b1 || (b2 || b3)).
   Proof.
   intros.
-  apply (BigEq _ _ _ _ _ _ _ _ (bigraph_juxtaposition (bigraph_juxtaposition b1 b2) b3) (bigraph_juxtaposition b1 (bigraph_juxtaposition b2 b3))
+  apply (BigEq _ _ _ _ _ _ _ _ ((b1 || b2) || b3) (b1 || (b2 || b3))
           bij_sum_assoc
           bij_sum_assoc
           bij_sum_assoc
           bij_sum_assoc
           bij_sum_assoc
           bij_sum_assoc
-          (fun n12_3 => bij_rew (P := fin) (arity_sum_assoc b1 b2 b3 n12_3))
+          (fun n12_3 => bij_rew (P := fin) (arity_juxt_assoc b1 b2 b3 n12_3))
         ).
   + apply functional_extensionality.
     destruct x as [k1 | [k2 | k3]]; reflexivity.
@@ -509,7 +509,7 @@ Theorem bigraph_sum_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} (b1 : b
         destruct get_link; reflexivity.
   Qed.
 
-Definition arity_sum_congruence_forward {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} 
+Definition arity_juxt_congruence_forward {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} 
                                     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4)
                                     (bij_n12 : bijection (type (get_node b1)) (type (get_node b2))) (bij_n34 : bijection (type (get_node b3)) (type (get_node b4)))
                                     (bij_p12 : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n12 n1)))))
@@ -522,7 +522,7 @@ Definition arity_sum_congruence_forward {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 
   + exact (bij_p34 n3).
   Defined.
 
-Definition arity_sum_congruence_backward {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} 
+Definition arity_juxt_congruence_backward {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} 
                                     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4)
                                     (bij_n12 : bijection (type (get_node b1)) (type (get_node b2))) (bij_n34 : bijection (type (get_node b3)) (type (get_node b4)))
                                     (bij_p12 : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n12 n1)))))
@@ -535,7 +535,7 @@ Definition arity_sum_congruence_backward {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4
   + exact (backward (bij_p34 n3)).
   Defined.
 
-Lemma arity_sum_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} 
+Lemma arity_juxt_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} 
                                     (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4)
                                     (bij_n12 : bijection (type (get_node b1)) (type (get_node b2))) (bij_n34 : bijection (type (get_node b3)) (type (get_node b4)))
                                     (bij_p12 : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n12 n1)))))
@@ -544,7 +544,7 @@ Lemma arity_sum_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r
  bijection (fin (Arity (get_control (b1 || b3) n13))) (fin (Arity (get_control (b2 || b4) ((bij_n12 <+> bij_n34) n13)))).
   Proof.
   intros until n13.
-  apply (mkBijection _ _ (arity_sum_congruence_forward b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34 n13) (arity_sum_congruence_backward b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34 n13)).
+  apply (mkBijection _ _ (arity_juxt_congruence_forward b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34 n13) (arity_juxt_congruence_backward b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34 n13)).
   + destruct n13 as [n1 | n3]; simpl.
     - rewrite <- (fob_id _ _ (bij_p12 n1)).
       reflexivity.
@@ -557,21 +557,21 @@ Lemma arity_sum_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r
       reflexivity.
   Defined.
 
-Theorem bigraph_sum_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4),
-  bigraph_equality b1 b2 -> bigraph_equality b3 b4 -> bigraph_equality (bigraph_juxtaposition b1 b3) (bigraph_juxtaposition b2 b4).
+Theorem bigraph_juxt_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4),
+  bigraph_equality b1 b2 -> bigraph_equality b3 b4 -> bigraph_equality (b1 || b3) (b2 || b4).
   Proof.
   intros until b4.
   intros Heqb1b2 Heqb3b4.
   destruct Heqb1b2 as (bij_s12, bij_i12, bij_r12, bij_o12, bij_n12, bij_e12, bij_p12, big_control_eq12, big_parent_eq12, big_link_eq12).
   destruct Heqb3b4 as (bij_s34, bij_i34, bij_r34, bij_o34, bij_n34, bij_e34, bij_p34, big_control_eq34, big_parent_eq34, big_link_eq34).
-  apply (BigEq _ _ _ _ _ _ _ _ (bigraph_juxtaposition b1 b3) (bigraph_juxtaposition b2 b4)
+  apply (BigEq _ _ _ _ _ _ _ _ (b1 || b3) (b2 || b4)
           (bij_s12 <+> bij_s34)
           (bij_i12 <+> bij_i34)
           (bij_r12 <+> bij_r34)
           (bij_o12 <+> bij_o34)
           (bij_n12 <+> bij_n34)
           (bij_e12 <+> bij_e34)
-          (arity_sum_congruence b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34) 
+          (arity_juxt_congruence b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34) 
         ).
   + apply functional_extensionality.
     destruct x as [n2' | n4']; simpl.
@@ -638,7 +638,7 @@ Theorem bigraph_sum_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 
   Qed.
 
 Definition bigraph_packed_juxtaposition (b1 b2 : bigraph_packed) := 
-  packing (bigraph_juxtaposition (big b1) (big b2)).
+  packing ((big b1) || (big b2)).
 End DisjointJuxtaposition.
 
 Add Parametric Morphism : bigraph_packed_juxtaposition with
@@ -646,7 +646,7 @@ Add Parametric Morphism : bigraph_packed_juxtaposition with
   Proof.
   unfold bigraph_packed_equality, bigraph_packed_juxtaposition.
   destruct x; destruct y; simpl; destruct x0; destruct y0; simpl.
-  apply bigraph_sum_congruence.
+  apply bigraph_juxt_congruence.
   assumption.
   Qed.
 
@@ -654,29 +654,29 @@ Theorem bigraph_packed_empty_left_neutral : forall {s i r o} (b : bigraph s i r 
   Proof.
   unfold bigraph_packed_equality, bigraph_packed_juxtaposition.
   intros.
-  apply bigraph_empty_left_neutral.
+  apply bigraph_juxt_left_neutral.
   Qed.
 
-Theorem bigraph_packed_sum_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2),
+Theorem bigraph_packed_juxt_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2),
   bigraph_packed_equality (bigraph_packed_juxtaposition b1 b2) (bigraph_packed_juxtaposition b2 b1).
   Proof.
   unfold bigraph_packed_equality, bigraph_packed_juxtaposition.
   intros.
-  apply bigraph_sum_comm.
+  apply bigraph_juxt_comm.
   Qed.
 
-Theorem bigraph_packed_sum_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3),
+Theorem bigraph_packed_juxt_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3),
   bigraph_packed_equality (bigraph_packed_juxtaposition (bigraph_packed_juxtaposition b1 b2) b3) (bigraph_packed_juxtaposition b1 (bigraph_packed_juxtaposition b2 b3)).
   Proof.
   unfold bigraph_packed_equality, bigraph_packed_juxtaposition.
   intros.
-  apply bigraph_sum_assoc.
+  apply bigraph_juxt_assoc.
   Qed.
 
 Lemma bigraph_empty_right_neutral : forall {s i r o} (b : bigraph s i r o), bigraph_packed_equality (bigraph_packed_juxtaposition b bigraph_empty) b.
   Proof.
   intros.
-  rewrite bigraph_packed_sum_comm.
+  rewrite bigraph_packed_juxt_comm.
   rewrite bigraph_packed_empty_left_neutral.
   reflexivity.
   Qed.

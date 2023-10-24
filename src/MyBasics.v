@@ -682,8 +682,6 @@ Definition tensor {P Q I O J L : Type} (pp : P+I -> P+O) (pq : Q+J -> Q+L) : (P+
 Notation "f ** g" := (tensor f g) (at level 65).
 
 
-
-
 Theorem closure_transitive : forall {N I O : Type} (pp : N+I -> N+O) ni n' no,
                               closure pp ni (inl n') -> closure pp (inl n') no -> closure pp ni no.
 Proof.
