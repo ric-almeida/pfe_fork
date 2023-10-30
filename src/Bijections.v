@@ -1542,8 +1542,9 @@ rewrite parallel_id.
 reflexivity.
 Qed.
 
+(*
 Theorem bij_transform_sequence : forall {A B C D M I O : Type} (f : A+I -> A+M) (g : B+M -> B+O) (bij_AC : bijection A C) (bij_BD : bijection B D),
-                                  (bij_transform bij_AC f) >> (bij_transform bij_BD g) = bij_transform (bij_AC <+> bij_BD) (f >> g).
+  (bij_transform bij_AC f) >> (bij_transform bij_BD g) = bij_transform (bij_AC <+> bij_BD) (f >> g).
 Proof.
 intros.
 destruct bij_AC.
@@ -1648,7 +1649,7 @@ reflexivity.
 destruct (h (inr p)).
 reflexivity.
 reflexivity.
-Qed.
+Qed.*)
 
 Theorem bij_subset : forall {A} (P : A -> Prop), (forall a, P a) -> bijection A { a : A | P a }.
 Proof.
