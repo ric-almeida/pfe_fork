@@ -714,39 +714,44 @@ Definition bigraph_composition {s1 i1 r1 o1 s2 i2 : FinDecType}
   + exact (ap _ _ _ _ b2).
   Defined.
 
-Notation "b1 'o' b2" := (bigraph_composition b1 b2) (at level 50, left associativity).
-(* Definition bigraph_empty : bigraph findec_void findec_void findec_void findec_void.
+Notation "b1 '<<o>>' b2" := (bigraph_composition b1 b2) (at level 50, left associativity).
+Definition bigraph_identity {s i}: bigraph s i s i.
   Proof.
-  apply (Big findec_void findec_void findec_void findec_void
-            findec_void findec_void
-            (@void_univ_embedding _)
-            (choice void_univ_embedding void_univ_embedding)
-            (choice void_univ_embedding (void_univ_embedding <o> (bij_port_void (@void_univ_embedding _))))).
-  intro n.
-  destruct n.
+  apply (Big s i s i
+          findec_void 
+          findec_void
+          (@void_univ_embedding _)
+          id).
+  - intros [inner | p].
+    + left. exact inner.
+    + destruct p. destruct x.
+  - intro n.
+    destruct n.
   Defined.
 
-Notation "∅" := bigraph_empty.
-Lemma arity_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o) n, 
-        Arity (get_control (∅ || b) n) = Arity (get_control b (bij_void_sum_neutral n)).
+Notation "'Idb' s i" := (bigraph_identity s i) (at level 50).
+
+Lemma arity_comp_left_neutral : forall {s i r o} (b : bigraph s i r o) n, 
+  Arity (get_control ((bigraph_identity) <<o>> b) n) =
+  Arity (get_control b (bij_void_sum_neutral n)).
   Proof.
   intros s i r o b n.
   destruct n as [ v | n].
-  + destruct v.
+    + destruct v.
   + reflexivity.
   Qed.
 
-Theorem bigraph_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o), 
-  bigraph_equality (bigraph_empty || b) b.
+(* Theorem bigraph_comp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
+  bigraph_equality ((bigraph_identity) <<o>> b) b.
   Proof.
   intros s i r o b.
-  apply (BigEq _ _ _ _ _ _ _ _ (bigraph_empty || b) b
-          bij_void_sum_neutral
-          bij_void_sum_neutral
-          bij_void_sum_neutral
-          bij_void_sum_neutral
-          bij_void_sum_neutral
-          bij_void_sum_neutral
+  apply (BigEq _ _ _ _ _ _ _ _ ((bigraph_identity) <<o>> b) b
+          bijection_id
+          bijection_id
+          bijection_id
+          bijection_id
+          bijection_id
+          bijection_id
           (fun n => bij_rew (P := fin) (arity_juxt_left_neutral b n)) 
         ).
   + apply functional_extensionality.
