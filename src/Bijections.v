@@ -98,6 +98,21 @@ elim v.
 reflexivity.
 Defined.
 
+Theorem bij_void_sum_neutral_r : forall {A}, bijection (A + void) A.
+Proof.
+intro A.
+apply (mkBijection (A+void) A
+        (fun va => match va with | inl a => a | inr v => match v with end end)
+        (fun a => inl a)).
+apply functional_extensionality.
+intro x.
+reflexivity.
+apply functional_extensionality.
+destruct x.
+reflexivity.
+elim v.
+Defined.
+
 Theorem bij_sum_comm : forall {A B}, bijection (A+B) (B+A).
 Proof.
 intros A B.

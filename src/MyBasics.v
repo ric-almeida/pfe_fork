@@ -361,7 +361,7 @@ Theorem id_left_neutral : forall {A B : Type} (f : A -> B), id <o> f = f.
   reflexivity.
   Qed.
 
-Theorem id_right_neutral : forall {A B : Type} (f : A -> B), f <o> id = f.
+Theorem id_right_neutral : forall |||{A B : Type} (f : A -> B), f <o> id = f.
   Proof.
   intros A B f.
   reflexivity.
