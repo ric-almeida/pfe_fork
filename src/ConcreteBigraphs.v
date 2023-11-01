@@ -684,8 +684,6 @@ Lemma bigraph_juxt_right_neutral : forall {s i r o} (b : bigraph s i r o), bigra
   reflexivity.
   Qed.
 
-
-
 (* Definition seq_link {s1 i1 r1 o1 s2 i2 : FinDecType} 
   {b1 : bigraph s1 i1 r1 o1} {b2 : bigraph s2 i2 s1 i1} :=
   switch_link (switch_link (get_link b2) >> switch_link (get_link b1)) <o>
@@ -1032,7 +1030,7 @@ Theorem arity_comp_juxt_dist : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
   Arity (get_control
     ((b1 || b2) <<o>> (b3 || b4)) n12_34) =
   Arity (get_control 
-    ((b1 <<o>> b3) || (b2 <<o>> b4)) (bij_sum_rearrange n12_34)) .
+    ((b1 <<o>> b3) || (b2 <<o>> b4)) (sum_shuffle n12_34)) .
   Proof.
   intros.
   destruct n12_34 as [[n1|n2]|[n3|n4]]; reflexivity.
@@ -1057,14 +1055,14 @@ Theorem bigraph_comp_juxt_dist : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
     bijection_id (*i3 + i4*)
     bijection_id (*r1 + r2*)
     bijection_id (*o1 + o2*)
-    bij_sum_rearrange(* n1 + n2 + n3 + n4*)
-    bij_sum_rearrange (* e1 + e2 + e3 + e4 *)
+    bij_sum_shuffle(* n1 + n2 + n3 + n4*)
+    bij_sum_shuffle (* e1 + e2 + e3 + e4 *)
     (fun n12_34 => bij_rew (P := fin) (arity_comp_juxt_dist b1 b2 b3 b4 n12_34)) (* Port *)
   ).
   + apply functional_extensionality.
     destruct x as [[n1|n3]|[n2|n4]]; reflexivity.
   + apply functional_extensionality.
-    destruct x as [[[n1|n3]|[n2|n4]]|[s3'|s4']]; simpl; unfold funcomp; simpl; unfold rearrange; unfold extract1; unfold rearrange_sum; unfold sum_shuffle; unfold parallel.
+    destruct x as [[[n1|n3]|[n2|n4]]|[s3'|s4']]; simpl; unfold funcomp; simpl; unfold rearrange; unfold extract1; unfold sum_shuffle; unfold parallel.
     - destruct get_parent; reflexivity.
     - destruct get_parent. reflexivity. destruct get_parent; reflexivity.
     - destruct get_parent; reflexivity.
@@ -1072,7 +1070,7 @@ Theorem bigraph_comp_juxt_dist : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
     - destruct get_parent. reflexivity. destruct get_parent; reflexivity.
     - destruct get_parent. reflexivity. destruct get_parent; reflexivity.
   + apply functional_extensionality.
-    destruct x as [[i3'|i4']|p]; simpl; unfold funcomp; simpl; unfold rearrange; unfold extract1; unfold rearrange_sum; unfold sum_shuffle; unfold parallel; unfold switch_link; simpl.
+    destruct x as [[i3'|i4']|p]; simpl; unfold funcomp; simpl; unfold rearrange; unfold extract1; unfold sum_shuffle; unfold parallel; unfold switch_link; simpl.
     - destruct get_link. simpl. destruct get_link; reflexivity. reflexivity.
     - destruct get_link. simpl. destruct get_link; reflexivity. reflexivity.
     - destruct p as ([[v1 | v2] | [v3 | v4]], (i1234, Hvi1234)); unfold bij_join_port_backward; simpl.
@@ -1099,4 +1097,35 @@ Theorem bigraph_comp_juxt_dist : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
       destruct get_link; reflexivity. reflexivity.
   Qed.
     
+Definition symmetry_arrow (I J:Type) : bijection (I + J) (J + I).
+  Proof. 
+  apply (bij_sum_comm). 
+  Defined.
+
+Lemma symmetry_S1 {I}: 
+  forall i, symmetry_arrow I void (inl i) = inr i.
+  Proof.
+  intros i.
+  auto.
+  Qed.
+  
+Lemma symmetry_S2 {I J}: 
+  forall ij, 
+    ((symmetry_arrow J I) <o> (symmetry_arrow I J)) ij = ij.
+  Proof.
+  intros [i|j];
+  unfold funcomp; auto.
+  Qed.
+
+Lemma symmetry_S3 {I0 J0 I1 J1}: forall (i:I0 +J0 +I1 +J1), i = i.
+  Proof. auto. Qed.
+
+(* Lemma symmetry_S4 {I J K}: 
+  symmetry_arrow (I+J) K = 
+  ((symmetry_arrow I K) <+> (@bijection_id J)) -->>
+  (bijection_id <+> (symmetry_arrow J K)).
+forall (i:I0 +J0 +I1 +J1), i = i.
+  Proof. auto. Qed. *)
+
+
 End Bigraphs.

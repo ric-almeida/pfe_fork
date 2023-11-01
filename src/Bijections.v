@@ -1734,14 +1734,30 @@ Definition rearrange_sum {A B C D : Type} (abcd : (A+B)+(C+D)) : ((A+C)+(B+D)) :
   | inr (inr d) => inr (inr d) 
   end.
 
-Definition bij_sum_rearrange : forall {A B C D : Type}, 
-  bijection ((A+B)+(C+D)) ((A+C)+(B+D)).
+
+Definition bij_sum_rearrange {I J K}
+  (bik :bijection I K) 
+  (bjk :bijection J K):  
+  bijection (I+J) K.
 Proof.
-intros A B C D.
-apply 
-(mkBijection ((A+B)+(C+D)) ((A+C)+(B+D)) 
-(rearrange_sum) 
-(rearrange_sum));
-unfold rearrange_sum; unfold funcomp; apply functional_extensionality;
- destruct x as [[a|c]|[b|d]]; reflexivity.
-Defined.
+  apply (mkBijection 
+    (I + J) 
+    K 
+    (fun ij => match ij with 
+      | inl i => bik i
+      | inr j => bjk j
+      end
+    )
+    (fun k => inl (bik⁻¹ k) )).
+  - unfold funcomp.
+    destruct bik. 
+    unfold funcomp in fob_id0. 
+    simpl. 
+    apply fob_id0.
+  - unfold funcomp.
+    apply functional_extensionality.
+    intros [i | j];
+    destruct bjk;
+    unfold funcomp in fob_id0;
+    simpl; unfold id. Focus 2.
+Admitted.
