@@ -314,11 +314,7 @@ Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
   transitivity proved by (bigraph_packed_equality_trans)
     as bigraph_packed_equality_rel.
 
-(** * Disjoint juxtaposition
-  This section deals with the operation of disjoint juxtaposition. This is the act
-  of putting two bigraphs with disjoint interfaces "next" to one another. 
-  After the definition, we prove associativity and commutativity of dis_juxtaposition *)
-Section DisjointJuxtaposition.
+
 Definition bigraph_juxtaposition {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
     : bigraph (findec_sum s1 s2) (findec_sum i1 i2) (findec_sum r1 r2) (findec_sum o1 o2).
@@ -341,6 +337,12 @@ Definition bigraph_juxtaposition {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
   Defined.
 
 Notation "b1 || b2" := (bigraph_juxtaposition b1 b2) (at level 50, left associativity).
+
+(** * Disjoint juxtaposition
+  This section deals with the operation of disjoint juxtaposition. This is the act
+  of putting two bigraphs with disjoint interfaces "next" to one another. 
+  After the definition, we prove associativity and commutativity of dis_juxtaposition *)
+Section DisjointJuxtaposition.
 Definition bigraph_empty : bigraph findec_void findec_void findec_void findec_void.
   Proof.
   apply (Big findec_void findec_void findec_void findec_void
@@ -682,11 +684,7 @@ Lemma bigraph_juxt_right_neutral : forall {s i r o} (b : bigraph s i r o), bigra
   reflexivity.
   Qed.
 
-(** * Composition
-  This section deals with the operation of composition. This is the act
-  of putting a bigraph inside another one. To do b1 o b2, the outerface 
-  of b2 needs to be the innerface of b1. WIP: or just a bijection? *)
-Section CompositionBigraphs.
+
 
 (* Definition seq_link {s1 i1 r1 o1 s2 i2 : FinDecType} 
   {b1 : bigraph s1 i1 r1 o1} {b2 : bigraph s2 i2 s1 i1} :=
@@ -715,6 +713,11 @@ Definition bigraph_composition {s1 i1 r1 o1 s2 i2 : FinDecType}
   Defined.
 
 Notation "b1 '<<o>>' b2" := (bigraph_composition b1 b2) (at level 50, left associativity).
+(** * Composition
+  This section deals with the operation of composition. This is the act
+  of putting a bigraph inside another one. To do b1 o b2, the outerface 
+  of b2 needs to be the innerface of b1. WIP: or just a bijection? *)
+Section CompositionBigraphs.
 Definition bigraph_identity {s i}: bigraph s i s i.
   Proof.
   apply (Big s i s i
@@ -964,14 +967,22 @@ Lemma arity_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
       reflexivity.
   Defined.
 
-(* Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 s1 i1) (b4 : bigraph s4 i4 s2 i2),
+Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
+  (b1 : bigraph s1 i1 r1 o1) 
+  (b2 : bigraph s2 i2 r2 o2) 
+  (b3 : bigraph s3 i3 s1 i1) 
+  (b4 : bigraph s4 i4 s2 i2),
   bigraph_equality b1 b2 -> bigraph_equality b3 b4 -> bigraph_equality (b1 <<o>> b3) (b2 <<o>> b4).
   Proof.
   intros until b4.
   intros Heqb1b2 Heqb3b4.
   destruct Heqb1b2 as (bij_s12, bij_i12, bij_r12, bij_o12, bij_n12, bij_e12, bij_p12, big_control_eq12, big_parent_eq12, big_link_eq12).
   destruct Heqb3b4 as (bij_s34, bij_i34, bij_r34, bij_o34, bij_n34, bij_e34, bij_p34, big_control_eq34, big_parent_eq34, big_link_eq34).
-  apply (BigEq _ _ _ _ _ _ _ _ (b1 <<o>> b3) (b2 <<o>> b4)
+  apply (BigEq 
+          s3 i3 r1 o1
+          s4 i4 r2 o2
+          (b1 <<o>> b3)
+          (b2 <<o>> b4)
           (bij_s34)
           (bij_i34)
           (bij_r12)
@@ -987,20 +998,7 @@ Lemma arity_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
     - rewrite <- big_control_eq34.
       reflexivity.
   + apply functional_extensionality.
-    destruct x as [[n2' | n4'] | s4']; simpl; unfold funcomp; simpl; unfold rearrange; unfold extract1.
-    - rewrite <- big_parent_eq12.
-      simpl.
-      unfold funcomp.
-      simpl.
-      destruct get_parent; reflexivity.
-    - rewrite <- big_parent_eq34.
-      simpl.
-      unfold funcomp.
-      simpl. unfold parallel.
-      destruct get_parent eqn:E. reflexivity.
-      destruct (get_parent b1 (inr t)) eqn:E'.
-      * destruct (get_parent b2 (inr (bij_r34 t))) eqn:E''.
-       reflexivity. reflexivity.
+    destruct x as [[n2' | n4'] | s4']; simpl; unfold funcomp; simpl; unfold rearrange; unfold extract1; unfold parallel; simpl; auto.
     - rewrite <- big_parent_eq12.
       simpl.
       unfold funcomp.
@@ -1010,45 +1008,95 @@ Lemma arity_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
       simpl.
       unfold funcomp.
       simpl.
-      destruct get_parent; reflexivity.
-  + apply functional_extensionality.
-    destruct x as [[i2' | i4'] | ([n2' | n4'], (i', Hi'))]; simpl.
-    - rewrite <- big_link_eq12.
-      simpl.
-      unfold funcomp.
-      simpl.
-      destruct get_link; reflexivity.
-    - rewrite <- big_link_eq34.
-      simpl.
-      unfold funcomp.
-      simpl.
-      destruct get_link; reflexivity.
-    - rewrite <- big_link_eq12.
-      simpl.
-      unfold sum_shuffle, parallel, choice, funcomp, id.
-      simpl.
-      unfold eq_rect_r.
-      unfold parallel, funcomp.
-      simpl.
-      erewrite <- (eq_rect_map (f := inl) (a := n2')).
-      instantiate (1 := eq_sym (equal_f (fob_id (type (get_node b1)) (type (get_node b2)) bij_n12) n2')).
-      destruct (backward (bij_p12 ((bij_n12 ⁻¹) n2'))).
-      destruct get_link; reflexivity.
-    - rewrite <- big_link_eq34.
-      simpl.
-      unfold sum_shuffle, parallel, choice, funcomp, id.
-      simpl.
-      unfold eq_rect_r.
-      unfold parallel, funcomp.
-      simpl.
-      erewrite <- (eq_rect_map (f := inr) (a := n4')).
-      instantiate (1 := eq_sym (equal_f (fob_id (type (get_node b3)) (type (get_node b4)) bij_n34) n4')).
-      destruct (backward (bij_p34 ((bij_n34 ⁻¹) n4'))).
-      destruct get_link; reflexivity.
-  Qed. *)
-
+      destruct get_parent.
+      * reflexivity.
+      * simpl.
+        rewrite <- big_parent_eq12.
+        simpl.
+        unfold funcomp.
+        simpl.
+        unfold parallel.
+        simpl.
+        destruct (get_parent b1 (inr t)) eqn:Et.
+      ** destruct (get_parent b1
+      (inr ((bij_s12 ⁻¹) (bij_r34 t)))) eqn:Et0. Admitted. (*WEIRD*)
 
 End CompositionBigraphs.
 
 
+Theorem arity_comp_juxt_dist : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
+  (b1 : bigraph s1 i1 r1 o1) 
+  (b2 : bigraph s2 i2 r2 o2) 
+  (b3 : bigraph s3 i3 s1 i1) 
+  (b4 : bigraph s4 i4 s2 i2) (n12_34:type (get_node (b1 || b2 <<o>> (b3 || b4)))),
+  Arity (get_control
+    ((b1 || b2) <<o>> (b3 || b4)) n12_34) =
+  Arity (get_control 
+    ((b1 <<o>> b3) || (b2 <<o>> b4)) (bij_sum_rearrange n12_34)) .
+  Proof.
+  intros.
+  destruct n12_34 as [[n1|n2]|[n3|n4]]; reflexivity.
+  Qed.
+
+Theorem bigraph_comp_juxt_dist : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
+  (b1 : bigraph s1 i1 r1 o1) 
+  (b2 : bigraph s2 i2 r2 o2) 
+  (b3 : bigraph s3 i3 s1 i1) 
+  (b4 : bigraph s4 i4 s2 i2),
+  bigraph_equality 
+    ((b1 || b2) <<o>> (b3 || b4)) 
+    ((b1 <<o>> b3) || (b2 <<o>> b4)).
+  Proof.
+  intros.
+  apply (BigEq
+    _ _ _ _
+    _ _ _ _ 
+    ((b1 || b2) <<o>> (b3 || b4)) 
+    ((b1 <<o>> b3) || (b2 <<o>> b4))
+    bijection_id (*s3 + s4*)
+    bijection_id (*i3 + i4*)
+    bijection_id (*r1 + r2*)
+    bijection_id (*o1 + o2*)
+    bij_sum_rearrange(* n1 + n2 + n3 + n4*)
+    bij_sum_rearrange (* e1 + e2 + e3 + e4 *)
+    (fun n12_34 => bij_rew (P := fin) (arity_comp_juxt_dist b1 b2 b3 b4 n12_34)) (* Port *)
+  ).
+  + apply functional_extensionality.
+    destruct x as [[n1|n3]|[n2|n4]]; reflexivity.
+  + apply functional_extensionality.
+    destruct x as [[[n1|n3]|[n2|n4]]|[s3'|s4']]; simpl; unfold funcomp; simpl; unfold rearrange; unfold extract1; unfold rearrange_sum; unfold sum_shuffle; unfold parallel.
+    - destruct get_parent; reflexivity.
+    - destruct get_parent. reflexivity. destruct get_parent; reflexivity.
+    - destruct get_parent; reflexivity.
+    - destruct get_parent. reflexivity. destruct get_parent; reflexivity.
+    - destruct get_parent. reflexivity. destruct get_parent; reflexivity.
+    - destruct get_parent. reflexivity. destruct get_parent; reflexivity.
+  + apply functional_extensionality.
+    destruct x as [[i3'|i4']|p]; simpl; unfold funcomp; simpl; unfold rearrange; unfold extract1; unfold rearrange_sum; unfold sum_shuffle; unfold parallel; unfold switch_link; simpl.
+    - destruct get_link. simpl. destruct get_link; reflexivity. reflexivity.
+    - destruct get_link. simpl. destruct get_link; reflexivity. reflexivity.
+    - destruct p as ([[v1 | v2] | [v3 | v4]], (i1234, Hvi1234)); unfold bij_join_port_backward; simpl.
+    * unfold bij_rew_forward, eq_rect_r.
+      rewrite <- eq_rect_eq.
+      rewrite <- eq_rect_eq.
+      simpl.
+      destruct get_link; reflexivity.
+    * unfold bij_rew_forward, eq_rect_r.
+      rewrite <- eq_rect_eq.
+      rewrite <- eq_rect_eq.
+      simpl.
+      destruct get_link. simpl. destruct get_link; reflexivity. reflexivity.
+    * unfold bij_rew_forward, eq_rect_r.
+      rewrite <- eq_rect_eq.
+      rewrite <- eq_rect_eq.
+      simpl.
+      destruct get_link. simpl. reflexivity. unfold extract1. reflexivity.
+    * unfold bij_rew_forward, eq_rect_r.
+      rewrite <- eq_rect_eq.
+      rewrite <- eq_rect_eq.
+      simpl.
+      destruct get_link; unfold rearrange; unfold extract1; simpl. 
+      destruct get_link; reflexivity. reflexivity.
+  Qed.
+    
 End Bigraphs.

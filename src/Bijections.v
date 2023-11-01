@@ -1724,3 +1724,24 @@ apply (mkBijection _ _ (fun a => match a with exist _ a Ha => exist Q a (HPQ a H
   apply subset_eq_compat.
   reflexivity.
 Qed.
+
+
+Definition rearrange_sum {A B C D : Type} (abcd : (A+B)+(C+D)) : ((A+C)+(B+D)) :=
+  match abcd with
+  | inl (inl a) => inl (inl a)
+  | inl (inr b) => inr (inl b)
+  | inr (inl c) => inl (inr c)
+  | inr (inr d) => inr (inr d) 
+  end.
+
+Definition bij_sum_rearrange : forall {A B C D : Type}, 
+  bijection ((A+B)+(C+D)) ((A+C)+(B+D)).
+Proof.
+intros A B C D.
+apply 
+(mkBijection ((A+B)+(C+D)) ((A+C)+(B+D)) 
+(rearrange_sum) 
+(rearrange_sum));
+unfold rearrange_sum; unfold funcomp; apply functional_extensionality;
+ destruct x as [[a|c]|[b|d]]; reflexivity.
+Defined.
