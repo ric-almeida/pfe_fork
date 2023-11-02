@@ -305,7 +305,17 @@ Lemma bigraph_packed_equality_trans (bp1 bp2 bp3 : bigraph_packed) : bigraph_pac
   Proof.
   apply bigraph_equality_trans.
   Qed.
-  
+
+Record support_equivalent {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
+  SupEq
+  {
+    s_bij_s : bijection (type s1) (type s2) ;
+    s_bij_i : bijection (type i1) (type i2) ;
+    s_bij_r : bijection (type r1) (type r2) ;
+    s_bij_o : bijection (type o1) (type o2) ;
+  }.
+
 End EquivalenceBigraphs.
 
 Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
@@ -975,7 +985,7 @@ Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
   intros until b4.
   intros Heqb1b2 Heqb3b4.
   destruct Heqb1b2 as (bij_s12, bij_i12, bij_r12, bij_o12, bij_n12, bij_e12, bij_p12, big_control_eq12, big_parent_eq12, big_link_eq12).
-  destruct Heqb3b4 as (bij_s34, bij_i34, bij_r34, bij_o34, bij_n34, bij_e34, bij_p34, big_control_eq34, big_parent_eq34, big_link_eq34).
+  destruct Heqb3b4 as (bij_s34, bij_i34, bij_r34_s12, bij_o34_i12, bij_n34, bij_e34, bij_p34, big_control_eq34, big_parent_eq34, big_link_eq34).
   apply (BigEq 
           s3 i3 r1 o1
           s4 i4 r2 o2
@@ -1006,18 +1016,16 @@ Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
       simpl.
       unfold funcomp.
       simpl.
-      destruct get_parent.
+      unfold parallel.
+      destruct (get_parent b3 (inl ((bij_n34 ⁻¹) n4'))) eqn:RE.
       * reflexivity.
-      * simpl.
+      *  
         rewrite <- big_parent_eq12.
         simpl.
         unfold funcomp.
         simpl.
-        unfold parallel.
-        simpl.
-        destruct (get_parent b1 (inr t)) eqn:Et.
-      ** destruct (get_parent b1
-      (inr ((bij_s12 ⁻¹) (bij_r34 t)))) eqn:Et0. Admitted. (*WEIRD*)
+        unfold parallel. Abort. 
+        (*Missing a hypothesis that says bij_s12 = bij_r34_s12 in the equalities *)
 
 End CompositionBigraphs.
 
