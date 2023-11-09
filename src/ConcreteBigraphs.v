@@ -112,7 +112,7 @@ Record bigraph  (site: FinDecType)
   { 
     node : FinDecType ;
     edge : FinDecType ;
-    control : (type node) -> (Kappa) ;
+    control : (type node) -> Kappa ;
     parent : (type node) + (type site) -> (type node) + (type root) ; 
     link : (type innername) + Port control -> (type outername) + (type edge); 
     ap : FiniteParent parent ;
@@ -157,11 +157,11 @@ Record bigraph_equality {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
     bij_i : bijection (type i1) (type i2) ;
     bij_r : bijection (type r1) (type r2) ;
     bij_o : bijection (type o1) (type o2) ;
-    bij_n : bijection (type (get_node b1)) (type (get_node b2));
-    bij_e : bijection (type (get_edge b1)) (type (get_edge b2));
-    bij_p : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n n1))));
-    big_control_eq : (bij_n -->> (@bijection_id Kappa)) (get_control b1) = get_control b2;
-    big_parent_eq  : ((bij_n <+> bij_s) -->> (bij_n <+> bij_r)) (get_parent b1) = get_parent b2;
+    bij_n : bijection (type (get_node b1)) (type (get_node b2)) ;
+    bij_e : bijection (type (get_edge b1)) (type (get_edge b2)) ;
+    bij_p : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n n1)))) ;
+    big_control_eq : (bij_n -->> (@bijection_id Kappa)) (get_control b1) = get_control b2 ;
+    big_parent_eq  : ((bij_n <+> bij_s) -->> (bij_n <+> bij_r)) (get_parent b1) = get_parent b2 ;
     big_link_eq    : ((bij_i <+> <{ bij_n & bij_p }>) -->> (bij_o <+> bij_e)) (get_link b1) = get_link b2
   }.
 
@@ -719,8 +719,10 @@ Definition bigraph_composition {s1 i1 r1 o1 s2 i2 : FinDecType}
   + exact (ap _ _ _ _ b1).
   + exact (ap _ _ _ _ b2).
   Defined.
-
+  
 Notation "b1 '<<o>>' b2" := (bigraph_composition b1 b2) (at level 50, left associativity).
+(* Definition bigraph_packed_composition (b1 b2 : bigraph_packed) := 
+  packing ((big b1) <<o>> (big b2)). *)
 (** * Composition
   This section deals with the operation of composition. This is the act
   of putting a bigraph inside another one. To do b1 o b2, the outerface 
@@ -1019,8 +1021,7 @@ Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
       unfold parallel.
       destruct (get_parent b3 (inl ((bij_n34 ⁻¹) n4'))) eqn:RE.
       * reflexivity.
-      *  
-        rewrite <- big_parent_eq12.
+      * rewrite <- big_parent_eq12.
         simpl.
         unfold funcomp.
         simpl.
@@ -1125,8 +1126,9 @@ Lemma symmetry_S2 {I J}:
   unfold funcomp; auto.
   Qed.
 
-Lemma symmetry_S3 {I0 J0 I1 J1}: forall (i:I0 +J0 +I1 +J1), i = i.
-  Proof. auto. Qed.
+(* Lemma symmetry_S3 {I0 J0 I1 J1}: forall (i:I0 +J0 + I1 +J1), i = i.
+  symmetry_arrow I1 J1 <o> (bij_sum_compose f g) = (*TODO*)
+  Proof. auto. Qed. *)
 
 (* Lemma symmetry_S4 {I J K}: 
   symmetry_arrow (I+J) K = 

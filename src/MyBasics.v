@@ -1124,3 +1124,4 @@ Lemma and_implies_or :
     left.
     apply Ha.
   Qed.
+
