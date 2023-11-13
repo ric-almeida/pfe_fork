@@ -288,6 +288,8 @@ Record bigraph_packed : Type :=
   }.
 Coercion packing {s i r o} (b : bigraph s i r o) := 
   (mkPacked s i r o b).
+Coercion unpacking (b : bigraph_packed) : (bigraph (s b) (i b) (r b) (o b)) := 
+  (big b).
 Definition bigraph_packed_equality (bp1 bp2 : bigraph_packed) := 
   bigraph_equality (big bp1) (big bp2).
 
@@ -654,7 +656,9 @@ Definition bigraph_packed_juxtaposition (b1 b2 : bigraph_packed) :=
 End DisjointJuxtaposition.
 
 Add Parametric Morphism : bigraph_packed_juxtaposition with
- signature bigraph_packed_equality ==> bigraph_packed_equality ==> bigraph_packed_equality as juxtaposition_morphism.
+ signature bigraph_packed_equality ==> 
+ bigraph_packed_equality ==> 
+ bigraph_packed_equality as juxtaposition_morphism.
   Proof.
   unfold bigraph_packed_equality, bigraph_packed_juxtaposition.
   destruct x; destruct y; simpl; destruct x0; destruct y0; simpl.
@@ -721,8 +725,6 @@ Definition bigraph_composition {s1 i1 r1 o1 s2 i2 : FinDecType}
   Defined.
   
 Notation "b1 '<<o>>' b2" := (bigraph_composition b1 b2) (at level 50, left associativity).
-(* Definition bigraph_packed_composition (b1 b2 : bigraph_packed) := 
-  packing ((big b1) <<o>> (big b2)). *)
 (** * Composition
   This section deals with the operation of composition. This is the act
   of putting a bigraph inside another one. To do b1 o b2, the outerface 
@@ -1028,6 +1030,35 @@ Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
         unfold parallel. Abort. 
         (*Missing a hypothesis that says bij_s12 = bij_r34_s12 in the equalities *)
 
+Definition bigraph_packed_composition {s1 i1 r1 o1 s2 i2 : FinDecType} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) : bigraph_packed :=
+  packing ((b1) <<o>> (b2)).
+  
+Theorem bigraph_packed_comp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
+  bigraph_packed_equality (bigraph_packed_composition bigraph_identity b) b.
+  Proof.
+  unfold bigraph_packed_equality, bigraph_packed_composition.
+  intros.
+  apply bigraph_comp_left_neutral.
+  Qed.
+
+Theorem bigraph_packed_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) (b3 : bigraph s3 i3 s2 i2),
+  bigraph_packed_equality 
+    (bigraph_packed_composition (bigraph_packed_composition b1 b2) b3) 
+    (bigraph_packed_composition b1 (bigraph_packed_composition b2 b3)).
+  Proof.
+  unfold bigraph_packed_equality, bigraph_packed_juxtaposition.
+  intros.
+  apply bigraph_comp_assoc.
+  Qed.
+
+Lemma bigraph_packed_comp_right_neutral : forall {s i r o} (b : bigraph s i r o), bigraph_packed_equality (bigraph_packed_composition b bigraph_identity) b.
+  Proof.
+  unfold bigraph_packed_equality, bigraph_packed_composition.
+  intros.
+  apply bigraph_comp_right_neutral.
+  Qed.
+
 End CompositionBigraphs.
 
 
@@ -1126,16 +1157,40 @@ Lemma symmetry_S2 {I J}:
   unfold funcomp; auto.
   Qed.
 
-(* Lemma symmetry_S3 {I0 J0 I1 J1}: forall (i:I0 +J0 + I1 +J1), i = i.
-  symmetry_arrow I1 J1 <o> (bij_sum_compose f g) = (*TODO*)
-  Proof. auto. Qed. *)
+Lemma symmetry_S3 {I0 J0 I1 J1}
+  {f : bijection I0 I1}
+  {g : bijection J0 J1}: 
+  symmetry_arrow I1 J1 <o> (f <+> g) = 
+    (g <+> f) <o> symmetry_arrow I0 J0.
+  Proof.
+  simpl. unfold funcomp.
+  apply functional_extensionality.
+  intros [xi0 | xj0]; unfold parallel; reflexivity.
+  Qed. 
 
-(* Lemma symmetry_S4 {I J K}: 
-  symmetry_arrow (I+J) K = 
-  ((symmetry_arrow I K) <+> (@bijection_id J)) -->>
-  (bijection_id <+> (symmetry_arrow J K)).
-forall (i:I0 +J0 +I1 +J1), i = i.
-  Proof. auto. Qed. *)
+Definition ikj {I J K} :=
+  ((symmetry_arrow I K) <+> (@bijection_id J)).
+Check ikj.
 
+Definition ijk {I J K} :=
+  ((@bijection_id I) <+> (symmetry_arrow J K)).
+Check ijk.
+  
+(* Lemma symmetry_S4 {I J K} : 
+  symmetry_arrow (I+J) K =
+    ((symmetry_arrow I K) <+> @bijection_id J)
+    <o> 
+    ((@bijection_id I) <+> (symmetry_arrow J K)). *)
+
+(* 
+Lemma symmetry_S4 {I J K} : 
+  forall i, match
+  symmetry_arrow (I+J) K (inl (inl i)) with
+  | inl k' => k' = inl (inl
+    (((symmetry_arrow I K) <+> @bijection_id J)
+    <O> 
+    ((@bijection_id I) <+> (symmetry_arrow J K))) (inl i))
+    
+    end. *)
 
 End Bigraphs.
