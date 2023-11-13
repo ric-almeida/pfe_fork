@@ -1033,6 +1033,9 @@ Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
 Definition bigraph_packed_composition {s1 i1 r1 o1 s2 i2 : FinDecType} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) : bigraph_packed :=
   packing ((b1) <<o>> (b2)).
+
+Definition bigraph_packed_composition' (*{s1 i1 r1 o1 s2 i2 : FinDecType} *)
+  (b1 : bigraph_packed) (b2 : bigraph_packed) : bigraph_packed. Admitted.
   
 Theorem bigraph_packed_comp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
   bigraph_packed_equality (bigraph_packed_composition bigraph_identity b) b.
@@ -1060,7 +1063,16 @@ Lemma bigraph_packed_comp_right_neutral : forall {s i r o} (b : bigraph s i r o)
   Qed.
 
 End CompositionBigraphs.
-
+(* Add Parametric Morphism : bigraph_packed_composition' with
+ signature bigraph_packed_equality ==> 
+ bigraph_packed_equality ==> 
+ bigraph_packed_equality as composition_morphism.
+  Proof.
+  unfold bigraph_packed_equality, bigraph_packed_composition.
+  destruct x; destruct y; simpl; destruct x0; destruct y0; simpl.
+  apply bigraph_comp_congruence.
+  assumption.
+  Qed. *)
 
 Theorem arity_comp_juxt_dist : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
   (b1 : bigraph s1 i1 r1 o1) 
