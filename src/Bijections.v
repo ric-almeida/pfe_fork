@@ -1761,3 +1761,17 @@ Proof.
     unfold funcomp in fob_id0;
     simpl; unfold id. Focus 2.
 Admitted.
+
+
+Theorem equality_bij {A B} (bij1 : bijection A B) (bij2 : bijection A B): 
+  bij1 = bij2 <-> (forward bij1) = (forward bij2) /\ (backward bij1) = (backward bij2).
+  Proof. 
+  split.
+  - intros. rewrite H. split; reflexivity.
+  - intros.  destruct bij1 as [f1 b1 fob1 bof1], bij2 as [f2 b2 fob2 bof2].
+  simpl in H.
+  destruct H.
+  destruct H.
+  destruct H0.
+  assert (fob2 = fob1). { destruct fob1. auto. simpl in fob2.
+  Abort.

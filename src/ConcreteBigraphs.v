@@ -165,6 +165,11 @@ Record bigraph_equality {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
     big_link_eq    : ((bij_i <+> <{ bij_n & bij_p }>) -->> (bij_o <+> bij_e)) (get_link b1) = get_link b2
   }.
 
+(* Theorem identified_interface {A} (baa : bijection A A) :
+  (forward baa) = id.
+  Proof. apply functional_extensionality. intros. unfold id.
+  destruct baa. destruct x. *)
+
 (* Definition get_bij_s {s1 i1 r1 o1 s2 i2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1)
   : bijection (type s1) (type s2) :=
   (bij_s (bigraph_equality b1 b2)). *)
@@ -275,6 +280,14 @@ Lemma bigraph_equality_trans {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}
     reflexivity.
   Qed.
 
+Lemma bigraph_equality_dec {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}  
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
+  {bigraph_equality b1 b2} + {~ bigraph_equality b1 b2}.
+  Proof.
+  induction b1 as [node1 edge1 kind1 arity1 control1 parent1 link1 ap1].
+  induction b2 as [node2 edge2 kind2 arity2 control2 parent2 link2 ap2].
+  Admitted.
+
 (** ** On the packed type 
   The issue with the previous relation is that a parametric relation asks for two 
   objects of the exact same Type and our equality is heterogeneous. The solution we 
@@ -329,6 +342,11 @@ Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
   transitivity proved by (bigraph_packed_equality_trans)
     as bigraph_packed_equality_rel.
 
+Lemma bigraph_packed_equality_dec  
+(b1 : bigraph_packed) (b2 : bigraph_packed) :
+{b1 = b2} + {~ b1 = b2}.
+Proof.
+Fail decide equality. Abort.
 
 Definition bigraph_juxtaposition {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
@@ -701,13 +719,6 @@ Lemma bigraph_juxt_right_neutral : forall {s i r o} (b : bigraph s i r o), bigra
   reflexivity.
   Qed.
 
-(* Definition seq_link {s1 i1 r1 o1 s2 i2 : FinDecType} 
-  {b1 : bigraph s1 i1 r1 o1} {b2 : bigraph s2 i2 s1 i1} :=
-  switch_link (switch_link (get_link b2) >> switch_link (get_link b1)) <o>
-  (backward (@bijection_id _ <+> (bij_join_port (get_control b1) (get_control b2)))).
-
-  Check seq_link. *)
-
 Definition bigraph_composition {s1 i1 r1 o1 s2 i2 : FinDecType} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) 
     : bigraph s2 i2 r1 o1.
@@ -721,7 +732,7 @@ Definition bigraph_composition {s1 i1 r1 o1 s2 i2 : FinDecType}
         (join (get_control b1) (get_control b2))
         ((get_parent b2) >> (get_parent b1))
         (switch_link (switch_link (get_link b2) >> switch_link (get_link b1)) <o>
-        (backward (@bijection_id _ <+> (bij_join_port (get_control b1) (get_control b2)))))).
+          (backward (@bijection_id _ <+> (bij_join_port (get_control b1) (get_control b2)))))).
   apply (finite_parent_sequence).
   + exact (ap _ _ _ _ b1).
   + exact (ap _ _ _ _ b2).
@@ -983,14 +994,13 @@ Lemma arity_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
   Defined.
 
 
-(* Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
+Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
   (b1 : bigraph s1 i1 r1 o1) 
   (b2 : bigraph s2 i2 r2 o2) 
   (b3 : bigraph s3 i3 s1 i1) 
   (b4 : bigraph s4 i4 s2 i2)
   (be12 : bigraph_equality b1 b2)
   (be34 : bigraph_equality b3 b4), 
-  (bij_s be12) = (bij_r be34) ->
   bigraph_equality (b1 <<o>> b3) (b2 <<o>> b4).
   Proof.
   intros until b4.
@@ -1034,7 +1044,7 @@ Lemma arity_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
         simpl.
         unfold funcomp.
         simpl.
-        unfold parallel. Abort.  *)
+        unfold parallel. Abort. 
         (*Missing a hypothesis that says bij_s12 = bij_r34_s12 in the equalities *)
 
 Definition bigraph_packed_composition {s1 i1 r1 o1 s2 i2 : FinDecType} 
@@ -1187,14 +1197,6 @@ Lemma symmetry_S3 {I0 J0 I1 J1}
   apply functional_extensionality.
   intros [xi0 | xj0]; unfold parallel; reflexivity.
   Qed. 
-
-Definition ikj {I J K} :=
-  ((symmetry_arrow I K) <+> (@bijection_id J)).
-Check ikj.
-
-Definition ijk {I J K} :=
-  ((@bijection_id I) <+> (symmetry_arrow J K)).
-Check ijk.
   
 Lemma symmetry_S4 {I J K} :
   forall x,
