@@ -165,6 +165,9 @@ Record bigraph_equality {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
     big_link_eq    : ((bij_i <+> <{ bij_n & bij_p }>) -->> (bij_o <+> bij_e)) (get_link b1) = get_link b2
   }.
 
+(* Definition get_bij_s {s1 i1 r1 o1 s2 i2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1)
+  : bijection (type s1) (type s2) :=
+  (bij_s (bigraph_equality b1 b2)). *)
 Lemma bigraph_equality_refl {s i r o : FinDecType} (b : bigraph s i r o) :
   bigraph_equality b b.
   Proof.
@@ -979,12 +982,16 @@ Lemma arity_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
       reflexivity.
   Defined.
 
-Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
+
+(* Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
   (b1 : bigraph s1 i1 r1 o1) 
   (b2 : bigraph s2 i2 r2 o2) 
   (b3 : bigraph s3 i3 s1 i1) 
-  (b4 : bigraph s4 i4 s2 i2),
-  bigraph_equality b1 b2 -> bigraph_equality b3 b4 -> bigraph_equality (b1 <<o>> b3) (b2 <<o>> b4).
+  (b4 : bigraph s4 i4 s2 i2)
+  (be12 : bigraph_equality b1 b2)
+  (be34 : bigraph_equality b3 b4), 
+  (bij_s be12) = (bij_r be34) ->
+  bigraph_equality (b1 <<o>> b3) (b2 <<o>> b4).
   Proof.
   intros until b4.
   intros Heqb1b2 Heqb3b4.
@@ -1027,7 +1034,7 @@ Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
         simpl.
         unfold funcomp.
         simpl.
-        unfold parallel. Abort. 
+        unfold parallel. Abort.  *)
         (*Missing a hypothesis that says bij_s12 = bij_r34_s12 in the equalities *)
 
 Definition bigraph_packed_composition {s1 i1 r1 o1 s2 i2 : FinDecType} 
@@ -1035,7 +1042,8 @@ Definition bigraph_packed_composition {s1 i1 r1 o1 s2 i2 : FinDecType}
   packing ((b1) <<o>> (b2)).
 
 Definition bigraph_packed_composition' (*{s1 i1 r1 o1 s2 i2 : FinDecType} *)
-  (b1 : bigraph_packed) (b2 : bigraph_packed) : bigraph_packed. Admitted.
+  (b1 : bigraph_packed) (b2 : bigraph_packed) : bigraph_packed. Abort.
+
   
 Theorem bigraph_packed_comp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
   bigraph_packed_equality (bigraph_packed_composition bigraph_identity b) b.
@@ -1043,7 +1051,7 @@ Theorem bigraph_packed_comp_left_neutral : forall {s i r o} (b : bigraph s i r o
   unfold bigraph_packed_equality, bigraph_packed_composition.
   intros.
   apply bigraph_comp_left_neutral.
-  Qed.
+  Qed. 
 
 Theorem bigraph_packed_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) (b3 : bigraph s3 i3 s2 i2),
   bigraph_packed_equality 
@@ -1053,17 +1061,17 @@ Theorem bigraph_packed_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigra
   unfold bigraph_packed_equality, bigraph_packed_juxtaposition.
   intros.
   apply bigraph_comp_assoc.
-  Qed.
+  Qed. 
 
 Lemma bigraph_packed_comp_right_neutral : forall {s i r o} (b : bigraph s i r o), bigraph_packed_equality (bigraph_packed_composition b bigraph_identity) b.
   Proof.
   unfold bigraph_packed_equality, bigraph_packed_composition.
   intros.
   apply bigraph_comp_right_neutral.
-  Qed.
+  Qed. 
 
 End CompositionBigraphs.
-(* Add Parametric Morphism : bigraph_packed_composition' with
+(* Add Parametric Morphism : bigraph_packed_composition with
  signature bigraph_packed_equality ==> 
  bigraph_packed_equality ==> 
  bigraph_packed_equality as composition_morphism.
@@ -1072,7 +1080,7 @@ End CompositionBigraphs.
   destruct x; destruct y; simpl; destruct x0; destruct y0; simpl.
   apply bigraph_comp_congruence.
   assumption.
-  Qed. *)
+  Qed.  *)
 
 Theorem arity_comp_juxt_dist : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
   (b1 : bigraph s1 i1 r1 o1) 
@@ -1155,7 +1163,7 @@ Definition symmetry_arrow (I J:Type) : bijection (I + J) (J + I).
   Defined.
 
 Lemma symmetry_S1 {I}: 
-  forall i, symmetry_arrow I void (inl i) = inr i.
+  forall i:I, symmetry_arrow I void (inl i) = inr i.
   Proof.
   intros i.
   auto.
@@ -1188,21 +1196,18 @@ Definition ijk {I J K} :=
   ((@bijection_id I) <+> (symmetry_arrow J K)).
 Check ijk.
   
-(* Lemma symmetry_S4 {I J K} : 
-  symmetry_arrow (I+J) K =
-    ((symmetry_arrow I K) <+> @bijection_id J)
-    <o> 
-    ((@bijection_id I) <+> (symmetry_arrow J K)). *)
+Lemma symmetry_S4 {I J K} :
+  forall x,
+  (symmetry_arrow (I+J) K) x =
+    ((bij_sum_assoc) <O> 
+    ((symmetry_arrow I K) <+> (@bijection_id J)) <O> 
+    ((bijection_inv bij_sum_assoc) <O> 
+    ((@bijection_id I) <+> (symmetry_arrow J K)) 
+    <O> bij_sum_assoc)) x. 
+  Proof.
+  intros [[i | j] | k];
+  simpl; unfold parallel, funcomp; reflexivity.
+  Qed.
 
-(* 
-Lemma symmetry_S4 {I J K} : 
-  forall i, match
-  symmetry_arrow (I+J) K (inl (inl i)) with
-  | inl k' => k' = inl (inl
-    (((symmetry_arrow I K) <+> @bijection_id J)
-    <O> 
-    ((@bijection_id I) <+> (symmetry_arrow J K))) (inl i))
-    
-    end. *)
 
 End Bigraphs.
