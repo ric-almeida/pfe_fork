@@ -149,6 +149,7 @@ End GettersBigraphs.
   bigraphs at will. *)
 Section EquivalenceBigraphs.
 (** ** On the heterogeneous type *)
+
 Record bigraph_equality {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
   BigEq
@@ -284,6 +285,7 @@ Lemma bigraph_equality_dec {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   {bigraph_equality b1 b2} + {~ bigraph_equality b1 b2}.
   Proof.
+  Fail decide equality.
   induction b1 as [node1 edge1 kind1 arity1 control1 parent1 link1 ap1].
   induction b2 as [node2 edge2 kind2 arity2 control2 parent2 link2 ap2].
   Admitted.
@@ -304,8 +306,8 @@ Record bigraph_packed : Type :=
   }.
 Coercion packing {s i r o} (b : bigraph s i r o) := 
   (mkPacked s i r o b).
-Coercion unpacking (b : bigraph_packed) : (bigraph (s b) (i b) (r b) (o b)) := 
-  (big b).
+(* Coercion unpacking (b : bigraph_packed) : (bigraph (s b) (i b) (r b) (o b)) := 
+  (big b). *)
 Definition bigraph_packed_equality (bp1 bp2 : bigraph_packed) := 
   bigraph_equality (big bp1) (big bp2).
 
@@ -344,7 +346,7 @@ Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
 
 Lemma bigraph_packed_equality_dec  
 (b1 : bigraph_packed) (b2 : bigraph_packed) :
-{b1 = b2} + {~ b1 = b2}.
+{bigraph_packed_equality b1 b2} + {~ bigraph_packed_equality b1 b2}.
 Proof.
 Fail decide equality. Abort.
 
@@ -993,6 +995,9 @@ Lemma arity_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
       reflexivity.
   Defined.
 
+Definition bij_or_eq (s1:Type) (s2:Type) (H: s1 = s2): bijection s1 s2.
+  rewrite H.
+  exact bijection_id. Defined.
 
 Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
   (b1 : bigraph s1 i1 r1 o1) 
