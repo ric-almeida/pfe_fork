@@ -396,6 +396,12 @@ Definition parallel {A B C D : Type} (p : A -> B) (q : C -> D) (ac : A+C) : B+D 
  | inr c => inr (q c)
  end.
 
+Definition parallel_bis {A B C D : Type} (p : A -> B) (q : C -> D) (ac : A+C) : B+D :=
+  match ac with
+  | inl a => inl (p a)
+  | inr c => inr (q c)
+  end.
+
 
 
 Notation "f ||| g" := (parallel f g) (at level 67).
