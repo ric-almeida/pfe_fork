@@ -350,10 +350,10 @@ Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
     as bigraph_packed_equality_rel.
 
 Lemma bigraph_packed_equality_dec  
-(b1 : bigraph_packed) (b2 : bigraph_packed) :
-{bigraph_packed_equality b1 b2} + {~ bigraph_packed_equality b1 b2}.
-Proof.
-Fail decide equality. Abort.
+  (b1 : bigraph_packed) (b2 : bigraph_packed) :
+  {bigraph_packed_equality b1 b2} + {~ bigraph_packed_equality b1 b2}.
+  Proof.
+  Fail decide equality. Abort.
 
 Definition bigraph_juxtaposition {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
@@ -1177,6 +1177,98 @@ Theorem bigraph_comp_juxt_dist : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
       destruct get_link; reflexivity. reflexivity.
   Qed.
     
+Section NestingBig.
+
+
+Definition rm_void_parent {s1 r1 node0: FinDecType} 
+  (p : type node0 + type (findec_sum findec_void s1) ->
+    type node0 + type (findec_sum findec_void r1)) : 
+    type node0 + type s1 ->
+      type node0 + type r1.
+  Proof. intros [n|s].
+    - destruct (p (inl n)) eqn:Epn.
+    + left. exact t.
+    + right. destruct t. destruct t. exact t.
+    - destruct (p (inr (inr s))) eqn:Epn.
+    + left. exact t.
+    + right. destruct t. destruct t. exact t. Defined.
+
+Definition rm_void_sumtype {r1 : FinDecType} (x:type (findec_sum findec_void r1)) : type r1 := 
+  match x with
+    | inl t =>
+        match t return (type r1) with
+        end
+    | inr t => t end.
+  (* destruct x. destruct t. exact t. Defined. *)
+
+Definition rm_void_parent' {s1 r1 node0: FinDecType} 
+  (p : type node0 + type (findec_sum findec_void s1) ->
+    type node0 + type (findec_sum findec_void r1)) : 
+    type node0 + type s1 ->
+      type node0 + type r1 :=
+  (fun ns => match ns with 
+    | inl n => match p (inl n) with 
+      | inl n' => inl n'
+      | inr (v_r) => inr (rm_void_sumtype v_r) 
+      end 
+    | inr s => match p (inr (inr s)) with
+      | inl n' => inl n'
+      | inr (v_r) => inr (rm_void_sumtype v_r) 
+    end end).   
+
+Definition rm_void_link {i1 o1 node0 edge0: FinDecType} {control0 : (type node0) -> Kappa} 
+  (l : type (findec_sum i1 findec_void) + Port control0 ->
+    type (findec_sum i1 o1) + type edge0) : 
+      type i1 + Port control0 ->
+        type (findec_sum i1 o1) + type edge0 :=
+  (fun ip => match ip with 
+  | inl i => match l (inl (inl i)) with 
+    | inl i1o1 => inl i1o1
+    | inr e => inr e 
+    end 
+  | inr p => match l (inr p) with
+    | inl i1o1 => inl i1o1
+    | inr e => inr e 
+  end end).   
+
+Definition rm_void_finDecSum {s1 i1 o1 r1: FinDecType} 
+  (b : bigraph 
+    (findec_sum findec_void s1)
+    (findec_sum i1 findec_void)
+    (findec_sum findec_void r1)
+    (findec_sum i1 o1)) : 
+    bigraph 
+    s1
+    i1
+    r1
+    (findec_sum i1 o1).
+    Proof. 
+    destruct b.
+    apply 
+      (Big
+        s1 i1 r1 (findec_sum i1 o1)
+        node0
+        edge0
+        control0
+        (rm_void_parent' parent0)
+        (rm_void_link link0)
+      ).
+      unfold rm_void_parent'.
+      unfold rm_void_sumtype.
+      intro ns.
+      simpl.
+      unfold FiniteParent in ap0.
+      
+    Admitted.
+    
+
+
+Definition nest {s1 i1 r1 o1 s2 i2 : FinDecType} 
+  (b1 : bigraph s1 findec_void r1 o1) (b2 : bigraph findec_void i2 s1 i1) :=
+  (rm_void_finDecSum ((@bigraph_identity findec_void i1) || b1)) <<o>> b2.
+
+End NestingBig.
+
 Definition symmetry_arrow (I J:Type) : bijection (I + J) (J + I).
   Proof. 
   apply (bij_sum_comm). 
