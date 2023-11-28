@@ -833,3 +833,27 @@ Proof.
 
  
 End EJCP.
+
+
+
+O_or_S: forall n : nat, {m : nat | S m = n} + {0 = n}
+
+proj1_sig_eq:
+  forall (A : Type) (P : A -> Prop) (u v : {a : A | P a}),
+  u = v -> proj1_sig u = proj1_sig v
+  
+eq_sig_hprop:
+  forall (A : Type) (P : A -> Prop),
+  (forall (x : A) (p q : P x), p = q) ->
+  forall u v : {a : A | P a}, proj1_sig u = proj1_sig v -> u = v
+  
+proj2_sig_eq:
+  forall (A : Type) (P : A -> Prop) (u v : {a : A | P a}) (p : u = v),
+  eq_rect (proj1_sig u) (fun a : A => P a) (proj2_sig u) 
+	(proj1_sig v) (proj1_sig_eq p) = proj2_sig v
+	
+eq_sig:
+  forall (A : Type) (P : A -> Prop) (u v : {a : A | P a})
+	(p : proj1_sig u = proj1_sig v),
+  eq_rect (proj1_sig u) (fun a : A => P a) (proj2_sig u) (proj1_sig v) p =
+  proj2_sig v -> u = v
