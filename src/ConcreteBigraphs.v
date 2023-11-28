@@ -370,6 +370,8 @@ End EquivalenceBigraphs.
 Instance big_Equivalence: Equivalence bigraph_packed_equality.
 constructor. exact @bigraph_packed_equality_refl. exact @bigraph_packed_equality_sym. exact @bigraph_packed_equality_trans. Defined.
 
+Example b1 : bigraph_packed. Admitted.
+Example b2 : bigraph_packed. Admitted.
 
 Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
   reflexivity proved by (bigraph_packed_equality_refl)
@@ -378,10 +380,10 @@ Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
     as bigraph_packed_equality_rel.
 
 Lemma bigraph_packed_equality_dec  
-(b1 : bigraph_packed) (b2 : bigraph_packed) :
-{bigraph_packed_equality b1 b2} + {~ bigraph_packed_equality b1 b2}.
-Proof.
-Fail decide equality. Abort.
+  (b1 : bigraph_packed) (b2 : bigraph_packed) :
+  {bigraph_packed_equality b1 b2} + {~ bigraph_packed_equality b1 b2}.
+  Proof.
+  Fail decide equality. Abort.
 
 Definition sum_fun (f : nat -> nat) (g : nat -> nat) : nat -> nat :=
   fun n => f n + g n.
