@@ -120,7 +120,7 @@ Record bigraph  (site: FinDecType)
 End IntroBigraphs.
 
 (** * Getters
-This section is just getters to lightenn some notations *)
+  This section is just getters to lightenn some notations *)
 Section GettersBigraphs.
 Definition get_node {s i r o : FinDecType} (bg : bigraph s i r o) : FinDecType := 
   node s i r o bg.
@@ -337,6 +337,11 @@ Record support_equivalent {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}
   }.
 
 End EquivalenceBigraphs.
+
+
+Instance big_Equivalence: Equivalence bigraph_packed_equality.
+constructor. exact @bigraph_packed_equality_refl. exact @bigraph_packed_equality_sym. exact @bigraph_packed_equality_trans. Defined.
+
 
 Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
   reflexivity proved by (bigraph_packed_equality_refl)
@@ -1068,7 +1073,7 @@ Theorem bigraph_packed_comp_left_neutral : forall {s i r o} (b : bigraph s i r o
   apply bigraph_comp_left_neutral.
   Qed. 
 
-Theorem bigraph_packed_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) (b3 : bigraph s3 i3 s2 i2),
+(* Theorem bigraph_packed_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) (b3 : bigraph s3 i3 s2 i2),
   bigraph_packed_equality 
     (bigraph_packed_composition (bigraph_packed_composition b1 b2) b3) 
     (bigraph_packed_composition b1 (bigraph_packed_composition b2 b3)).
@@ -1076,7 +1081,7 @@ Theorem bigraph_packed_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigra
   unfold bigraph_packed_equality, bigraph_packed_juxtaposition.
   intros.
   apply bigraph_comp_assoc.
-  Qed. 
+  Qed.  *)
 
 Lemma bigraph_packed_comp_right_neutral : forall {s i r o} (b : bigraph s i r o), bigraph_packed_equality (bigraph_packed_composition b bigraph_identity) b.
   Proof.
