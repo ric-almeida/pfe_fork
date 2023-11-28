@@ -104,18 +104,16 @@ Lemma tensor_alt : forall {N1 I1 O1 N2 I2 O2} (f1 : N1 + I1 -> N1 + O1) (f2 : N2
   destruct x as [[n1|n2]|[i1|i2]]; reflexivity.
   Qed.
 
-Definition fun_sr (nb_sr : nat) := fun n => n + nb_sr.
-
-Record bigraph  (site: nat -> nat) (* forall n:nat, site n = nb_sites + n *)
+Record bigraph  (site: FinDecType) 
                 (innername: FinDecType) 
-                (root: nat -> nat) 
+                (root: FinDecType) 
                 (outername: FinDecType) : Type := 
   Big  
   { 
     node : FinDecType ;
     edge : FinDecType ;
     control : (type node) -> Kappa ;
-    parent : (type node) + fin (site 0) -> (type node) + fin (root 0) ; 
+    parent : (type node) + (type site) -> (type node) + (type root) ; 
     link : (type innername) + Port control -> (type outername) + (type edge); 
     ap : FiniteParent parent ;
   }.
@@ -124,15 +122,15 @@ End IntroBigraphs.
 (** * Getters
   This section is just getters to lightenn some notations *)
 Section GettersBigraphs.
-Definition get_node {i o : FinDecType} {s r : nat -> nat} (bg : bigraph s i r o) : FinDecType := 
+Definition get_node {s i r o : FinDecType} (bg : bigraph s i r o) : FinDecType := 
   node s i r o bg.
-Definition get_edge {i o : FinDecType} {s r : nat -> nat} (bg : bigraph s i r o) : FinDecType := 
+Definition get_edge {s i r o : FinDecType} (bg : bigraph s i r o) : FinDecType := 
   edge s i r o bg.
-Definition get_control {i o : FinDecType} {s r : nat -> nat} (bg : bigraph s i r o) : type (get_node bg) -> Kappa :=
+Definition get_control {s i r o : FinDecType} (bg : bigraph s i r o) : type (get_node bg) -> Kappa :=
   @control s i r o bg.
-Definition get_parent {i o : FinDecType} {s r : nat -> nat} (bg : bigraph s i r o) : (type (get_node bg)) + fin (s 0) -> (type (get_node bg)) + fin (r 0) :=
+Definition get_parent {s i r o : FinDecType} (bg : bigraph s i r o) : (type (get_node bg)) + (type s) -> (type (get_node bg)) + (type r) :=
   @parent s i r o bg.
-Definition get_link {i o : FinDecType} {s r : nat -> nat} (bg : bigraph s i r o) : (type i) + Port (get_control bg) -> (type o) + type (get_edge bg) :=
+Definition get_link {s i r o : FinDecType} (bg : bigraph s i r o) : (type i) + Port (get_control bg) -> (type o) + type (get_edge bg) :=
   @link s i r o bg.
 End GettersBigraphs.
 
@@ -151,15 +149,14 @@ End GettersBigraphs.
   bigraphs at will. *)
 Section EquivalenceBigraphs.
 (** ** On the heterogeneous type *)
-Record bigraph_equality {i1 o1 i2 o2 : FinDecType} {s1 r1 s2 r2 : nat -> nat}
+
+Record bigraph_equality {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
   BigEq
   {
-    bij_s : bijection (fin (s1 0)) (fin (s2 0)) ;
-    (* bij_s' : s1 0 = s2 0 ; *)
+    bij_s : bijection (type s1) (type s2) ;
     bij_i : bijection (type i1) (type i2) ;
-    bij_r : bijection (fin (r1 0)) (fin (r2 0)) ;
-    (* bij_r' : r1 0 = r2 0 ; *)
+    bij_r : bijection (type r1) (type r2) ;
     bij_o : bijection (type o1) (type o2) ;
     bij_n : bijection (type (get_node b1)) (type (get_node b2)) ;
     bij_e : bijection (type (get_edge b1)) (type (get_edge b2)) ;
@@ -169,40 +166,15 @@ Record bigraph_equality {i1 o1 i2 o2 : FinDecType} {s1 r1 s2 r2 : nat -> nat}
     big_link_eq    : ((bij_i <+> <{ bij_n & bij_p }>) -->> (bij_o <+> bij_e)) (get_link b1) = get_link b2
   }.
 
-  Require Import PeanoNat.
-  Lemma nat_lt_0_absurd : forall (p : nat), p < 0 -> False.
-  Proof.
-    intros p H.
-    apply Nat.nlt_0_r in H.
-    contradiction.
-  Qed.
-  
-  Lemma nat_lt_0_empty : {p : nat | p < 0} -> False.
-  Proof.
-    intros [p H_lt_0].
-    apply nat_lt_0_absurd in H_lt_0.
-    assumption.
-  Qed.
-  
-  Lemma nat_lt_0_to_void : {p : nat | p < 0} = void.
-  Proof. Abort.
-  (* destruct void. apply nat_lt_0_empty.
-  Qed. *)
+(* Theorem identified_interface {A} (baa : bijection A A) :
+  (forward baa) = id.
+  Proof. apply functional_extensionality. intros. unfold id.
+  destruct baa. destruct x. *)
 
-Theorem bij_means_eq {m n : nat} : 
-  bijection (fin (m)) (fin (n)) -> m = n.
-  Proof.
-  intros bij.
-  unfold fin in *.
-  induction n as [|n' Hn]; 
-  induction m as [|m' Hm]. Focus 4.
-  - rewrite Hm. Admitted. 
-
-Theorem bij_means_eq_sr {s1 r1 s2 r2 : nat -> nat} : 
-  bijection (fin (s1 0)) (fin (s2 0)) -> s1 0 = s2 0.
-  Proof. apply bij_means_eq. Qed.
-
-Lemma bigraph_equality_refl {i o : FinDecType} {s r : nat -> nat} (b : bigraph s i r o) :
+(* Definition get_bij_s {s1 i1 r1 o1 s2 i2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1)
+  : bijection (type s1) (type s2) :=
+  (bij_s (bigraph_equality b1 b2)). *)
+Lemma bigraph_equality_refl {s i r o : FinDecType} (b : bigraph s i r o) :
   bigraph_equality b b.
   Proof.
   eapply (BigEq _ _ _ _ _ _ _ _ _ _ bijection_id bijection_id bijection_id bijection_id bijection_id bijection_id (fun _ => bijection_id)).
@@ -219,7 +191,7 @@ Lemma bigraph_equality_refl {i o : FinDecType} {s r : nat -> nat} (b : bigraph s
     reflexivity.
   Qed.
 
-Lemma bigraph_equality_sym {i1 o1 i2 o2 : FinDecType} {s1 r1 s2 r2 : nat -> nat}  
+Lemma bigraph_equality_sym {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}  
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   bigraph_equality b1 b2
       -> bigraph_equality b2 b1.
@@ -272,7 +244,7 @@ Lemma bigraph_equality_sym {i1 o1 i2 o2 : FinDecType} {s1 r1 s2 r2 : nat -> nat}
     reflexivity.
   Qed.
 
-Lemma bigraph_equality_trans {i1 o1 i2 o2 i3 o3 : FinDecType} {s1 r1 s2 r2 s3 r3 : nat -> nat}
+Lemma bigraph_equality_trans {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}  
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3):
     bigraph_equality b1 b2
       -> bigraph_equality b2 b3  
@@ -309,7 +281,7 @@ Lemma bigraph_equality_trans {i1 o1 i2 o2 i3 o3 : FinDecType} {s1 r1 s2 r2 s3 r3
     reflexivity.
   Qed.
 
-Lemma bigraph_equality_dec {i1 o1 i2 o2 : FinDecType} {s1 r1 s2 r2 : nat -> nat} 
+Lemma bigraph_equality_dec {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType}  
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   {bigraph_equality b1 b2} + {~ bigraph_equality b1 b2}.
   Proof.
@@ -326,9 +298,9 @@ Lemma bigraph_equality_dec {i1 o1 i2 o2 : FinDecType} {s1 r1 s2 r2 : nat -> nat}
 Record bigraph_packed : Type :=
   mkPacked
   {
-  s: nat -> nat;
+  s: FinDecType;
   i: FinDecType;
-  r: nat -> nat;
+  r: FinDecType;
   o: FinDecType;
   big : bigraph s i r o
   }.
@@ -354,13 +326,13 @@ Lemma bigraph_packed_equality_trans (bp1 bp2 bp3 : bigraph_packed) : bigraph_pac
   apply bigraph_equality_trans.
   Qed.
 
-Record support_equivalent {i1 o1 i2 o2 : FinDecType} {s1 r1 s2 r2 : nat -> nat}
+Record support_equivalent {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
   SupEq
   {
-    s_bij_s : bijection (fin (s1 0)) (fin (s2 0)) ;
+    s_bij_s : bijection (type s1) (type s2) ;
     s_bij_i : bijection (type i1) (type i2) ;
-    s_bij_r : bijection (fin (r1 0)) (fin (r2 0)) ;
+    s_bij_r : bijection (type r1) (type r2) ;
     s_bij_o : bijection (type o1) (type o2) ;
   }.
 
@@ -370,8 +342,6 @@ End EquivalenceBigraphs.
 Instance big_Equivalence: Equivalence bigraph_packed_equality.
 constructor. exact @bigraph_packed_equality_refl. exact @bigraph_packed_equality_sym. exact @bigraph_packed_equality_trans. Defined.
 
-Example b1 : bigraph_packed. Admitted.
-Example b2 : bigraph_packed. Admitted.
 
 Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
   reflexivity proved by (bigraph_packed_equality_refl)
@@ -380,96 +350,31 @@ Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
     as bigraph_packed_equality_rel.
 
 Lemma bigraph_packed_equality_dec  
-  (b1 : bigraph_packed) (b2 : bigraph_packed) :
-  {bigraph_packed_equality b1 b2} + {~ bigraph_packed_equality b1 b2}.
-  Proof.
-  Fail decide equality. Abort.
+(b1 : bigraph_packed) (b2 : bigraph_packed) :
+{bigraph_packed_equality b1 b2} + {~ bigraph_packed_equality b1 b2}.
+Proof.
+Fail decide equality. Abort.
 
-Definition sum_fun (f : nat -> nat) (g : nat -> nat) : nat -> nat :=
-  fun n => f n + g n.
-
-Require Import Coq.Init.Nat.
-Definition bij_sr_forward {sr1 sr2 : nat -> nat} 
-  (p : fin (sr1 0) + fin (sr2 0)) : (fin ((sum_fun sr1 sr2) 0)).
-  Proof.
-    unfold sum_fun.
-    destruct p as [[p1 Hp1] | [p2 Hp2]]; unfold fin in *.
-    - exists p1.
-      apply PeanoNat.Nat.lt_lt_add_r. apply Hp1.
-    - exists p2.
-      apply PeanoNat.Nat.lt_lt_add_l. apply Hp2.
-  Defined.
-
-Definition bij_sr_backward {sr1 sr2 : nat -> nat} 
-  (p : fin ((sum_fun sr1 sr2) 0)) : (fin (sr1 0) + fin (sr2 0)).
-  Proof.
-  unfold fin in *.
-  unfold sum_fun in p.
-  destruct p as [p H]. 
-  set (sr1_ := sr1 0).
-  set (sr2_ := sr2 0).
-  fold sr1_ in H.
-  fold sr2_ in H. (* HELP *)
-  destruct (ltb p sr1_) eqn:E. 
-  - (* p < sr1_ *)
-    Search ((_ <? _) = true). 
-    rewrite PeanoNat.Nat.ltb_lt in E.
-    left.
-    exists p.
-    apply E.
-  - (* sr1_ <= p < sr1_ + sr2_ *)
-    Search ((_ <? _) = false). 
-    right. 
-    exists (p - sr1_).
-    Search ( _ < _ <-> _ + _ < _ + _).
-    apply PeanoNat.Nat.add_lt_mono_r with (p:=sr1_).
-    Search (_ - _ + _ < _ <-> _ < _).
-    rewrite PeanoNat.Nat.sub_add.
-    + rewrite Coq.Arith.Plus.plus_comm.
-      apply H.
-    + apply PeanoNat.Nat.ltb_ge in E. apply E. Defined.
-
-Definition bij_sr {sr1 sr2 : nat -> nat} :
-  bijection (fin (sr1 0) + fin (sr2 0)) (fin ((sum_fun sr1 sr2) 0)).
-  Proof. 
-    apply ( mkBijection
-      (fin (sr1 0) + fin (sr2 0)) 
-      (fin ((sum_fun sr1 sr2) 0))
-      bij_sr_forward
-      bij_sr_backward
-    ). 
-    - apply functional_extensionality.
-      intros [sr_ H]. unfold id.
-      unfold bij_sr_forward, bij_sr_backward. unfold funcomp, id, sum_fun in *. Admitted.
-      (* + apply H1. 
-    - apply functional_extensionality.
-      unfold bij_sr_forward, bij_sr_backward, funcomp, id, sum_fun.
-      intros [[sr1_ H1] | [sr2_ H2]].
-      + apply H1. 
-    Admitted. *)
-
-Definition bigraph_juxtaposition {i1 o1 i2 o2 : FinDecType} {s1 r1 s2 r2 : nat -> nat}
+Definition bigraph_juxtaposition {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
-    : bigraph (sum_fun s1 s2) (findec_sum i1 i2) (sum_fun r1 r2) (findec_sum o1 o2).
+    : bigraph (findec_sum s1 s2) (findec_sum i1 i2) (findec_sum r1 r2) (findec_sum o1 o2).
   Proof.
-  apply (Big (sum_fun s1 s2)
-            (findec_sum i1 i2)
-            (sum_fun r1 r2)
-            (findec_sum o1 o2)
-            (findec_sum (get_node b1) (get_node b2))
-            (findec_sum (get_edge b1) (get_edge b2))
-            (join (get_control b1) (get_control b2))
-            ((@bijection_id _ <+> (bij_sr)) <o>
-              (bij_sum_shuffle <o> (parallel (get_parent b1) (get_parent b2)) <o> (bijection_inv bij_sum_shuffle))<o> 
-              (bijection_inv (@bijection_id _ <+> (bij_sr))))
-            (bij_sum_shuffle <o> (parallel (get_link b1) (get_link b2)) <o> (bijection_inv bij_sum_shuffle) <o> 
-              (bijection_inv (@bijection_id _ <+> (bij_join_port (get_control b1) (get_control b2)))))
-      ).
-  rewrite <- tensor_alt. unfold bij_sum_compose. simpl. Admitted.
-  (* unfold bij_sr. apply finite_parent_tensor.
+  apply (Big (findec_sum s1 s2)
+             (findec_sum i1 i2)
+             (findec_sum r1 r2)
+             (findec_sum o1 o2)
+             (findec_sum (get_node b1) (get_node b2))
+             (findec_sum (get_edge b1) (get_edge b2))
+             (join (get_control b1) (get_control b2))
+             (bij_sum_shuffle <o> (parallel (get_parent b1) (get_parent b2)) <o> (bijection_inv bij_sum_shuffle))
+             (bij_sum_shuffle <o> (parallel (get_link b1)   (get_link b2))   <o> (bijection_inv bij_sum_shuffle) <o> 
+               (bijection_inv (@bijection_id _ <+> (bij_join_port (get_control b1) (get_control b2)))))
+        ).
+  rewrite <- tensor_alt.
+  apply finite_parent_tensor.
   + exact (ap _ _ _ _ b1).
   + exact (ap _ _ _ _ b2).
-  Defined. *)
+  Defined.
 
 Notation "b1 || b2" := (bigraph_juxtaposition b1 b2) (at level 50, left associativity).
 
