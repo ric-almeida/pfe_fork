@@ -1231,42 +1231,63 @@ Definition rm_void_link {i1 o1 node0 edge0: FinDecType} {control0 : (type node0)
     | inr e => inr e 
   end end).   
 
+Lemma acyclic_rm_void_parent {node s r: FinDecType} {n:type node}
+  {p: type node + type (findec_sum findec_void s) ->
+  type node + type (findec_sum findec_void r)} :
+  Acc (fun n' n : type node => p (inl n) = inl n') n
+  -> Acc
+  (fun n' n0 : type node =>
+   rm_void_parent' p (inl n0) =
+   inl n') n. Admitted.
+
 Definition rm_void_finDecSum {s1 i1 o1 r1: FinDecType} 
-  (b : bigraph 
-    (findec_sum findec_void s1)
-    (findec_sum i1 findec_void)
-    (findec_sum findec_void r1)
-    (findec_sum i1 o1)) : 
-    bigraph 
-    s1
-    i1
-    r1
-    (findec_sum i1 o1).
-    Proof. 
-    destruct b.
-    apply 
-      (Big
-        s1 i1 r1 (findec_sum i1 o1)
-        node0
-        edge0
-        control0
-        (rm_void_parent' parent0)
-        (rm_void_link link0)
-      ).
-      unfold rm_void_parent'.
-      unfold rm_void_sumtype.
-      intro ns.
-      simpl.
-      unfold FiniteParent in ap0.
-      
-    Admitted.
-    
+  (b : bigraph (findec_sum findec_void s1) (findec_sum i1 findec_void) (findec_sum findec_void r1) (findec_sum i1 o1)) : 
+  bigraph s1 i1 r1 (findec_sum i1 o1).
+  Proof. 
+  destruct b.
+  apply 
+    (Big
+      s1 i1 r1 (findec_sum i1 o1)
+      node0
+      edge0
+      control0
+      (rm_void_parent' parent0)
+      (rm_void_link link0)
+    ).
+    unfold FiniteParent in *.
+    intros n.
+    specialize (ap0 n).
+    apply acyclic_rm_void_parent.
+    apply ap0.
+    Qed.
 
 
-Definition nest {s1 i1 r1 o1 s2 i2 : FinDecType} 
+Definition nest {s1 i1 r1 o1 i2 : FinDecType} 
   (b1 : bigraph s1 findec_void r1 o1) (b2 : bigraph findec_void i2 s1 i1) :=
   (rm_void_finDecSum ((@bigraph_identity findec_void i1) || b1)) <<o>> b2.
 
+Definition nest' {I m X n Y : FinDecType} 
+  (F : bigraph findec_void I m X) (G : bigraph m findec_void n Y) 
+  : bigraph findec_void I n (findec_sum X Y) :=
+  (rm_void_finDecSum ((@bigraph_identity findec_void X) || G)) <<o>> F.
+
+Example I : FinDecType. Admitted.
+Example m : FinDecType. Admitted.
+Example X : FinDecType. Admitted.
+Example n : FinDecType. Admitted.
+Example Y : FinDecType. Admitted.
+Example F : bigraph findec_void I m X. Admitted.
+Example G : bigraph m findec_void n Y. Admitted.
+
+Check (@bigraph_identity findec_void X) || G.
+Check rm_void_finDecSum ((@bigraph_identity findec_void X) || G).
+Check (rm_void_finDecSum ((@bigraph_identity findec_void X) || G)) <<o>> F.
+Check nest' F G.
+
+Example b1 {s1 r1 o1}: bigraph s1 findec_void r1 o1. Admitted.
+Example b2 {s1 i2 i1}: bigraph findec_void i2 s1 i1. Admitted.
+
+Check nest b1 b2.
 End NestingBig.
 
 Definition symmetry_arrow (I J:Type) : bijection (I + J) (J + I).
