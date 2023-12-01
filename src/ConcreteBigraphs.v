@@ -112,7 +112,7 @@ Record bigraph  (site: FinDecType)
   { 
     node : FinDecType ;
     edge : FinDecType ;
-    control : (type node) -> Kappa ;
+    control : (type node) -> Bigraphs.Kappa ;
     parent : (type node) + (type site) -> (type node) + (type root) ; 
     link : (type innername) + Port control -> (type outername) + (type edge); 
     ap : FiniteParent parent ;
@@ -1179,12 +1179,10 @@ Theorem bigraph_comp_juxt_dist : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
     
 Section NestingBig.
 
-
 Definition rm_void_parent {s1 r1 node0: FinDecType} 
   (p : type node0 + type (findec_sum findec_void s1) ->
     type node0 + type (findec_sum findec_void r1)) : 
-    type node0 + type s1 ->
-      type node0 + type r1.
+    type node0 + type s1 -> type node0 + type r1.
   Proof. intros [n|s].
     - destruct (p (inl n)) eqn:Epn.
     + left. exact t.
@@ -1201,20 +1199,27 @@ Definition rm_void_sumtype {r1 : FinDecType} (x:type (findec_sum findec_void r1)
     | inr t => t end.
   (* destruct x. destruct t. exact t. Defined. *)
 
+Definition rm_void_sumtype' {r1 : FinDecType} (x:type (findec_sum findec_void r1)) : type r1.
+  Proof.
+  destruct x. destruct t. exact t. Defined.
+
+Definition rm_void_pair {node root : FinDecType} (pns : type node + type (findec_sum findec_void root)):
+  type node + type root :=
+  match pns with 
+  | inl n => inl n
+  | inr (v_r) => inr (rm_void_sumtype' v_r) 
+  end.
+
+
 Definition rm_void_parent' {s1 r1 node0: FinDecType} 
   (p : type node0 + type (findec_sum findec_void s1) ->
     type node0 + type (findec_sum findec_void r1)) : 
     type node0 + type s1 ->
       type node0 + type r1 :=
   (fun ns => match ns with 
-    | inl n => match p (inl n) with 
-      | inl n' => inl n'
-      | inr (v_r) => inr (rm_void_sumtype v_r) 
-      end 
-    | inr s => match p (inr (inr s)) with
-      | inl n' => inl n'
-      | inr (v_r) => inr (rm_void_sumtype v_r) 
-    end end).   
+    | inl n => rm_void_pair (p (inl n))
+    | inr s => rm_void_pair (p (inr (inr s)))
+    end).   
 
 Definition rm_void_link {i1 o1 node0 edge0: FinDecType} {control0 : (type node0) -> Kappa} 
   (l : type (findec_sum i1 findec_void) + Port control0 ->
@@ -1236,9 +1241,18 @@ Lemma acyclic_rm_void_parent {node s r: FinDecType} {n:type node}
   type node + type (findec_sum findec_void r)} :
   Acc (fun n' n : type node => p (inl n) = inl n') n
   -> Acc
-  (fun n' n0 : type node =>
-   rm_void_parent' p (inl n0) =
-   inl n') n. Admitted.
+  (fun n' n0 : type node => rm_void_parent' p (inl n0) = inl n') n.
+  Proof. 
+    intros H.
+    unfold rm_void_parent'.
+    unfold rm_void_pair.
+    unfold rm_void_sumtype'.
+
+    eapply Acc_inv in H.
+    destruct H as [H_acc _].
+    - admit.
+    - admit.
+  Admitted.
 
 Definition rm_void_finDecSum {s1 i1 o1 r1: FinDecType} 
   (b : bigraph (findec_sum findec_void s1) (findec_sum i1 findec_void) (findec_sum findec_void r1) (findec_sum i1 o1)) : 
@@ -1288,7 +1302,11 @@ Example b1 {s1 r1 o1}: bigraph s1 findec_void r1 o1. Admitted.
 Example b2 {s1 i2 i1}: bigraph findec_void i2 s1 i1. Admitted.
 
 Check nest b1 b2.
+
 End NestingBig.
+
+
+
 
 Definition symmetry_arrow (I J:Type) : bijection (I + J) (J + I).
   Proof. 
@@ -1336,3 +1354,35 @@ Lemma symmetry_S4 {I J K} :
 
 
 End Bigraphs.
+
+Module MyBigraphs := Bigraphs.
+Import Bigraphs.
+Definition MyKappa : Type := type (findec_fin 3).
+Example zero : MyKappa. exists 0. auto. Defined.
+Example un : MyKappa. exists 1. auto. Defined.
+Example deux : MyKappa. exists 2. auto. Defined.
+
+Definition MyArity : MyKappa -> nat := (fun 
+    mk => match mk with 
+    | exist _ n pf => n + 1
+    end
+  ).
+  
+Example Kxyz : 
+  bigraph (findec_fin 1) (findec_fin 0) (findec_fin 1) (findec_fin 3).
+  apply (Big
+    _ _ _ _ 
+    (findec_fin 1)
+    (findec_fin 0)
+    (fun n => match n with | _ => deux end) (*control*)
+    (fun ns => match ns with 
+    | inl _ => 0
+    | inr (exist _ x _) => match x with end
+    end) (*parent*)
+    (fun ip => match ip with 
+    | inl (exist _ x _) => match x with end
+    | inr (exist _ p _) => p
+    end) (*link*)
+  ).
+
+End ExampleBigraph.
