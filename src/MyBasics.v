@@ -32,9 +32,9 @@ Inductive closure {N I O : Type} (p : (N+I) -> (N+O)) (ni : N+I) : (N+O) -> Prop
 
 Definition FiniteChild {N I O} (p : N+I -> N+O) := forall n, Acc (fun n n' => p (inl n) = inl n') n.
 
-Definition FiniteParent {N I O} (p : N+I -> N+O) := forall n, Acc (fun n' n => p (inl n) = inl n') n.
+Definition Acyclic {N I O} (p : N+I -> N+O) := forall n, Acc (fun n' n => p (inl n) = inl n') n.
 
-Definition Acyclic {N I O} (p : N+I -> N+O) := forall ni no, closure p ni no -> forall n, ni = inl n -> ~ no = inl n.
+Definition Acyclic' {N I O} (p : N+I -> N+O) := forall ni no, closure p ni no -> forall n, ni = inl n -> ~ no = inl n.
 
 Lemma eq_sigT_intro : forall {A} {P : A -> Type} {x y : A} {Px : P x} (Hxy : x = y), 
   existT P x Px = existT P y (eq_rect x P Px y Hxy).
@@ -826,7 +826,7 @@ Theorem antisymmetric_acyclic : forall {N I O : Type} (pp : N+I -> N+O) n,
 
 (* Théorèmes faux 
   Theorem finite_parent_child : forall { N I O : Type} (pp : N+I -> N+O),
-    FiniteParent pp -> FiniteChild pp.
+    Acyclic pp -> FiniteChild pp.
   Proof.
   intros until pp.
   intro HC.
@@ -843,7 +843,7 @@ Theorem antisymmetric_acyclic : forall {N I O : Type} (pp : N+I -> N+O) n,
   Qed.
 
   Theorem finite_child_parent : forall { N I O : Type} (pp : N+I -> N+O),
-    FiniteChild pp -> FiniteParent pp.
+    FiniteChild pp -> Acyclic pp.
   Proof.
   intros until pp.
   intro HC.
@@ -877,9 +877,9 @@ Theorem finite_child_acyclic : forall {N I O : Type} (pp : N+I -> N+O),
   Qed.
 
 Theorem finite_parent_acyclic : forall {N I O : Type} (pp : N+I -> N+O),
-  FiniteParent pp -> forall n, ~closure pp (inl n) (inl n).
+  Acyclic pp -> forall n, ~closure pp (inl n) (inl n).
   Proof.
-  unfold FiniteParent.
+  unfold Acyclic.
   intros N I O pp H n.
   induction (H n).
   intro H2.
@@ -978,7 +978,7 @@ Theorem finite_parent_tensor_right : forall {N1 I1 O1 N2 I2 O2 : Type} (p1 : N1+
   Qed.
 
 Theorem finite_parent_tensor : forall {N1 I1 O1 N2 I2 O2 : Type} (p1 : N1+I1 -> N1+O1) (p2 : N2+I2 -> N2+O2),
-  FiniteParent p1 -> FiniteParent p2 -> FiniteParent (tensor p1 p2).
+  Acyclic p1 -> Acyclic p2 -> Acyclic (tensor p1 p2).
   Proof.
   intros until p2.
   intros Hp1 Hp2 n.
@@ -1081,7 +1081,7 @@ Theorem finite_parent_sequence_right : forall {N1 N2 S1 S2 R1 : Type} (p1 : N1+S
   Qed.
 
 Theorem finite_parent_sequence_left : forall {N1 N2 S1 S2 R1 : Type} (p1 : N1+S1 -> N1+R1) (p2 : N2+S2 -> N2+S1) (n2:N2),
-  Acc (fun n' n => p2 (inl n) = inl n') n2 -> FiniteParent p1 -> Acc (fun n' n => (sequence p2 p1) (inl n) = inl n') (inr n2).
+  Acc (fun n' n => p2 (inl n) = inl n') n2 -> Acyclic p1 -> Acc (fun n' n => (sequence p2 p1) (inl n) = inl n') (inr n2).
   Proof.
   intros until p2.
   intros n2 Hp2n2 Hp1.
@@ -1108,7 +1108,7 @@ Theorem finite_parent_sequence_left : forall {N1 N2 S1 S2 R1 : Type} (p1 : N1+S1
 
 
 Theorem finite_parent_sequence : forall {N1 N2 S1 S2 R1 : Type} (p1 : N1+S1 -> N1+R1) (p2 : N2+S2 -> N2+S1),
-  FiniteParent p1 -> FiniteParent p2 -> FiniteParent (sequence p2 p1).
+  Acyclic p1 -> Acyclic p2 -> Acyclic (sequence p2 p1).
   Proof.
   intros until p2.
   intros Hp1 Hp2 n.

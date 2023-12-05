@@ -398,6 +398,7 @@ rewrite Hij in HlAi.
 intuition.
 Qed.
 
+(*revoir ça*)
 Theorem finite_disjoint_union : forall A (P : A -> Prop) (DecP : forall a, decidable (P a)), 
   Finite { a : A | P a } -> Finite { a : A | ~(P a) } -> Finite A.
 Proof.

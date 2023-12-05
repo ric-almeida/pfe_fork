@@ -18,6 +18,7 @@ Module Bigraphs.
 
 Variable Kappa:Type.
 Variable Arity:Kappa-> nat.
+Variable Name:Type. (*Or DecType?*)
 
 (** * Definition of a bigraph
   This section defines the Type bigraph *)
@@ -104,33 +105,38 @@ Lemma tensor_alt : forall {N1 I1 O1 N2 I2 O2} (f1 : N1 + I1 -> N1 + O1) (f2 : N2
   destruct x as [[n1|n2]|[i1|i2]]; reflexivity.
   Qed.
 
+  Inductive list (A:Type) : Type :=
+    | nil : list A
+    | cons : A -> list A -> list A.
+
 Record bigraph  (site: FinDecType) 
-                (innername: FinDecType) 
+                (innername: Name -> Prop) 
                 (root: FinDecType) 
-                (outername: FinDecType) : Type := 
+                (outername: Name -> Prop) : Type := 
   Big  
   { 
     node : FinDecType ;
     edge : FinDecType ;
-    control : (type node) -> Bigraphs.Kappa ;
+    control : (type node) -> Kappa ;
     parent : (type node) + (type site) -> (type node) + (type root) ; 
-    link : (type innername) + Port control -> (type outername) + (type edge); 
-    ap : FiniteParent parent ;
+    link : {i:Name|innername i} + Port control -> {o:Name|outername o} + (type edge); 
+    ap : Acyclic parent ;
   }.
+
 End IntroBigraphs.
 
 (** * Getters
   This section is just getters to lightenn some notations *)
 Section GettersBigraphs.
-Definition get_node {s i r o : FinDecType} (bg : bigraph s i r o) : FinDecType := 
+Definition get_node     {s r : FinDecType} {i o : Name -> Prop} (bg : bigraph s i r o) : FinDecType := 
   node s i r o bg.
-Definition get_edge {s i r o : FinDecType} (bg : bigraph s i r o) : FinDecType := 
+Definition get_edge     {s r : FinDecType} {i o : Name -> Prop} (bg : bigraph s i r o) : FinDecType := 
   edge s i r o bg.
-Definition get_control {s i r o : FinDecType} (bg : bigraph s i r o) : type (get_node bg) -> Kappa :=
+Definition get_control  {s r : FinDecType} {i o : Name -> Prop} (bg : bigraph s i r o) : type (get_node bg) -> Kappa :=
   @control s i r o bg.
-Definition get_parent {s i r o : FinDecType} (bg : bigraph s i r o) : (type (get_node bg)) + (type s) -> (type (get_node bg)) + (type r) :=
+Definition get_parent   {s r : FinDecType} {i o : Name -> Prop} (bg : bigraph s i r o) : (type (get_node bg)) + (type s) -> (type (get_node bg)) + (type r) :=
   @parent s i r o bg.
-Definition get_link {s i r o : FinDecType} (bg : bigraph s i r o) : (type i) + Port (get_control bg) -> (type o) + type (get_edge bg) :=
+Definition get_link     {s r : FinDecType} {i o : Name -> Prop} (bg : bigraph s i r o) : {i':Name|i i'} + Port (get_control bg) -> {o':Name|o o'} + type (get_edge bg) :=
   @link s i r o bg.
 End GettersBigraphs.
 
@@ -150,7 +156,7 @@ End GettersBigraphs.
 Section EquivalenceBigraphs.
 (** ** On the heterogeneous type *)
 
-Record bigraph_equality {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
+Record bigraph_equality {s1 r1 s2 r2 : FinDecType} {}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
   BigEq
   {
@@ -383,10 +389,10 @@ Notation "b1 || b2" := (bigraph_juxtaposition b1 b2) (at level 50, left associat
   of putting two bigraphs with disjoint interfaces "next" to one another. 
   After the definition, we prove associativity and commutativity of dis_juxtaposition *)
 Section DisjointJuxtaposition.
-Definition bigraph_empty : bigraph findec_void findec_void findec_void findec_void.
+Definition bigraph_empty : bigraph voidfd voidfd voidfd voidfd.
   Proof.
-  apply (Big findec_void findec_void findec_void findec_void
-            findec_void findec_void
+  apply (Big voidfd voidfd voidfd voidfd
+            voidfd voidfd
             (@void_univ_embedding _)
             (choice void_univ_embedding void_univ_embedding)
             (choice void_univ_embedding (void_univ_embedding <o> (bij_port_void (@void_univ_embedding _))))).
@@ -754,8 +760,8 @@ Section CompositionBigraphs.
 Definition bigraph_identity {s i}: bigraph s i s i.
   Proof.
   apply (Big s i s i
-          findec_void 
-          findec_void
+          voidfd 
+          voidfd
           (@void_univ_embedding _)
           id).
   - intros [inner | p].
@@ -1180,8 +1186,8 @@ Theorem bigraph_comp_juxt_dist : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
 Section NestingBig.
 
 Definition rm_void_parent {s1 r1 node0: FinDecType} 
-  (p : type node0 + type (findec_sum findec_void s1) ->
-    type node0 + type (findec_sum findec_void r1)) : 
+  (p : type node0 + type (findec_sum voidfd s1) ->
+    type node0 + type (findec_sum voidfd r1)) : 
     type node0 + type s1 -> type node0 + type r1.
   Proof. intros [n|s].
     - destruct (p (inl n)) eqn:Epn.
@@ -1191,7 +1197,7 @@ Definition rm_void_parent {s1 r1 node0: FinDecType}
     + left. exact t.
     + right. destruct t. destruct t. exact t. Defined.
 
-Definition rm_void_sumtype {r1 : FinDecType} (x:type (findec_sum findec_void r1)) : type r1 := 
+Definition rm_void_sumtype {r1 : FinDecType} (x:type (findec_sum voidfd r1)) : type r1 := 
   match x with
     | inl t =>
         match t return (type r1) with
@@ -1199,11 +1205,11 @@ Definition rm_void_sumtype {r1 : FinDecType} (x:type (findec_sum findec_void r1)
     | inr t => t end.
   (* destruct x. destruct t. exact t. Defined. *)
 
-Definition rm_void_sumtype' {r1 : FinDecType} (x:type (findec_sum findec_void r1)) : type r1.
+Definition rm_void_sumtype' {r1 : FinDecType} (x:type (findec_sum voidfd r1)) : type r1.
   Proof.
   destruct x. destruct t. exact t. Defined.
 
-Definition rm_void_pair {node root : FinDecType} (pns : type node + type (findec_sum findec_void root)):
+Definition rm_void_pair {node root : FinDecType} (pns : type node + type (findec_sum voidfd root)):
   type node + type root :=
   match pns with 
   | inl n => inl n
@@ -1212,8 +1218,8 @@ Definition rm_void_pair {node root : FinDecType} (pns : type node + type (findec
 
 
 Definition rm_void_parent' {s1 r1 node0: FinDecType} 
-  (p : type node0 + type (findec_sum findec_void s1) ->
-    type node0 + type (findec_sum findec_void r1)) : 
+  (p : type node0 + type (findec_sum voidfd s1) ->
+    type node0 + type (findec_sum voidfd r1)) : 
     type node0 + type s1 ->
       type node0 + type r1 :=
   (fun ns => match ns with 
@@ -1222,7 +1228,7 @@ Definition rm_void_parent' {s1 r1 node0: FinDecType}
     end).   
 
 Definition rm_void_link {i1 o1 node0 edge0: FinDecType} {control0 : (type node0) -> Kappa} 
-  (l : type (findec_sum i1 findec_void) + Port control0 ->
+  (l : type (findec_sum i1 voidfd) + Port control0 ->
     type (findec_sum i1 o1) + type edge0) : 
       type i1 + Port control0 ->
         type (findec_sum i1 o1) + type edge0 :=
@@ -1237,8 +1243,8 @@ Definition rm_void_link {i1 o1 node0 edge0: FinDecType} {control0 : (type node0)
   end end).   
 
 Lemma acyclic_rm_void_parent {node s r: FinDecType} {n:type node}
-  {p: type node + type (findec_sum findec_void s) ->
-  type node + type (findec_sum findec_void r)} :
+  {p: type node + type (findec_sum voidfd s) ->
+  type node + type (findec_sum voidfd r)} :
   Acc (fun n' n : type node => p (inl n) = inl n') n
   -> Acc
   (fun n' n0 : type node => rm_void_parent' p (inl n0) = inl n') n.
@@ -1255,7 +1261,7 @@ Lemma acyclic_rm_void_parent {node s r: FinDecType} {n:type node}
   Admitted.
 
 Definition rm_void_finDecSum {s1 i1 o1 r1: FinDecType} 
-  (b : bigraph (findec_sum findec_void s1) (findec_sum i1 findec_void) (findec_sum findec_void r1) (findec_sum i1 o1)) : 
+  (b : bigraph (findec_sum voidfd s1) (findec_sum i1 voidfd) (findec_sum voidfd r1) (findec_sum i1 o1)) : 
   bigraph s1 i1 r1 (findec_sum i1 o1).
   Proof. 
   destruct b.
@@ -1268,40 +1274,124 @@ Definition rm_void_finDecSum {s1 i1 o1 r1: FinDecType}
       (rm_void_parent' parent0)
       (rm_void_link link0)
     ).
-    unfold FiniteParent in *.
+    unfold Acyclic in *.
     intros n.
     specialize (ap0 n).
     apply acyclic_rm_void_parent.
     apply ap0.
-    Qed.
+    Defined.
 
 
 Definition nest {s1 i1 r1 o1 i2 : FinDecType} 
-  (b1 : bigraph s1 findec_void r1 o1) (b2 : bigraph findec_void i2 s1 i1) :=
-  (rm_void_finDecSum ((@bigraph_identity findec_void i1) || b1)) <<o>> b2.
+  (b1 : bigraph s1 voidfd r1 o1) (b2 : bigraph voidfd i2 s1 i1) :=
+  (rm_void_finDecSum ((@bigraph_identity voidfd i1) || b1)) <<o>> b2.
 
-Definition nest' {I m X n Y : FinDecType} 
-  (F : bigraph findec_void I m X) (G : bigraph m findec_void n Y) 
-  : bigraph findec_void I n (findec_sum X Y) :=
-  (rm_void_finDecSum ((@bigraph_identity findec_void X) || G)) <<o>> F.
+Definition nest' {I m X n Y : FinDecType} (* G.F *)
+  (G : bigraph m voidfd n Y) (F : bigraph voidfd I m X) 
+  : bigraph voidfd I n (findec_sum X Y) :=
+  (rm_void_finDecSum ((@bigraph_identity voidfd X) || G)) <<o>> F.
 
+  (* TODO union *)
 Example I : FinDecType. Admitted.
 Example m : FinDecType. Admitted.
 Example X : FinDecType. Admitted.
 Example n : FinDecType. Admitted.
 Example Y : FinDecType. Admitted.
-Example F : bigraph findec_void I m X. Admitted.
-Example G : bigraph m findec_void n Y. Admitted.
+Example F : bigraph voidfd I m X. Admitted.
+Example G : bigraph m voidfd n Y. Admitted.
 
-Check (@bigraph_identity findec_void X) || G.
-Check rm_void_finDecSum ((@bigraph_identity findec_void X) || G).
-Check (rm_void_finDecSum ((@bigraph_identity findec_void X) || G)) <<o>> F.
-Check nest' F G.
+Check (@bigraph_identity voidfd X) || G.
+Check rm_void_finDecSum ((@bigraph_identity voidfd X) || G).
+Check (rm_void_finDecSum ((@bigraph_identity voidfd X) || G)) <<o>> F.
+Check nest' G F.
 
-Example b1 {s1 r1 o1}: bigraph s1 findec_void r1 o1. Admitted.
-Example b2 {s1 i2 i1}: bigraph findec_void i2 s1 i1. Admitted.
+Notation "b1 [.] b2" := (nest' b1 b2) (at level 50, left associativity).
+
+Check G [.] F.
+
+Example b1 {s1 r1 o1}: bigraph s1 voidfd r1 o1. Admitted.
+Example b2 {s1 i2 i1}: bigraph voidfd i2 s1 i1. Admitted.
 
 Check nest b1 b2.
+
+
+Fail Lemma nest'_associative {I k X m Y n Z : FinDecType} 
+(F : bigraph voidfd I k X) 
+(G : bigraph k voidfd m Y) 
+(H : bigraph m voidfd n Z) 
+: H [.] (G [.] F) = (H [.] G) [.] F.
+(* Cannot do H.G *)
+
+
+(*Weird tests*)
+Example I' : FinDecType. Admitted.
+Example G' : bigraph m I' n Y. Admitted.
+Check (@bigraph_identity voidfd X) || G'.
+
+Definition rm_void_link' 
+  {i1 i2 o1 node0 edge0: FinDecType} 
+  {control0 : (type node0) -> Kappa} 
+  (l : type (findec_sum i1 i2) + Port control0 ->
+    type (findec_sum i1 o1) + type edge0) : 
+      type (findec_sum i1 i2) + Port control0 ->
+        type (findec_sum i1 o1) + type edge0 :=
+  (fun ip => match ip with 
+  | inl i => match l ((inl i)) with 
+    | inl i1o1 => inl i1o1
+    | inr e => inr e 
+    end 
+  | inr p => match l (inr p) with
+    | inl i1o1 => inl i1o1
+    | inr e => inr e 
+  end end).   
+
+Definition rm_void_finDecSum' {s1 i1 o1 r1 i2: FinDecType} 
+  (b : bigraph (findec_sum voidfd s1) (findec_sum i1 i2) (findec_sum voidfd r1) (findec_sum i1 o1)) : 
+  bigraph s1 (findec_sum i1 i2) r1 (findec_sum i1 o1).
+  Proof. 
+  destruct b.
+  apply 
+    (Big
+      s1 (findec_sum i1 i2) r1 (findec_sum i1 o1)
+      node0
+      edge0
+      control0
+      (rm_void_parent' parent0)
+      (rm_void_link' link0)
+    ).
+    unfold Acyclic in *.
+    intros n.
+    specialize (ap0 n).
+    apply acyclic_rm_void_parent.
+    apply ap0.
+    Defined.
+
+Definition rm_void_finDecSum_left {s1 i1 o1 r1 i2: FinDecType} 
+  (b : bigraph (findec_sum s1 voidfd) (findec_sum i1 i2) (findec_sum r1 voidfd) (findec_sum o1 i2)) : 
+  bigraph s1 (findec_sum i1 i2) r1 (findec_sum i1 i2).
+  Proof. 
+  destruct b. Admitted.
+  (* apply 
+    (Big
+      s1 (findec_sum i1 i2) r1 (findec_sum i1 o1)
+      node0
+      edge0
+      control0
+      (rm_void_parent' parent0)
+      (rm_void_link' link0)
+    ).
+    unfold Acyclic in *.
+    intros n.
+    specialize (ap0 n).
+    apply acyclic_rm_void_parent.
+    apply ap0.
+    Qed. *)
+
+Fail Definition nest'' {s1 i1 r1 o1 s2 i2 o2 : FinDecType} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 o2) 
+  : bigraph s2 (findec_sum i2 i1) r1 (findec_sum o2 o1) :=
+  (rm_void_finDecSum' ((@bigraph_identity voidfd i2) || b1)) <<o>> 
+  (rm_void_finDecSum_left (b2 || (@bigraph_identity voidfd i1))).
 
 End NestingBig.
 
@@ -1356,33 +1446,34 @@ Lemma symmetry_S4 {I J K} :
 End Bigraphs.
 
 Module MyBigraphs := Bigraphs.
-Import Bigraphs.
-Definition MyKappa : Type := type (findec_fin 3).
-Example zero : MyKappa. exists 0. auto. Defined.
-Example un : MyKappa. exists 1. auto. Defined.
-Example deux : MyKappa. exists 2. auto. Defined.
-
-Definition MyArity : MyKappa -> nat := (fun 
-    mk => match mk with 
-    | exist _ n pf => n + 1
-    end
-  ).
+  Import Bigraphs.
   
-Example Kxyz : 
-  bigraph (findec_fin 1) (findec_fin 0) (findec_fin 1) (findec_fin 3).
-  apply (Big
-    _ _ _ _ 
-    (findec_fin 1)
-    (findec_fin 0)
-    (fun n => match n with | _ => deux end) (*control*)
-    (fun ns => match ns with 
-    | inl _ => 0
-    | inr (exist _ x _) => match x with end
-    end) (*parent*)
-    (fun ip => match ip with 
-    | inl (exist _ x _) => match x with end
-    | inr (exist _ p _) => p
-    end) (*link*)
-  ).
+  Definition MyKappa : Type := type (findec_fin 3).
+  Example zero : MyKappa. exists 0. auto. Defined.
+  Example un : MyKappa. exists 1. auto. Defined.
+  Example deux : MyKappa. exists 2. auto. Defined.
+
+  Definition MyArity : MyKappa -> nat := (fun 
+      mk => match mk with 
+      | exist _ n pf => n + 1
+      end
+    ).
+    
+  Example Kxyz : 
+    bigraph (findec_fin 1) (findec_fin 0) (findec_fin 1) (findec_fin 3).
+    apply (Big
+      _ _ _ _ 
+      (findec_fin 1)
+      (findec_fin 0)
+      (fun n => match n with | _ => deux end) (*control*)
+      (fun ns => match ns with 
+      | inl _ => 0
+      | inr (exist _ x _) => match x with end
+      end) (*parent*)
+      (fun ip => match ip with 
+      | inl (exist _ x _) => match x with end
+      | inr (exist _ p _) => p
+      end) (*link*)
+    ).
 
 End ExampleBigraph.
