@@ -10,6 +10,7 @@ Require Import Bijections.
 Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.
 Require Import PropExtensionality.
+Require Import Coq.Lists.List.
 
 Set Printing All.
 
@@ -104,23 +105,25 @@ Lemma tensor_alt : forall {N1 I1 O1 N2 I2 O2} (f1 : N1 + I1 -> N1 + O1) (f2 : N2
   apply functional_extensionality.
   destruct x as [[n1|n2]|[i1|i2]]; reflexivity.
   Qed.
-
-  Inductive list (A:Type) : Type :=
-    | nil : list A
-    | cons : A -> list A -> list A.
+  
+Record DecList : Type := 
+  {
+  mylist : list Name ;
+  nodup : NoDup mylist ;
+  }.
 
 Record bigraph  (site: FinDecType) 
-                (innername: Name -> Prop) 
-                (root: FinDecType) 
-                (outername: Name -> Prop) : Type := 
+    (innername: Name -> Prop) 
+    (root: FinDecType) 
+    (outername: Name -> Prop) : Type := 
   Big  
   { 
-    node : FinDecType ;
-    edge : FinDecType ;
-    control : (type node) -> Kappa ;
-    parent : (type node) + (type site) -> (type node) + (type root) ; 
-    link : {i:Name|innername i} + Port control -> {o:Name|outername o} + (type edge); 
-    ap : Acyclic parent ;
+  node : FinDecType ;
+  edge : FinDecType ;
+  control : (type node) -> Kappa ;
+  parent : (type node) + (type site) -> (type node) + (type root) ; 
+  link : {i:Name | innername i} + Port control -> {o:Name | outername o} + (type edge); 
+  ap : Acyclic parent ;
   }.
 
 End IntroBigraphs.
@@ -156,20 +159,20 @@ End GettersBigraphs.
 Section EquivalenceBigraphs.
 (** ** On the heterogeneous type *)
 
-Record bigraph_equality {s1 r1 s2 r2 : FinDecType} {}
+Record bigraph_equality {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : Name -> Prop}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
   BigEq
   {
     bij_s : bijection (type s1) (type s2) ;
-    bij_i : bijection (type i1) (type i2) ;
+    bij_i : forall name, i1 name <-> i2 name ;
     bij_r : bijection (type r1) (type r2) ;
-    bij_o : bijection (type o1) (type o2) ;
+    bij_o : forall name, o1 name <-> o2 name ;
     bij_n : bijection (type (get_node b1)) (type (get_node b2)) ;
     bij_e : bijection (type (get_edge b1)) (type (get_edge b2)) ;
     bij_p : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n n1)))) ;
     big_control_eq : (bij_n -->> (@bijection_id Kappa)) (get_control b1) = get_control b2 ;
     big_parent_eq  : ((bij_n <+> bij_s) -->> (bij_n <+> bij_r)) (get_parent b1) = get_parent b2 ;
-    big_link_eq    : ((bij_i <+> <{ bij_n & bij_p }>) -->> (bij_o <+> bij_e)) (get_link b1) = get_link b2
+    big_link_eq    : ((<{ bijection_id | bij_i }> <+> <{ bij_n & bij_p }>) -->> (<{ bijection_id | bij_o }> <+> bij_e)) (get_link b1) = get_link b2
   }.
 
 (* Theorem identified_interface {A} (baa : bijection A A) :
@@ -180,10 +183,24 @@ Record bigraph_equality {s1 r1 s2 r2 : FinDecType} {}
 (* Definition get_bij_s {s1 i1 r1 o1 s2 i2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1)
   : bijection (type s1) (type s2) :=
   (bij_s (bigraph_equality b1 b2)). *)
-Lemma bigraph_equality_refl {s i r o : FinDecType} (b : bigraph s i r o) :
+Lemma bigraph_equality_refl {s r : FinDecType} {i o : Name -> Prop} (b : bigraph s i r o) :
   bigraph_equality b b.
   Proof.
-  eapply (BigEq _ _ _ _ _ _ _ _ _ _ bijection_id bijection_id bijection_id bijection_id bijection_id bijection_id (fun _ => bijection_id)).
+  eapply (BigEq _ _ _ _ _ _ _ _ _ _ bijection_id _ bijection_id _ bijection_id bijection_id (fun _ => bijection_id)).
+  + auto.
+  + unfold bij_fun_compose. simpl. unfold funcomp, parallel, id. apply functional_extensionality.
+    intros [n | site]; destruct get_parent; auto.
+  + rewrite bij_subset_compose_id. rewrite bij_subset_compose_id.  simpl.
+    unfold funcomp, parallel, id. apply functional_extensionality. 
+    intros [inner | port].
+    - destruct get_link; auto.
+    - unfold bijection_id, bijection_inv, bij_dep_sum_2_forward, bij_dep_sum_1_forward. simpl. unfold funcomp, id. simpl.
+      
+      destruct get_link eqn:E. ; admit.
+    
+  Unshelve; intros; apply iff_refl. intros. apply iff_refl.
+    -
+  + 
   + rewrite bij_fun_compose_id.
     reflexivity.
   + rewrite bij_sum_compose_id.

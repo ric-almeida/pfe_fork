@@ -1005,7 +1005,8 @@ apply (mkBijection _ _ (bij_dep_sum_1_forward bij_AB) (bij_dep_sum_1_backward bi
     apply proof_irrelevance.
 Defined.
 
-Definition bij_sigT_compose : forall {A B : Type} {P : A -> Type} {Q : B -> Type} (bij_AB : bijection A B),
+Definition bij_sigT_compose : 
+  forall {A B : Type} {P : A -> Type} {Q : B -> Type} (bij_AB : bijection A B),
   (forall a, bijection (P a) (Q (bij_AB a))) -> bijection (@sigT A P) (@sigT B Q).
 Proof.
 intros A B P Q bij_AB bij_PQ.
