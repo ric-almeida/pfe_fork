@@ -578,8 +578,6 @@ Defined.
 
 Notation "<{ f | g }>" := (bij_subset_compose f g).
 
-
-
 Lemma adjunction_equiv {A B : Type} {P : A -> Prop} {Q : B -> Prop} (bij_AB : bijection A B) :
             (forall a, P a <-> Q (bij_AB a)) -> (forall b, Q b <-> P (backward bij_AB b)).
 Proof.
@@ -1784,4 +1782,3 @@ Theorem equality_bij {A B} (bij1 : bijection A B) (bij2 : bijection A B):
   destruct H0.
   assert (fob2 = fob1). { destruct fob1. auto. simpl in fob2.
   Abort.
-
