@@ -287,6 +287,8 @@ Lemma injective_in_map_inv : forall A B (f : A -> B) a l, InjectiveXT f -> In (f
   Qed.
 
 Inductive void : Type := .
+Check void.
+Print void.
 
 Definition void_univ_embedding {A : Type} : void -> A.
   Proof.
