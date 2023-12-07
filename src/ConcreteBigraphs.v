@@ -10,15 +10,15 @@ Require Import Bijections.
 Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.
 Require Import PropExtensionality.
+Require Import SignatureBig.
 
 Set Printing All.
 
+
+
 (** This module implements bigraphs and basic operations on bigraphs *)
-Module Bigraphs.
-
-Parameter Kappa:Type.
-Variable Arity:Kappa-> nat.
-
+Module Bigraphs (s : Signature).
+Include s.
 (** * Definition of a bigraph
   This section defines the Type bigraph *)
 Section IntroBigraphs.
@@ -149,7 +149,6 @@ End GettersBigraphs.
   bigraphs at will. *)
 Section EquivalenceBigraphs.
 (** ** On the heterogeneous type *)
-
 Record bigraph_equality {s1 i1 r1 o1 s2 i2 r2 o2 : FinDecType} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
   BigEq
@@ -1355,38 +1354,3 @@ Lemma symmetry_S4 {I J K} :
 
 End Bigraphs.
 
-
-Export Bigraphs.
-
-Module MyBigraphs := Bigraphs. (*with (Kappa := type (findec_fin 3)).*)
-Definition Kappa : Type := type (findec_fin 3).
-Example zero : Kappa. exists 0. auto. Defined.
-Example un : Kappa. exists 1. auto. Defined.
-Example deux : Kappa. exists 2. auto. Defined.
-
-Definition MyArity : Kappa -> nat := (fun 
-    mk => match mk with 
-    | exist _ n pf => n + 1
-    end
-  ).
-
-Check bigraph.
-Print bigraph.
-Example Kxyz : 
-  bigraph (findec_fin 1) (findec_fin 0) (findec_fin 1) (findec_fin 3).
-  apply (Big
-    _ _ _ _ 
-    (findec_fin 1)
-    (findec_fin 0)
-    (fun n => match n with | _ => deux end) (*control*)
-    (fun ns => match ns with 
-    | inl _ => 0
-    | inr (exist _ x _) => match x with end
-    end) (*parent*)
-    (fun ip => match ip with 
-    | inl (exist _ x _) => match x with end
-    | inr (exist _ p _) => p
-    end) (*link*)
-  ).
-
-End ExampleBigraph.

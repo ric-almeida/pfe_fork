@@ -229,7 +229,7 @@ assert (decidable (Forall (fun a1 => Forall (fun a2 => f a1 = f a2 -> a1 = a2) l
     apply Hinjf.
 Qed.
 
-Definition findec_void :=
+Definition voidfd :=
   {|
     type        := void;
     dec_type    := dec_eq_void;
