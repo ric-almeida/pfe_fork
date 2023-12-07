@@ -118,7 +118,7 @@ Record bigraph  (site: FinDecType)
     edge : FinDecType ;
     control : (type node) -> Kappa ;
     parent : (type node) + (type site) -> (type node) + (type root) ; 
-    link : {i:Name | In i innername} + Port control -> {o:Name | In o outername} + (type edge); 
+    link : {i:Name & In i innername} + Port control -> {o:Name & In o outername} + (type edge); 
     ap : FiniteParent parent ;
   }.
 End IntroBigraphs.
@@ -134,7 +134,7 @@ Definition get_control {s r : FinDecType} {i o : list Name} (bg : bigraph s i r 
   @control s i r o bg.
 Definition get_parent {s r : FinDecType} {i o : list Name} (bg : bigraph s i r o) : (type (get_node bg)) + (type s) -> (type (get_node bg)) + (type r) :=
   @parent s i r o bg.
-Definition get_link {s r : FinDecType} {i o : list Name} (bg : bigraph s i r o) : {inner:Name | In inner i} + Port (get_control bg) -> {outer:Name | In outer o} + type (get_edge bg) :=
+Definition get_link {s r : FinDecType} {i o : list Name} (bg : bigraph s i r o) : {inner:Name & In inner i} + Port (get_control bg) -> {outer:Name & In outer o} + type (get_edge bg) :=
   @link s i r o bg.
 End GettersBigraphs.
 
@@ -167,15 +167,15 @@ Record bigraph_equality {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list Name}
   BigEq
   {
     bij_s : bijection (type s1) (type s2) ;
-    bij_i : forall name, In name i1 <-> In name i2 ;
+    bij_i : forall name, bijection (In name i1) (In name i2 );
     bij_r : bijection (type r1) (type r2) ;
-    bij_o : forall name, In name o1 <-> In name o2 ;
+    bij_o : forall name, bijection (In name o1) (In name o2 );
     bij_n : bijection (type (get_node b1)) (type (get_node b2)) ;
     bij_e : bijection (type (get_edge b1)) (type (get_edge b2)) ;
     bij_p : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n n1)))) ;
     big_control_eq : (bij_n -->> (@bijection_id Kappa)) (get_control b1) = get_control b2 ;
     big_parent_eq  : ((bij_n <+> bij_s) -->> (bij_n <+> bij_r)) (get_parent b1) = get_parent b2 ;
-    big_link_eq    : ((<{ bijection_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{ bijection_id | bij_o}> <+> bij_e)) (get_link b1) = get_link b2
+    big_link_eq    : ((<{ bijection_id & bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{ bijection_id & bij_o}> <+> bij_e)) (get_link b1) = get_link b2
   }.
 
 (* Theorem identified_interface {A} (baa : bijection A A) :
@@ -189,7 +189,7 @@ Record bigraph_equality {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list Name}
 Lemma bigraph_equality_refl {s r : FinDecType} {i o : list Name} (b : bigraph s i r o) :
   bigraph_equality b b.
   Proof.
-  eapply (BigEq _ _ _ _ _ _ _ _ _ _ bijection_id _ bijection_id _ bijection_id bijection_id (fun _ => bijection_id)).
+  eapply (BigEq _ _ _ _ _ _ _ _ _ _ bijection_id (fun _ => bijection_id) bijection_id (fun _ => bijection_id) bijection_id bijection_id (fun _ => bijection_id)).
   + rewrite bij_fun_compose_id.
     reflexivity.
   + rewrite bij_sum_compose_id.
@@ -197,17 +197,14 @@ Lemma bigraph_equality_refl {s r : FinDecType} {i o : list Name} (b : bigraph s 
     rewrite bij_fun_compose_id.
     reflexivity.
   + rewrite bij_sigT_compose_id.
-    rewrite bij_subset_compose_id.
-    rewrite bij_subset_compose_id.
+    rewrite bij_sigT_compose_id.
+    rewrite bij_sigT_compose_id.
     rewrite bij_sum_compose_id.
     rewrite bij_sum_compose_id.
     rewrite bij_fun_compose_id.
     reflexivity.
-  Unshelve.
-  - intros. tauto.
-  - intros. tauto.
   Qed.
-
+(* 
 Definition eq_comu {i1 i2: list Name} 
   (P : forall name : Name, In name i1 <-> In name i2) :
   forall name : Name, In name i2 <-> In name i1.
@@ -218,7 +215,7 @@ Lemma eq_comu_plus {i1 i2: list Name} :
   (forall name : Name, In name i1 <-> In name i2) <->
   (forall name : Name, In name i2 <-> In name i1).
   Proof.
-    split; intros H; exact (eq_comu H). Qed.
+    split; intros H; exact (eq_comu H). Qed. *)
 
 (* Lemma eq_commu_rewrite {x y : list Name}
   (bij : forall a, In a x <-> In a y ) 
@@ -235,12 +232,11 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list Name}
   Proof.
   intro Heqb1b2.
   destruct Heqb1b2.
-
   apply (BigEq _ _ _ _ _ _ _ _ b2 b1
           (bijection_inv bij_s)
-          (eq_comu bij_i0)
+          (adjunction_bij bijection_id bij_i0)
           (bijection_inv bij_r)
-          (eq_comu bij_o0)
+          (adjunction_bij bijection_id bij_o0)
           (bijection_inv bij_n)
           (bijection_inv bij_e)
           (adjunction_bij bij_n bij_p)).
@@ -272,13 +268,26 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list Name}
     rewrite bij_r.(bof_id _ _).
     rewrite parallel_id.
     reflexivity.
-  + rewrite eq_comu_plus. eq_comu. simpl.
-    rewrite <- bij_inv_sum.
-    rewrite <- bij_inv_sigT.
-    rewrite <- bij_inv_sum.
-    rewrite <- bij_inv_fun.
+  + rewrite <- bij_inv_sigT.
     rewrite <- big_link_eq.
     rewrite <- bij_compose_forward_simpl.
+    simpl.
+    unfold funcomp, parallel. simpl.
+    apply functional_extensionality.
+    intros [inner | port]; destruct get_link; auto; simpl.
+    unfold adjunction_bij, bijection_inv. simpl.
+    rewrite bij_inv_id.
+    ++ 
+    rewrite <- adjunction_equiv.
+    
+    rewrite <- bij_inv_sum. rewrite <- adjunction_equiv.
+    
+            (* unfold adjunction_bij. simpl. *)
+  (* rewrite <- adjunction_equiv.  *)
+  (* rewrite <- bij_inv_sum. *)
+  (* rewrite <- bij_inv_sigT.
+  rewrite <- bij_inv_sigT. *)
+    (*rewrite <- bij_inv_fun. *)
     rewrite bij_inv_left_simpl.
     reflexivity.
   Qed.
