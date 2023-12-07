@@ -115,7 +115,7 @@ Record bigraph  (site: FinDecType)
   Big  
   { 
     node : FinDecType ;
-    edge : FinDecType ;
+    edge : FinDecType ; 
     control : (type node) -> Kappa ;
     parent : (type node) + (type site) -> (type node) + (type root) ; 
     link : {i:Name | In i innername} + Port control -> {o:Name | In o outername} + (type edge); 
