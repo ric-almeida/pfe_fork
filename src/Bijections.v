@@ -754,13 +754,6 @@ eapply bij_compose.
 + exact (bij_PQ (backward bij_AB b)).
 Defined.
 
-(* Lemma adjunction_bij_id {A : Type} {P : A -> Type} {Q : A -> Type}
-  (bij : forall a, bijection (P a) (Q a)) : 
-  adjunction_bij bijection_id bij =
-  forall a, bijection (Q a) (P a).
-  adjunction_bij (bijection_id) (bijection_inv bij).
-  Proof. unfold bijection_inv. simpl. auto. Qed. *)
-
 Definition bij_dep_prod_2_forward {A} {P Q : A -> Type} (bij_PQ : forall a, bijection (P a) (Q a)) : (forall a, P a) -> (forall a, Q a).
 Proof.
 intros HP a.
