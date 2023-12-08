@@ -107,11 +107,16 @@ Lemma tensor_alt : forall {N1 I1 O1 N2 I2 O2} (f1 : N1 + I1 -> N1 + O1) (f2 : N2
   apply functional_extensionality.
   destruct x as [[n1|n2]|[i1|i2]]; reflexivity.
   Qed.
+Record NoDupList : Type :=
+  {
+    ndlist :> list Name ;
+    nd : NoDup ndlist ;
+  }.
 
 Record bigraph  (site: FinDecType) 
-                (innername: list Name) 
+                (innername: NoDupList) 
                 (root: FinDecType) 
-                (outername: list Name) : Type := 
+                (outername: NoDupList) : Type := 
   Big  
   { 
     node : FinDecType ;
@@ -126,15 +131,15 @@ End IntroBigraphs.
 (** * Getters
   This section is just getters to lightenn some notations *)
 Section GettersBigraphs.
-Definition get_node {s r : FinDecType} {i o : list Name} (bg : bigraph s i r o) : FinDecType := 
+Definition get_node {s r : FinDecType} {i o : NoDupList} (bg : bigraph s i r o) : FinDecType := 
   node s i r o bg.
-Definition get_edge {s r : FinDecType} {i o : list Name} (bg : bigraph s i r o) : FinDecType := 
+Definition get_edge {s r : FinDecType} {i o : NoDupList} (bg : bigraph s i r o) : FinDecType := 
   edge s i r o bg.
-Definition get_control {s r : FinDecType} {i o : list Name} (bg : bigraph s i r o) : type (get_node bg) -> Kappa :=
+Definition get_control {s r : FinDecType} {i o : NoDupList} (bg : bigraph s i r o) : type (get_node bg) -> Kappa :=
   @control s i r o bg.
-Definition get_parent {s r : FinDecType} {i o : list Name} (bg : bigraph s i r o) : (type (get_node bg)) + (type s) -> (type (get_node bg)) + (type r) :=
+Definition get_parent {s r : FinDecType} {i o : NoDupList} (bg : bigraph s i r o) : (type (get_node bg)) + (type s) -> (type (get_node bg)) + (type r) :=
   @parent s i r o bg.
-Definition get_link {s r : FinDecType} {i o : list Name} (bg : bigraph s i r o) : {inner:Name | In inner i} + Port (get_control bg) -> {outer:Name | In outer o} + type (get_edge bg) :=
+Definition get_link {s r : FinDecType} {i o : NoDupList} (bg : bigraph s i r o) : {inner:Name | In inner i} + Port (get_control bg) -> {outer:Name | In outer o} + type (get_edge bg) :=
   @link s i r o bg.
 End GettersBigraphs.
 
@@ -152,17 +157,17 @@ End GettersBigraphs.
   symmetric and transitive. This is going to be useful to be able to rewrite 
   bigraphs at will. *)
 Section EquivalenceBigraphs.
-Fixpoint l1_in_l2 {A : Type} (l1 l2 : list A) : Prop :=
+(* Fixpoint l1_in_l2 {A : Type} (l1 l2 : list A) : Prop :=
   match l1 with
   | [] => True
   | hd :: tl =>  In hd l2 /\ l1_in_l2 tl l2 
   end.
 
 Definition list_equiv {A : Type} (l1 l2 : list A) : Prop :=
-  l1_in_l2 l1 l2 /\ l1_in_l2 l2 l1.
+  l1_in_l2 l1 l2 /\ l1_in_l2 l2 l1. *)
 
 (** ** On the heterogeneous type *)
-Record bigraph_equality {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list Name} 
+Record bigraph_equality {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
   BigEq
   {
@@ -178,13 +183,13 @@ Record bigraph_equality {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list Name}
     big_link_eq    : ((<{bij_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{bij_id| bij_o}> <+> bij_e)) (get_link b1) = get_link b2
   }.
 
-Lemma introduce_bijid {i1 i2 : list Name} : 
+Lemma introduce_bijid {i1 i2 : NoDupList} : 
  (forall name : Name, In name i1 <-> In name i2) 
   -> 
   (forall name : Name, In name i1 <-> In (bij_id name) i2).
   intros. simpl. simpl. apply H. Qed.
 
-Lemma bigraph_equality_refl {s r : FinDecType} {i o : list Name} (b : bigraph s i r o) :
+Lemma bigraph_equality_refl {s r : FinDecType} {i o : NoDupList} (b : bigraph s i r o) :
   bigraph_equality b b.
   Proof.
   eapply (BigEq _ _ _ _ _ _ _ _ _ _ bij_id _ bij_id _ bij_id bij_id (fun _ => bij_id)).
@@ -207,31 +212,31 @@ Lemma bigraph_equality_refl {s r : FinDecType} {i o : list Name} (b : bigraph s 
   Qed.
 
 (* eq_comu *)
-  Definition eq_comu {i1 i2: list Name} 
+  Definition eq_comu {i1 i2: NoDupList} 
     (P : forall name : Name, In name i1 <-> In name i2) :
     forall name : Name, In name i2 <-> In name i1.
     Proof.
     intros. symmetry. apply P. Defined.
 
-  (* Definition eq_comu {i1 i2: list Name} 
+  (* Definition eq_comu {i1 i2: NoDupList} 
     (P : forall name : Name, In name i1 <-> In name i2) :
     forall name : Name, In name i2 <-> In name i1.
     Proof.
     intros. symmetry. apply P. Defined. *)
 
-  Lemma eq_comu_plus {i1 i2: list Name} :
+  Lemma eq_comu_plus {i1 i2: NoDupList} :
     (forall name : Name, In name i1 <-> In name i2) <->
     (forall name : Name, In name i2 <-> In name i1).
     Proof.
       split; intros H; exact (eq_comu H). Qed.
 
-  Lemma eq_comu_eq_commu {i1 i2: list Name} 
+  Lemma eq_comu_eq_commu {i1 i2: NoDupList} 
     (P : forall name : Name, In name i1 <-> In name i2) :
     eq_comu (eq_comu P) = P.
     Proof.
       unfold eq_comu. Admitted.
 
-  Lemma eq_comu_plus_plus {i1 i2: list Name} :
+  Lemma eq_comu_plus_plus {i1 i2: NoDupList} :
     forall name : Name, (In name i1 <-> In name i2) ->
     (In name i2 <-> In name i1).
     Proof.
@@ -245,12 +250,12 @@ Lemma bigraph_equality_refl {s r : FinDecType} {i o : list Name} (b : bigraph s 
     <{}>
 
 
-  Lemma eq_commu_rewrite {x y : list Name}
+  Lemma eq_commu_rewrite {x y : NoDupList}
     (bij : forall a, In a x <-> In a y ):
   <{bij_id | eq_comu bij}> p = bij p. *)
 Print eq_comu.
 Check eq_comu.
-Lemma simpl_adj_id {i1 i2 : list Name}  
+Lemma simpl_adj_id {i1 i2 : NoDupList}  
   (bij_i : forall name : Name, In name i1 <-> In name i2)
   (bij_i' : forall name : Name, In name i2 <-> In name i1) :
   adjunction_equiv bij_id bij_i = bij_i'.
@@ -259,17 +264,17 @@ Lemma simpl_adj_id {i1 i2 : list Name}
   eapply introduce_bijid in bij_i_id. Admitted.
 
 
-(* Lemma hopeful {i1 i2 : list Name}  
+(* Lemma hopeful {i1 i2 : NoDupList}  
 (bij_i: forall name : Name, In name i1 <-> In name i2) :
 <{ bij_id | adjunction_equiv bij_id bij_i }>
 = (bijection_inv <{ bij_id | bij_i }>). *)
 
 Theorem bijidObijid {A}: @bij_id A <O> bij_id = bij_id.
-Proof. apply bij_eq.
--  unfold bij_compose,funcomp,parallel,bij_id,id. simpl. reflexivity.
--  unfold bij_compose,funcomp,parallel,bij_id,id. simpl. reflexivity. Qed.
+  Proof. apply bij_eq.
+  -  unfold bij_compose,funcomp,parallel,bij_id,id. simpl. reflexivity.
+  -  unfold bij_compose,funcomp,parallel,bij_id,id. simpl. reflexivity. Qed.
 
-Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list Name}  
+Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}  
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   bigraph_equality b1 b2
       -> bigraph_equality b2 b1.
@@ -332,7 +337,7 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list Name}
     reflexivity.
   Qed.
 
-Lemma bigraph_equality_trans {s1 r1 s2 r2 s3 r3 : FinDecType} {i1 o1 i2 o2 i3 o3: list Name} 
+Lemma bigraph_equality_trans {s1 r1 s2 r2 s3 r3 : FinDecType} {i1 o1 i2 o2 i3 o3: NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3):
     bigraph_equality b1 b2
       -> bigraph_equality b2 b3  
@@ -380,7 +385,7 @@ Lemma bigraph_equality_trans {s1 r1 s2 r2 s3 r3 : FinDecType} {i1 o1 i2 o2 i3 o3
     reflexivity.
   Qed. *)
 
-Lemma bigraph_equality_dec {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list Name}  
+Lemma bigraph_equality_dec {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}  
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   {bigraph_equality b1 b2} + {~ bigraph_equality b1 b2}.
   Proof.
@@ -398,9 +403,9 @@ Record bigraph_packed : Type :=
   mkPacked
   {
   s: FinDecType;
-  i: FinDecType;
+  i: NoDupList;
   r: FinDecType;
-  o: FinDecType;
+  o: NoDupList;
   big : bigraph s i r o
   }.
 Coercion packing {s i r o} (b : bigraph s i r o) := 
@@ -422,31 +427,32 @@ Lemma bigraph_packed_equality_sym (bp1 bp2 : bigraph_packed) : bigraph_packed_eq
 
 Lemma bigraph_packed_equality_trans (bp1 bp2 bp3 : bigraph_packed) : bigraph_packed_equality bp1 bp2 -> bigraph_packed_equality bp2 bp3 -> bigraph_packed_equality bp1 bp3.
   Proof.
-  apply bigraph_equality_trans.
-  Qed.
+  Fail apply bigraph_equality_trans.
+  Abort.
 
-Record support_equivalent {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list Name} 
+Record support_equivalent {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
   SupEq
   {
     s_bij_s : bijection (type s1) (type s2) ;
-    s_bij_i : bijection (type i1) (type i2) ;
+    s_bij_i : forall name, In name i1 <-> In name i2 ;
     s_bij_r : bijection (type r1) (type r2) ;
-    s_bij_o : bijection (type o1) (type o2) ;
+    s_bij_o : forall name, In name o1 <-> In name o2 ;
   }.
 
 End EquivalenceBigraphs.
 
 
 Instance big_Equivalence: Equivalence bigraph_packed_equality.
-constructor. exact @bigraph_packed_equality_refl. exact @bigraph_packed_equality_sym. exact @bigraph_packed_equality_trans. Defined.
+constructor. exact @bigraph_packed_equality_refl. exact @bigraph_packed_equality_sym. Abort. 
+(* exact @bigraph_packed_equality_trans. Defined. *)
 
-
-Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
+(* TODO when trans done *)
+(* Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
   reflexivity proved by (bigraph_packed_equality_refl)
   symmetry proved by (bigraph_packed_equality_sym)
   transitivity proved by (bigraph_packed_equality_trans)
-    as bigraph_packed_equality_rel.
+    as bigraph_packed_equality_rel. *)
 
 Lemma bigraph_packed_equality_dec  
   (b1 : bigraph_packed) (b2 : bigraph_packed) :
@@ -454,14 +460,45 @@ Lemma bigraph_packed_equality_dec
   Proof.
   Fail decide equality. Abort.
 
-Definition bigraph_juxtaposition {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list Name} 
+Definition bij_list_forward {i1 i2} : 
+  {name : Name | In name i1} + {name : Name | In name i2}
+  ->
+  {name : Name | In name (i1 ++ i2)}.
+  Proof.
+  refine (fun name => match name with
+                | inl (exist _ name' H1) => _
+                | inr (exist _ name' H2) => _
+                end).
+    + exists (name'). 
+      apply in_or_app. left. apply H1.
+    + exists (name'). 
+      apply in_or_app. right. apply H2.
+    Defined.
+
+
+Definition bij_list_backward {i1 i2 : NoDupList} :
+  {name : Name | In name (i1 ++ i2)}
+  ->
+  {name : Name | In name i1} + {name : Name | In name i2}.
+  Proof.
+  destruct i1 as [i1 ndi1].
+  destruct i2 as [i2 ndi2]. simpl.
+  intros [name Hn].
+  apply in_app_or in Hn.
+  Admitted.
+
+Fixpoint app_merge (l1 : list Name) (l2 : list Name).
+
+Definition app_NoDupList (i1: NoDupList) (i2 : NoDupList) : NoDupList
+
+Definition bigraph_juxtaposition {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
-    : bigraph (findec_sum s1 s2) (findec_sum i1 i2) (findec_sum r1 r2) (findec_sum o1 o2).
+    : bigraph (findec_sum s1 s2) (i1 ++ i2) (findec_sum r1 r2) (o1 ++ o2).
   Proof.
   apply (Big (findec_sum s1 s2)
-             (findec_sum i1 i2)
+             (i1 ++ i2)
              (findec_sum r1 r2)
-             (findec_sum o1 o2)
+             (o1 ++ o2)
              (findec_sum (get_node b1) (get_node b2))
              (findec_sum (get_edge b1) (get_edge b2))
              (join (get_control b1) (get_control b2))
