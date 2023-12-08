@@ -487,9 +487,50 @@ Definition bij_list_backward {i1 i2 : NoDupList} :
   apply in_app_or in Hn.
   Admitted.
 
-Fixpoint app_merge (l1 : list Name) (l2 : list Name).
+Fixpoint app_mergeNoDup 
+  (eq_dec : forall x y : Name, {x = y} + {x <> y})
+  (l1 : list Name) (l2 : list Name) 
+  (nd1 : NoDup l1) (nd2 : NoDup l2) : list Name.
+  Proof. 
+    induction l1 as [| a l1'].
+    - exact l2. (*l1 = [] and l2 nodup*)
+    - destruct (in_dec eq_dec a l2).
+    + (* a in l2 *)
+      set (nd1' := NoDup_remove_1 [] l1' a nd1).
+      simpl in nd1'.
+      exact (app_mergeNoDup eq_dec l1' l2 nd1' nd2).
+    + (* a not in l2 *)
+      set (nd1' := NoDup_remove_1 [] l1' a nd1).
+      simpl in nd1'.
+      exact (a :: (app_mergeNoDup eq_dec l1' l2 nd1' nd2)).
+  Defined.
 
-Definition app_NoDupList (i1: NoDupList) (i2 : NoDupList) : NoDupList
+Theorem app_mergeNoDupNoDup (eq_dec : forall x y : Name, {x = y} + {x <> y})
+  (l1 : list Name) (l2 : list Name) 
+  (nd1 : NoDup l1) (nd2 : NoDup l2) : 
+  NoDup (app_mergeNoDup eq_dec l1 l2 nd1 nd2).
+  Proof.
+   destruct (app_mergeNoDup eq_dec l1 l2 nd1 nd2).
+   - constructor.
+   - 
+
+
+
+   :=
+  match l1 with
+    | nil => l2
+    | a :: l1' =>  
+      if in_dec eq_dec a l2 then
+      app_mergeNoDup eq_dec l1' l2 (NoDup_remove_1 [] l1' a nd1) nd2
+        else
+      a :: app_mergeNoDup eq_dec l1' l2
+  end.
+
+Definition app_NoDupList (i1: NoDupList) (i2 : NoDupList) : NoDupList.
+Proof.
+  exact (
+    fun 
+  )
 
 Definition bigraph_juxtaposition {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
