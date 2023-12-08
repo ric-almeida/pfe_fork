@@ -173,23 +173,21 @@ Record bigraph_equality {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list Name}
     bij_n : bijection (type (get_node b1)) (type (get_node b2)) ;
     bij_e : bijection (type (get_edge b1)) (type (get_edge b2)) ;
     bij_p : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n n1)))) ;
-    big_control_eq : (bij_n -->> (@bijection_id Kappa)) (get_control b1) = get_control b2 ;
+    big_control_eq : (bij_n -->> (@bij_id Kappa)) (get_control b1) = get_control b2 ;
     big_parent_eq  : ((bij_n <+> bij_s) -->> (bij_n <+> bij_r)) (get_parent b1) = get_parent b2 ;
-    big_link_eq    : ((<{ bijection_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{ bijection_id | bij_o}> <+> bij_e)) (get_link b1) = get_link b2
+    big_link_eq    : ((<{bij_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{bij_id| bij_o}> <+> bij_e)) (get_link b1) = get_link b2
   }.
 
-(* Theorem identified_interface {A} (baa : bijection A A) :
-  (forward baa) = id.
-  Proof. apply functional_extensionality. intros. unfold id.
-  destruct baa. destruct x. *)
+Lemma introduce_bijid {i1 i2 : list Name} : 
+ (forall name : Name, In name i1 <-> In name i2) 
+  -> 
+  (forall name : Name, In name i1 <-> In (bij_id name) i2).
+  intros. simpl. simpl. apply H. Qed.
 
-(* Definition get_bij_s {s1 i1 r1 o1 s2 i2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1)
-  : bijection (type s1) (type s2) :=
-  (bij_s (bigraph_equality b1 b2)). *)
 Lemma bigraph_equality_refl {s r : FinDecType} {i o : list Name} (b : bigraph s i r o) :
   bigraph_equality b b.
   Proof.
-  eapply (BigEq _ _ _ _ _ _ _ _ _ _ bijection_id _ bijection_id _ bijection_id bijection_id (fun _ => bijection_id)).
+  eapply (BigEq _ _ _ _ _ _ _ _ _ _ bij_id _ bij_id _ bij_id bij_id (fun _ => bij_id)).
   + rewrite bij_fun_compose_id.
     reflexivity.
   + rewrite bij_sum_compose_id.
@@ -208,25 +206,68 @@ Lemma bigraph_equality_refl {s r : FinDecType} {i o : list Name} (b : bigraph s 
   - intros. tauto.
   Qed.
 
-Definition eq_comu {i1 i2: list Name} 
-  (P : forall name : Name, In name i1 <-> In name i2) :
-  forall name : Name, In name i2 <-> In name i1.
-  Proof.
-  intros. symmetry. apply P. Defined.
+(* eq_comu *)
+  Definition eq_comu {i1 i2: list Name} 
+    (P : forall name : Name, In name i1 <-> In name i2) :
+    forall name : Name, In name i2 <-> In name i1.
+    Proof.
+    intros. symmetry. apply P. Defined.
 
-Lemma eq_comu_plus {i1 i2: list Name} :
-  (forall name : Name, In name i1 <-> In name i2) <->
-  (forall name : Name, In name i2 <-> In name i1).
-  Proof.
-    split; intros H; exact (eq_comu H). Qed.
+  (* Definition eq_comu {i1 i2: list Name} 
+    (P : forall name : Name, In name i1 <-> In name i2) :
+    forall name : Name, In name i2 <-> In name i1.
+    Proof.
+    intros. symmetry. apply P. Defined. *)
 
-(* Lemma eq_commu_rewrite {x y : list Name}
-  (bij : forall a, In a x <-> In a y ) 
-  (bij2: bijection {name : Name | In name y} {name : Name | In name x}):
-  <{ bijection_id | eq_comu bij }> = bij2 
-  <-> 
-  <{ bijection_id | bij }> = bij2. *)
+  Lemma eq_comu_plus {i1 i2: list Name} :
+    (forall name : Name, In name i1 <-> In name i2) <->
+    (forall name : Name, In name i2 <-> In name i1).
+    Proof.
+      split; intros H; exact (eq_comu H). Qed.
 
+  Lemma eq_comu_eq_commu {i1 i2: list Name} 
+    (P : forall name : Name, In name i1 <-> In name i2) :
+    eq_comu (eq_comu P) = P.
+    Proof.
+      unfold eq_comu. Admitted.
+
+  Lemma eq_comu_plus_plus {i1 i2: list Name} :
+    forall name : Name, (In name i1 <-> In name i2) ->
+    (In name i2 <-> In name i1).
+    Proof.
+      intros.
+      split; intros H'.
+      - rewrite <- H in H'. apply H'.
+      - rewrite H in H'. apply H'. Qed.
+  (* 
+  Lemma eq_prop (H: P <-> Q) :
+    {x | P x} = {y | Q y}
+    <{}>
+
+
+  Lemma eq_commu_rewrite {x y : list Name}
+    (bij : forall a, In a x <-> In a y ):
+  <{bij_id | eq_comu bij}> p = bij p. *)
+Print eq_comu.
+Check eq_comu.
+Lemma simpl_adj_id {i1 i2 : list Name}  
+  (bij_i : forall name : Name, In name i1 <-> In name i2)
+  (bij_i' : forall name : Name, In name i2 <-> In name i1) :
+  adjunction_equiv bij_id bij_i = bij_i'.
+  Proof. 
+  pose bij_i as bij_i_id.
+  eapply introduce_bijid in bij_i_id. Admitted.
+
+
+(* Lemma hopeful {i1 i2 : list Name}  
+(bij_i: forall name : Name, In name i1 <-> In name i2) :
+<{ bij_id | adjunction_equiv bij_id bij_i }>
+= (bijection_inv <{ bij_id | bij_i }>). *)
+
+Theorem bijidObijid {A}: @bij_id A <O> bij_id = bij_id.
+Proof. apply bij_eq.
+-  unfold bij_compose,funcomp,parallel,bij_id,id. simpl. reflexivity.
+-  unfold bij_compose,funcomp,parallel,bij_id,id. simpl. reflexivity. Qed.
 
 Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list Name}  
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
@@ -234,13 +275,12 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list Name}
       -> bigraph_equality b2 b1.
   Proof.
   intro Heqb1b2.
-  destruct Heqb1b2.
-
+  destruct Heqb1b2 as (bij_s, bij_i, bij_r, bij_o, bij_n, bij_e, bij_p, big_control_eq, big_parent_eq, big_link_eq).
   apply (BigEq _ _ _ _ _ _ _ _ b2 b1
           (bijection_inv bij_s)
-          (eq_comu bij_i0)
+          (adjunction_equiv bij_id bij_i)
           (bijection_inv bij_r)
-          (eq_comu bij_o0)
+          (adjunction_equiv (bij_id) bij_o)
           (bijection_inv bij_n)
           (bijection_inv bij_e)
           (adjunction_bij bij_n bij_p)).
@@ -272,9 +312,18 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list Name}
     rewrite bij_r.(bof_id _ _).
     rewrite parallel_id.
     reflexivity.
-  + rewrite eq_comu_plus. eq_comu. simpl.
-    rewrite <- bij_inv_sum.
+  + 
     rewrite <- bij_inv_sigT.
+    change (
+      (<{ (bijection_inv bij_id) | adjunction_equiv bij_id bij_i }> <+>
+      bijection_inv <{ bij_n & bij_p }> -->>
+      <{ (bijection_inv bij_id) | adjunction_equiv bij_id bij_o }> <+> bijection_inv bij_e)
+        (get_link b2) = get_link b1
+    ). (* just adding bij_inv bij_id TODO : look for more elegant way?*)
+
+    rewrite <- bij_inv_subset.
+    rewrite <- bij_inv_subset.
+    rewrite <- bij_inv_sum.
     rewrite <- bij_inv_sum.
     rewrite <- bij_inv_fun.
     rewrite <- big_link_eq.
@@ -283,7 +332,7 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list Name}
     reflexivity.
   Qed.
 
-Lemma bigraph_equality_trans {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}  
+Lemma bigraph_equality_trans {s1 r1 s2 r2 s3 r3 : FinDecType} {i1 o1 i2 o2 i3 o3: list Name} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3):
     bigraph_equality b1 b2
       -> bigraph_equality b2 b3  
@@ -292,11 +341,11 @@ Lemma bigraph_equality_trans {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}
   intros Heqb1b2 Heqb2b3.
   destruct Heqb1b2 as (bij_s12, bij_i12, bij_r12, bij_o12, bij_n12, bij_e12, bij_p12, big_control_eq12, big_parent_eq12, big_link_eq12).
   destruct Heqb2b3 as (bij_s23, bij_i23, bij_r23, bij_o23, bij_n23, bij_e23, bij_p23, big_control_eq23, big_parent_eq23, big_link_eq23).
-  apply (BigEq _ _ _ _ _ _ _ _ b1 b3
+  eapply (BigEq _ _ _ _ _ _ _ _ b1 b3
           (bij_s23 <O> bij_s12)
-          (bij_i23 <O> bij_i12)
+          ((fun a => iff_trans (bij_i12 a) (bij_i23 (bij_id a))))
           (bij_r23 <O> bij_r12)
-          (bij_o23 <O> bij_o12)
+          (fun a => iff_trans (bij_o12 a) (bij_o23 (bij_id a)))
           (bij_n23 <O> bij_n12)
           (bij_e23 <O> bij_e12)
           (fun n1 => (bij_p23 (bij_n12 n1)) <O> (bij_p12 n1))).
@@ -310,7 +359,18 @@ Lemma bigraph_equality_trans {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}
     rewrite <- bij_fun_compose_compose.
     simpl.
     reflexivity.
-  + rewrite <- big_link_eq23.
+  + 
+    change (
+    (
+    <{ bij_id | fun a : Name => iff_trans (bij_i12 a) (bij_i23 (bij_id a)) }> <+>
+    <{ bij_n23 <O> bij_n12 & fun n1 : type (get_node b1) => bij_p23 (bij_n12 n1) <O> bij_p12 n1 }> -->>
+    <{ bij_id <O> bij_id  | fun a : Name => iff_trans (bij_o12 a) (bij_o23 (bij_id a)) }> <+>
+    bij_e23 <O> bij_e12
+    ) (get_link b1) = get_link b3
+    ).
+    Fail rewrite <- (bij_subset_compose_compose bij_id bij_id bij_o12 bij_o23).
+    Abort.
+    (* rewrite <- big_link_eq23.
     rewrite <- big_link_eq12.
     rewrite <- bij_compose_forward_simpl.
     rewrite bij_fun_compose_compose.
@@ -318,7 +378,7 @@ Lemma bigraph_equality_trans {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 : FinDecType}
     rewrite bij_sum_compose_compose.
     rewrite bij_sigT_compose_compose.
     reflexivity.
-  Qed.
+  Qed. *)
 
 Lemma bigraph_equality_dec {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list Name}  
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
@@ -327,7 +387,7 @@ Lemma bigraph_equality_dec {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list Name}
   Fail decide equality.
   induction b1 as [node1 edge1 kind1 arity1 control1 parent1 link1 ap1].
   induction b2 as [node2 edge2 kind2 arity2 control2 parent2 link2 ap2].
-  Admitted.
+  Abort.
 
 (** ** On the packed type 
   The issue with the previous relation is that a parametric relation asks for two 
@@ -407,7 +467,7 @@ Definition bigraph_juxtaposition {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : list 
              (join (get_control b1) (get_control b2))
              (bij_sum_shuffle <o> (parallel (get_parent b1) (get_parent b2)) <o> (bijection_inv bij_sum_shuffle))
              (bij_sum_shuffle <o> (parallel (get_link b1)   (get_link b2))   <o> (bijection_inv bij_sum_shuffle) <o> 
-               (bijection_inv (@bijection_id _ <+> (bij_join_port (get_control b1) (get_control b2)))))
+               (bijection_inv (@bij_id _ <+> (bij_join_port (get_control b1) (get_control b2)))))
         ).
   rewrite <- tensor_alt.
   apply finite_parent_tensor.
@@ -779,7 +839,7 @@ Definition bigraph_composition {s1 i1 r1 o1 s2 i2 : FinDecType}
         (join (get_control b1) (get_control b2))
         ((get_parent b2) >> (get_parent b1))
         (switch_link (switch_link (get_link b2) >> switch_link (get_link b1)) <o>
-          (backward (@bijection_id _ <+> (bij_join_port (get_control b1) (get_control b2)))))).
+          (backward (@bij_id _ <+> (bij_join_port (get_control b1) (get_control b2)))))).
   apply (finite_parent_sequence).
   + exact (ap _ _ _ _ b1).
   + exact (ap _ _ _ _ b2).
@@ -820,10 +880,10 @@ Theorem bigraph_comp_left_neutral : forall {s i r o} (b : bigraph s i r o),
   Proof.
   intros s i r o b.
   apply (BigEq _ _ _ _ _ _ _ _ (bigraph_identity <<o>> b) b
-          bijection_id
-          bijection_id
-          bijection_id
-          bijection_id
+          bij_id
+          bij_id
+          bij_id
+          bij_id
           bij_void_sum_neutral
           bij_void_sum_neutral
           (fun n => bij_rew (P := fin) (arity_comp_left_neutral b n)) 
@@ -874,10 +934,10 @@ Theorem bigraph_comp_right_neutral : forall {s i r o} (b : bigraph s i r o),
   Proof.
   intros s i r o b.
   apply (BigEq _ _ _ _ _ _ _ _ (b <<o>> bigraph_identity) b
-          bijection_id
-          bijection_id
-          bijection_id
-          bijection_id
+          bij_id
+          bij_id
+          bij_id
+          bij_id
           bij_void_sum_neutral_r
           bij_void_sum_neutral_r
           (fun n => bij_rew (P := fin) (arity_comp_right_neutral b n)) 
@@ -929,10 +989,10 @@ Theorem bigraph_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i
   Proof.
   intros.
   apply (BigEq _ _ _ _ _ _ _ _ ((b1 <<o>> b2) <<o>> b3) (b1 <<o>> (b2 <<o>> b3))
-          bijection_id
-          bijection_id
-          bijection_id
-          bijection_id
+          bij_id
+          bij_id
+          bij_id
+          bij_id
           bij_sum_assoc
           bij_sum_assoc
           (fun n12_3 => bij_rew (P := fin) (arity_juxt_assoc b1 b2 b3 n12_3))
@@ -1042,7 +1102,7 @@ Lemma arity_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
 
 Definition bij_or_eq (s1:Type) (s2:Type) (H: s1 = s2): bijection s1 s2.
   rewrite H.
-  exact bijection_id. Defined.
+  exact bij_id. Defined.
 
 Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
   (b1 : bigraph s1 i1 r1 o1) 
@@ -1171,10 +1231,10 @@ Theorem bigraph_comp_juxt_dist : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
     _ _ _ _ 
     ((b1 || b2) <<o>> (b3 || b4)) 
     ((b1 <<o>> b3) || (b2 <<o>> b4))
-    bijection_id (*s3 + s4*)
-    bijection_id (*i3 + i4*)
-    bijection_id (*r1 + r2*)
-    bijection_id (*o1 + o2*)
+    bij_id (*s3 + s4*)
+    bij_id (*i3 + i4*)
+    bij_id (*r1 + r2*)
+    bij_id (*o1 + o2*)
     bij_sum_shuffle(* n1 + n2 + n3 + n4*)
     bij_sum_shuffle (* e1 + e2 + e3 + e4 *)
     (fun n12_34 => bij_rew (P := fin) (arity_comp_juxt_dist b1 b2 b3 b4 n12_34)) (* Port *)
@@ -1382,9 +1442,9 @@ Lemma symmetry_S4 {I J K} :
   forall x,
   (symmetry_arrow (I+J) K) x =
     ((bij_sum_assoc) <O> 
-    ((symmetry_arrow I K) <+> (@bijection_id J)) <O> 
+    ((symmetry_arrow I K) <+> (@bij_id J)) <O> 
     ((bijection_inv bij_sum_assoc) <O> 
-    ((@bijection_id I) <+> (symmetry_arrow J K)) 
+    ((@bij_id I) <+> (symmetry_arrow J K)) 
     <O> bij_sum_assoc)) x. 
   Proof.
   intros [[i | j] | k];

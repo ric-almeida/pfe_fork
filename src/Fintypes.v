@@ -1366,7 +1366,7 @@ apply (finite_bij (subset_in_list lA -> bool) (A -> bool)).
   - apply bijection_inv.
     apply bij_subset.
     apply HlA1.
-  - apply bijection_id.
+  - apply bij_id.
 + exists (powerset eqA lA (injective_nodup _ _ HlA2)).
   split.
   - apply surjective_powerset.
@@ -1572,7 +1572,7 @@ apply (finite_bij (subset_in_list lA -> B) (A -> B)).
   - apply bijection_inv.
     apply bij_subset.
     apply HlA1.
-  - apply bijection_id.
+  - apply bij_id.
 + exists (power eqA lA lB (injective_nodup _ _ HlA2)).
   split.
   - apply surjective_power.
@@ -1763,7 +1763,7 @@ apply (finite_bij (forall a : subset_in_list lA, B (proj1_sig a)) (forall a, B a
 + apply bijection_inv.
   apply (bij_dep_prod_compose (bij_subset (fun a => In a lA) HlA1)).
   intro a.
-  exact bijection_id.
+  exact bij_id.
 + exists (dep_prod eqA lA (fun a => proj1_sig (FaB a)) (injective_nodup _ _ HlA2)).
   split.
   - apply surjective_dep_prod.
@@ -1921,7 +1921,7 @@ apply (finite_bij { a : subset_in_list lA & B (proj1_sig a) } {a : A & B a }).
 + apply bijection_inv.
   apply (bij_sigT_compose (bij_subset (fun a => In a lA) HlA1)).
   intro a.
-  exact bijection_id.
+  exact bij_id.
 + exists (dep_sum lA (fun a => proj1_sig (FaB a))).
   split.
   - apply surjective_dep_sum.

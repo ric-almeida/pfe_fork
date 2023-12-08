@@ -74,10 +74,10 @@ Qed.
 Definition bijection_inv {A B} (bij : bijection A B) : bijection B A :=
  (mkBijection B A bij.(backward) bij.(forward) (bij.(bof_id A B)) (bij.(fob_id A B))).
 
-Definition bijection_id {A} : bijection A A :=
+Definition bij_id {A} : bijection A A :=
  (mkBijection A A id id eq_refl eq_refl).
 
-Theorem bij_inv_id : forall {A}, bijection_inv (@bijection_id A) = @bijection_id A.
+Theorem bij_inv_id : forall {A}, bijection_inv (@bij_id A) = @bij_id A.
 Proof.
 intro A.
 reflexivity.
@@ -286,7 +286,7 @@ apply functional_extensionality.
 destruct x as [[a | c] | [e | g]]; unfold funcomp; simpl; reflexivity.
 Qed.
 
-Theorem bij_id_left_neutral : forall {A B} (bij_AB : bijection A B), bijection_id <O> bij_AB = bij_AB.
+Theorem bij_id_left_neutral : forall {A B} (bij_AB : bijection A B), bij_id <O> bij_AB = bij_AB.
 Proof.
 intros.
 destruct bij_AB.
@@ -295,7 +295,7 @@ reflexivity.
 reflexivity.
 Qed.
 
-Theorem bij_id_right_neutral : forall {A B} (bij_AB : bijection A B), bij_AB <O> bijection_id = bij_AB.
+Theorem bij_id_right_neutral : forall {A B} (bij_AB : bijection A B), bij_AB <O> bij_id = bij_AB.
 Proof.
 intros.
 destruct bij_AB.
@@ -321,7 +321,7 @@ reflexivity.
 reflexivity.
 Qed.
 
-Theorem bij_inv_left_simpl : forall {A B} (bij_AB : bijection A B), bijection_inv bij_AB <O> bij_AB = bijection_id.
+Theorem bij_inv_left_simpl : forall {A B} (bij_AB : bijection A B), bijection_inv bij_AB <O> bij_AB = bij_id.
 Proof.
 intros.
 destruct bij_AB.
@@ -331,7 +331,7 @@ assumption.
 assumption.
 Qed.
 
-Theorem bij_inv_right_simpl : forall {A B} (bij_AB : bijection A B), bij_AB <O> bijection_inv bij_AB = bijection_id.
+Theorem bij_inv_right_simpl : forall {A B} (bij_AB : bijection A B), bij_AB <O> bijection_inv bij_AB = bij_id.
 Proof.
 intros.
 destruct bij_AB.
@@ -379,7 +379,7 @@ reflexivity.
 reflexivity.
 Qed.
 
-Theorem bij_sum_compose_id : forall {A B}, bij_sum_compose (@bijection_id A) (@bijection_id B) = bijection_id.
+Theorem bij_sum_compose_id : forall {A B}, bij_sum_compose (@bij_id A) (@bij_id B) = bij_id.
 Proof.
 intros A B.
 apply bij_eq.
@@ -390,7 +390,7 @@ apply bij_eq.
 Qed.
 
 Theorem bij_sum_compose_compose : forall {A B C D E F : Type} (bij_AB : bijection A B) (bij_BC : bijection B C) (bij_DE : bijection D E) (bij_EF : bijection E F),
-          bij_sum_compose bij_BC bij_EF <O> bij_sum_compose bij_AB bij_DE = bij_sum_compose (bij_BC <O> bij_AB) (bij_EF <O> bij_DE).
+  (bij_BC <+> bij_EF) <O> (bij_AB <+> bij_DE) = ((bij_BC <O> bij_AB) <+> (bij_EF <O> bij_DE)).
 Proof.
 intros A B C D E F bji_AB bij_BC bij_DE bij_EF.
 apply bij_eq.
@@ -427,7 +427,7 @@ reflexivity.
 reflexivity.
 Qed.
 
-Theorem bij_prod_compose_id : forall {A B}, bij_prod_compose (@bijection_id A) (@bijection_id B) = bijection_id.
+Theorem bij_prod_compose_id : forall {A B}, bij_prod_compose (@bij_id A) (@bij_id B) = bij_id.
 Proof.
 intros A B.
 apply bij_eq.
@@ -492,7 +492,7 @@ reflexivity.
 reflexivity.
 Qed.
 
-Theorem bij_fun_compose_id : forall {A B}, bij_fun_compose (@bijection_id A) (@bijection_id B) = bijection_id.
+Theorem bij_fun_compose_id : forall {A B}, bij_fun_compose (@bij_id A) (@bij_id B) = bij_id.
 Proof.
 intros A B.
 apply bij_eq.
@@ -507,7 +507,7 @@ apply bij_eq.
 Qed.
 
 Theorem bij_fun_compose_compose : forall {A B C D E F : Type} (bij_AB : bijection A B) (bij_BC : bijection B C) (bij_DE : bijection D E) (bij_EF : bijection E F),
-          ((bij_BC -->> bij_EF) <O> (bij_AB -->> bij_DE)) = ((bij_BC <O> bij_AB) -->> (bij_EF <O> bij_DE)).
+  ((bij_BC -->> bij_EF) <O> (bij_AB -->> bij_DE)) = ((bij_BC <O> bij_AB) -->> (bij_EF <O> bij_DE)).
 Proof.
 intros A B C D E F bji_AB bij_BC bij_DE bij_EF.
 apply bij_eq.
@@ -579,7 +579,7 @@ Defined.
 Notation "<{ f | g }>" := (bij_subset_compose f g).
 
 Lemma adjunction_equiv {A B : Type} {P : A -> Prop} {Q : B -> Prop} (bij_AB : bijection A B) :
-            (forall a, P a <-> Q (bij_AB a)) -> (forall b, Q b <-> P (backward bij_AB b)).
+  (forall a, P a <-> Q (bij_AB a)) -> (forall b, Q b <-> P (backward bij_AB b)).
 Proof.
 intros EqPQ b.
 apply iff_sym.
@@ -591,7 +591,7 @@ assert (b = id b) as Hb.
 Qed.
 
 Theorem bij_inv_subset :forall {A B : Type} {P : A -> Prop} {Q : B -> Prop} (bij_AB : bijection A B) (EqPQ : forall a, P a <-> Q (bij_AB a)),
-                      bijection_inv (bij_subset_compose bij_AB EqPQ) = bij_subset_compose (bijection_inv bij_AB) (adjunction_equiv bij_AB EqPQ).
+  bijection_inv (<{bij_AB | EqPQ}>) = <{(bijection_inv bij_AB) | (adjunction_equiv bij_AB EqPQ)}>.
 Proof.
 intros A B P Q bij_AB EqPQ.
 apply bij_eq.
@@ -605,8 +605,9 @@ apply bij_eq.
   reflexivity.
 Qed.
 
-Theorem bij_subset_compose_id : forall {A : Type} {P : A -> Prop} (EqPP : forall a, P a <-> P (bijection_id a)),
-                                      bij_subset_compose bijection_id EqPP = bijection_id.
+Theorem bij_subset_compose_id : forall {A : Type} {P : A -> Prop} 
+  (EqPP : forall a, P a <-> P (bij_id a)),
+  <{bij_id | EqPP}> = bij_id.
 Proof.
 intros A P EqPP.
 apply bij_eq.
@@ -623,10 +624,10 @@ apply bij_eq.
 Qed.
 
 Theorem bij_subset_compose_compose : forall {A B C} {P : A -> Prop} {Q : B -> Prop} {R : C -> Prop}
-                                            (bij_AB : bijection A B) (bij_BC : bijection B C)
-                                            (EqPQ : forall a, P a <-> Q (bij_AB a))
-                                            (EqQR : forall b, Q b <-> R (bij_BC b)),
-          bij_subset_compose bij_BC EqQR <O> bij_subset_compose bij_AB EqPQ = bij_subset_compose (bij_BC <O> bij_AB) (fun a => iff_trans (EqPQ a) (EqQR (bij_AB a))).
+  (bij_AB : bijection A B) (bij_BC : bijection B C)
+  (EqPQ : forall a, P a <-> Q (bij_AB a))
+  (EqQR : forall b, Q b <-> R (bij_BC b)),
+  <{bij_BC | EqQR}> <O> <{bij_AB | EqPQ}> = <{(bij_BC <O> bij_AB) | (fun a => iff_trans (EqPQ a) (EqQR (bij_AB a)))}>.
 Proof.
 intros A B C P Q R bij_AB bij_BC EqPQ EqQR.
 apply bij_eq; simpl.
@@ -660,7 +661,7 @@ apply (mkBijection _ _ (bij_rew_forward Hab) (bij_rew_forward (eq_sym Hab))).
   reflexivity.
 Defined.
 
-Lemma bij_rew_id : forall {A} {P : A -> Type} {a : A} (Haa : a = a), (@bij_rew A P a a Haa) = bijection_id.
+Lemma bij_rew_id : forall {A} {P : A -> Type} {a : A} (Haa : a = a), (@bij_rew A P a a Haa) = bij_id.
 Proof.
 intros A P a Haa.
 apply bij_eq; simpl.
@@ -772,7 +773,7 @@ apply (mkBijection _ _ (bij_dep_prod_2_forward bij_PQ) (bij_dep_prod_2_forward (
   unfold bij_dep_prod_2_forward.
   generalize (f_equal (forward) (bij_inv_right_simpl (bij_PQ a))).
   intro H.
-  unfold bij_compose, bijection_id in H.
+  unfold bij_compose, bij_id in H.
   simpl in H.
   unfold funcomp, id in H.
   unfold bijection_inv.
@@ -787,7 +788,7 @@ apply (mkBijection _ _ (bij_dep_prod_2_forward bij_PQ) (bij_dep_prod_2_forward (
   unfold bij_dep_prod_2_forward.
   generalize (f_equal (forward) (bij_inv_left_simpl (bij_PQ a))).
   intro H.
-  unfold bij_compose, bijection_id in H.
+  unfold bij_compose, bij_id in H.
   simpl in H.
   unfold funcomp, id in H.
   unfold bijection_inv.
@@ -840,8 +841,8 @@ Notation "<'forall' f , g >" := (bij_dep_prod_compose f g).
 
 
 Theorem bij_inv_dep_prod : forall {A B : Type} {P : A -> Type} {Q : B -> Type} (bij_AB : bijection A B)
-                                (bij_PQ : forall a, bijection (P a) (Q (bij_AB a))),
-                        bijection_inv (bij_dep_prod_compose bij_AB bij_PQ) = bij_dep_prod_compose (bijection_inv bij_AB) (adjunction_bij bij_AB bij_PQ).
+  (bij_PQ : forall a, bijection (P a) (Q (bij_AB a))),
+  bijection_inv (bij_dep_prod_compose bij_AB bij_PQ) = bij_dep_prod_compose (bijection_inv bij_AB) (adjunction_bij bij_AB bij_PQ).
 Proof.
 intros A B P Q bij_AB bij_PQ.
 apply bij_eq; simpl.
@@ -870,7 +871,7 @@ apply bij_eq; simpl.
   reflexivity.
 Qed.
 
-Theorem bij_dep_prod_compose_id : forall {A : Type} {P : A -> Type}, bij_dep_prod_compose (@bijection_id A) (fun a => @bijection_id (P a)) = bijection_id.
+Theorem bij_dep_prod_compose_id : forall {A : Type} {P : A -> Type}, bij_dep_prod_compose (@bij_id A) (fun a => @bij_id (P a)) = bij_id.
 Proof.
 intros A P.
 apply bij_eq.
@@ -1019,8 +1020,8 @@ Notation "<{ f & g }>" := (bij_sigT_compose f g).
 
 
 Theorem bij_inv_sigT : forall {A B : Type} {P : A -> Type} {Q : B -> Type} (bij_AB : bijection A B)
-                                (bij_PQ : forall a, bijection (P a) (Q (bij_AB a))),
-                        bijection_inv (bij_sigT_compose bij_AB bij_PQ) = bij_sigT_compose (bijection_inv bij_AB) (adjunction_bij bij_AB bij_PQ).
+  (bij_PQ : forall a, bijection (P a) (Q (bij_AB a))),
+  bijection_inv (bij_sigT_compose bij_AB bij_PQ) = bij_sigT_compose (bijection_inv bij_AB) (adjunction_bij bij_AB bij_PQ).
 Proof.
 intros A B P Q bij_AB bij_PQ.
 apply bij_eq; simpl.
@@ -1049,7 +1050,7 @@ apply bij_eq; simpl.
   reflexivity.
 Qed.
 
-Theorem bij_sigT_compose_id : forall {A : Type} {P : A -> Type}, bij_sigT_compose (@bijection_id A) (fun a => @bijection_id (P a)) = bijection_id.
+Theorem bij_sigT_compose_id : forall {A : Type} {P : A -> Type}, bij_sigT_compose (@bij_id A) (fun a => @bij_id (P a)) = bij_id.
 Proof.
 intros A P.
 apply bij_eq.
@@ -1507,7 +1508,7 @@ Qed.
 Definition bij_transform {N M I O : Type} (bij : bijection N M) (f : N+I -> N+O) : M+I -> M+O :=
  (parallel (forward bij) id) <o> f <o> (parallel (backward bij) id).
 
-Theorem bij_transform_bij_id : forall {N I O : Type} (f : N+I -> N+O), bij_transform bijection_id f = f.
+Theorem bij_transform_bij_id : forall {N I O : Type} (f : N+I -> N+O), bij_transform bij_id f = f.
 Proof.
 intros.
 unfold bij_transform.
