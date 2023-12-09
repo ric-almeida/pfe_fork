@@ -487,6 +487,12 @@ Definition bij_list_backward {i1 i2 : NoDupList} :
   apply in_app_or in Hn.
   Admitted.
 
+
+Definition mynoduptl  {a:Name} {l1: list Name}
+  (nd1 : NoDup (a :: l1)) : NoDup l1.
+  apply nodup_tl in nd1. apply nd1. Defined.
+Locate in_dec.
+
 Fixpoint app_mergeNoDup 
   (eq_dec : forall x y : Name, {x = y} + {x <> y})
   (l1 : list Name) (l2 : list Name) 
@@ -494,7 +500,36 @@ Fixpoint app_mergeNoDup
   Proof. 
     induction l1 as [| a l1'].
     - exact l2. (*l1 = [] and l2 nodup*)
-    - destruct (in_dec eq_dec a l2).
+    - destruct (In_dec eq_dec a l2) eqn:E.
+    + (* In a l2 *)
+      set (nd1' := mynoduptl nd1).
+      exact (app_mergeNoDup eq_dec l1' l2 nd1' nd2).
+    + (* not In a l2 *)
+      set (nd1' := NoDup_remove_1 [] l1' a nd1).
+      simpl in nd1'.
+      exact (a :: (app_mergeNoDup eq_dec l1' l2 (mynoduptl nd1) nd2)).
+  Defined.
+
+(*Definition noduptl {a:Name} {l1': list Name} (nd1 : NoDup (a :: l1')) : NoDup l1'.
+  Proof. apply nodup_tl in nd1. apply nd1. Defined.
+Locate nodup_tl.
+Fixpoint app_mergeNoDup' 
+  (eq_dec : forall x y : Name, {x = y} + {x <> y})
+  (l1 : list Name) (l2 : list Name) 
+  (nd1 : NoDup l1) (nd2 : NoDup l2) : list Name :=
+  match l1 with
+    | nil => l2
+    | a :: l1' =>  
+      if in_dec eq_dec a l2 then 
+      app_mergeNoDup eq_dec l1' l2 (nodup_tl a l1') nd2
+        else
+      a :: app_mergeNoDup eq_dec l1' l2
+  end.
+
+  Proof. 
+    induction l1 as [| a l1'].
+    - exact l2. (*l1 = [] and l2 nodup*)
+    - destruct (in_dec eq_dec a l2) eqn:E.
     + (* a in l2 *)
       set (nd1' := NoDup_remove_1 [] l1' a nd1).
       simpl in nd1'.
@@ -503,43 +538,60 @@ Fixpoint app_mergeNoDup
       set (nd1' := NoDup_remove_1 [] l1' a nd1).
       simpl in nd1'.
       exact (a :: (app_mergeNoDup eq_dec l1' l2 nd1' nd2)).
-  Defined.
+  Defined. *)
+
+  Print app_mergeNoDup.
+
+Lemma mergeemptyright 
+  (eq_dec : forall x y : Name, {x = y} + {x <> y})
+  (l1 : list Name) 
+  (nd1 : NoDup l1) (nd2 : NoDup []):
+  app_mergeNoDup eq_dec l1 [] nd1 nd2 = l1.
+  Proof.
+  induction l1.
+  simpl. reflexivity.
+  simpl. rewrite IHl1. reflexivity. Qed.
+
+Lemma nodupcons {a:Name} {l1: list Name} :
+NoDup (a :: l1) -> NoDup l1.
+Proof. apply NoDup_cons_iff. Qed.
 
 Theorem app_mergeNoDupNoDup (eq_dec : forall x y : Name, {x = y} + {x <> y})
   (l1 : list Name) (l2 : list Name) 
   (nd1 : NoDup l1) (nd2 : NoDup l2) : 
   NoDup (app_mergeNoDup eq_dec l1 l2 nd1 nd2).
   Proof.
-   destruct (app_mergeNoDup eq_dec l1 l2 nd1 nd2).
-   - constructor.
-   - 
+    induction l1; induction l2.
+    - simpl. constructor.
+    - simpl. constructor.
+    + apply NoDup_cons_iff in nd2.
+      destruct nd2 as [nd2' _].
+      apply nd2'.
+    + apply NoDup_cons_iff in nd2.
+      destruct nd2 as [nd2' nd2''].
+      apply nd2''.
+    - rewrite mergeemptyright. apply nd1.
+    - (*shit, no link btw a and a0*) 
+     pose nd1 as nd1'.
+      apply nodupcons in nd1'.
+      set (l2' := (a0 :: l2)). Admitted.
 
-
-
-   :=
-  match l1 with
-    | nil => l2
-    | a :: l1' =>  
-      if in_dec eq_dec a l2 then
-      app_mergeNoDup eq_dec l1' l2 (NoDup_remove_1 [] l1' a nd1) nd2
-        else
-      a :: app_mergeNoDup eq_dec l1' l2
-  end.
+Variable eqdecName : forall x y : Name, {x = y} + {x <> y}.
 
 Definition app_NoDupList (i1: NoDupList) (i2 : NoDupList) : NoDupList.
 Proof.
-  exact (
-    fun 
-  )
+  exists (app_mergeNoDup eqdecName (ndlist i1) (ndlist i2) (nd i1) (nd i2)).
+  apply app_mergeNoDupNoDup.
+  Defined.
 
 Definition bigraph_juxtaposition {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
-    : bigraph (findec_sum s1 s2) (i1 ++ i2) (findec_sum r1 r2) (o1 ++ o2).
+    : bigraph (findec_sum s1 s2) (app_NoDupList i1 i2) (findec_sum r1 r2) (app_NoDupList o1 o2).
   Proof.
   apply (Big (findec_sum s1 s2)
-             (i1 ++ i2)
+             (app_NoDupList i1 i2)
              (findec_sum r1 r2)
-             (o1 ++ o2)
+             (app_NoDupList o1 o2)
              (findec_sum (get_node b1) (get_node b2))
              (findec_sum (get_edge b1) (get_edge b2))
              (join (get_control b1) (get_control b2))
