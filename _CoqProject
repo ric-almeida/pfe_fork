@@ -6,5 +6,6 @@ src/FinDecTypes.v
 src/Fintypes.v
 src/ToolsForBigraphs.v
 src/SignatureBig.v
+src/Names.v
 src/ConcreteBigraphs.v
 src/BigExample.v

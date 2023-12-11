@@ -556,12 +556,23 @@ Lemma nodupcons {a:Name} {l1: list Name} :
 NoDup (a :: l1) -> NoDup l1.
 Proof. apply NoDup_cons_iff. Qed.
 
+Lemma notinlnotinapp {a:Name} {l1 l2: list Name} {nd1 nd2} {eq_dec}:
+~ In a l1 -> ~ In a l2 -> ~ In a (app_mergeNoDup eq_dec l1 l2 nd1 nd2).
+Proof. Admitted.
+
+Lemma root_not_in_left {l1 l2} {a a0} {nd1 nd2 nd1'} {eq_dec}: 
+~ In a (a0::l2) 
+-> (app_mergeNoDup eq_dec (a :: l1) (a0 :: l2) nd1 nd2)
+= (a :: app_mergeNoDup eq_dec (l1) (a0 :: l2) nd1' nd2).
+intros.
+Admitted.
+
 Theorem app_mergeNoDupNoDup (eq_dec : forall x y : Name, {x = y} + {x <> y})
   (l1 : list Name) (l2 : list Name) 
   (nd1 : NoDup l1) (nd2 : NoDup l2) : 
   NoDup (app_mergeNoDup eq_dec l1 l2 nd1 nd2).
   Proof.
-    induction l1; induction l2.
+    induction l1 as [|a1 l1' IHl1] eqn:E1; induction l2 as [|a2 l2' IHl2] eqn:E2.
     - simpl. constructor.
     - simpl. constructor.
     + apply NoDup_cons_iff in nd2.
@@ -572,9 +583,21 @@ Theorem app_mergeNoDupNoDup (eq_dec : forall x y : Name, {x = y} + {x <> y})
       apply nd2''.
     - rewrite mergeemptyright. apply nd1.
     - (*shit, no link btw a and a0*) 
+    destruct (In_dec eq_dec a1 (a2::l2')) eqn:E. Focus 2.
+    + erewrite root_not_in_left. simpl. Search (NoDup (_::_)).
+      ++ constructor.
+        +++
+      apply IHl1. Admitted. 
+    (* with (nd1' := nd1).
+      ++ 
+    + assert (a = a0). {admit. }
+    injection H.
+    rewrite <- H in nd2.
+    change (NoDup (app_mergeNoDup eq_dec (a :: l1) (a :: l2) nd1 nd2)).
+    rewrite <-  H. simpl.
      pose nd1 as nd1'.
       apply nodupcons in nd1'.
-      set (l2' := (a0 :: l2)). Admitted.
+      set (l2' := (a0 :: l2)). Admitted. *)
 
 Variable eqdecName : forall x y : Name, {x = y} + {x <> y}.
 
@@ -596,7 +619,7 @@ Definition bigraph_juxtaposition {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDup
              (findec_sum (get_edge b1) (get_edge b2))
              (join (get_control b1) (get_control b2))
              (bij_sum_shuffle <o> (parallel (get_parent b1) (get_parent b2)) <o> (bijection_inv bij_sum_shuffle))
-             (bij_sum_shuffle <o> (parallel (get_link b1)   (get_link b2))   <o> (bijection_inv bij_sum_shuffle) <o> 
+             (bij_sum_shuffle <o> (parallel (get_link b1) (get_link b2)) <o> (bijection_inv bij_sum_shuffle) <o> 
                (bijection_inv (@bij_id _ <+> (bij_join_port (get_control b1) (get_control b2)))))
         ).
   rewrite <- tensor_alt.
