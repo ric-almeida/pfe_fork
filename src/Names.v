@@ -43,25 +43,6 @@ Proof.
     - exfalso. apply n. reflexivity.
 Qed.
 
-(* Theorem app_merge'_com {l1 l2 : list Name} :
-app_merge' l1 l2 = app_merge' l2 l1.
-Proof.
-induction l1 as [|a1 l1' IHl1].
-- simpl. induction l2 as [|a2 l2' IHl2].
-+ simpl. reflexivity.
-+ simpl. rewrite <- IHl2. reflexivity.
-- induction l2 as [|a2 l2' IHl2].
-+ simpl. rewrite IHl1. simpl. reflexivity.
-+ simpl. destruct (EqDecN a2 a1); destruct (EqDecN a1 a2).
-++ rewrite IHl1. rewrite <- IHl2.
-Abort. *)
-
-(* Theorem app_merge'_assoc {l1 l2 l3 : list Name} :
-app_merge' (app_merge' l1 l2) l3 = 
-    app_merge' l1 (app_merge' l2 l3).
-Proof. Abort. *)
-
-
 Lemma app_merge'_empty_right (l1 : list Name) :
 app_merge' l1 [] = l1.
 Proof.
@@ -77,6 +58,12 @@ Proof.
     simpl. reflexivity.
     simpl. reflexivity. 
 Qed.
+
+(* Theorem app_merge'_assoc {l1 l2 l3 : list Name} :
+app_merge' (app_merge' l1 l2) l3 = 
+    app_merge' l1 (app_merge' l2 l3).
+Proof. Abort. *)
+
 
 Theorem in_eq_m {a:Name} {l}: 
 In a (app_merge' [a] l).
@@ -167,9 +154,8 @@ Proof.
     destruct nd. apply H0. 
 Qed.
 
-Lemma in_split_m (a:Name) (l:list Name) :
-NoDup l -> In a l ->
-exists l1 l2, l = app_merge' l1 (a :: l2).
+Lemma in_split_m_dup (a:Name) (l:list Name) :
+NoDup l -> In a l -> exists l1 l2, l = app_merge' l1 (a :: l2).
 Proof.
   intros nd H.
   generalize dependent a.
@@ -204,166 +190,198 @@ Proof.
       destruct nd. apply H1.
 Qed.
 
-Theorem not_inr_not_interesting (b:Name) (l1:list Name) (l2:list Name) : 
-~ In b l2 -> 
-(In b (app_merge' (b :: l1) l2) <-> In b (app_merge' l1 l2)).
-Admitted.
+Theorem not_inr_not_interesting (a: Name) (b:Name) (l1:list Name) (l2:list Name) : 
+~ In b l2 -> a <> b -> In b (app_merge' l1 l2) -> In b (app_merge' (a :: l1) l2).
+Proof.
+    intros. simpl. 
+    destruct (in_dec EqDecN a l2).
+    - apply H1.
+    - apply in_cons. apply H1.
+Qed.
 
 Theorem inl_useless (a:Name) (l1:list Name) (l2:list Name) : 
 In a l2 -> app_merge' (a :: l1) l2 = app_merge' l1 l2.
 Proof.
-Admitted.
+    intros.
+    simpl.
+    destruct (in_dec EqDecN a l2).
+    - reflexivity.
+    - exfalso. apply n. apply H.
+Qed. 
 
 Theorem not_left (b:Name) (l1:list Name) (l2:list Name) : 
 ~ In b l2 -> In b l1 -> In b (app_merge' l1 l2).
 Proof. 
-intros H H'.
-induction l1.
-- exfalso. apply H'.
-- destruct (EqDecN a b).
-+ destruct e. apply in_head_left_list.
-+ destruct (in_dec EqDecN a l2).
-* rewrite inl_useless. 
-** apply IHl1. apply in_inv in H'. destruct H'.
-*** exfalso. apply n. apply H0.
-*** apply H0.
-** apply i.
-* apply not_inr_not_interesting. {apply H. }
-destruct (in_dec EqDecN b l2).
-** apply in_right_list. apply i.
-** apply in_head_left_list.
+    intros H H'.
+    induction l1.
+    - exfalso. apply H'.
+    - destruct (EqDecN a b).
+    + destruct e. apply in_head_left_list.
+    + destruct (in_dec EqDecN a l2).
+    * rewrite inl_useless. 
+    ** apply IHl1. apply in_inv in H'. destruct H'.
+    *** exfalso. apply n. apply H0.
+    *** apply H0.
+    ** apply i.
+    * apply not_inr_not_interesting.
+    ** apply H.
+    ** apply n.
+    ** apply IHl1.
+    apply in_inv in H'.
+    destruct H'. { exfalso. apply n. apply H0. }
+    apply H0.
 Qed.
 
 Theorem in_left_list : forall (b:Name) (l1:list Name) (l2:list Name), 
 In b l1 -> In b (app_merge' l1 l2).
 Proof.
-intros b l1 l2 H. 
-destruct (in_dec EqDecN b l2).
-- apply in_right_list. apply i.
-- apply in_split in H.
-(* apply (in_split_m b l1 nd1) in H. *)
-destruct H as [l1_1 [l1_2]].
-rewrite H.
-induction l1_1 as [| a l1_1' IHl1_1]. 
-+ apply in_head_left_list.
-+ destruct (EqDecN a b). 
-++ destruct e. apply in_head_left_list.
-++ apply not_left. {apply n. }
-rewrite <- H. 
-Admitted.
-
-Theorem in_app_left (b:Name) {l l' l''} : 
-In b l' -> In b (app_merge' (l++l') l'').
-intros.
-induction l.
-- simpl. Admitted.
-(*
-Fixpoint split_first_a (a:Name) (l:list Name) (acc : list Name): list Name * list Name :=
-match l with 
-| [] => (acc,[])
-| h::t => match (EqDecN a h) with
-    | left eq => (acc, t)
-    | right noteq => split_first_a a t (acc ++ [h])
-    end
-end.
-
-Theorem reconstruct_split_first_a (a:Name) (l:list Name) : 
-In a l -> 
-l = fst (split_first_a a l []) ++ a :: snd (split_first_a a l []).
-Proof.
-intros.
-induction l.
-- exfalso. apply H.
-- simpl. destruct (EqDecN a a0).
-+ simpl. destruct e. reflexivity.
-+ simpl. destruct H as [H | H]. {exfalso; apply n; symmetry; apply H. }
-apply IHl in H. Admitted.
-
-
-Lemma a_not_in_l1_split (a:Name) (l:list Name) :
-~ In a (fst (split_first_a a l [])).
-Proof.
-unfold not.
-intros.
-induction l as [| h t IH].
-- simpl in *. apply H.
-- simpl in *. destruct (EqDecN a h).
-+ simpl in H. apply H.
-+ apply IH. Admitted. 
-
-Lemma not_in_cons {a h : Name} {l} :
-a <> h -> ~ In a l -> ~ In a (h::l). Admitted.
+    intros b l1 l2 H. 
+    destruct (in_dec EqDecN b l2).
+    - apply in_right_list. apply i.
+    - apply in_split in H.
+    destruct H as [l1_1 [l1_2]].
+    rewrite H.
+    induction l1_1 as [| a l1_1' IHl1_1]. 
+    + apply in_head_left_list.
+    + apply not_left. {apply n. }
+    apply in_or_app. right. constructor. reflexivity. 
+Qed.
 
 Lemma in_split_not_in (a:Name) (l:list Name) : 
-In a l ->
-exists l1 l2, ~ In a l1 /\ l = l1 ++ a :: l2.
+In a l -> exists l1 l2, ~ In a l1 /\ l = l1 ++ a :: l2.
 Proof.
-intros.
-generalize dependent a.
-induction l as [| h t IH].
-- intros. inversion H.
-- intros.
-  set (l12 := split_first_a a (h::t) []).
-  destruct (EqDecN a h).
-  + exists [].
-    exists t.
-    simpl. destruct e. auto.
-  + exists (h::fst l12).
-    exists (snd l12).
-    split.
-    * apply not_in_cons.
-    ** apply n.
-    ** unfold l12. apply (a_not_in_l1_split a).
-    * destruct l12 as [l1 l2] eqn:E.
-    apply IH in H.
-    destruct H.
-    destruct H.
-    destruct H.
-    exists (h :: x).
-    exists x0.
-    split.
-    * unfold not. intros. apply H.  destruct H1.
-    simpl.
-    split.
-    * unfold not. intros. destruct H1. 
-    ** apply H. simpl.
-    rewrite <- H.
-    reflexivity.
+    intros.
+    generalize dependent a.
+    induction l as [| h t IH].
+    - intros. inversion H.
+    - intros.
+    set (l12 := split_first_a a (h::t) []).
+    destruct (EqDecN a h).
+    + exists [].
+        exists t.
+        simpl. destruct e. auto.
+    + exists (h::fst l12).
+        exists (snd l12).
+        split.
+        * apply not_in_cons.
+        ** apply n.
+        ** unfold l12. apply (a_not_in_l1_split a).
+        * destruct l12 as [l1 l2] eqn:E.
+        apply IH in H.
+        destruct H.
+        destruct H.
+        destruct H.
+        exists (h :: x).
+        exists x0.
+        split.
+        * unfold not. intros. apply H.  destruct H1.
+        simpl.
+        split.
+        * unfold not. intros. destruct H1. 
+        ** apply H. simpl.
+        rewrite <- H.
+        reflexivity.
 Qed. 
     
-Lemma in_split_m' (a:Name) (l:list Name) :
-In a l ->
-exists l1 l2, l = app_merge' l1 (a :: l2).
-Proof.
-  intros H.
-  set (ndl := nodup EqDecN l).
-Admitted. *)
-
-
-
-(* apply in_right_list. apply i.
-* apply in_cons. apply IHl1_1. simpl. auto. 
-apply in_split in H. destruct H as [l1_1 [l1_2 H]]. rewrite H.
-simpl. destruct (in_dec EqDecN a l2).
-* apply IHl1 in H. 
-simpl.  simpl.
-Qed. *)
+Lemma in_split_m (a:Name) (l:list Name) :
+In a l -> exists l1 l2, l = app_merge' l1 (a :: l2).
+Proof. (* FALSE !! If l has dup, then app_merge will remove them *)
+Abort.
 
 Lemma in_or_app_m : forall (l m:list Name) (a:Name), 
 In a l \/ In a m -> In a (app_merge' l m).
 Proof. 
-intros.
-destruct H.
-- apply in_left_list. apply H.
-- apply in_right_list. apply H.
+    intros.
+    destruct H.
+    - apply in_left_list. apply H.
+    - apply in_right_list. apply H.
 Qed.
 
-Lemma in_app_iff : forall l l' (a:Name), In a (app_merge' l l') <-> In a l \/ In a l'.
+Theorem not_in_cons (x a : Name) (l : list Name):
+~ In x (app_merge' [a] l) <-> x <> a /\ ~ In x l.
+Proof. split.
+    - split.
+    + unfold not. intros. apply H. rewrite H0. simpl.
+    destruct (in_dec EqDecN a l).
+    apply i.
+    constructor. reflexivity.
+    + unfold not. intros. apply H.
+    apply in_right_list. apply H0.
+    - intros. unfold not. intros. destruct H.
+    simpl in H0. destruct (in_dec EqDecN a l).
+    apply H1. apply H0.
+    apply H1. apply in_inv in H0. destruct H0.
+    + exfalso. apply H. symmetry. apply H0.
+    + apply H0.
+Qed. 
+
+Theorem in_app_merge'_com {l1 l2 : list Name} : forall a,
+In a (app_merge' l1 l2) -> In a (app_merge' l2 l1).
+Proof.
+intros.
+induction l1 as [|a1 l1' IHl1].
+- simpl in *. rewrite app_merge'_empty_right. apply H. 
+- simpl. destruct (in_dec EqDecN a1 l2).
+(* + apply (in_right_list a l2 (a1::l1') i). in i.
+
+induction l2 as [|a2 l2' IHl2].
++ simpl. reflexivity.
++ simpl.  *)
+Admitted.
+
+Theorem not_head_right_list {a2 b : Name} {l1 l2} :
+b <> a2 -> In b (app_merge' l1 (a2 :: l2)) -> In b (app_merge' l1 l2).
+Proof.
+intros.
+induction l2 as [|a2' l2' IHl2].
+- induction l1 as [|a1' l1' IHl1].
++ simpl in *. destruct H0. {apply H; symmetry; apply H0. } apply H0.
++ rewrite app_merge'_empty_right in *.
+apply in_cons. apply IHl1.  simpl. apply in_app_merge'_com. 
+
+(* - simpl in *. destruct H0. {exfalso; apply H; symmetry; apply H0. } apply H0.
+- simpl. destruct (in_dec EqDecN a1 l2).
++ apply IHl1. *)
+Admitted.
+
+Lemma not_in_merge {a} {l1 l2}:
+~ In a l1 -> ~ In a l2 ->
+~ In a (app_merge' l1 l2).
+Proof. 
+    intros H1 H2.
+    induction l1 as [|a1 l1' IHl1].
+    + apply H2.
+    + simpl. destruct (in_dec EqDecN a1 l2).
+    ++ apply IHl1.
+    unfold not in *. intros. apply H1. 
+    apply in_cons.
+    apply H.
+    ++ unfold not. intros. 
+    apply in_inv in H.
+    destruct H as [H | H'].
+    * apply H1. rewrite H. constructor. reflexivity.
+    * apply IHl1.
+    ** unfold not. intros. apply H1. apply in_cons. apply H.
+    ** apply H'. 
+Qed.
+
+Lemma in_app_iff {b:Name} {l1 l2} :
+In b (app_merge' l1 l2) <-> In b l1 \/ In b l2.
 Proof. 
 intros. split. 
-- intros. admit. 
+- intros. 
+destruct (in_dec EqDecN b l1).
++ left. apply i.
++ right. 
+induction l2 as [|a2 l2' IHl2].
+* rewrite app_merge'_empty_right in H. exfalso. apply n. apply H.
+* Search ( _ -> In _ (_::_)).
+destruct (EqDecN b a2).
+** destruct e. constructor. reflexivity.
+** apply in_cons. apply IHl2. apply (not_head_right_list n0 H). 
 - apply in_or_app_m.
-Admitted. 
+Qed.
+
 
 Lemma in_app_or : forall (l m:list Name) (a:Name), 
 In a (app_merge' l m) -> In a l \/ In a m.
@@ -374,57 +392,11 @@ induction l.
 - destruct IHl.
 + Admitted. 
 
-Theorem not_in_cons (x a : Name) (l : list Name):
-~ In x (app_merge' [a] l) <-> x<>a /\ ~ In x l.
-Proof. split.
-    - split.
-    + unfold not. intros. apply H. rewrite H0. simpl.
-    destruct (in_dec EqDecN a l).
-    apply i.
-    constructor. reflexivity.
-    + unfold not. intros. apply H. 
-    apply in_cons. apply H0.
-    - intros. unfold not. intros. destruct H.
-    simpl in H0. destruct (in_dec EqDecN a l).
-    apply H1. apply H0.
-    apply H1. apply in_inv in H0. destruct H0.
-    + exfalso. apply H. symmetry. apply H0.
-    + apply H0.
-Qed. 
-
-Lemma in_app_or_merge {a} {l1 l2}:
-In a l1 \/ In a l2 ->
-In a (app_merge' l1 l2).
-Proof.
-intros [H | H].
-- induction l1 as [|a1 l1' IHl1].
-+ exfalso. apply in_nil in H. apply H.
-+ destruct (EqDecN a1 a).
-++ rewrite e. simpl. apply IHl1. 
-apply in_inv in H. destruct H.
-* Admitted.
 
 
-Lemma not_in_merge {a} {l1 l2}:
-~ In a l1 -> ~ In a l2 ->
-~ In a (app_merge' l1 l2).
-Proof. 
-intros H1 H2.
-induction l1 as [|a1 l1' IHl1].
-+ apply H2.
-+ simpl. destruct (in_dec EqDecN a1 l2).
-++ apply IHl1.
-unfold not in *. intros. apply H1. 
-apply in_cons.
-apply H.
-++ unfold not. intros. 
-apply in_inv in H.
-destruct H as [H | H'].
-* apply H1. rewrite H. constructor. reflexivity.
-* apply IHl1.
-**   
-apply in_cons.
-apply H. Admitted.
+
+
+
   
 
 (* Theorem in_split : forall x (l:list Name), In x l -> exists l1 l2, l = app_merge' l1 (x::l2).
@@ -436,7 +408,7 @@ Admitted.  *)
 
 
   
-
+Section AboutNoDup.
 
 Lemma rm_headNoDUP {a:Name} {l}: 
 ~ In a l -> (NoDup (a::l) <-> NoDup l).
@@ -509,8 +481,8 @@ Proof.
 intros H1 H2 nd1 nd2.
 constructor.
 - apply not_in_merge; assumption.
-induction l1 as [|a1 l1' IHl1].
-- simpl.
+-  
+(* induction l1 as [|a1 l1' IHl1]. simpl.
 constructor.
 + apply H2.
 + apply nd2. 
@@ -533,7 +505,8 @@ destruct nd1 as [nd1' nd1''].
 apply nd1''.
 ++ apply not_in_cons in H1.
 destruct H1 as [H1  H1'].
-unfold not. intros. Admitted.
+unfold not. intros.  *)
+Admitted.
 (* apply split_in in H.
 destruct H as [H | [H' | H'']].
 * apply H1. apply H.
@@ -543,8 +516,8 @@ Qed. *)
 
 
 Lemma NoDup_app_merge (l1 : list Name) (l2 : list Name) :
-    NoDup l1 -> NoDup l2 -> NoDup (app_merge' l1 l2).
-    Proof.
+NoDup l1 -> NoDup l2 -> NoDup (app_merge' l1 l2).
+Proof.
     intros nd1 nd2.
     induction l1 as [|a1 l1' IHl1]. 
     - simpl. apply nd2.
@@ -555,8 +528,10 @@ Lemma NoDup_app_merge (l1 : list Name) (l2 : list Name) :
     apply nd1''.
     + apply NoDup_cons_iff in nd1.
     destruct nd1 as [nd1' nd1''].
-    apply not_in_merge; assumption.
-    Qed.
+    constructor.
+    * apply not_in_merge; assumption.
+    * apply IHl1. apply nd1''. 
+Qed.
     
 
 
@@ -686,6 +661,7 @@ Lemma NoDup_app_merge (l1 : list Name) (l2 : list Name) :
     apply (app_merge'_body (a2::l2_1)).
     Qed.  *)
 
+(** SECTION APP_MERGE **)
 
     Fixpoint app_merge (l1 : list Name) (l2 : list Name) {struct l1} : list Name.
   Proof. 
@@ -706,11 +682,11 @@ Lemma NoDup_app_merge (l1 : list Name) (l2 : list Name) :
     simpl. rewrite IHl1. reflexivity. 
   Qed.
 
-  Lemma dup_head_app_merge {l1' l2' : list Name} {a : Name}:
-app_merge (a::l1') (a::l2') = app_merge l1' (a::l2').
-    Proof.
-        simpl.
-        destruct (EqDecN a a).
-        - reflexivity.
-        - exfalso. apply n. reflexivity.
-    Qed.  
+    Lemma dup_head_app_merge {l1' l2' : list Name} {a : Name}:
+    app_merge (a::l1') (a::l2') = app_merge l1' (a::l2').
+        Proof.
+            simpl.
+            destruct (EqDecN a a).
+            - reflexivity.
+            - exfalso. apply n. reflexivity.
+        Qed.  
