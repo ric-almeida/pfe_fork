@@ -1760,8 +1760,8 @@ Proof.
     intros [i | j];
     destruct bjk;
     unfold funcomp in fob_id0;
-    simpl; unfold id. Focus 2.
-Admitted.
+    simpl; unfold id. 
+Abort.
 
 
 Theorem equality_bij {A B} (bij1 : bijection A B) (bij2 : bijection A B): 

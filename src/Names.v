@@ -9,7 +9,6 @@ Set Printing All.
 Import ListNotations.
 
 
-
 Module Type Names.
 Parameter Name : Type.
 Parameter EqDecN : forall x y : Name, {x = y} + {x <> y}.
@@ -190,8 +189,8 @@ Proof.
     intros. inversion H.    
   - (* l = h:: t*)
     intros.      
-    apply NoDup_in_or_exclusive in H. Focus 2. apply nd.
-    destruct H.
+    apply NoDup_in_or_exclusive in H. 
+    * destruct H.
     + (* l = a::t *)
       exists [].
       exists t.
@@ -214,6 +213,7 @@ Proof.
        rewrite <- H'. 
        apply NoDup_cons_iff in nd. 
       destruct nd. apply H1.
+    * apply nd.
 Qed.
 
 Theorem not_inr_not_interesting (a: Name) (b:Name) (l1:list Name) (l2:list Name) : 
@@ -374,10 +374,6 @@ Proof.
 Qed.
 
 
-
-  
-Section AboutNoDup.
-
 Lemma rm_headNoDUP {a:Name} {l}: 
 ~ In a l -> (NoDup (a::l) <-> NoDup l).
 Proof.
@@ -444,161 +440,4 @@ Proof.
     ++ apply H''.
 Qed.
 
-    
-
-
-(* Lemma NoDup_app_merge (l1 : list Name) (l2 : list Name) :
-    NoDup l1 -> NoDup l2 -> NoDup (app_merge' l1 l2).
-    Proof.
-    intros nd1 nd2.
-    induction l1 as [|a1 l1' IHl1]; induction l2 as [|a2 l2' IHl2] .
-    - simpl. constructor.
-    - simpl. constructor.
-    + apply NoDup_cons_iff in nd2.
-        destruct nd2 as [nd2' _].
-        apply nd2'.
-    + apply NoDup_cons_iff in nd2.
-        destruct nd2 as [nd2' nd2''].
-        apply nd2''.
-    - simpl. rewrite app_merge'_empty_right. constructor.
-    + apply NoDup_cons_iff in nd1.
-        destruct nd1 as [nd1' _].
-        apply nd1'.
-    + apply NoDup_cons_iff in nd1.
-        destruct nd1 as [nd1' nd1''].
-        apply nd1''.
-    - (*no link btw a1 and a2*) 
-    destruct (In_dec EqDecN a1 (a2::l2')).
-    +   apply in_inv in i. destruct i. (*In a1 l2*)
-    ++  rewrite H. rewrite dup_head_app_merge'.
-        rewrite <- H.
-        apply IHl1. 
-        apply NoDup_cons_iff in nd1.
-        destruct nd1 as [nd1' nd1''].
-        apply nd1''.
-    ++ rewrite a1_inl_app_merge'.
-    +++ apply IHl1. 
-        apply NoDup_cons_iff in nd1.
-        destruct nd1 as [nd1' nd1''].
-        apply nd1''.  
-    +++ apply H.
-    + rewrite a1_not_inl_app_merge'. (* Not In a1 l2*)
-    ++ simpl.  apply IHl1.
-        apply NoDup_cons_iff in nd1.
-        destruct nd1 as [nd1' nd1''].
-        apply nd1''.  
-    ++ unfold not in n. destruct n.
-    apply in_inv in n.
-
-Lemma NoDup_app_merge (l1 : list Name) (l2 : list Name) :
-    NoDup l1 -> NoDup l2 -> NoDup (app_merge l1 l2).
-    Proof.
-    intros nd1 nd2.
-    induction l1 as [|a1 l1' IHl1]; induction l2 as [|a2 l2' IHl2] .
-    - simpl. constructor.
-    - simpl. constructor.
-    + apply NoDup_cons_iff in nd2.
-        destruct nd2 as [nd2' _].
-        apply nd2'.
-    + apply NoDup_cons_iff in nd2.
-        destruct nd2 as [nd2' nd2''].
-        apply nd2''.
-    - rewrite app_merge_empty_right. constructor.
-    + apply NoDup_cons_iff in nd1.
-        destruct nd1 as [nd1' _].
-        apply nd1'.
-    + apply NoDup_cons_iff in nd1.
-        destruct nd1 as [nd1' nd1''].
-        apply nd1''.
-    - (*no link btw a1 and a2*) 
-    destruct (In_dec EqDecN a1 (a2::l2')).
-    +   apply in_inv in i. destruct i.
-    ++  rewrite H. rewrite dup_head_app_merge.
-        rewrite <- H.
-        apply IHl1. 
-        apply NoDup_cons_iff in nd1.
-        destruct nd1 as [nd1' nd1''].
-        apply nd1''.
-    ++  rewrite H. rewrite dup_head_app_merge.
-    rewrite <- H.
-    apply IHl1. 
-    apply NoDup_cons_iff in nd1.
-    destruct nd1 as [nd1' nd1''].
-    apply nd1''.
-    
-    apply NoDup_cons_iff in nd2. constructor. simpl. *)
-(* Lemma NoDupHeadBody {a a':Name} {l2_1' l2_2} : 
-    NoDup ((a' :: l2_1') ++ a :: l2_2) -> a <> a'.
-    Admitted. *)
-
-(* Lemma app_merge'_body {l1' l2_2 : list Name} {a : Name} (l2_1 : list Name):
-    NoDup (l2_1 ++ a :: l2_2) ->
-    app_merge' (a :: l1') (l2_1 ++ a :: l2_2) = app_merge' l1' (l2_1 ++ a :: l2_2).
-    Proof.
-        intros nd2. 
-        induction l2_1 as [|a' l2_1' IHl2]. (*if i do this I have to prove nodup -> a0 <> a*)
-        - apply dup_head_app_merge'.
-        - apply NoDupHeadBody in nd2.
-        simpl.
-        destruct (EqDecN a' a).
-        + reflexivity.
-        + destruct (in_dec EqDecN a (l2_1' ++ a :: l2_2)).
-        ++ reflexivity.
-        ++ exfalso. apply n0. 
-        Search (in_app_or).
-        apply in_or_app.
-        right. constructor. reflexivity.
-    Qed. *)
-
-
-(* Lemma a1_inl_app_merge' {l1' l2' : list Name} {a1 a2 : Name}:
-    In a1 l2' -> 
-    app_merge' (a1::l1') (a2::l2') = app_merge' l1' (a2::l2').
-    Proof.
-    intros. Search ( _ = _ ++ _ :: _ ).
-    apply in_split in H.
-    destruct H as [l2_1 [l2_2 H']].
-    rewrite H'.
-    apply (app_merge'_body (a2::l2_1)).
-    Admitted.  *)
-    
-(* Lemma a1_not_inl_app_merge' {l1' l2' : list Name} {a1 a2 : Name}:
-    ~ In a1 l2' -> a1 <> a2 ->
-    app_merge' (a1::l1') (a2::l2') = a1 :: app_merge' l1' (a2::l2').
-    Proof.
-    intros. Admitted. *)
-    (* apply in_split in H.
-    destruct H as [l2_1 [l2_2 H']].
-    rewrite H'.
-    apply (app_merge'_body (a2::l2_1)).
-    Qed.  *)
-
-(** SECTION APP_MERGE **)
-
-    Fixpoint app_merge (l1 : list Name) (l2 : list Name) {struct l1} : list Name.
-  Proof. 
-    induction l1 as [| a l1'].
-    - exact l2. (*l1 = [] and l2 nodup*)
-    - destruct (In_dec EqDecN a l2) eqn:E.
-    + (* In a l2 *)
-      exact (app_merge l1' l2).
-    + (* not In a l2 *)
-      exact (a :: (app_merge l1' l2)).
-  Defined.
-
-  Lemma app_merge_empty_right (l1 : list Name) :
-  app_merge l1 [] = l1.
-  Proof.
-    induction l1.
-    simpl. reflexivity.
-    simpl. rewrite IHl1. reflexivity. 
-  Qed.
-
-    Lemma dup_head_app_merge {l1' l2' : list Name} {a : Name}:
-    app_merge (a::l1') (a::l2') = app_merge l1' (a::l2').
-        Proof.
-            simpl.
-            destruct (EqDecN a a).
-            - reflexivity.
-            - exfalso. apply n. reflexivity.
-        Qed.  
+End Names.
