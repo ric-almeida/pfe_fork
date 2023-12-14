@@ -285,3 +285,50 @@ Lemma NoDup_app_merge (l1 : list Name) (l2 : list Name) :
     rewrite H'.
     apply (app_merge'_body (a2::l2_1)).
     Qed.  *)
+
+
+
+    (* eq_comu *)
+  Definition eq_comu {i1 i2: NoDupList} 
+  (P : forall name : Name, In name i1 <-> In name i2) :
+  forall name : Name, In name i2 <-> In name i1.
+  Proof.
+  intros. symmetry. apply P. Defined.
+
+(* Definition eq_comu {i1 i2: NoDupList} 
+  (P : forall name : Name, In name i1 <-> In name i2) :
+  forall name : Name, In name i2 <-> In name i1.
+  Proof.
+  intros. symmetry. apply P. Defined. *)
+
+Lemma eq_comu_plus {i1 i2: NoDupList} :
+  (forall name : Name, In name i1 <-> In name i2) <->
+  (forall name : Name, In name i2 <-> In name i1).
+  Proof.
+    split; intros H; exact (eq_comu H). Qed.
+
+Lemma eq_comu_eq_commu {i1 i2: NoDupList} 
+  (P : forall name : Name, In name i1 <-> In name i2) :
+  eq_comu (eq_comu P) = P.
+  Proof.
+    unfold eq_comu. Admitted.
+
+Lemma eq_comu_plus_plus {i1 i2: NoDupList} :
+  forall name : Name, (In name i1 <-> In name i2) ->
+  (In name i2 <-> In name i1).
+  Proof.
+    intros.
+    split; intros H'.
+    - rewrite <- H in H'. apply H'.
+    - rewrite H in H'. apply H'. Qed.
+(* 
+Lemma eq_prop (H: P <-> Q) :
+  {x | P x} = {y | Q y}
+  <{}>
+
+
+Lemma eq_commu_rewrite {x y : NoDupList}
+  (bij : forall a, In a x <-> In a y ):
+<{bij_id | eq_comu bij}> p = bij p. *)
+Print eq_comu.
+Check eq_comu.

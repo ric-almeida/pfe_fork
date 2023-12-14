@@ -14,6 +14,7 @@ Parameter Name : Type.
 Parameter EqDecN : forall x y : Name, {x = y} + {x <> y}.
 
 Record NoDupList : Type :=
+mkNoDupList
   {
     ndlist :> list Name ;
     nd : NoDup ndlist ;
@@ -439,5 +440,15 @@ Proof.
     apply H. apply in_cons. apply H0. 
     ++ apply H''.
 Qed.
+
+
+
+(* INTERESTING PART ABOUT NODUPLISTS *)
+
+Definition app_NoDupList (l1 : NoDupList) (l2 : NoDupList) : NoDupList :=
+{|
+ndlist := app_merge' l1 l2 ;
+nd := NoDup_app_merge l1 l2 (nd l1) (nd l2)
+|}.
 
 End Names.

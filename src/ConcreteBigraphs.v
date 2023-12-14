@@ -11,6 +11,7 @@ Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.
 Require Import PropExtensionality.
 Require Import SignatureBig.
+Require Import Names.
 Require Import Coq.Lists.List.
 
 Set Printing All.
@@ -20,9 +21,9 @@ Import ListNotations.
 
 
 (** This module implements bigraphs and basic operations on bigraphs *)
-Module Bigraphs (s : Signature).
+Module Bigraphs (s : Signature) (n : Names).
 Include s.
-Variable Name:Type. (*Should be put in Signature of another module*)
+Include n.
 (** * Definition of a bigraph
   This section defines the Type bigraph *)
 Section IntroBigraphs.
@@ -107,11 +108,6 @@ Lemma tensor_alt : forall {N1 I1 O1 N2 I2 O2} (f1 : N1 + I1 -> N1 + O1) (f2 : N2
   apply functional_extensionality.
   destruct x as [[n1|n2]|[i1|i2]]; reflexivity.
   Qed.
-Record NoDupList : Type :=
-  {
-    ndlist :> list Name ;
-    nd : NoDup ndlist ;
-  }.
 
 Record bigraph  (site: FinDecType) 
                 (innername: NoDupList) 
@@ -157,14 +153,6 @@ End GettersBigraphs.
   symmetric and transitive. This is going to be useful to be able to rewrite 
   bigraphs at will. *)
 Section EquivalenceBigraphs.
-(* Fixpoint l1_in_l2 {A : Type} (l1 l2 : list A) : Prop :=
-  match l1 with
-  | [] => True
-  | hd :: tl =>  In hd l2 /\ l1_in_l2 tl l2 
-  end.
-
-Definition list_equiv {A : Type} (l1 l2 : list A) : Prop :=
-  l1_in_l2 l1 l2 /\ l1_in_l2 l2 l1. *)
 
 (** ** On the heterogeneous type *)
 Record bigraph_equality {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList} 
@@ -172,7 +160,7 @@ Record bigraph_equality {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
   BigEq
   {
     bij_s : bijection (type s1) (type s2) ;
-    bij_i : forall name, In name i1 <-> In name i2 ;
+    bij_i : forall name, In name i1 <-> In name i2 ; (*Permutation i1 i2*)
     bij_r : bijection (type r1) (type r2) ;
     bij_o : forall name, In name o1 <-> In name o2 ;
     bij_n : bijection (type (get_node b1)) (type (get_node b2)) ;
@@ -185,9 +173,9 @@ Record bigraph_equality {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
 
 Lemma introduce_bijid {i1 i2 : NoDupList} : 
  (forall name : Name, In name i1 <-> In name i2) 
-  -> 
+  <-> 
   (forall name : Name, In name i1 <-> In (bij_id name) i2).
-  intros. simpl. simpl. apply H. Qed.
+  Proof. split; intros; simpl; simpl; apply H. Qed.
 
 Lemma bigraph_equality_refl {s r : FinDecType} {i o : NoDupList} (b : bigraph s i r o) :
   bigraph_equality b b.
@@ -211,57 +199,13 @@ Lemma bigraph_equality_refl {s r : FinDecType} {i o : NoDupList} (b : bigraph s 
   - intros. tauto.
   Qed.
 
-(* eq_comu *)
-  Definition eq_comu {i1 i2: NoDupList} 
-    (P : forall name : Name, In name i1 <-> In name i2) :
-    forall name : Name, In name i2 <-> In name i1.
-    Proof.
-    intros. symmetry. apply P. Defined.
-
-  (* Definition eq_comu {i1 i2: NoDupList} 
-    (P : forall name : Name, In name i1 <-> In name i2) :
-    forall name : Name, In name i2 <-> In name i1.
-    Proof.
-    intros. symmetry. apply P. Defined. *)
-
-  Lemma eq_comu_plus {i1 i2: NoDupList} :
-    (forall name : Name, In name i1 <-> In name i2) <->
-    (forall name : Name, In name i2 <-> In name i1).
-    Proof.
-      split; intros H; exact (eq_comu H). Qed.
-
-  Lemma eq_comu_eq_commu {i1 i2: NoDupList} 
-    (P : forall name : Name, In name i1 <-> In name i2) :
-    eq_comu (eq_comu P) = P.
-    Proof.
-      unfold eq_comu. Admitted.
-
-  Lemma eq_comu_plus_plus {i1 i2: NoDupList} :
-    forall name : Name, (In name i1 <-> In name i2) ->
-    (In name i2 <-> In name i1).
-    Proof.
-      intros.
-      split; intros H'.
-      - rewrite <- H in H'. apply H'.
-      - rewrite H in H'. apply H'. Qed.
-  (* 
-  Lemma eq_prop (H: P <-> Q) :
-    {x | P x} = {y | Q y}
-    <{}>
-
-
-  Lemma eq_commu_rewrite {x y : NoDupList}
-    (bij : forall a, In a x <-> In a y ):
-  <{bij_id | eq_comu bij}> p = bij p. *)
-Print eq_comu.
-Check eq_comu.
-Lemma simpl_adj_id {i1 i2 : NoDupList}  
+(* Lemma simpl_adj_id {i1 i2 : NoDupList}  
   (bij_i : forall name : Name, In name i1 <-> In name i2)
   (bij_i' : forall name : Name, In name i2 <-> In name i1) :
   adjunction_equiv bij_id bij_i = bij_i'.
   Proof. 
   pose bij_i as bij_i_id.
-  eapply introduce_bijid in bij_i_id. Admitted.
+  eapply introduce_bijid in bij_i_id. Admitted. *)
 
 
 (* Lemma hopeful {i1 i2 : NoDupList}  
@@ -272,7 +216,8 @@ Lemma simpl_adj_id {i1 i2 : NoDupList}
 Theorem bijidObijid {A}: @bij_id A <O> bij_id = bij_id.
   Proof. apply bij_eq.
   -  unfold bij_compose,funcomp,parallel,bij_id,id. simpl. reflexivity.
-  -  unfold bij_compose,funcomp,parallel,bij_id,id. simpl. reflexivity. Qed.
+  -  unfold bij_compose,funcomp,parallel,bij_id,id. simpl. reflexivity. 
+  Qed.
 
 Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}  
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
@@ -337,6 +282,16 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
     reflexivity.
   Qed.
 
+(* Lemma out_idk_y :
+<{bij_id | EqQR}> <O> <{bij_id | EqPQ}>
+=
+<{ bij_id | fun a : Name => iff_trans (bij_i12 a) (bij_i23 (bij_id a)) }> <+>
+ <{ bij_n23 <O> bij_n12 & fun n1 : type (get_node b1) => bij_p23 (bij_n12 n1) <O> bij_p12 n1 }> -->>
+ <{ bij_id | fun a : Name => iff_trans (bij_o12 a) (bij_o23 (bij_id a)) }> <+>
+ bij_e23 <O> bij_e12. *)
+
+
+
 Lemma bigraph_equality_trans {s1 r1 s2 r2 s3 r3 : FinDecType} {i1 o1 i2 o2 i3 o3: NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3):
     bigraph_equality b1 b2
@@ -364,35 +319,33 @@ Lemma bigraph_equality_trans {s1 r1 s2 r2 s3 r3 : FinDecType} {i1 o1 i2 o2 i3 o3
     rewrite <- bij_fun_compose_compose.
     simpl.
     reflexivity.
-  + 
-    change (
+  + change (
     (
-    <{ bij_id | fun a : Name => iff_trans (bij_i12 a) (bij_i23 (bij_id a)) }> <+>
-    <{ bij_n23 <O> bij_n12 & fun n1 : type (get_node b1) => bij_p23 (bij_n12 n1) <O> bij_p12 n1 }> -->>
+    (<{ bij_id | fun a : Name => iff_trans (bij_i12 a) (bij_i23 (bij_id a)) }> <+> 
+    <{ bij_n23 <O> bij_n12 & fun n1 : type (get_node b1) => bij_p23 (bij_n12 n1) <O> bij_p12 n1 }>) -->>
     <{ bij_id <O> bij_id  | fun a : Name => iff_trans (bij_o12 a) (bij_o23 (bij_id a)) }> <+>
     bij_e23 <O> bij_e12
     ) (get_link b1) = get_link b3
     ).
     Fail rewrite <- (bij_subset_compose_compose bij_id bij_id bij_o12 bij_o23).
-    Abort.
-    (* rewrite <- big_link_eq23.
+    Fail rewrite <- (bij_subset_compose_compose_id bij_i12 bij_i23).
+    rewrite <- big_link_eq23.
     rewrite <- big_link_eq12.
     rewrite <- bij_compose_forward_simpl.
     rewrite bij_fun_compose_compose.
     rewrite bij_sum_compose_compose.
     rewrite bij_sum_compose_compose.
     rewrite bij_sigT_compose_compose.
-    reflexivity.
-  Qed. *)
+    Fail rewrite <- (bij_subset_compose_compose bij_id bij_id bij_o12 bij_o23).
+    Fail rewrite <- (bij_subset_compose_compose_id bij_i12 bij_i23).
+    (* reflexivity. *)
+  Abort.
 
 Lemma bigraph_equality_dec {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}  
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   {bigraph_equality b1 b2} + {~ bigraph_equality b1 b2}.
-  Proof.
-  Fail decide equality.
-  induction b1 as [node1 edge1 kind1 arity1 control1 parent1 link1 ap1].
-  induction b2 as [node2 edge2 kind2 arity2 control2 parent2 link2 ap2].
-  Abort.
+  Proof. (* Need to have access to definition of bigraph_equality *)
+  Admitted.
 
 (** ** On the packed type 
   The issue with the previous relation is that a parametric relation asks for two 
@@ -435,7 +388,7 @@ Record support_equivalent {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
   SupEq
   {
     s_bij_s : bijection (type s1) (type s2) ;
-    s_bij_i : forall name, In name i1 <-> In name i2 ;
+    s_bij_i : forall name, In name i1 <-> In name i2 ; (* Permutation i1 i2 *)
     s_bij_r : bijection (type r1) (type r2) ;
     s_bij_o : forall name, In name o1 <-> In name o2 ;
   }.
@@ -460,152 +413,6 @@ Lemma bigraph_packed_equality_dec
   Proof.
   Fail decide equality. Abort.
 
-Definition bij_list_forward {i1 i2} : 
-  {name : Name | In name i1} + {name : Name | In name i2}
-  ->
-  {name : Name | In name (i1 ++ i2)}.
-  Proof.
-  refine (fun name => match name with
-                | inl (exist _ name' H1) => _
-                | inr (exist _ name' H2) => _
-                end).
-    + exists (name'). 
-      apply in_or_app. left. apply H1.
-    + exists (name'). 
-      apply in_or_app. right. apply H2.
-    Defined.
-
-
-Definition bij_list_backward {i1 i2 : NoDupList} :
-  {name : Name | In name (i1 ++ i2)}
-  ->
-  {name : Name | In name i1} + {name : Name | In name i2}.
-  Proof.
-  destruct i1 as [i1 ndi1].
-  destruct i2 as [i2 ndi2]. simpl.
-  intros [name Hn].
-  apply in_app_or in Hn.
-  Admitted.
-
-
-Definition mynoduptl  {a:Name} {l1: list Name}
-  (nd1 : NoDup (a :: l1)) : NoDup l1.
-  apply nodup_tl in nd1. apply nd1. Defined.
-Locate in_dec.
-
-Fixpoint app_mergeNoDup 
-  (eq_dec : forall x y : Name, {x = y} + {x <> y})
-  (l1 : list Name) (l2 : list Name) 
-  (nd1 : NoDup l1) (nd2 : NoDup l2) : list Name.
-  Proof. 
-    induction l1 as [| a l1'].
-    - exact l2. (*l1 = [] and l2 nodup*)
-    - destruct (In_dec eq_dec a l2) eqn:E.
-    + (* In a l2 *)
-      set (nd1' := mynoduptl nd1).
-      exact (app_mergeNoDup eq_dec l1' l2 nd1' nd2).
-    + (* not In a l2 *)
-      set (nd1' := NoDup_remove_1 [] l1' a nd1).
-      simpl in nd1'.
-      exact (a :: (app_mergeNoDup eq_dec l1' l2 (mynoduptl nd1) nd2)).
-  Defined.
-
-(*Definition noduptl {a:Name} {l1': list Name} (nd1 : NoDup (a :: l1')) : NoDup l1'.
-  Proof. apply nodup_tl in nd1. apply nd1. Defined.
-Locate nodup_tl.
-Fixpoint app_mergeNoDup' 
-  (eq_dec : forall x y : Name, {x = y} + {x <> y})
-  (l1 : list Name) (l2 : list Name) 
-  (nd1 : NoDup l1) (nd2 : NoDup l2) : list Name :=
-  match l1 with
-    | nil => l2
-    | a :: l1' =>  
-      if in_dec eq_dec a l2 then 
-      app_mergeNoDup eq_dec l1' l2 (nodup_tl a l1') nd2
-        else
-      a :: app_mergeNoDup eq_dec l1' l2
-  end.
-
-  Proof. 
-    induction l1 as [| a l1'].
-    - exact l2. (*l1 = [] and l2 nodup*)
-    - destruct (in_dec eq_dec a l2) eqn:E.
-    + (* a in l2 *)
-      set (nd1' := NoDup_remove_1 [] l1' a nd1).
-      simpl in nd1'.
-      exact (app_mergeNoDup eq_dec l1' l2 nd1' nd2).
-    + (* a not in l2 *)
-      set (nd1' := NoDup_remove_1 [] l1' a nd1).
-      simpl in nd1'.
-      exact (a :: (app_mergeNoDup eq_dec l1' l2 nd1' nd2)).
-  Defined. *)
-
-  Print app_mergeNoDup.
-
-Lemma mergeemptyright 
-  (eq_dec : forall x y : Name, {x = y} + {x <> y})
-  (l1 : list Name) 
-  (nd1 : NoDup l1) (nd2 : NoDup []):
-  app_mergeNoDup eq_dec l1 [] nd1 nd2 = l1.
-  Proof.
-  induction l1.
-  simpl. reflexivity.
-  simpl. rewrite IHl1. reflexivity. Qed.
-
-Lemma nodupcons {a:Name} {l1: list Name} :
-NoDup (a :: l1) -> NoDup l1.
-Proof. apply NoDup_cons_iff. Qed.
-
-Lemma notinlnotinapp {a:Name} {l1 l2: list Name} {nd1 nd2} {eq_dec}:
-~ In a l1 -> ~ In a l2 -> ~ In a (app_mergeNoDup eq_dec l1 l2 nd1 nd2).
-Proof. Admitted.
-
-Lemma root_not_in_left {l1 l2} {a a0} {nd1 nd2 nd1'} {eq_dec}: 
-~ In a (a0::l2) 
--> (app_mergeNoDup eq_dec (a :: l1) (a0 :: l2) nd1 nd2)
-= (a :: app_mergeNoDup eq_dec (l1) (a0 :: l2) nd1' nd2).
-intros.
-Admitted.
-
-Theorem app_mergeNoDupNoDup (eq_dec : forall x y : Name, {x = y} + {x <> y})
-  (l1 : list Name) (l2 : list Name) 
-  (nd1 : NoDup l1) (nd2 : NoDup l2) : 
-  NoDup (app_mergeNoDup eq_dec l1 l2 nd1 nd2).
-  Proof.
-    induction l1 as [|a1 l1' IHl1] eqn:E1; induction l2 as [|a2 l2' IHl2] eqn:E2.
-    - simpl. constructor.
-    - simpl. constructor.
-    + apply NoDup_cons_iff in nd2.
-      destruct nd2 as [nd2' _].
-      apply nd2'.
-    + apply NoDup_cons_iff in nd2.
-      destruct nd2 as [nd2' nd2''].
-      apply nd2''.
-    - rewrite mergeemptyright. apply nd1.
-    - (*shit, no link btw a and a0*) 
-    destruct (In_dec eq_dec a1 (a2::l2')) eqn:E. Focus 2.
-    + erewrite root_not_in_left. simpl. Search (NoDup (_::_)).
-      ++ constructor.
-        +++
-      apply IHl1. Admitted. 
-    (* with (nd1' := nd1).
-      ++ 
-    + assert (a = a0). {admit. }
-    injection H.
-    rewrite <- H in nd2.
-    change (NoDup (app_mergeNoDup eq_dec (a :: l1) (a :: l2) nd1 nd2)).
-    rewrite <-  H. simpl.
-     pose nd1 as nd1'.
-      apply nodupcons in nd1'.
-      set (l2' := (a0 :: l2)). Admitted. *)
-
-Variable eqdecName : forall x y : Name, {x = y} + {x <> y}.
-
-Definition app_NoDupList (i1: NoDupList) (i2 : NoDupList) : NoDupList.
-Proof.
-  exists (app_mergeNoDup eqdecName (ndlist i1) (ndlist i2) (nd i1) (nd i2)).
-  apply app_mergeNoDupNoDup.
-  Defined.
 
 Definition bigraph_juxtaposition {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 

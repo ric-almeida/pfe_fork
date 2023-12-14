@@ -641,6 +641,23 @@ apply bij_eq; simpl.
   reflexivity.
 Qed.
 
+Theorem bij_subset_compose_compose_id : forall {A} {P : A -> Prop} {Q : A -> Prop} {R : A -> Prop}
+  (EqPQ : forall a, P a <-> Q (bij_id a))
+  (EqQR : forall b, Q b <-> R (bij_id b)),
+  <{bij_id | EqQR}> <O> <{bij_id | EqPQ}> = <{(bij_id) | (fun a => iff_trans (EqPQ a) (EqQR (bij_id a)))}>.
+Proof.
+intros A P Q R EqPQ EqQR.
+apply bij_eq; simpl.
++ apply functional_extensionality.
+  destruct x.
+  apply subset_eq_compat.
+  reflexivity.
++ apply functional_extensionality.
+  destruct x.
+  apply subset_eq_compat.
+  reflexivity.
+Qed.
+
 Definition bij_rew_forward {A} {P : A -> Type} {a b : A} (Hab : a = b) : (P a) -> (P b) := fun pa => eq_rect a P pa b Hab.
 
 Lemma bij_rew : forall {A} {P : A -> Type} {a b : A}, a = b -> bijection (P a) (P b).
