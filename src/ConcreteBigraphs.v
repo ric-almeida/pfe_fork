@@ -109,9 +109,6 @@ Lemma tensor_alt : forall {N1 I1 O1 N2 I2 O2} (f1 : N1 + I1 -> N1 + O1) (f2 : N2
   destruct x as [[n1|n2]|[i1|i2]]; reflexivity.
   Qed.
 
-Definition NameSub (nl : NoDupList) : Type :=
-  {name:Name | In name nl}.
-
 Definition bij_list_forward (i1:NoDupList) (i2:NoDupList) : 
   (NameSub i1) + (NameSub i2)
   ->
@@ -148,7 +145,8 @@ Definition bij_list_names (i1:NoDupList) (i2:NoDupList) :
   destruct i1 as [i1 ndi1];
   destruct i2 as [i2 ndi2]; simpl.
   - apply functional_extensionality.
-  admit.
+  intros.
+  unfold bij_list_forward, funcomp, id. simpl. admit.
   - apply functional_extensionality.
   destruct x as [(na1, H1) | (na2, H2)].
   + unfold id. simpl. unfold funcomp. simpl. unfold in_app_or_m_nod_dup'. simpl.
@@ -156,13 +154,13 @@ Definition bij_list_names (i1:NoDupList) (i2:NoDupList) :
 
 
 
-Definition bij_names_void (l:NoDupList) : bijection (NameSub l) void.
+(* Definition bij_names_void (l:NoDupList) : bijection (NameSub l) void.
   Proof.
   Fail apply (mkBijection (NameSub l) void 
   (fun n => match n with | exist _ n pf =>void_univ_embedding n end)
   (void_univ_embedding)
   ).
-  Admitted.
+  Admitted. *)
 
 Record bigraph  (site: FinDecType) 
                 (innername: NoDupList) 
@@ -469,15 +467,17 @@ Lemma bigraph_packed_equality_dec
   Fail decide equality. Abort.
 
   
-Definition bigraph_juxtaposition {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList} 
+Definition bigraph_tensor_product {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
-    : bigraph (findec_sum s1 s2) (app_NoDupList i1 i2) (findec_sum r1 r2) (app_NoDupList o1 o2).
+  (dis_i : Disjoint i1 i2)
+  (dis_o : Disjoint o1 o2)
+    : bigraph (findec_sum s1 s2) (app_NoDupList i1 i2) (findec_sum r1 r2) (list_to_NDL (o1 ++ o2)).
   Proof.
   apply (Big 
     (findec_sum s1 s2)
     (app_NoDupList i1 i2)
     (findec_sum r1 r2)
-    (app_NoDupList o1 o2)
+    (list_to_NDL (o1 ++ o2))
     (findec_sum (get_node b1) (get_node b2))
     (findec_sum (get_edge b1) (get_edge b2))
     (join (get_control b1) (get_control b2))

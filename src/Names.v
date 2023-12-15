@@ -22,6 +22,17 @@ mkNoDupList
 
 Definition EmptyNDL : NoDupList := {| ndlist := []; nd := NoDup_nil Name |}.
 
+
+Definition list_to_NDL (l:list Name) : NoDupList.
+apply (
+    mkNoDupList 
+    (nodup EqDecN l)
+).
+apply NoDup_nodup.
+Defined.
+
+
+
 Lemma in_elt' (l1: list Name) : forall (x:Name) l2, In x (l1 ++ x :: l2).
 Proof. intros.
     apply in_or_app.
@@ -35,6 +46,18 @@ Fixpoint app_merge' (l1 : list Name) (l2 : list Name) {struct l1} : list Name :=
       if in_dec EqDecN a l2 then app_merge' l1' l2
         else a :: app_merge' l1' l2
   end.
+
+(* 
+Theorem NoDup_app_merge (l1 : list Name) (l2 : list Name) :
+NoDup l1 -> NoDup l2 -> NoDup (app_merge' l1 l2).
+
+Mais pas 
+Theorem NoDup_app_merge (l1 : list Name) (l2 : list Name) :
+NoDup (app_merge' l1 l2). This <- is nodup
+*)
+
+
+
 
 Lemma merge'_head {l1' l2' : list Name} {a : Name}:
 app_merge' (a::l1') (a::l2') = app_merge' l1' (a::l2').
@@ -495,6 +518,149 @@ forall name : Name,
 Proof. intros.
 split; intros; simpl in *; apply H.
 Qed.
-Print left_empty.
+
+
+Require Import FunctionalExtensionality.
+
+Theorem woopsie : app_merge' = 
+(fun l1 l2 => @nodup Name EqDecN (l1++l2)).
+Proof.
+apply functional_extensionality.
+intros l1.
+apply functional_extensionality.
+intros l2.
+induction l1.
+- 
+induction l2. simpl. reflexivity.
+simpl. destruct (in_dec EqDecN a l2).
++ Abort. (*TODO CHECK*)
+
+(* PART ABOUT DISJOINT LISTS *)
+Section DisjointLists.
+Definition Disjoint (l1:NoDupList) (l2:NoDupList) : Prop :=
+forall name, In name l1 -> ~ In name l2.
+
+Theorem nodupmergedisjointlist (l1:NoDupList) (l2:NoDupList) :
+Disjoint l1 l2 -> ndlist (list_to_NDL (l1 ++ l2)) = (ndlist l1) ++ (ndlist l2).
+Proof.
+unfold Disjoint.
+intros.
+destruct l1 as [l1 nd1].
+destruct l2 as [l2 nd2].
+simpl.
+apply nodup_fixed_point. Abort.
+
+
+End DisjointLists.
+
+
+
+
+
+
+Section NameSubsets.
+
+
+Require Import Bijections.
+Require Import MyBasics.
+
+Definition NameSub (nl : NoDupList) : Type :=
+  {name:Name | In name nl}.
+
+
+Definition bij_list_forward (i1:NoDupList) (i2:NoDupList) : 
+  (NameSub i1) + (NameSub i2)
+  ->
+  NameSub (app_NoDupList i1 i2).
+  Proof.
+  refine (fun name => match name with
+                | inl (exist _ name' H1) => _
+                | inr (exist _ name' H2) => _
+                end).
+    + exists (name'). 
+      apply in_left_list; assumption. 
+    + exists (name'). 
+      apply in_right_list; assumption. 
+    Defined.
+
+Definition bij_list_backward (i1:NoDupList) (i2:NoDupList) :
+  NameSub (app_NoDupList i1 i2)
+  ->
+  (NameSub i1) + (NameSub i2).
+  Proof.
+  destruct i1 as [i1 ndi1].
+  destruct i2 as [i2 ndi2]. simpl.
+  intros Hn.
+  apply in_app_or_m_nod_dup' in Hn; assumption.
+  Defined.
+
+Definition bij_list_names (i1:NoDupList) (i2:NoDupList) : 
+  bijection ((NameSub i1) + (NameSub i2)) (NameSub (app_NoDupList i1 i2)).
+  Proof.
+  apply 
+  (mkBijection _ _ 
+  (bij_list_forward i1 i2) 
+  (bij_list_backward i1 i2));
+  destruct i1 as [i1 ndi1];
+  destruct i2 as [i2 ndi2]; simpl.
+  - apply functional_extensionality.
+  intros.
+  unfold bij_list_forward, funcomp, id. simpl. admit.
+  - apply functional_extensionality.
+  destruct x as [(na1, H1) | (na2, H2)].
+  + unfold id. simpl. unfold funcomp. simpl. 
+  Admitted.
+
+
+
+Definition bij_list_forward' (i1:NoDupList) (i2:NoDupList) : 
+  (NameSub i1) + (NameSub i2)
+  ->
+  NameSub (list_to_NDL (i1 ++ i2)).
+  Proof.
+  refine (fun name => match name with
+                | inl (exist _ name' H1) => _
+                | inr (exist _ name' H2) => _
+                end).
+    + exists (name'). unfold list_to_NDL.
+      apply in_left_list; assumption. 
+    + exists (name'). 
+      apply in_right_list; assumption. 
+    Defined.
+
+Definition bij_list_backward (i1:NoDupList) (i2:NoDupList) :
+  NameSub (app_NoDupList i1 i2)
+  ->
+  (NameSub i1) + (NameSub i2).
+  Proof.
+  destruct i1 as [i1 ndi1].
+  destruct i2 as [i2 ndi2]. simpl.
+  intros Hn.
+  apply in_app_or_m_nod_dup' in Hn; assumption.
+  Defined.
+
+Definition bij_list_names (i1:NoDupList) (i2:NoDupList) : 
+  bijection ((NameSub i1) + (NameSub i2)) (NameSub (app_NoDupList i1 i2)).
+  Proof.
+  apply 
+  (mkBijection _ _ 
+  (bij_list_forward i1 i2) 
+  (bij_list_backward i1 i2));
+  destruct i1 as [i1 ndi1];
+  destruct i2 as [i2 ndi2]; simpl.
+  - apply functional_extensionality.
+  intros.
+  unfold bij_list_forward, funcomp, id. simpl. admit.
+  - apply functional_extensionality.
+  destruct x as [(na1, H1) | (na2, H2)].
+  + unfold id. simpl. unfold funcomp. simpl. 
+  Admitted.
+
+
+
+Require Import Bijections.
+
+End NameSubsets.
+
 
 End Names.
