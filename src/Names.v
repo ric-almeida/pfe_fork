@@ -20,6 +20,8 @@ mkNoDupList
     nd : NoDup ndlist ;
   }.
 
+Definition EmptyNDL : NoDupList := {| ndlist := []; nd := NoDup_nil Name |}.
+
 Lemma in_elt' (l1: list Name) : forall (x:Name) l2, In x (l1 ++ x :: l2).
 Proof. intros.
     apply in_or_app.

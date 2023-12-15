@@ -140,7 +140,7 @@ Definition bij_list_backward (i1:NoDupList) (i2:NoDupList) :
 
 Definition bij_list_names (i1:NoDupList) (i2:NoDupList) : 
   bijection ((NameSub i1) + (NameSub i2)) (NameSub (app_NoDupList i1 i2)).
-Proof.
+  Proof.
   apply 
   (mkBijection _ _ 
   (bij_list_forward i1 i2) 
@@ -152,6 +152,16 @@ Proof.
   - apply functional_extensionality.
   destruct x as [(na1, H1) | (na2, H2)].
   + unfold id. simpl. unfold funcomp. simpl. unfold in_app_or_m_nod_dup'. simpl.
+  Admitted.
+
+
+
+Definition bij_names_void (l:NoDupList) : bijection (NameSub l) void.
+  Proof.
+  Fail apply (mkBijection (NameSub l) void 
+  (fun n => match n with | exist _ n pf =>void_univ_embedding n end)
+  (void_univ_embedding)
+  ).
   Admitted.
 
 Record bigraph  (site: FinDecType) 
@@ -472,8 +482,9 @@ Definition bigraph_juxtaposition {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDup
     (findec_sum (get_edge b1) (get_edge b2))
     (join (get_control b1) (get_control b2))
     (bij_sum_shuffle <o> (parallel (get_parent b1) (get_parent b2)) <o> (bijection_inv bij_sum_shuffle))
-    (bij_sum_shuffle <o> (parallel (get_link b1) (get_link b2)) <o> (bijection_inv bij_sum_shuffle) <o> 
-      (bijection_inv (@bij_id _ <+> (bij_join_port (get_control b1) (get_control b2)))))
+    ( ((bij_list_names o1 o2) <+> bij_id) <o>
+      bij_sum_shuffle <o> (parallel (get_link b1) (get_link b2)) <o> (bijection_inv bij_sum_shuffle) <o> 
+      (bijection_inv ((bij_list_names i1 i2) <+> (bij_join_port (get_control b1) (get_control b2)))))
     ).
   rewrite <- tensor_alt.
   apply finite_parent_tensor.
@@ -483,14 +494,25 @@ Definition bigraph_juxtaposition {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDup
 
 Notation "b1 || b2" := (bigraph_juxtaposition b1 b2) (at level 50, left associativity).
 
-Definition bigraph_empty : bigraph voidfd voidfd voidfd voidfd.
+Definition void_link (ip : NameSub EmptyNDL + Port void_univ_embedding) :
+  NameSub EmptyNDL + type voidfd. 
   Proof.
-  apply (Big voidfd voidfd voidfd voidfd
+  destruct ip as [i|p].
+  - left. apply i.
+  - right. apply (bij_port_void void_univ_embedding p).
+  Qed. (*Qed not defined bc very unsure about the definition *)
+
+
+Definition bigraph_empty : bigraph voidfd EmptyNDL voidfd EmptyNDL.
+  Proof.
+  refine (Big voidfd EmptyNDL voidfd EmptyNDL
             voidfd voidfd
             (@void_univ_embedding _)
             (choice void_univ_embedding void_univ_embedding)
-            (choice void_univ_embedding (void_univ_embedding <o> (bij_port_void (@void_univ_embedding _))))).
-  intro n.
+            void_link _ 
+            )
+  .
+  - intro n.
   destruct n.
   Defined.
 
