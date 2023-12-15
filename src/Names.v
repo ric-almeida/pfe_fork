@@ -479,7 +479,6 @@ Proof.
 Qed.
 
 
-
 (* INTERESTING PART ABOUT NODUPLISTS *)
 
 Definition app_NoDupList (l1 : NoDupList) (l2 : NoDupList) : NoDupList :=
@@ -487,5 +486,15 @@ Definition app_NoDupList (l1 : NoDupList) (l2 : NoDupList) : NoDupList :=
 ndlist := app_merge' l1 l2 ;
 nd := NoDup_app_merge l1 l2 (nd l1) (nd l2)
 |}.
+
+
+Theorem left_empty (i:NoDupList) :
+forall name : Name,
+  In name (app_NoDupList EmptyNDL i) <->
+  In name i.
+Proof. intros.
+split; intros; simpl in *; apply H.
+Qed.
+Print left_empty.
 
 End Names.

@@ -532,15 +532,17 @@ Lemma arity_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o) n,
   + reflexivity.
   Qed.
 
+ (* Definition : forall name, In name (app_NoDupList [] l) <-> In name l *)
+  
 Theorem bigraph_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o), 
   bigraph_equality (∅ || b) b.
   Proof.
   intros s i r o b.
   apply (BigEq _ _ _ _ _ _ _ _ (∅ || b) b
           bij_void_sum_neutral
+          (left_empty i)
           bij_void_sum_neutral
-          bij_void_sum_neutral
-          bij_void_sum_neutral
+          (left_empty o)
           bij_void_sum_neutral
           bij_void_sum_neutral
           (fun n => bij_rew (P := fin) (arity_juxt_left_neutral b n)) 
@@ -559,7 +561,7 @@ Theorem bigraph_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o),
   + apply functional_extensionality.
     destruct x as [i1 | (v1, (k1, Hvk1))]; simpl.
     - unfold funcomp.
-      simpl.
+      simpl. (* TODO INTERESTING PART *)
       destruct get_link; reflexivity.
     - unfold parallel, sum_shuffle, choice, funcomp, id.
       simpl.
