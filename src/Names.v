@@ -133,6 +133,23 @@ Proof.
     * apply H. 
 Qed.
 
+Lemma NoDup_in_or_exclusive' {a h:Name} {t:list Name} :
+In a (h::t) -> NoDup (h::t) -> 
+(a = h /\ ~ In a t) + (a <> h /\ In a t).
+Proof.
+    intros H nd.
+    destruct (EqDecN a h).
+    - left. destruct e. split.
+    + reflexivity.
+    + apply NoDup_cons_iff in nd. 
+    destruct nd. apply H0.
+    - right. split.
+    + apply n.
+    + simpl in H. destruct H.
+    * exfalso. apply n; symmetry; apply H.
+    * apply H. 
+Qed.
+
 Lemma eq_means_cons_eq {a1 a2:Name} {l1 l2} :
 a1 = a2 /\ l1 = l2 -> a1::l1 = a2::l2.
 Proof. 
@@ -355,6 +372,24 @@ Proof.
     - left. apply not_in_left in H; assumption.
 Qed.
 
+Lemma in_app_or_m_nod_dup : forall (l m:list Name) (a:Name), 
+NoDup l -> NoDup m -> In a (app_merge' l m) -> In a l + In a m.
+Proof.
+    intros l m a ndl ndm H.
+    destruct (in_dec EqDecN a m).
+    - right. apply i. 
+    - left. apply not_in_left in H; assumption.
+Qed.
+
+Lemma in_app_or_m_nod_dup' : forall (l m:list Name) (a:Name), 
+NoDup l -> NoDup m -> {a:Name | In a (app_merge' l m)} -> {a | In a l} + {a | In a m}.
+Proof.
+    intros l m a ndl ndm H.
+    destruct H.
+    destruct (in_dec EqDecN x m).
+    - right. exists x. apply i0. 
+    - left. exists x. apply not_in_left in i; assumption.
+Qed.
 
 Lemma in_app_iff {b:Name} {l1 l2} :
 In b (app_merge' l1 l2) <-> In b l1 \/ In b l2.

@@ -109,6 +109,58 @@ Lemma tensor_alt : forall {N1 I1 O1 N2 I2 O2} (f1 : N1 + I1 -> N1 + O1) (f2 : N2
   destruct x as [[n1|n2]|[i1|i2]]; reflexivity.
   Qed.
 
+Definition NameSub (nl : NoDupList) : Type :=
+  {name:Name | In name nl}.
+
+(* Definition bij_list_forward (i1:NoDupList) (i2:NoDupList) : 
+  {name : Name | In name (ndlist i1)} + {name : Name | In name (ndlist i2)}
+  ->
+  {name : Name | In name (app_NoDupList i1 i2)}.
+  Proof.
+  refine (fun name => match name with
+                | inl (exist _ name' H1) => _
+                | inr (exist _ name' H2) => _
+                end).
+    + exists (name'). 
+      apply in_left_list; assumption. 
+    + exists (name'). 
+      apply in_right_list; assumption. 
+    Defined.
+
+Definition bij_list_backward (i1:NoDupList) (i2:NoDupList) :
+  {name : Name | In name (app_NoDupList i1 i2)}
+  ->
+  {name : Name | In name (ndlist i1)} + {name : Name | In name (ndlist i2)}.
+  Proof.
+  destruct i1 as [i1 ndi1].
+  destruct i2 as [i2 ndi2]. simpl.
+  intros Hn.
+  apply in_app_or_m_nod_dup' in Hn. assumption.
+  Defined.
+
+Definition bij_list_backward' {i1 i2 : NoDupList} (name:Name) :
+  In name (app_NoDupList i1 i2)
+  ->
+  In name (ndlist i1) + In name (ndlist i2).
+  Proof.
+  destruct i1 as [i1 ndi1].
+  destruct i2 as [i2 ndi2]. simpl.
+  intros Hn.
+  apply in_app_or_m_nod_dup in Hn; assumption.
+  Defined.
+
+Definition bij_list_names (i1:NoDupList) (i2:NoDupList) : 
+bijection 
+({name : Name | In name (ndlist i1)} + {name : Name | In name (ndlist i2)})
+({name : Name | In name (app_NoDupList i1 i2)}).
+Proof.
+apply (
+  mkBijection ( _ _
+  (bij_list_forward i1 i2)
+  (bij_list_backward i1 i2)
+  )
+). *)
+
 Record bigraph  (site: FinDecType) 
                 (innername: NoDupList) 
                 (root: FinDecType) 
@@ -119,7 +171,7 @@ Record bigraph  (site: FinDecType)
     edge : FinDecType ;
     control : (type node) -> Kappa ;
     parent : (type node) + (type site) -> (type node) + (type root) ; 
-    link : {i:Name | In i innername} + Port control -> {o:Name | In o outername} + (type edge); 
+    link : (NameSub innername) + Port control -> (NameSub outername) + (type edge); 
     ap : FiniteParent parent ;
   }.
 End IntroBigraphs.
@@ -413,22 +465,23 @@ Lemma bigraph_packed_equality_dec
   Proof.
   Fail decide equality. Abort.
 
-
+  
 Definition bigraph_juxtaposition {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
     : bigraph (findec_sum s1 s2) (app_NoDupList i1 i2) (findec_sum r1 r2) (app_NoDupList o1 o2).
   Proof.
-  apply (Big (findec_sum s1 s2)
-             (app_NoDupList i1 i2)
-             (findec_sum r1 r2)
-             (app_NoDupList o1 o2)
-             (findec_sum (get_node b1) (get_node b2))
-             (findec_sum (get_edge b1) (get_edge b2))
-             (join (get_control b1) (get_control b2))
-             (bij_sum_shuffle <o> (parallel (get_parent b1) (get_parent b2)) <o> (bijection_inv bij_sum_shuffle))
-             (bij_sum_shuffle <o> (parallel (get_link b1) (get_link b2)) <o> (bijection_inv bij_sum_shuffle) <o> 
-               (bijection_inv (@bij_id _ <+> (bij_join_port (get_control b1) (get_control b2)))))
-        ).
+  apply (Big 
+    (findec_sum s1 s2)
+    (app_NoDupList i1 i2)
+    (findec_sum r1 r2)
+    (app_NoDupList o1 o2)
+    (findec_sum (get_node b1) (get_node b2))
+    (findec_sum (get_edge b1) (get_edge b2))
+    (join (get_control b1) (get_control b2))
+    (bij_sum_shuffle <o> (parallel (get_parent b1) (get_parent b2)) <o> (bijection_inv bij_sum_shuffle))
+    (bij_sum_shuffle <o> (parallel (get_link b1) (get_link b2)) <o> (bijection_inv bij_sum_shuffle) <o> 
+      (bijection_inv (@bij_id _ <+> (bij_join_port (get_control b1) (get_control b2)))))
+    ).
   rewrite <- tensor_alt.
   apply finite_parent_tensor.
   + exact (ap _ _ _ _ b1).
