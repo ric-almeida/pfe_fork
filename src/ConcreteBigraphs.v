@@ -112,10 +112,10 @@ Lemma tensor_alt : forall {N1 I1 O1 N2 I2 O2} (f1 : N1 + I1 -> N1 + O1) (f2 : N2
 Definition NameSub (nl : NoDupList) : Type :=
   {name:Name | In name nl}.
 
-(* Definition bij_list_forward (i1:NoDupList) (i2:NoDupList) : 
-  {name : Name | In name (ndlist i1)} + {name : Name | In name (ndlist i2)}
+Definition bij_list_forward (i1:NoDupList) (i2:NoDupList) : 
+  (NameSub i1) + (NameSub i2)
   ->
-  {name : Name | In name (app_NoDupList i1 i2)}.
+  NameSub (app_NoDupList i1 i2).
   Proof.
   refine (fun name => match name with
                 | inl (exist _ name' H1) => _
@@ -128,38 +128,31 @@ Definition NameSub (nl : NoDupList) : Type :=
     Defined.
 
 Definition bij_list_backward (i1:NoDupList) (i2:NoDupList) :
-  {name : Name | In name (app_NoDupList i1 i2)}
+  NameSub (app_NoDupList i1 i2)
   ->
-  {name : Name | In name (ndlist i1)} + {name : Name | In name (ndlist i2)}.
+  (NameSub i1) + (NameSub i2).
   Proof.
   destruct i1 as [i1 ndi1].
   destruct i2 as [i2 ndi2]. simpl.
   intros Hn.
-  apply in_app_or_m_nod_dup' in Hn. assumption.
-  Defined.
-
-Definition bij_list_backward' {i1 i2 : NoDupList} (name:Name) :
-  In name (app_NoDupList i1 i2)
-  ->
-  In name (ndlist i1) + In name (ndlist i2).
-  Proof.
-  destruct i1 as [i1 ndi1].
-  destruct i2 as [i2 ndi2]. simpl.
-  intros Hn.
-  apply in_app_or_m_nod_dup in Hn; assumption.
+  apply in_app_or_m_nod_dup' in Hn; assumption.
   Defined.
 
 Definition bij_list_names (i1:NoDupList) (i2:NoDupList) : 
-bijection 
-({name : Name | In name (ndlist i1)} + {name : Name | In name (ndlist i2)})
-({name : Name | In name (app_NoDupList i1 i2)}).
+  bijection ((NameSub i1) + (NameSub i2)) (NameSub (app_NoDupList i1 i2)).
 Proof.
-apply (
-  mkBijection ( _ _
-  (bij_list_forward i1 i2)
-  (bij_list_backward i1 i2)
-  )
-). *)
+  apply 
+  (mkBijection _ _ 
+  (bij_list_forward i1 i2) 
+  (bij_list_backward i1 i2));
+  destruct i1 as [i1 ndi1];
+  destruct i2 as [i2 ndi2]; simpl.
+  - apply functional_extensionality.
+  admit.
+  - apply functional_extensionality.
+  destruct x as [(na1, H1) | (na2, H2)].
+  + unfold id. simpl. unfold funcomp. simpl. unfold in_app_or_m_nod_dup'. simpl.
+  Admitted.
 
 Record bigraph  (site: FinDecType) 
                 (innername: NoDupList) 

@@ -381,10 +381,10 @@ Proof.
     - left. apply not_in_left in H; assumption.
 Qed.
 
-Lemma in_app_or_m_nod_dup' : forall (l m:list Name) (a:Name), 
+Lemma in_app_or_m_nod_dup' : forall (l m:list Name), 
 NoDup l -> NoDup m -> {a:Name | In a (app_merge' l m)} -> {a | In a l} + {a | In a m}.
 Proof.
-    intros l m a ndl ndm H.
+    intros l m ndl ndm H.
     destruct H.
     destruct (in_dec EqDecN x m).
     - right. exists x. apply i0. 

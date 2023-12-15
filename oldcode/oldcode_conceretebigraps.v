@@ -145,3 +145,14 @@ Proof.
   exists (app_mergeNoDup eqdecName (ndlist i1) (ndlist i2) (nd i1) (nd i2)).
   apply app_mergeNoDupNoDup.
   Defined.
+
+  Definition bij_list_backward' {i1 i2 : NoDupList} (name:Name) :
+  In name (app_NoDupList i1 i2)
+  ->
+  In name (ndlist i1) + In name (ndlist i2).
+  Proof.
+  destruct i1 as [i1 ndi1].
+  destruct i2 as [i2 ndi2]. simpl.
+  intros Hn.
+  apply in_app_or_m_nod_dup in Hn; assumption.
+  Defined.
