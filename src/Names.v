@@ -1,7 +1,10 @@
 
 Require Import Coq.Lists.List.
 Require Import Coq.Program.Equality.
+Require Import Bijections.
+Require Import MyBasics.
 
+Require Import FunctionalExtensionality.
 
 Set Printing All.
 
@@ -520,20 +523,23 @@ split; intros; simpl in *; apply H.
 Qed.
 
 
-Require Import FunctionalExtensionality.
 
-Theorem woopsie : app_merge' = 
-(fun l1 l2 => @nodup Name EqDecN (l1++l2)).
+Theorem woopsie : forall l1 l2, app_merge' (ndlist l1) (ndlist l2) = nodup EqDecN ((ndlist l1)++(ndlist l2)).
 Proof.
-apply functional_extensionality.
-intros l1.
-apply functional_extensionality.
-intros l2.
+intros [l1 nd1].
+intros [l2 nd2].
 induction l1.
-- 
+- simpl. 
 induction l2. simpl. reflexivity.
 simpl. destruct (in_dec EqDecN a l2).
-+ Abort. (*TODO CHECK*)
+* exfalso. apply NoDup_cons_iff in nd2. destruct nd2. apply H. apply i.
+* simpl. admit.
+- simpl. destruct (in_dec EqDecN a l2); destruct (in_dec EqDecN a (l1++l2)).
+* admit.
+* exfalso. admit.
+* exfalso. admit.
+* admit.
+Admitted. 
 
 (* PART ABOUT DISJOINT LISTS *)
 Section DisjointLists.
@@ -561,17 +567,12 @@ End DisjointLists.
 Section NameSubsets.
 
 
-Require Import Bijections.
-Require Import MyBasics.
-
 Definition NameSub (nl : NoDupList) : Type :=
   {name:Name | In name nl}.
 
 
 Definition bij_list_forward (i1:NoDupList) (i2:NoDupList) : 
-  (NameSub i1) + (NameSub i2)
-  ->
-  NameSub (app_NoDupList i1 i2).
+  (NameSub i1) + (NameSub i2) ->  NameSub (app_NoDupList i1 i2).
   Proof.
   refine (fun name => match name with
                 | inl (exist _ name' H1) => _
@@ -609,9 +610,10 @@ Definition bij_list_names (i1:NoDupList) (i2:NoDupList) :
   - apply functional_extensionality.
   destruct x as [(na1, H1) | (na2, H2)].
   + unfold id. simpl. unfold funcomp. simpl. 
+  unfold in_app_or_m_nod_dup'.
   Admitted.
 
-
+(* 
 
 Definition bij_list_forward' (i1:NoDupList) (i2:NoDupList) : 
   (NameSub i1) + (NameSub i2)
@@ -654,11 +656,9 @@ Definition bij_list_names (i1:NoDupList) (i2:NoDupList) :
   - apply functional_extensionality.
   destruct x as [(na1, H1) | (na2, H2)].
   + unfold id. simpl. unfold funcomp. simpl. 
-  Admitted.
+  Admitted. *)
 
 
-
-Require Import Bijections.
 
 End NameSubsets.
 

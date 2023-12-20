@@ -539,14 +539,13 @@ erewrite comp_right_simpl.
 Qed.
 
 
-Definition bij_subset_forward {A B : Type} {P : A -> Prop} {Q : B -> Prop} (bij_AB : bijection A B) (HEqPQ : forall a, P a <-> Q (forward bij_AB a)) : (@sig A P) -> (@sig B Q).
+Definition bij_subset_forward {A B : Type} {P : A -> Prop} {Q : B -> Prop} 
+(bij_AB : bijection A B) 
+(HEqPQ : forall a, P a <-> Q (forward bij_AB a)) : 
+{a:A | P a} -> {b:B | Q b}.
 Proof.
-refine 
-(fun aPa => 
-match aPa with (exist _ a Pa) => 
-exist Q ((forward bij_AB) a) _ end).
-specialize (HEqPQ a).
-exact (proj1 HEqPQ Pa).
+apply 
+(fun aPa => match aPa with (exist _ a Pa) => exist Q ((forward bij_AB) a) (proj1 ((HEqPQ a)) Pa) end).
 Defined.
 
 Definition bij_subset_backward {A B : Type} {P : A -> Prop} {Q : B -> Prop} (bij_AB : bijection A B) (HEqPQ : forall a, P a <-> Q (forward bij_AB a)) : (@sig B Q) -> (@sig A P).
