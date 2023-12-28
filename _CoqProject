@@ -7,5 +7,6 @@ src/Fintypes.v
 src/ToolsForBigraphs.v
 src/SignatureBig.v
 src/Names.v
+src/Ports.v
 src/ConcreteBigraphs.v
 src/BigExample.v

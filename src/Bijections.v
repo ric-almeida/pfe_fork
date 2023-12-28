@@ -1792,3 +1792,24 @@ Theorem equality_bij {A B} (bij1 : bijection A B) (bij2 : bijection A B):
   destruct H0.
   assert (fob2 = fob1). { destruct fob1. auto. simpl in fob2.
   Abort.
+
+  Lemma tensor_alt : forall {N1 I1 O1 N2 I2 O2} (f1 : N1 + I1 -> N1 + O1) (f2 : N2 + I2 -> N2 + O2), 
+  f1 ** f2 = (bij_sum_shuffle <o> (parallel f1 f2) <o> (bijection_inv bij_sum_shuffle)).
+  Proof.
+  intros.
+  apply functional_extensionality.
+  destruct x as [[n1|n2]|[i1|i2]]; reflexivity.
+  Qed.
+
+  Theorem bijidObijid {A}: @bij_id A <O> bij_id = bij_id.
+  Proof. apply bij_eq.
+  -  unfold bij_compose,funcomp,parallel,bij_id,id. simpl. reflexivity.
+  -  unfold bij_compose,funcomp,parallel,bij_id,id. simpl. reflexivity. 
+  Qed.
+
+  Theorem bij_eq_comp_id {A} : @bij_id A <O> bij_id = bij_id.
+  Proof.
+  unfold bij_compose. simpl. unfold bij_id. apply bij_eq. 
+  - simpl. auto.
+  - simpl. auto. 
+  Qed.

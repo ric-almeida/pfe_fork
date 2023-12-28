@@ -610,7 +610,6 @@ Definition bij_list_names (i1:NoDupList) (i2:NoDupList) :
   - apply functional_extensionality.
   destruct x as [(na1, H1) | (na2, H2)].
   + unfold id. simpl. unfold funcomp. simpl. 
-  unfold in_app_or_m_nod_dup'.
   Admitted.
 
 (* 

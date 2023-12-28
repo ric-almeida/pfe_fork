@@ -1,13 +1,10 @@
+(* Require Import SignatureBig.
 Require Import MyBasics.
 Require Import Bijections.
 Require Import FunctionalExtensionality.
 
-(** This module implements a signature *)
-Module Type Signature.
-
-Parameter Kappa:Type.
-Parameter Arity:Kappa-> nat.
-
+Module PortModule (s : Signature).
+Include s.
 Definition Port {node : Type} (control : node -> Kappa): Type :=
   { n : node & fin (Arity (control n)) }.
 
@@ -82,6 +79,5 @@ Definition bij_port_void (c : void -> Kappa) : bijection (Port c) void.
     destruct v.
   Defined.
 
-End Signature.
-
-Print Signature.
+End PortModule.
+ *)

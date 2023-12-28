@@ -19,7 +19,7 @@ Set Printing All.
 
 Import ListNotations.
 
-
+Locate Port.
 (** This module implements bigraphs and basic operations on bigraphs *)
 Module Bigraphs (s : Signature) (n : Names).
 Include s.
@@ -27,88 +27,6 @@ Include n.
 (** * Definition of a bigraph
   This section defines the Type bigraph *)
 Section IntroBigraphs.
-Definition Port {node : Type} (control : node -> Kappa): Type :=
-  { n : node & fin (Arity (control n)) }.
-
-Definition join {A B C : Type} (p : A -> C) (q : B -> C) (ac : A+B) : C :=
-  match ac with
-  | inl a => (p a)
-  | inr b => (q b)
-  end.
-
-Definition bij_join_port_forward { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa) :
-  Port c1 + Port c2 -> 
-  Port (join c1 c2).
-  Proof.
-  refine (fun p => match p with
-              | inl (existT _ vi1 Hvi1) => _
-              | inr (existT _ vi2 Hvi2) => _
-              end).
-  + exists (inl vi1).
-    destruct Hvi1 as (i1, Hi1).
-    exists i1.
-    exact Hi1.
-  + exists (inr vi2).
-    destruct Hvi2 as (i2, Hi2).
-    exists i2.
-    exact Hi2.
-  Defined.
-
-Definition bij_join_port_backward { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa)  :
-  Port (join c1 c2) -> Port c1 + Port c2.
-  Proof.
-    destruct 1 as ([v1 | v2], (i, Hvi)).
-    + left.
-      exists v1.
-      exists i.
-      apply Hvi.
-    + right.
-      exists v2.
-      exists i.
-      apply Hvi.
-    Defined.
-
-Definition bij_join_port { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa)  :
-  bijection (Port c1 + Port c2) (Port (join c1 c2)).
-  Proof.
-  apply 
-    (mkBijection _ _ 
-    (bij_join_port_forward c1 c2) 
-    (bij_join_port_backward c1 c2)).
-  + apply functional_extensionality.
-    destruct x as ([v1|v2], (i, Hvi)).
-    - reflexivity.
-    - reflexivity.
-  + apply functional_extensionality.
-    destruct x as [(v1, (i1, Hvi1)) | (v2, (i2, Hvi2))].
-    - unfold funcomp, id.
-      simpl.
-      apply f_equal.
-      reflexivity.
-    - unfold funcomp, id.
-      simpl.
-      apply f_equal.
-      reflexivity.
-  Defined.
-
-Definition bij_port_void (c : void -> Kappa) : bijection (Port c) void.
-  Proof.
-  apply (mkBijection _ _ (fun vi => match vi with existT _ v _ => void_univ_embedding v end) (void_univ_embedding)).
-  + apply functional_extensionality.
-    destruct x.
-  + apply functional_extensionality.
-    destruct x as (v, (i, H)).
-    destruct v.
-  Defined.
-
-Lemma tensor_alt : forall {N1 I1 O1 N2 I2 O2} (f1 : N1 + I1 -> N1 + O1) (f2 : N2 + I2 -> N2 + O2), 
-  f1 ** f2 = (bij_sum_shuffle <o> (parallel f1 f2) <o> (bijection_inv bij_sum_shuffle)).
-  Proof.
-  intros.
-  apply functional_extensionality.
-  destruct x as [[n1|n2]|[i1|i2]]; reflexivity.
-  Qed.
-
 Record bigraph  (site: FinDecType) 
                 (innername: NoDupList) 
                 (root: FinDecType) 
@@ -171,12 +89,6 @@ Record bigraph_equality {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
     big_link_eq    : ((<{bij_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{bij_id| bij_o}> <+> bij_e)) (get_link b1) = get_link b2
   }.
 
-Lemma introduce_bijid {i1 i2 : NoDupList} : 
- (forall name : Name, In name i1 <-> In name i2) 
-  <-> 
-  (forall name : Name, In name i1 <-> In (bij_id name) i2).
-  Proof. split; intros; simpl; simpl; apply H. Qed.
-
 Lemma bigraph_equality_refl {s r : FinDecType} {i o : NoDupList} (b : bigraph s i r o) :
   bigraph_equality b b.
   Proof.
@@ -197,26 +109,6 @@ Lemma bigraph_equality_refl {s r : FinDecType} {i o : NoDupList} (b : bigraph s 
   Unshelve.
   - intros. tauto.
   - intros. tauto.
-  Qed.
-
-(* Lemma simpl_adj_id {i1 i2 : NoDupList}  
-  (bij_i : forall name : Name, In name i1 <-> In name i2)
-  (bij_i' : forall name : Name, In name i2 <-> In name i1) :
-  adjunction_equiv bij_id bij_i = bij_i'.
-  Proof. 
-  pose bij_i as bij_i_id.
-  eapply introduce_bijid in bij_i_id. Admitted. *)
-
-
-(* Lemma hopeful {i1 i2 : NoDupList}  
-(bij_i: forall name : Name, In name i1 <-> In name i2) :
-<{ bij_id | adjunction_equiv bij_id bij_i }>
-= (bijection_inv <{ bij_id | bij_i }>). *)
-
-Theorem bijidObijid {A}: @bij_id A <O> bij_id = bij_id.
-  Proof. apply bij_eq.
-  -  unfold bij_compose,funcomp,parallel,bij_id,id. simpl. reflexivity.
-  -  unfold bij_compose,funcomp,parallel,bij_id,id. simpl. reflexivity. 
   Qed.
 
 Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}  
@@ -269,8 +161,7 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
       bijection_inv <{ bij_n & bij_p }> -->>
       <{ (bijection_inv bij_id) | adjunction_equiv bij_id bij_o }> <+> bijection_inv bij_e)
         (get_link b2) = get_link b1
-    ). (* just adding bij_inv bij_id TODO : look for more elegant way?*)
-
+    ). (* just rewriting bij_id as bij_inv bij_id, TODO : look for more elegant way?*)
     rewrite <- bij_inv_subset.
     rewrite <- bij_inv_subset.
     rewrite <- bij_inv_sum.
@@ -282,17 +173,8 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
     reflexivity.
   Qed.
 
-(* Lemma out_idk_y :
-<{bij_id | EqQR}> <O> <{bij_id | EqPQ}>
-=
-<{ bij_id | fun a : Name => iff_trans (bij_i12 a) (bij_i23 (bij_id a)) }> <+>
- <{ bij_n23 <O> bij_n12 & fun n1 : type (get_node b1) => bij_p23 (bij_n12 n1) <O> bij_p12 n1 }> -->>
- <{ bij_id | fun a : Name => iff_trans (bij_o12 a) (bij_o23 (bij_id a)) }> <+>
- bij_e23 <O> bij_e12. *)
-
-
-
-Lemma bigraph_equality_trans {s1 r1 s2 r2 s3 r3 : FinDecType} {i1 o1 i2 o2 i3 o3: NoDupList} 
+(*TODO*) Lemma bigraph_equality_trans 
+  {s1 r1 s2 r2 s3 r3 : FinDecType} {i1 o1 i2 o2 i3 o3: NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3):
     bigraph_equality b1 b2
       -> bigraph_equality b2 b3  
@@ -325,14 +207,14 @@ Lemma bigraph_equality_trans {s1 r1 s2 r2 s3 r3 : FinDecType} {i1 o1 i2 o2 i3 o3
     <{ bij_id <O> bij_id  | fun a : Name => iff_trans (bij_o12 a) (bij_o23 (bij_id a)) }> <+>
     bij_e23 <O> bij_e12
     ) (get_link b1) = get_link b3
-    ).
+    ). (* idk why I can't do that change, bij_id <O> bij_id = bij_id! cf bij_eq_comp_id in Bijections file*)
     change ((
     (<{ bij_id | fun a : Name => iff_trans (bij_i12 a) (bij_i23 (bij_id a)) }> <+> 
     <{ bij_n23 <O> bij_n12 & fun n1 : type (get_node b1) => bij_p23 (bij_n12 n1) <O> bij_p12 n1 }>) -->>
     <{ bij_id <O> bij_id  | fun a : Name => iff_trans (bij_o12 a) (bij_o23 (bij_id a)) }> <+>
     bij_e23 <O> bij_e12
     ) (get_link b1) = get_link b3
-    ).
+    ). (*but I can do the change on the second bij_id (the second innername basically) *)
     Fail rewrite <- (bij_subset_compose_compose bij_id bij_id bij_o12 bij_o23).
     Fail rewrite <- (bij_subset_compose_compose_id bij_i12 bij_i23).
     rewrite <- big_link_eq23.
@@ -350,8 +232,8 @@ Lemma bigraph_equality_trans {s1 r1 s2 r2 s3 r3 : FinDecType} {i1 o1 i2 o2 i3 o3
 Lemma bigraph_equality_dec {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}  
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   {bigraph_equality b1 b2} + {~ bigraph_equality b1 b2}.
-  Proof. (* Need to have access to definition of bigraph_equality *)
-  Admitted.
+  Proof. (* Need to have access to a more transparent definition of bigraph_equality *)
+  Abort.
 
 (** ** On the packed type 
   The issue with the previous relation is that a parametric relation asks for two 
@@ -384,9 +266,9 @@ Lemma bigraph_packed_equality_sym (bp1 bp2 : bigraph_packed) : bigraph_packed_eq
   apply bigraph_equality_sym.
   Qed.
 
-Lemma bigraph_packed_equality_trans (bp1 bp2 bp3 : bigraph_packed) : bigraph_packed_equality bp1 bp2 -> bigraph_packed_equality bp2 bp3 -> bigraph_packed_equality bp1 bp3.
+(* TODO when bigraph_equality_trans done *) Lemma bigraph_packed_equality_trans (bp1 bp2 bp3 : bigraph_packed) : bigraph_packed_equality bp1 bp2 -> bigraph_packed_equality bp2 bp3 -> bigraph_packed_equality bp1 bp3.
   Proof.
-  Fail apply bigraph_equality_trans.
+  Fail apply bigraph_equality_trans. 
   Abort.
 
 Record support_equivalent {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList} 
@@ -398,7 +280,10 @@ Record support_equivalent {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
     s_bij_r : bijection (type r1) (type r2) ;
     s_bij_o : forall name, In name o1 <-> In name o2 ;
   }.
-
+(* TODO on support translation : Would need to prove 
+i) ρ preserves controls, i.e. ctrl G ◦ ρV = ctrl F . 
+It follows that ρ induces a bijection ρP : PF → PG on ports, defined by ρP ((v, i)) def =(ρV (v),i).
+ii) ρ commutes with the structural maps as follows: prnt G ◦ (Idm U ρV )= I (dn U ρV ) ◦ prnt F link G ◦ (IdX U ρP )= I (dY U ρE) ◦ link F*)
 End EquivalenceBigraphs.
 
 
@@ -406,7 +291,7 @@ Instance big_Equivalence: Equivalence bigraph_packed_equality.
 constructor. exact @bigraph_packed_equality_refl. exact @bigraph_packed_equality_sym. Abort. 
 (* exact @bigraph_packed_equality_trans. Defined. *)
 
-(* TODO when trans done *)
+(* TODO when bigraph_equality_trans done *)
 (* Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
   reflexivity proved by (bigraph_packed_equality_refl)
   symmetry proved by (bigraph_packed_equality_sym)
@@ -416,14 +301,16 @@ constructor. exact @bigraph_packed_equality_refl. exact @bigraph_packed_equality
 Lemma bigraph_packed_equality_dec  
   (b1 : bigraph_packed) (b2 : bigraph_packed) :
   {bigraph_packed_equality b1 b2} + {~ bigraph_packed_equality b1 b2}.
-  Proof.
+  Proof. (* same problem, bigraph_packed_equality not transparent enough *)
   Fail decide equality. Abort.
 
-  
+(* Juxtaposition is a tensor product when the sets of names are disjoint 
+  On this we can prove associativity, neutral elt, and distribution to composition (M1 M2 M3 in Milner's book p21) 
+  But bascially i'ts just juxtaposition with added hypothesis*)
 Definition bigraph_tensor_product {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList} 
+  {dis_i : Disjoint i1 i2}
+  {dis_o : Disjoint o1 o2}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
-  (dis_i : Disjoint i1 i2)
-  (dis_o : Disjoint o1 o2)
     : bigraph (findec_sum s1 s2) (app_NoDupList i1 i2) (findec_sum r1 r2) (app_NoDupList o1 o2).
   Proof.
   apply (Big 
@@ -443,8 +330,13 @@ Definition bigraph_tensor_product {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDu
   apply finite_parent_tensor.
   + exact (ap _ _ _ _ b1).
   + exact (ap _ _ _ _ b2).
-  Defined.
+  Defined. 
 
+Notation "b1 ⊗ b2" := (bigraph_tensor_product b1 b2) (at level 50, left associativity).
+
+(*juxtaposition, also called parallel product
+  in the book, parallel product is defined from tensor product p33 with the sentence "is defined just as tensor product, except that its link map allows name-sharing"
+  but I think we should probably do it the other way around *)
 Definition bigraph_juxtaposition {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
     : bigraph (findec_sum s1 s2) (app_NoDupList i1 i2) (findec_sum r1 r2) (app_NoDupList o1 o2).
@@ -486,21 +378,20 @@ Definition bigraph_empty : bigraph voidfd EmptyNDL voidfd EmptyNDL.
             (@void_univ_embedding _)
             (choice void_univ_embedding void_univ_embedding)
             void_link _ 
-            )
-  .
+            ).
   - intro n.
   destruct n.
   Defined.
 
 Notation "∅" := bigraph_empty.
 
-(** * Disjoint juxtaposition
+(** * Disjoint juxtaposition/ Tensor Product
   This section deals with the operation of disjoint juxtaposition. This is the act
   of putting two bigraphs with disjoint interfaces "next" to one another. 
   After the definition, we prove associativity and commutativity of dis_juxtaposition *)
-Section DisjointJuxtaposition.
+(* Section DisjointJuxtaposition.
 Lemma arity_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o) n, 
-        Arity (get_control (∅ || b) n) = Arity (get_control b (bij_void_sum_neutral n)).
+        Arity (get_control (∅ ⊗ b) n) = Arity (get_control b (bij_void_sum_neutral n)).
   Proof.
   intros s i r o b n.
   destruct n as [ v | n].
@@ -787,7 +678,302 @@ Theorem bigraph_juxt_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4
 
 Definition bigraph_packed_juxtaposition (b1 b2 : bigraph_packed) := 
   packing ((big b1) || (big b2)).
-End DisjointJuxtaposition.
+End DisjointJuxtaposition. *)
+
+(** * Disjoint juxtaposition / Parallel product
+  This section deals with the operation of disjoint juxtaposition. This is the act
+  of putting two bigraphs with disjoint interfaces "next" to one another. 
+  After the definition, we prove associativity and commutativity of dis_juxtaposition *)
+Section Juxtaposition.
+Lemma arity_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o) n, 
+        Arity (get_control (∅ || b) n) = Arity (get_control b (bij_void_sum_neutral n)).
+  Proof.
+  intros s i r o b n.
+  destruct n as [ v | n].
+  + destruct v.
+  + reflexivity.
+  Qed.
+
+  (* Definition : forall name, In name (app_NoDupList [] l) <-> In name l *)
+  
+Theorem bigraph_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o), 
+  bigraph_equality (∅ || b) b.
+  Proof.
+  intros s i r o b.
+  apply (BigEq _ _ _ _ _ _ _ _ (∅ || b) b
+          bij_void_sum_neutral
+          (left_empty i)
+          bij_void_sum_neutral
+          (left_empty o)
+          bij_void_sum_neutral
+          bij_void_sum_neutral
+          (fun n => bij_rew (P := fin) (arity_juxt_left_neutral b n)) 
+        ).
+  + apply functional_extensionality.
+    intro x.
+    reflexivity. 
+  + apply functional_extensionality.
+    destruct x as [n1 | s1]; simpl.
+    - unfold funcomp.
+      simpl.
+      destruct get_parent; reflexivity.
+    - unfold funcomp.
+      simpl.
+      destruct get_parent; reflexivity.
+  + apply functional_extensionality.
+    destruct x as [i1 | (v1, (k1, Hvk1))]; simpl.
+    - unfold funcomp.
+      simpl. (* TODO INTERESTING PART when bij done *)
+      destruct get_link; reflexivity.
+    - unfold parallel, sum_shuffle, choice, funcomp, id.
+      simpl.
+      unfold bij_join_port_backward, bij_dep_sum_2_forward, bijection_inv, bij_dep_sum_1_forward.
+      simpl.
+      unfold bij_rew_forward, eq_rect_r, funcomp.
+      simpl.
+    (*
+        erewrite eq_rect_pi.
+        erewrite (eq_rect_pi (x := v1)).
+    *)
+      rewrite <- eq_rect_eq.
+      rewrite <- eq_rect_eq.
+      destruct get_link; reflexivity.
+  Qed.
+
+Lemma arity_juxt_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) n12,
+  Arity (get_control (b1 || b2) n12) = Arity (get_control (b2 || b1) (bij_sum_comm n12)).
+  Proof.
+  intros until n12.
+  destruct n12.
+  + reflexivity.
+  + reflexivity.
+  Qed.
+
+Theorem bigraph_juxt_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2),
+  bigraph_equality (b1 ||b2) (b2 || b1).
+  Proof.
+  intros.
+  apply (BigEq _ _ _ _ _ _ _ _ (b1 || b2) (b2 || b1)
+          bij_sum_comm
+          bij_sum_comm
+          bij_sum_comm
+          bij_sum_comm
+          bij_sum_comm
+          bij_sum_comm
+          (fun n12 => bij_rew (P := fin) (arity_juxt_comm b1 b2 n12))
+        ).
+  + apply functional_extensionality.
+    destruct x as [k2 | k1]; reflexivity.
+  + apply functional_extensionality.
+    destruct x as [[n2 | n1] | [s2' | s1']]; simpl; unfold funcomp; simpl; destruct get_parent; reflexivity.
+  + apply functional_extensionality.
+    destruct x as [[i2' | i1'] | p12]; simpl; unfold funcomp; simpl.
+    - destruct get_link; reflexivity.
+    - destruct get_link; reflexivity.
+    - destruct p12 as ([v2 | v1], (i21, Hvi21)); simpl.
+      * unfold bij_rew_forward.
+        unfold eq_rect_r.
+        (*
+          erewrite eq_rect_pi.
+          erewrite (eq_rect_pi (x := inl v2)).
+        *)
+        rewrite <- eq_rect_eq.
+        rewrite <- eq_rect_eq.
+        simpl.
+        destruct get_link; reflexivity.
+      * unfold bij_rew_forward.
+        unfold eq_rect_r.
+        (*
+          erewrite eq_rect_pi.
+          erewrite (eq_rect_pi (x := inl v2)).
+        *)
+        rewrite <- eq_rect_eq.
+        rewrite <- eq_rect_eq.
+        simpl.
+        destruct get_link; reflexivity.
+  Qed.
+
+Lemma arity_juxt_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) n12_3,
+  Arity (get_control ((b1 || b2) || b3) n12_3) = Arity (get_control (b1 || (b2 || b3)) (bij_sum_assoc n12_3)).
+  Proof.
+  intros until n12_3.
+  destruct n12_3 as [[n1 | n2] | n3].
+  + reflexivity.
+  + reflexivity.
+  + reflexivity.
+  Qed.
+
+Theorem bigraph_juxt_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3),
+  bigraph_equality ((b1 || b2) || b3) (b1 || (b2 || b3)).
+  Proof.
+  intros.
+  apply (BigEq _ _ _ _ _ _ _ _ ((b1 || b2) || b3) (b1 || (b2 || b3))
+          bij_sum_assoc
+          bij_sum_assoc
+          bij_sum_assoc
+          bij_sum_assoc
+          bij_sum_assoc
+          bij_sum_assoc
+          (fun n12_3 => bij_rew (P := fin) (arity_juxt_assoc b1 b2 b3 n12_3))
+        ).
+  + apply functional_extensionality.
+    destruct x as [k1 | [k2 | k3]]; reflexivity.
+  + apply functional_extensionality.
+    destruct x as [[n1 | [n2 | n3]] | [s1' | [s2' | s3']]]; simpl; unfold funcomp; simpl; destruct get_parent; reflexivity.
+  + apply functional_extensionality.
+    destruct x as [[i1' | [i2' | i3']] | p123]; simpl; unfold funcomp; simpl.
+    - destruct get_link; reflexivity.
+    - destruct get_link; reflexivity.
+    - destruct get_link; reflexivity.
+    - destruct p123 as ([v1 | [v2 | v3]], (i123, Hvi123)); simpl.
+      * unfold bij_rew_forward, eq_rect_r.
+        rewrite <- eq_rect_eq.
+        rewrite <- eq_rect_eq.
+        simpl.
+        destruct get_link; reflexivity.
+      * unfold bij_rew_forward, eq_rect_r.
+        rewrite <- eq_rect_eq.
+        rewrite <- eq_rect_eq.
+        simpl.
+        destruct get_link; reflexivity.
+      * unfold bij_rew_forward, eq_rect_r.
+        rewrite <- eq_rect_eq.
+        rewrite <- eq_rect_eq.
+        simpl.
+        destruct get_link; reflexivity.
+  Qed.
+
+Definition arity_juxt_congruence_forward {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} 
+                                    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4)
+                                    (bij_n12 : bijection (type (get_node b1)) (type (get_node b2))) (bij_n34 : bijection (type (get_node b3)) (type (get_node b4)))
+                                    (bij_p12 : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n12 n1)))))
+                                    (bij_p34 : forall (n3 : type (get_node b3)), bijection (fin (Arity (get_control b3 n3))) (fin (Arity (get_control b4 (bij_n34 n3)))))
+                                    (n13 : type (get_node (b1 || b3))) :
+  (fin (Arity (get_control (b1 || b3) n13))) -> (fin (Arity (get_control (b2 || b4) ((bij_n12 <+> bij_n34) n13)))).
+  Proof.
+  destruct n13 as [n1 | n3].
+  + exact (bij_p12 n1).
+  + exact (bij_p34 n3).
+  Defined.
+
+Definition arity_juxt_congruence_backward {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} 
+                                    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4)
+                                    (bij_n12 : bijection (type (get_node b1)) (type (get_node b2))) (bij_n34 : bijection (type (get_node b3)) (type (get_node b4)))
+                                    (bij_p12 : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n12 n1)))))
+                                    (bij_p34 : forall (n3 : type (get_node b3)), bijection (fin (Arity (get_control b3 n3))) (fin (Arity (get_control b4 (bij_n34 n3)))))
+                                    (n13 : type (get_node (b1 || b3))) :
+  (fin (Arity (get_control (b2 || b4) ((bij_n12 <+> bij_n34) n13)))) -> (fin (Arity (get_control (b1 || b3) n13))).
+  Proof.
+  destruct n13 as [n1 | n3].
+  + exact (backward (bij_p12 n1)).
+  + exact (backward (bij_p34 n3)).
+  Defined.
+
+Lemma arity_juxt_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} 
+                                    (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4)
+                                    (bij_n12 : bijection (type (get_node b1)) (type (get_node b2))) (bij_n34 : bijection (type (get_node b3)) (type (get_node b4)))
+                                    (bij_p12 : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n12 n1)))))
+                                    (bij_p34 : forall (n3 : type (get_node b3)), bijection (fin (Arity (get_control b3 n3))) (fin (Arity (get_control b4 (bij_n34 n3)))))
+                                    (n13 : type (get_node (b1 || b3))),
+  bijection (fin (Arity (get_control (b1 || b3) n13))) (fin (Arity (get_control (b2 || b4) ((bij_n12 <+> bij_n34) n13)))).
+  Proof.
+  intros until n13.
+  apply (mkBijection _ _ (arity_juxt_congruence_forward b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34 n13) (arity_juxt_congruence_backward b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34 n13)).
+  + destruct n13 as [n1 | n3]; simpl.
+    - rewrite <- (fob_id _ _ (bij_p12 n1)).
+      reflexivity.
+    - rewrite <- (fob_id _ _ (bij_p34 n3)).
+      reflexivity.
+  + destruct n13 as [n1 | n3]; simpl.
+    - rewrite <- (bof_id _ _ (bij_p12 n1)).
+      reflexivity.
+    - rewrite <- (bof_id _ _ (bij_p34 n3)).
+      reflexivity.
+  Defined.
+
+Theorem bigraph_juxt_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4),
+  bigraph_equality b1 b2 -> bigraph_equality b3 b4 -> bigraph_equality (b1 || b3) (b2 || b4).
+  Proof.
+  intros until b4.
+  intros Heqb1b2 Heqb3b4.
+  destruct Heqb1b2 as (bij_s12, bij_i12, bij_r12, bij_o12, bij_n12, bij_e12, bij_p12, big_control_eq12, big_parent_eq12, big_link_eq12).
+  destruct Heqb3b4 as (bij_s34, bij_i34, bij_r34, bij_o34, bij_n34, bij_e34, bij_p34, big_control_eq34, big_parent_eq34, big_link_eq34).
+  apply (BigEq _ _ _ _ _ _ _ _ (b1 || b3) (b2 || b4)
+          (bij_s12 <+> bij_s34)
+          (bij_i12 <+> bij_i34)
+          (bij_r12 <+> bij_r34)
+          (bij_o12 <+> bij_o34)
+          (bij_n12 <+> bij_n34)
+          (bij_e12 <+> bij_e34)
+          (arity_juxt_congruence b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34) 
+        ).
+  + apply functional_extensionality.
+    destruct x as [n2' | n4']; simpl.
+    - rewrite <- big_control_eq12.
+      reflexivity.
+    - rewrite <- big_control_eq34.
+      reflexivity.
+  + apply functional_extensionality.
+    destruct x as [[n2' | n4'] | [s2' | s4']]; simpl; unfold funcomp; simpl.
+    - rewrite <- big_parent_eq12.
+      simpl.
+      unfold funcomp.
+      simpl.
+      destruct get_parent; reflexivity.
+    - rewrite <- big_parent_eq34.
+      simpl.
+      unfold funcomp.
+      simpl.
+      destruct get_parent; reflexivity.
+    - rewrite <- big_parent_eq12.
+      simpl.
+      unfold funcomp.
+      simpl.
+      destruct get_parent; reflexivity.
+    - rewrite <- big_parent_eq34.
+      simpl.
+      unfold funcomp.
+      simpl.
+      destruct get_parent; reflexivity.
+  + apply functional_extensionality.
+    destruct x as [[i2' | i4'] | ([n2' | n4'], (i', Hi'))]; simpl.
+    - rewrite <- big_link_eq12.
+      simpl.
+      unfold funcomp.
+      simpl.
+      destruct get_link; reflexivity.
+    - rewrite <- big_link_eq34.
+      simpl.
+      unfold funcomp.
+      simpl.
+      destruct get_link; reflexivity.
+    - rewrite <- big_link_eq12.
+      simpl.
+      unfold sum_shuffle, parallel, choice, funcomp, id.
+      simpl.
+      unfold eq_rect_r.
+      unfold parallel, funcomp.
+      simpl.
+      erewrite <- (eq_rect_map (f := inl) (a := n2')).
+      instantiate (1 := eq_sym (equal_f (fob_id (type (get_node b1)) (type (get_node b2)) bij_n12) n2')).
+      destruct (backward (bij_p12 ((bij_n12 ⁻¹) n2'))).
+      destruct get_link; reflexivity.
+    - rewrite <- big_link_eq34.
+      simpl.
+      unfold sum_shuffle, parallel, choice, funcomp, id.
+      simpl.
+      unfold eq_rect_r.
+      unfold parallel, funcomp.
+      simpl.
+      erewrite <- (eq_rect_map (f := inr) (a := n4')).
+      instantiate (1 := eq_sym (equal_f (fob_id (type (get_node b3)) (type (get_node b4)) bij_n34) n4')).
+      destruct (backward (bij_p34 ((bij_n34 ⁻¹) n4'))).
+      destruct get_link; reflexivity.
+  Qed.
+
+Definition bigraph_packed_juxtaposition (b1 b2 : bigraph_packed) := 
+  packing ((big b1) || (big b2)).
+End Juxtaposition.
 
 Add Parametric Morphism : bigraph_packed_juxtaposition with
  signature bigraph_packed_equality ==> 
