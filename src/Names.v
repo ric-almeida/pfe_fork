@@ -437,6 +437,39 @@ Proof.
     - apply in_left_list; assumption.
 Qed.
 
+Theorem in_app_merge'_comu {l1 l2 : list Name} : forall a,
+In a (app_merge' l1 l2) <-> In a (app_merge' l2 l1).
+Proof.
+    intros. split; apply in_app_merge'_com.
+Qed.
+
+Theorem in_app_merge'_trans {l1 l2 l3 : list Name} : forall a,
+In a (app_merge' l1 (app_merge' l2 l3)) -> In a (app_merge' (app_merge' l1 l2) l3).
+Proof.
+    intros. 
+    apply in_app_or_m in H.
+    destruct H.
+    - apply in_left_list. apply in_left_list. assumption.
+    - apply in_app_or_m in H.
+    destruct H. 
+    + apply in_left_list. apply in_right_list. assumption.
+    + apply in_right_list. assumption.
+Qed.
+
+Theorem in_app_merge'_transi {l1 l2 l3 : list Name} : forall a,
+In a (app_merge' (app_merge' l1 l2) l3) <-> In a (app_merge' l1 (app_merge' l2 l3)).
+Proof.
+    intros. split.
+    - intros. 
+    apply in_app_or_m in H.
+    destruct H.
+    + apply in_app_or_m in H.
+    destruct H. 
+    ++ apply in_left_list. assumption.
+    ++ apply in_right_list. apply in_left_list. assumption.
+    + apply in_right_list. apply in_right_list. assumption.
+    - apply in_app_merge'_trans.
+Qed.
 
 Lemma rm_headNoDUP {a:Name} {l}: 
 ~ In a l -> (NoDup (a::l) <-> NoDup l).
