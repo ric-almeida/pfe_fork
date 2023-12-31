@@ -1454,9 +1454,9 @@ Theorem bigraph_comp_juxt_dist : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
     ((b1 || b2) <<o>> (b3 || b4)) 
     ((b1 <<o>> b3) || (b2 <<o>> b4))
     bij_id (*s3 + s4*)
-    bij_id (*i3 + i4*)
+    reflnames (*i3 + i4*)
     bij_id (*r1 + r2*)
-    bij_id (*o1 + o2*)
+    reflnames (*o1 + o2*)
     bij_sum_shuffle(* n1 + n2 + n3 + n4*)
     bij_sum_shuffle (* e1 + e2 + e3 + e4 *)
     (fun n12_34 => bij_rew (P := fin) (arity_comp_juxt_dist b1 b2 b3 b4 n12_34)) (* Port *)
@@ -1472,8 +1472,9 @@ Theorem bigraph_comp_juxt_dist : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
     - destruct get_parent. reflexivity. destruct get_parent; reflexivity.
     - destruct get_parent. reflexivity. destruct get_parent; reflexivity.
   + apply functional_extensionality.
-    destruct x as [[i3'|i4']|p]; simpl; unfold funcomp; simpl; unfold rearrange; unfold extract1; unfold sum_shuffle; unfold parallel; unfold switch_link; simpl.
-    - destruct get_link. simpl. destruct get_link; reflexivity. reflexivity.
+    destruct x as [i'|p]; simpl; unfold funcomp; simpl; unfold rearrange; unfold extract1; unfold sum_shuffle; unfold parallel; unfold switch_link; simpl.
+    - (*TODO destruct i*) Admitted.
+    (* destruct get_link. simpl. destruct get_link; reflexivity. reflexivity.
     - destruct get_link. simpl. destruct get_link; reflexivity. reflexivity.
     - destruct p as ([[v1 | v2] | [v3 | v4]], (i1234, Hvi1234)); unfold bij_join_port_backward; simpl.
     * unfold bij_rew_forward, eq_rect_r.
@@ -1497,7 +1498,7 @@ Theorem bigraph_comp_juxt_dist : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
       simpl.
       destruct get_link; unfold rearrange; unfold extract1; simpl. 
       destruct get_link; reflexivity. reflexivity.
-  Qed.
+  Qed. *)
     
 Section NestingBig.
 
@@ -1568,7 +1569,7 @@ Lemma acyclic_rm_void_parent {node s r: FinDecType} {n:type node}
     intros H.
     unfold rm_void_parent'.
     unfold rm_void_pair.
-    unfold rm_void_sumtype'.
+    unfold rm_void_sumtype'. simpl.
 
     eapply Acc_inv in H.
     destruct H as [H_acc _].
@@ -1576,14 +1577,14 @@ Lemma acyclic_rm_void_parent {node s r: FinDecType} {n:type node}
     - admit.
   Admitted.
 
-Definition rm_void_finDecSum {s1 i1 o1 r1: FinDecType} 
-  (b : bigraph (findec_sum voidfd s1) (findec_sum i1 voidfd) (findec_sum voidfd r1) (findec_sum i1 o1)) : 
-  bigraph s1 i1 r1 (findec_sum i1 o1).
+Definition rm_void_finDecSum {s1 i1 o1 r1} 
+  (b : bigraph (findec_sum voidfd s1) (app_NoDupList i1 EmptyNDL) (findec_sum voidfd r1) (app_NoDupList i1 o1)) : 
+  bigraph s1 i1 r1 (app_NoDupList i1 o1).
   Proof. 
-  destruct b.
-  apply 
+  destruct b. Admitted.
+  (* apply 
     (Big
-      s1 i1 r1 (findec_sum i1 o1)
+      s1 i1 r1 (app_NoDupList i1 o1)
       node0
       edge0
       control0
@@ -1595,32 +1596,32 @@ Definition rm_void_finDecSum {s1 i1 o1 r1: FinDecType}
     specialize (ap0 n).
     apply acyclic_rm_void_parent.
     apply ap0.
-    Qed.
+    Qed. *)
 
 
-Definition nest {s1 i1 r1 o1 i2 : FinDecType} 
-  (b1 : bigraph s1 voidfd r1 o1) (b2 : bigraph voidfd i2 s1 i1) :=
+Definition nest {s1 i1 r1 o1 i2} (* TODO check definition*)
+  (b1 : bigraph s1 EmptyNDL r1 o1) (b2 : bigraph voidfd i2 s1 i1) :=
   (rm_void_finDecSum ((@bigraph_identity voidfd i1) || b1)) <<o>> b2.
 
-Definition nest' {I m X n Y : FinDecType} 
-  (F : bigraph voidfd I m X) (G : bigraph m voidfd n Y) 
-  : bigraph voidfd I n (findec_sum X Y) :=
+Definition nest' {I m X n Y} (* TODO check definition*)
+  (F : bigraph voidfd I m X) (G : bigraph m EmptyNDL n Y) 
+  : bigraph voidfd I n (app_NoDupList X Y) :=
   (rm_void_finDecSum ((@bigraph_identity voidfd X) || G)) <<o>> F.
 
-Example I : FinDecType. Admitted.
+Example I : NoDupList. Admitted.
 Example m : FinDecType. Admitted.
-Example X : FinDecType. Admitted.
+Example X : NoDupList. Admitted.
 Example n : FinDecType. Admitted.
-Example Y : FinDecType. Admitted.
+Example Y : NoDupList. Admitted.
 Example F : bigraph voidfd I m X. Admitted.
-Example G : bigraph m voidfd n Y. Admitted.
+Example G : bigraph m EmptyNDL n Y. Admitted.
 
 Check (@bigraph_identity voidfd X) || G.
 Check rm_void_finDecSum ((@bigraph_identity voidfd X) || G).
 Check (rm_void_finDecSum ((@bigraph_identity voidfd X) || G)) <<o>> F.
 Check nest' F G.
 
-Example b1 {s1 r1 o1}: bigraph s1 voidfd r1 o1. Admitted.
+Example b1 {s1 r1 o1}: bigraph s1 EmptyNDL r1 o1. Admitted.
 Example b2 {s1 i2 i1}: bigraph voidfd i2 s1 i1. Admitted.
 
 Check nest b1 b2.
