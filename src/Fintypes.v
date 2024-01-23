@@ -1118,6 +1118,8 @@ assert ((fun b => exists a, b = f a) = (fun b => forall c, spec_image f (c++lA) 
   apply propositional_extensionality.
   unfold spec_image.
   firstorder.
+  exists x.
+  split. Focus 2. assumption. intuition.
 + rewrite H.
   exists img.
   intuition.

@@ -2,6 +2,8 @@ Require Import ConcreteBigraphs.
 Require Import SignatureBig.
 Require Import FinDecTypes.
 Require Import MyBasics.
+Require Import Bijections.
+Require Import FunctionalExtensionality.
 
 Set Printing All.
 
@@ -16,16 +18,92 @@ Definition Arity : Kappa -> nat :=
     | exist _ n _ => n + 1
     end
   ).
+Import SignatureBig.
+Fail End MySig. (*TODO figure out how ot import the definitions*)
+
+Definition Port {node : Type} (control : node -> Kappa): Type :=
+  { n : node & fin (Arity (control n)) }.
+
+Definition join {A B C : Type} (p : A -> C) (q : B -> C) (ac : A+B) : C :=
+  match ac with
+  | inl a => (p a)
+  | inr b => (q b)
+  end.
+
+Definition bij_join_port_forward { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa) :
+  Port c1 + Port c2 -> 
+  Port (join c1 c2).
+  Proof.
+  refine (fun p => match p with
+              | inl (existT _ vi1 Hvi1) => _
+              | inr (existT _ vi2 Hvi2) => _
+              end).
+  + exists (inl vi1).
+    destruct Hvi1 as (i1, Hi1).
+    exists i1.
+    exact Hi1.
+  + exists (inr vi2).
+    destruct Hvi2 as (i2, Hi2).
+    exists i2.
+    exact Hi2.
+  Defined.
+
+Definition bij_join_port_backward { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa)  :
+  Port (join c1 c2) -> Port c1 + Port c2.
+  Proof.
+    destruct 1 as ([v1 | v2], (i, Hvi)).
+    + left.
+      exists v1.
+      exists i.
+      apply Hvi.
+    + right.
+      exists v2.
+      exists i.
+      apply Hvi.
+    Defined.
+
+Definition bij_join_port { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa)  :
+  bijection (Port c1 + Port c2) (Port (join c1 c2)).
+  Proof.
+  apply 
+    (mkBijection _ _ 
+    (bij_join_port_forward c1 c2) 
+    (bij_join_port_backward c1 c2)).
+  + apply functional_extensionality.
+    destruct x as ([v1|v2], (i, Hvi)).
+    - reflexivity.
+    - reflexivity.
+  + apply functional_extensionality.
+    destruct x as [(v1, (i1, Hvi1)) | (v2, (i2, Hvi2))].
+    - unfold funcomp, id.
+      simpl.
+      apply f_equal.
+      reflexivity.
+    - unfold funcomp, id.
+      simpl.
+      apply f_equal.
+      reflexivity.
+  Defined.
+
+Definition bij_port_void (c : void -> Kappa) : bijection (Port c) void.
+  Proof.
+  apply (mkBijection _ _ (fun vi => match vi with existT _ v _ => void_univ_embedding v end) (void_univ_embedding)).
+  + apply functional_extensionality.
+    destruct x.
+  + apply functional_extensionality.
+    destruct x as (v, (i, H)).
+    destruct v.
+  Defined.
 
 End MySig.
 
 Module MyBigraph.
   Module Mb := Bigraphs MySig.
 
-  Print Mb.Kappa.
-  Import Mb.
+  Fail Print Mb.Kappa.
+  Fail Import Mb.
 
-  Example zero : Kappa. exists 0. auto. Defined.
+  (* Example zero : Kappa. exists 0. auto. Defined. *)
 
   Example zero1 : type (findec_fin 1). exists 0. auto. Defined.
   (* Variable A : Type.
@@ -60,16 +138,16 @@ Defined. *)
 
 Lemma forallfin1 (P : type (findec_fin 1) -> Prop) :
 forall n0 : type (findec_fin 1), P n0 -> 
-  P zero.
+  P zero1.
   intros [n pf]. 
-  unfold zero.
+  unfold zero1.
   assert (n=0).
   - induction n as [| n']. 
     + reflexivity.        
     + inversion pf. inversion H0.
   - Admitted.  
 
-Example simplBig : 
+(* Example simplBig : 
   bigraph (findec_fin 1) (findec_fin 1) (findec_fin 1) (findec_fin 1).
   apply (Big
     (findec_fin 1) (findec_fin 1) (findec_fin 1) (findec_fin 1)
@@ -93,7 +171,7 @@ Example simplBig :
     + reflexivity.        
     + inversion pf. inversion H0. (* n = 0, done *)
   - simpl. 
-  Admitted.
+  Admitted. *)
   
   (* assert (
     (exist (fun p : nat => p < 1) 0 (le_n 1))

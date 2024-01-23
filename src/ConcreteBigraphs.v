@@ -183,7 +183,7 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
   intros Heqb1b2 Heqb2b3.
   destruct Heqb1b2 as (bij_s12, bij_i12, bij_r12, bij_o12, bij_n12, bij_e12, bij_p12, big_control_eq12, big_parent_eq12, big_link_eq12).
   destruct Heqb2b3 as (bij_s23, bij_i23, bij_r23, bij_o23, bij_n23, bij_e23, bij_p23, big_control_eq23, big_parent_eq23, big_link_eq23).
-  eapply (BigEq _ _ _ _ _ _ _ _ b1 b3
+  apply (BigEq _ _ _ _ _ _ _ _ b1 b3
           (bij_s23 <O> bij_s12)
           ((fun a => iff_trans (bij_i12 a) (bij_i23 (bij_id a))))
           (bij_r23 <O> bij_r12)
@@ -201,10 +201,12 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
     rewrite <- bij_fun_compose_compose.
     simpl.
     reflexivity.
-  + Fail change ((
-    (<{ bij_id <O> bij_id | fun a : Name => iff_trans (bij_i12 a) (bij_i23 (bij_id a)) }> <+> 
+  + 
+    Fail rewrite <- bij_subset_compose_compose_id. 
+    Fail change ((
+    (<{ bij_id <O> bij_id | fun a : Name => iff_trans (bij_i12 a) (bij_i23 ((bij_id <O> bij_id) a)) }> <+> 
     <{ bij_n23 <O> bij_n12 & fun n1 : type (get_node b1) => bij_p23 (bij_n12 n1) <O> bij_p12 n1 }>) -->>
-    <{ bij_id <O> bij_id  | fun a : Name => iff_trans (bij_o12 a) (bij_o23 (bij_id a)) }> <+>
+    <{ bij_id <O> bij_id  | fun a : Name => iff_trans (bij_o12 a) (bij_o23 ((bij_id <O> bij_id) a)) }> <+>
     bij_e23 <O> bij_e12
     ) (get_link b1) = get_link b3
     ). (* idk why I can't do that change, bij_id <O> bij_id = bij_id! cf bij_eq_comp_id in Bijections file*)
@@ -215,8 +217,16 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
     bij_e23 <O> bij_e12
     ) (get_link b1) = get_link b3
     ). (*but I can do the change on the second bij_id (the second innername basically) *)
+    Fail change ((
+    (<{ bij_id <O> bij_id | fun a : Name => iff_trans (bij_i12 a) (bij_i23 ((bij_id <O> bij_id) a)) }> <+> 
+    <{ bij_n23 <O> bij_n12 & fun n1 : type (get_node b1) => bij_p23 (bij_n12 n1) <O> bij_p12 n1 }>) -->>
+    <{ bij_id <O> bij_id | fun a : Name => iff_trans (bij_o12 a) (bij_o23 ((bij_id <O> bij_id) a)) }> <+>
+    bij_e23 <O> bij_e12) 
+    (get_link b1) = get_link b3
+    ).
     Fail rewrite <- (bij_subset_compose_compose bij_id bij_id bij_o12 bij_o23).
     Fail rewrite <- (bij_subset_compose_compose_id bij_i12 bij_i23).
+    (* eassert (bij_subset_compose_compose bij_id bij_id bij_o12 bij_o23). *)
     rewrite <- big_link_eq23.
     rewrite <- big_link_eq12.
     rewrite <- bij_compose_forward_simpl.
@@ -287,7 +297,7 @@ ii) ρ commutes with the structural maps as follows: prnt G ◦ (Idm U ρV )= I 
 End EquivalenceBigraphs.
 
 
-Instance big_Equivalence: Equivalence bigraph_packed_equality.
+#[export] Instance big_Equivalence: Equivalence bigraph_packed_equality.
 constructor. exact @bigraph_packed_equality_refl. exact @bigraph_packed_equality_sym. Abort. 
 (* exact @bigraph_packed_equality_trans. Defined. *)
 

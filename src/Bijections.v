@@ -578,7 +578,7 @@ Defined.
 Notation "<{ f | g }>" := (bij_subset_compose f g).
 
 Lemma adjunction_equiv {A B : Type} {P : A -> Prop} {Q : B -> Prop} (bij_AB : bijection A B) :
-  (forall a, P a <-> Q (bij_AB a)) -> (forall b, Q b <-> P (backward bij_AB b)).
+  (forall a, P a <-> Q (forward bij_AB a)) -> (forall b, Q b <-> P (backward bij_AB b)).
 Proof.
 intros EqPQ b.
 apply iff_sym.
@@ -621,6 +621,28 @@ apply bij_eq.
   apply subset_eq_compat.
   reflexivity.
 Qed.
+
+Fail Theorem bij_subset_compose_id' : forall {A : Type} {P : A -> Prop} {Q : A -> Prop}
+  (EqPQ : forall a, P a <-> Q (bij_id a)),
+  <{bij_id | EqPQ}> = bij_id.
+  (* TODO: FIX *)
+
+Theorem bij_subset_compose_id'' : forall {A : Type} {P : A -> Prop} {Q : A -> Prop}
+  (EqPQ : forall a, P a <-> Q (bij_id a)),
+  forall a:{x : A | P x}, Q (proj1_sig a).
+  Proof. intros. simpl in EqPQ. unfold id in EqPQ. apply EqPQ.
+  destruct a. simpl. apply p. Qed.
+
+Theorem bij_subset_compose_id''' : forall {A : Type} {P : A -> Prop} {Q : A -> Prop}
+  (EqPQ : forall a, P a <-> Q (bij_id a)),
+  forall a:A, P a <-> Q a.
+  Proof. intros. simpl in EqPQ. unfold id in EqPQ. apply EqPQ. Qed.
+
+Theorem bij_subset_compose_id'''' : forall {A : Type} {P : A -> Prop} {Q : A -> Prop}
+  (EqPQ : forall a, P a <-> Q (bij_id a)),
+  forall a:{x : A | P x}, P (proj1_sig a) <-> Q (proj1_sig a).
+  Proof. intros. simpl in EqPQ. unfold id in EqPQ. apply EqPQ. Qed.
+
 
 Theorem bij_subset_compose_compose : forall {A B C} {P : A -> Prop} {Q : B -> Prop} {R : C -> Prop}
   (bij_AB : bijection A B) (bij_BC : bijection B C)
