@@ -1430,9 +1430,10 @@ Proof.
 induction l; simpl.
 + contradiction.
 + destruct eqA.
-  - subst.
-    intuition.
-  - intuition.
+  - subst. intros. apply Nat.lt_0_succ.
+  - intros. destruct H.
+  * exfalso; apply n; apply H.
+  * apply IHl in H. apply lt_n_S_stt. assumption.
 Qed.
 
 Theorem position_notin : forall {A} (eqA : dec_eq A) (a : A) (l :list A),

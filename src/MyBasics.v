@@ -139,12 +139,14 @@ Lemma in_map_inv_exists : forall {A B} (f : A -> B) b (lA : list A), In b (map f
   Proof.
   induction lA; simpl.
   + contradiction.
-  + intuition.
+  + intros. destruct H.
     - exists a.
-      intuition.
-    - destruct H as (a', Ha').
+      auto.
+    - apply IHlA in H.
+      destruct H as (a', Ha').
       exists a'.
-      intuition.
+      destruct Ha'.
+      split; auto.
   Qed.
 
 Lemma nodup_map : forall {A B} (f : A -> B) (lA : list A), InjectiveXT f -> NoDup lA -> NoDup (map f lA).

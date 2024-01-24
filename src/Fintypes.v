@@ -732,11 +732,29 @@ induction lA; simpl.
 + intros i Hi; elim (Nat.nlt_0_r _ Hi).
 + destruct (DecP a); simpl; intros i Hi.
   - destruct i as [|i']; simpl.
-    * intuition. 
+    * split. ** auto. ** split. *** apply Nat.lt_0_succ. *** reflexivity. 
     * destruct (IHlA i' (lt_S_n' _ _ Hi)) as (Hij', (Hj, Hij'')).
-      intuition.
+      split.
+      ** apply le_n_S. assumption.
+      ** split. 
+      *** apply le_n_S. assumption.
+      *** auto.
   - destruct (IHlA i Hi).
-    intuition.
+    split.
+    ** apply Nat.le_le_succ_r. assumption.
+    ** split. 
+    *** destruct H0; auto. apply lt_n_S_stt. assumption.
+    *** destruct H0; auto.
+Qed.
+
+Theorem length_head {A:Type} : forall t:A, forall q, length (t::q) = S (length q).
+Proof.
+intros. 
+Search (_::_ = _ ++_).
+change (length ([t] ++ q) = S (length q)).
+rewrite app_length.
+simpl.
+reflexivity.
 Qed.
 
 Theorem inj_nth_error_filter_pred : forall { A : Type } (P : A -> Prop) (DecP : forall a, decidable (P a)) (lA : list A),
@@ -747,9 +765,13 @@ induction lA; simpl.
   elim (Nat.nlt_0_r _ Hi).
 + intros i Hi j Hj HlA.
   destruct (DecP a).
-  - destruct i as [|i']; destruct j as [|j']; intuition.
+  - destruct i as [|i']; destruct j as [|j']; auto.
     * discriminate HlA.
     * discriminate HlA.
+    * apply eq_S. apply IHlA.
+    ** apply lt_S_n'. rewrite length_head in Hi. apply Hi.
+    ** apply lt_S_n'. rewrite length_head in Hj. apply Hj.
+    ** apply eq_add_S. assumption.
   - apply IHlA; intuition.
 Qed.
 
@@ -1123,7 +1145,10 @@ assert ((fun b => exists a, b = f a) = (fun b => forall c, spec_image f (c++lA) 
   unfold spec_image.
   firstorder.
   exists x.
-  split. intuition. assumption.
+  split. 
+  * unfold SurjectiveList in HlA1.
+  specialize (HlA1 x). apply in_or_app. right. assumption. 
+  * assumption.
 + rewrite H.
   exists img.
   intuition.
