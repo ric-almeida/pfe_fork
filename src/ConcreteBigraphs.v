@@ -16,6 +16,7 @@ Require Import Coq.Lists.List.
 
 Set Printing All.
 
+Set Warnings "-notation-overridden".
 
 Import ListNotations.
 

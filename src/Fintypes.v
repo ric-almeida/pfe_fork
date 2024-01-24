@@ -750,7 +750,6 @@ Qed.
 Theorem length_head {A:Type} : forall t:A, forall q, length (t::q) = S (length q).
 Proof.
 intros. 
-Search (_::_ = _ ++_).
 change (length ([t] ++ q) = S (length q)).
 rewrite app_length.
 simpl.

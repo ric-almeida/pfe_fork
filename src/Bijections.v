@@ -12,6 +12,8 @@ Require Import List.
 Require Import Coq.Numbers.Natural.Abstract.NDiv0.
 Require Import Arith.
 
+Set Warnings "-notation-overridden".
+
 Record bijection (A B : Type) := mkBijection
 {
  forward  :> A -> B;

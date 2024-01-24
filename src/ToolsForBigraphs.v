@@ -14,6 +14,8 @@ Require Import List Setoid Compare_dec Morphisms FinFun PeanoNat.
 Require Import MyBasics.
 Import ListNotations. 
 
+Set Warnings "-notation-overridden".
+
 Section parametric.
   Variable T : Type.
 Theorem nth_error_map : forall U (f : T -> U) ls n,

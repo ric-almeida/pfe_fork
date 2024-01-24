@@ -14,6 +14,9 @@ Require Import List.
 Require Import Arith.
 Require Import JMeq.
 
+
+Set Warnings "-notation-overridden".
+
 Definition decidable (P : Prop) := { P } + { ~P }.
 
 Definition dec_eq A := forall (a a' : A), decidable (a = a').
