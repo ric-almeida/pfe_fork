@@ -121,9 +121,9 @@ Definition ltof (a b:A) := f a < f b.
   intros a. apply (H (S (f a))). apply Nat.lt_succ_diag_r.
 Defined. *)
 
-Variable A : Type.
+(* Variable A : Type.
 Variable f : A -> nat.
-Variable R : A -> A -> Prop.
+Variable R : A -> A -> Prop. *)
 
 
 (* Theorem well_founded_lt_compat : well_founded R.
