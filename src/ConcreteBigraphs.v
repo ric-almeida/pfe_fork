@@ -1,3 +1,8 @@
+
+Set Warnings "-notation-overridden, -parsing".
+Set Warnings "-notation-overridden, -notation-overriden".
+
+
 Require Import Coq.Logic.Decidable.
 Require Import Coq.Setoids.Setoid.
 Require Import ToolsForBigraphs.
@@ -16,11 +21,9 @@ Require Import Coq.Lists.List.
 
 Set Printing All.
 
-Set Warnings "-notation-overridden".
 
 Import ListNotations.
 
-Locate Port.
 (** This module implements bigraphs and basic operations on bigraphs *)
 Module Bigraphs (s : Signature) (n : Names).
 Include s.
