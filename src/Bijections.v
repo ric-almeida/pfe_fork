@@ -9,6 +9,8 @@ Require Import MyBasics.
 Require Import PeanoNat.
 Require Import Lia.
 Require Import List.
+Require Import Coq.Numbers.Natural.Abstract.NDiv0.
+Require Import Arith.
 
 Record bijection (A B : Type) := mkBijection
 {
@@ -1156,6 +1158,11 @@ destruct x as (p, Hp).
 elim (Nat.nlt_0_r p Hp).
 Defined.
 
+Theorem lt_S_n' : forall n m : nat, S n < S m -> n < m.
+Proof.
+apply Nat.succ_lt_mono.
+Qed.
+
 Theorem bij_fin_one : bijection (fin 1) unit.
 Proof.
 apply (mkBijection (fin 1) unit (fun _ => tt) (fun _ => exist _ 0 (Nat.lt_succ_diag_r 0))).
@@ -1169,7 +1176,7 @@ unfold id.
 apply subset_eq_compat.
 destruct zero.
 reflexivity.
-elim (Nat.nlt_0_r _ (Lt.lt_S_n _ _ Hzero)).
+elim (Nat.nlt_0_r _ (lt_S_n' _ _ Hzero)).
 Defined.
 
 Definition inj_fin_two (f : fin 2) : bool.
@@ -1204,7 +1211,7 @@ reflexivity.
 apply subset_eq_compat.
 destruct k.
 reflexivity.
-elim (Nat.nlt_0_r _ (Lt.lt_S_n _ _ (Lt.lt_S_n _ _ Hk))).
+elim (Nat.nlt_0_r _ (lt_S_n' _ _ (lt_S_n' _ _ Hk))).
 Defined.
 
 Theorem bij_bool : bijection bool (unit+unit).
@@ -1227,7 +1234,7 @@ left.
 exact tt.
 right.
 exists p.
-apply Lt.lt_S_n.
+apply lt_S_n'.
 exact Hp.
 Defined.
 
@@ -1237,7 +1244,7 @@ destruct f as [u | (p, Hp)].
 exists 0.
 apply Nat.lt_0_succ.
 exists (S p).
-apply Lt.lt_n_S.
+rewrite <- Nat.succ_lt_mono.
 exact Hp.
 Defined.
 
@@ -1329,19 +1336,15 @@ apply subset_eq_compat.
 lia.
 Defined.
 
+
 Definition inj_fin_mul {n p : nat} (f : fin (n*p)) : fin n * fin p.
 Proof.
 destruct f as (k, Hk).
 split.
 exists (k / p).
-apply Nat.div_lt_upper_bound.
-intro H.
-rewrite H in Hk.
-apply (Nat.nlt_0_r k).
-rewrite (mult_n_O n).
-assumption.
+apply Nat.Div0.div_lt_upper_bound.
 rewrite Nat.mul_comm.
-assumption.
+apply Hk.
 exists (k mod p).
 apply Nat.mod_upper_bound.
 intro H.
@@ -1358,7 +1361,7 @@ exists (d * p + m).
 assert (1 + d <= n).
 exact Hd.
 apply Nat.lt_le_trans with (m := d*p+1*p).
-apply Plus.plus_lt_compat_l.
+apply Nat.add_lt_mono_l.
 simpl.
 rewrite Nat.add_0_r.
 exact Hm.
@@ -1367,6 +1370,12 @@ apply Nat.mul_le_mono_r.
 rewrite Nat.add_comm.
 exact H.
 Defined.
+
+Theorem le_plus_minus' : forall n m : nat, n <= m -> m = n + (m - n).
+Proof. 
+intros. simpl. rewrite Nat.add_comm. 
+rewrite Nat.sub_add; auto. 
+Qed.
 
 Theorem bij_fin_prod : forall {n p :nat}, bijection (fin (n*p)) ((fin n)*(fin p)).
 Proof.
@@ -1392,12 +1401,9 @@ intro Hp; rewrite Hp in Hb.
 elim (Nat.nlt_0_r _ Hb).
 apply subset_eq_compat.
 rewrite Nat.add_comm.
-rewrite Nat.mod_add.
+rewrite Nat.Div0.mod_add.
 apply Nat.mod_small.
 exact Hb.
-intro Hp.
-rewrite Hp in Hb.
-elim (Nat.nlt_0_r _ Hb).
 apply functional_extensionality.
 unfold inj_fin_mul.
 unfold surj_fin_mul.
@@ -1405,13 +1411,11 @@ unfold funcomp.
 unfold id.
 destruct x as (a, Ha).
 apply subset_eq_compat.
-rewrite Nat.mod_eq.
+rewrite Nat.Div0.mod_eq.
 rewrite Nat.mul_comm.
-rewrite <- Minus.le_plus_minus.
+rewrite <- le_plus_minus'.
 reflexivity.
-apply Nat.mul_div_le.
-intro Hp; rewrite Hp in Ha; rewrite Nat.mul_0_r in Ha; elim (Nat.nlt_0_r _ Ha).
-intro Hp; rewrite Hp in Ha; rewrite Nat.mul_0_r in Ha; elim (Nat.nlt_0_r _ Ha).
+apply Nat.Div0.mul_div_le.
 Qed.
 
 Fixpoint position {A} (eqA : dec_eq A) (a : A) (l : list A) : nat :=
@@ -1498,7 +1502,7 @@ induction n; intros l Hinjl Hn; simpl.
 + destruct l.
   - simpl in Hn.
     lia.
-  - rewrite (nth_error_in_tl _ _ _ (Lt.lt_S_n _ _ Hn) Hn).
+  - rewrite (nth_error_in_tl _ _ _ (lt_S_n' _ _ Hn) Hn).
     simpl.
     rewrite IHn.
     * destruct eqA.

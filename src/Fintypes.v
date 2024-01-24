@@ -657,6 +657,10 @@ induction lA; simpl.
       exact Hij'.
 Defined.
 
+
+Theorem lt_S_n' : forall n m : nat, S n < S m -> n < m.
+Proof. apply Nat.succ_lt_mono. Qed.
+
 Definition nth_error_filter_pred_fun_v0 { A : Type } (P : A -> Prop) (DecP : forall a, decidable (P a)) (lA : list A) i (Hi :  i < length (filter_pred P DecP lA)) : nat.
 Proof.
 revert i Hi.
@@ -666,7 +670,7 @@ induction lA; intros i Hi; simpl.
   destruct (DecP a).
   - destruct i as [|i'].
     * exact 0.
-    * exact (S (IHlA i' (lt_S_n _ _ Hi))).
+    * exact (S (IHlA i' (lt_S_n' _ _ Hi))).
   - exact (S (IHlA i Hi)).
 Defined.
 
@@ -699,7 +703,7 @@ Fixpoint nth_error_filter_pred_fun_v1 { A : Type } (P : A -> Prop) (DecP : foral
   | cons a q => (fun i    => match DecP a with
                              | left  Pa  => match i return i < length (filter_pred P DecP (cons a q)) -> nat with
                                             | O    => (fun _  => 0)
-                                            | S i' => (fun Hi => let Hi' := lt_S_n _ _ (eq_rect _ (fun l => (S i') < length l) Hi _ (filter_pred_ok P DecP a Pa q))
+                                            | S i' => (fun Hi => let Hi' := lt_S_n' _ _ (eq_rect _ (fun l => (S i') < length l) Hi _ (filter_pred_ok P DecP a Pa q))
                                                                  in S (nth_error_filter_pred_fun_v1 P DecP q i' Hi'))
                                             end
                              | right nPa => (fun Hi => let Hi := eq_rect _ (fun l => i < length l) Hi _ (filter_pred_ko P DecP a nPa q)
@@ -729,7 +733,7 @@ induction lA; simpl.
 + destruct (DecP a); simpl; intros i Hi.
   - destruct i as [|i']; simpl.
     * intuition. 
-    * destruct (IHlA i' (lt_S_n _ _ Hi)) as (Hij', (Hj, Hij'')).
+    * destruct (IHlA i' (lt_S_n' _ _ Hi)) as (Hij', (Hj, Hij'')).
       intuition.
   - destruct (IHlA i Hi).
     intuition.
@@ -1119,7 +1123,7 @@ assert ((fun b => exists a, b = f a) = (fun b => forall c, spec_image f (c++lA) 
   unfold spec_image.
   firstorder.
   exists x.
-  split. Focus 2. assumption. intuition.
+  split. intuition. assumption.
 + rewrite H.
   exists img.
   intuition.

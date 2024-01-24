@@ -125,8 +125,11 @@ Lemma in_map_inv : forall {A B} (f : A -> B) a (lA : list A), InjectiveXT f -> I
   Proof.
   intros A B f a lA Hinjf Hfa.
   generalize (in_map_iff f lA (f a)).
-  intuition.
+  
+  intros.
   destruct H.
+  apply H in Hfa.
+  destruct H. apply H0. apply Hfa.
   destruct H.
   rewrite <- (Hinjf x a H).
   assumption.
@@ -296,6 +299,9 @@ Definition void_univ_embedding {A : Type} : void -> A.
 
 Definition fin (n : nat) := { p | p < n }.
 
+Theorem le_S_n' : forall n m : nat, S n <= S m -> n <= m.
+Proof. {apply Nat.succ_le_mono. } Qed.
+
 Theorem le_lt_or_eq_dec : forall {n m : nat}, n <= m -> { n = m } + { n < m }.
   Proof.
   induction n.
@@ -307,12 +313,12 @@ Theorem le_lt_or_eq_dec : forall {n m : nat}, n <= m -> { n = m } + { n < m }.
   intros.
   destruct m.
   elim (Nat.nle_succ_0 _ H).
-  destruct (IHn _ (Le.le_S_n _ _ H)).
+  destruct (IHn _ (le_S_n' _ _ H)).
   left.
   apply f_equal.
   assumption.
   right.
-  apply Lt.lt_n_S.
+  rewrite <- Nat.succ_lt_mono.
   assumption.
   Qed.
 

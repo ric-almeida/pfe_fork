@@ -11,6 +11,7 @@ Require Import Euclid.
 Require Import Lists.List.
 Require Import Arith.
 Require Import List Setoid Compare_dec Morphisms FinFun PeanoNat.
+Require Import MyBasics.
 Import ListNotations. 
 
 Section parametric.
@@ -706,12 +707,12 @@ apply Nat.lt_0_succ.
 intros.
 destruct m.
 elim (Nat.nle_succ_0 _ H).
-destruct (IHn _ (Le.le_S_n _ _ H)).
+destruct (IHn _ (le_S_n' _ _ H)).
 left.
 apply f_equal.
 assumption.
 right.
-apply Lt.lt_n_S.
+rewrite <- Nat.succ_lt_mono.
 assumption.
 Qed.
 
@@ -734,6 +735,9 @@ destruct x as (p, Hp).
 elim (Nat.nlt_0_r p Hp).
 Defined.
 
+Theorem lt_S_n' : forall n m : nat, S n < S m -> n < m. 
+Proof. apply Nat.succ_lt_mono. Qed. 
+
 Theorem bij_fin_one : bijection (fin 1) unit.
 Proof.
 apply (mkBijection (fin 1) unit (fun _ => tt) (fun _ => exist _ 0 (Nat.lt_succ_diag_r 0))).
@@ -747,7 +751,7 @@ unfold id.
 apply subset_eq_compat.
 destruct zero.
 reflexivity.
-elim (Nat.nlt_0_r _ (Lt.lt_S_n _ _ Hzero)).
+elim (Nat.nlt_0_r _ (lt_S_n' _ _ Hzero)).
 Defined.
 
 Definition inj_fin_two (f : fin 2) : bool.
@@ -782,7 +786,7 @@ reflexivity.
 apply subset_eq_compat.
 destruct k.
 reflexivity.
-elim (Nat.nlt_0_r _ (Lt.lt_S_n _ _ (Lt.lt_S_n _ _ Hk))).
+elim (Nat.nlt_0_r _ (lt_S_n' _ _ (lt_S_n' _ _ Hk))).
 Defined.
 
 Theorem bij_bool : bijection bool (unit+unit).
@@ -805,7 +809,7 @@ left.
 exact tt.
 right.
 exists p.
-apply Lt.lt_S_n.
+apply lt_S_n'.
 exact Hp.
 Defined.
 
@@ -815,7 +819,7 @@ destruct f as [u | (p, Hp)].
 exists 0.
 apply Nat.lt_0_succ.
 exists (S p).
-apply Lt.lt_n_S.
+rewrite <- Nat.succ_lt_mono.
 exact Hp.
 Defined.
 
@@ -912,14 +916,10 @@ Proof.
 destruct f as (k, Hk).
 split.
 exists (k / p).
-apply Nat.div_lt_upper_bound.
-intro H.
-rewrite H in Hk.
-apply (Nat.nlt_0_r k).
-rewrite (mult_n_O n).
-assumption.
+apply Nat.Div0.div_lt_upper_bound.
 rewrite Nat.mul_comm.
 assumption.
+
 exists (k mod p).
 apply Nat.mod_upper_bound.
 intro H.
@@ -936,7 +936,7 @@ exists (d * p + m).
 assert (1 + d <= n).
 exact Hd.
 apply Nat.lt_le_trans with (m := d*p+1*p).
-apply Plus.plus_lt_compat_l.
+apply Nat.add_lt_mono_l.
 simpl.
 rewrite Nat.add_0_r.
 exact Hm.
@@ -945,6 +945,12 @@ apply Nat.mul_le_mono_r.
 rewrite Nat.add_comm.
 exact H.
 Defined.
+
+Theorem le_plus_minus' : forall n m : nat, n <= m -> m = n + (m - n).
+Proof. 
+intros. simpl. rewrite Nat.add_comm. 
+rewrite Nat.sub_add; auto. 
+Qed.
 
 Theorem bij_fin_prod : forall {n p :nat}, bijection (fin (n*p)) ((fin n)*(fin p)).
 Proof.
@@ -970,12 +976,9 @@ intro Hp; rewrite Hp in Hb.
 elim (Nat.nlt_0_r _ Hb).
 apply subset_eq_compat.
 rewrite Nat.add_comm.
-rewrite Nat.mod_add.
+rewrite Nat.Div0.mod_add.
 apply Nat.mod_small.
 exact Hb.
-intro Hp.
-rewrite Hp in Hb.
-elim (Nat.nlt_0_r _ Hb).
 apply functional_extensionality.
 unfold inj_fin_mul.
 unfold surj_fin_mul.
@@ -983,13 +986,11 @@ unfold funcomp.
 unfold id.
 destruct x as (a, Ha).
 apply subset_eq_compat.
-rewrite Nat.mod_eq.
+rewrite Nat.Div0.mod_eq.
 rewrite Nat.mul_comm.
-rewrite <- Minus.le_plus_minus.
+rewrite <- le_plus_minus'.
 reflexivity.
-apply Nat.mul_div_le.
-intro Hp; rewrite Hp in Ha; rewrite Nat.mul_0_r in Ha; elim (Nat.nlt_0_r _ Ha).
-intro Hp; rewrite Hp in Ha; rewrite Nat.mul_0_r in Ha; elim (Nat.nlt_0_r _ Ha).
+apply Nat.Div0.mul_div_le.
 Qed.
 (*
 induction n; intros.
@@ -2133,7 +2134,7 @@ induction lA; intros i Hi; simpl.
   destruct (DecP a).
   - destruct i as [|i'].
     * exact 0.
-    * exact (S (IHlA i' (lt_S_n _ _ Hi))).
+    * exact (S (IHlA i' (lt_S_n' _ _ Hi))).
   - exact (S (IHlA i Hi)).
 Defined.
 
@@ -2166,7 +2167,7 @@ Fixpoint nth_error_filter_pred_fun_v1 { A : Type } (P : A -> Prop) (DecP : foral
   | cons a q => (fun i    => match DecP a with
                              | left  Pa  => match i return i < length (filter_pred P DecP (cons a q)) -> nat with
                                             | O    => (fun _  => 0)
-                                            | S i' => (fun Hi => let Hi' := lt_S_n _ _ (eq_rect _ (fun l => (S i') < length l) Hi _ (filter_pred_ok P DecP a Pa q))
+                                            | S i' => (fun Hi => let Hi' := lt_S_n' _ _ (eq_rect _ (fun l => (S i') < length l) Hi _ (filter_pred_ok P DecP a Pa q))
                                                                  in S (nth_error_filter_pred_fun_v1 P DecP q i' Hi'))
                                             end
                              | right nPa => (fun Hi => let Hi := eq_rect _ (fun l => i < length l) Hi _ (filter_pred_ko P DecP a nPa q)
@@ -2196,7 +2197,7 @@ induction lA; simpl.
 + destruct (DecP a); simpl; intros i Hi.
   - destruct i as [|i']; simpl.
     * intuition. 
-    * destruct (IHlA i' (lt_S_n _ _ Hi)) as (Hij', (Hj, Hij'')).
+    * destruct (IHlA i' (lt_S_n' _ _ Hi)) as (Hij', (Hj, Hij'')).
       intuition.
   - destruct (IHlA i Hi).
     intuition.

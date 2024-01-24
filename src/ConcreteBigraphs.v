@@ -1082,7 +1082,7 @@ Lemma arity_comp_left_neutral : forall {s i r o} (b : bigraph s i r o) n,
 Definition reflnames {r} : forall name : Name,
 In name r <-> In name r.
 reflexivity. Defined.
-Print reflnames.
+
 
 Theorem bigraph_comp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
   bigraph_equality (bigraph_identity <<o>> b) b.
@@ -1582,7 +1582,7 @@ Lemma acyclic_rm_void_parent {node s r: FinDecType} {n:type node}
     unfold rm_void_sumtype'. simpl.
 
     eapply Acc_inv in H.
-    destruct H as [H_acc _].
+    destruct H as [H_acc].
     - admit.
     - admit.
   Admitted.
@@ -1626,15 +1626,10 @@ Example Y : NoDupList. Admitted.
 Example F : bigraph voidfd I m X. Admitted.
 Example G : bigraph m EmptyNDL n Y. Admitted.
 
-Check (@bigraph_identity voidfd X) || G.
-Check rm_void_finDecSum ((@bigraph_identity voidfd X) || G).
-Check (rm_void_finDecSum ((@bigraph_identity voidfd X) || G)) <<o>> F.
-Check nest' F G.
 
 Example b1 {s1 r1 o1}: bigraph s1 EmptyNDL r1 o1. Admitted.
 Example b2 {s1 i2 i1}: bigraph voidfd i2 s1 i1. Admitted.
 
-Check nest b1 b2.
 
 End NestingBig.
 
