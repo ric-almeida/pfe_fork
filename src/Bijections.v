@@ -925,6 +925,7 @@ apply bij_eq.
   apply functional_extensionality_dep.
   intro a.
   unfold id.
+  Print eq_rect_eq.
   rewrite <- eq_rect_eq.
   reflexivity.
 + simpl.

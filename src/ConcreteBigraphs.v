@@ -177,6 +177,18 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
     reflexivity.
   Qed.
 
+Definition in_i1 {i1:NoDupList} : Name -> Prop := 
+  fun (name:Name) =>
+  @In Name name (ndlist i1).
+
+Definition in_i2 {i2:NoDupList} : Name -> Prop := 
+  fun (name:Name) =>
+  @In Name name (ndlist i2).
+
+Definition in_i3 {i3:NoDupList} : Name -> Prop := 
+  fun (name:Name) =>
+  @In Name name (ndlist i3).
+
 (*TODO*) Lemma bigraph_equality_trans 
   {s1 r1 s2 r2 s3 r3 : FinDecType} {i1 o1 i2 o2 i3 o3: NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3):
@@ -189,7 +201,12 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
   destruct Heqb2b3 as (bij_s23, bij_i23, bij_r23, bij_o23, bij_n23, bij_e23, bij_p23, big_control_eq23, big_parent_eq23, big_link_eq23).
   apply (BigEq _ _ _ _ _ _ _ _ b1 b3
           (bij_s23 <O> bij_s12)
-          ((fun a => iff_trans (bij_i12 a) (bij_i23 (bij_id a))))
+          (fun a : Name => @iff_trans 
+	(@In Name a (ndlist i1)) 
+	(@In Name a (ndlist i2))
+        (@In Name (@forward Name Name (@bij_id Name) a) (ndlist i3))
+        (bij_i12 a) (bij_i23 (@forward Name Name (@bij_id Name) a))
+)
           (bij_r23 <O> bij_r12)
           (fun a => iff_trans (bij_o12 a) (bij_o23 (bij_id a)))
           (bij_n23 <O> bij_n12)
@@ -206,7 +223,26 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
     simpl.
     reflexivity.
   + 
-    Fail rewrite <- bij_subset_compose_compose_id. 
+    Fail rewrite <- (@bij_subset_compose_compose_id Name (fun name => In name i1) (fun name => In name i2) (fun name => In name i3) bij_i12 bij_i23). 
+    Fail rewrite <- (@bij_subset_compose_compose_id Name (fun name => In name o1) (fun name => In name o2) (fun name => In name o3) bij_o12 bij_o23). 
+    set (bij_i13 := <{ bij_id | fun a : Name => iff_trans (bij_i12 a) (bij_i23 (bij_id a)) }>).
+    assert (Hi := 
+      @bij_subset_compose_compose_id 
+        Name in_i1 in_i2 in_i3
+        bij_i12 
+        bij_i23).
+    
+    set (bij_o13 := <{ bij_id | fun a : Name => iff_trans (bij_o12 a) (bij_o23 (bij_id a)) }>).
+    assert (Ho := @bij_subset_compose_compose_id Name (fun name => In name o1) (fun name => In name o2) (fun name => In name o3) bij_o12 bij_o23).
+    unfold in_i1 in Hi.
+    unfold in_i2 in Hi.
+    unfold in_i3 in Hi.
+    simpl in Hi. simpl in bij_i13.
+    unfold id in Hi. unfold id in bij_i13.
+    Set Printing All.
+    rewrite <- Hi in bij_i13. 
+    
+    (*rewrite <- (bij_subset_compose_compose_id) in bij_i13.
     Fail change ((
     (<{ bij_id <O> bij_id | fun a : Name => iff_trans (bij_i12 a) (bij_i23 ((bij_id <O> bij_id) a)) }> <+> 
     <{ bij_n23 <O> bij_n12 & fun n1 : type (get_node b1) => bij_p23 (bij_n12 n1) <O> bij_p12 n1 }>) -->>
@@ -240,7 +276,7 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
     rewrite bij_sigT_compose_compose.
     Fail rewrite <- (bij_subset_compose_compose bij_id bij_id bij_o12 bij_o23).
     Fail rewrite <- (bij_subset_compose_compose_id bij_i12 bij_i23).
-    (* reflexivity. *)
+    (* reflexivity. *)*)
   Abort.
 
 Lemma bigraph_equality_dec {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}  
