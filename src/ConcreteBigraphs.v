@@ -220,8 +220,8 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
     rewrite bij_sum_compose_compose.
     rewrite bij_sum_compose_compose.
     rewrite bij_sigT_compose_compose.
-
-  Abort.
+    reflexivity.
+  Qed.
 
 Lemma bigraph_equality_dec {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}  
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
