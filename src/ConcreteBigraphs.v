@@ -177,17 +177,9 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
     reflexivity.
   Qed.
 
-Definition in_i1 {i1:NoDupList} : Name -> Prop := 
+Definition in_inner {i:NoDupList} : Name -> Prop := 
   fun (name:Name) =>
-  @In Name name (ndlist i1).
-
-Definition in_i2 {i2:NoDupList} : Name -> Prop := 
-  fun (name:Name) =>
-  @In Name name (ndlist i2).
-
-Definition in_i3 {i3:NoDupList} : Name -> Prop := 
-  fun (name:Name) =>
-  @In Name name (ndlist i3).
+  @In Name name (ndlist i).
 
 (*TODO*) Lemma bigraph_equality_trans 
   {s1 r1 s2 r2 s3 r3 : FinDecType} {i1 o1 i2 o2 i3 o3: NoDupList} 
@@ -225,22 +217,22 @@ Definition in_i3 {i3:NoDupList} : Name -> Prop :=
   + 
     Fail rewrite <- (@bij_subset_compose_compose_id Name (fun name => In name i1) (fun name => In name i2) (fun name => In name i3) bij_i12 bij_i23). 
     Fail rewrite <- (@bij_subset_compose_compose_id Name (fun name => In name o1) (fun name => In name o2) (fun name => In name o3) bij_o12 bij_o23). 
-    set (bij_i13 := <{ bij_id | fun a : Name => iff_trans (bij_i12 a) (bij_i23 (bij_id a)) }>).
-    assert (Hi := 
-      @bij_subset_compose_compose_id 
-        Name in_i1 in_i2 in_i3
-        bij_i12 
-        bij_i23).
+
+    set (bij_i13 := <{ bij_id | fun name : Name => iff_trans (bij_i12 name) (bij_i23 (bij_id name)) }>).
+    unfold bij_subset_compose in bij_i13.
+    simpl in bij_i13.
+    unfold id in bij_i13. 
+    simpl in bij_i13.
+    assert (Hi := @bij_subset_compose_compose_id Name in_inner in_inner in_inner bij_i12 bij_i23).
+    unfold bij_subset_compose in Hi.
+    unfold in_inner in Hi. 
+    unfold id in Hi. simpl in Hi. unfold id in Hi.
+
+    Set Printing All.
+    Fail rewrite <- Hi in bij_i13. 
     
     set (bij_o13 := <{ bij_id | fun a : Name => iff_trans (bij_o12 a) (bij_o23 (bij_id a)) }>).
     assert (Ho := @bij_subset_compose_compose_id Name (fun name => In name o1) (fun name => In name o2) (fun name => In name o3) bij_o12 bij_o23).
-    unfold in_i1 in Hi.
-    unfold in_i2 in Hi.
-    unfold in_i3 in Hi.
-    simpl in Hi. simpl in bij_i13.
-    unfold id in Hi. unfold id in bij_i13.
-    Set Printing All.
-    rewrite <- Hi in bij_i13. 
     
     (*rewrite <- (bij_subset_compose_compose_id) in bij_i13.
     Fail change ((
