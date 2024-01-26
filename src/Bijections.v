@@ -238,7 +238,7 @@ reflexivity.
 Qed.
 
 Lemma bij_compose_backward_simpl : forall {A B C} (bij_AB : bijection A B) (bij_BC : bijection B C) c,
-                                      backward (bij_BC <O> bij_AB) c = backward bij_AB (backward bij_BC c).
+  backward (bij_BC <O> bij_AB) c = backward bij_AB (backward bij_BC c).
 Proof.
 reflexivity.
 Qed.

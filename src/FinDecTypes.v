@@ -236,6 +236,7 @@ Definition voidfd :=
     finite_type := finite_void
   |}.
 
+
 Definition findec_unit :=
   {|
     type        := unit;

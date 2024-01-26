@@ -177,7 +177,7 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
     reflexivity.
   Qed.
 
-(*TODO*) Lemma bigraph_equality_trans 
+Lemma bigraph_equality_trans 
   {s1 r1 s2 r2 s3 r3 : FinDecType} {i1 o1 i2 o2 i3 o3: NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3):
     bigraph_equality b1 b2
@@ -260,10 +260,10 @@ Lemma bigraph_packed_equality_sym (bp1 bp2 : bigraph_packed) : bigraph_packed_eq
   apply bigraph_equality_sym.
   Qed.
 
-(* TODO when bigraph_equality_trans done *) Lemma bigraph_packed_equality_trans (bp1 bp2 bp3 : bigraph_packed) : bigraph_packed_equality bp1 bp2 -> bigraph_packed_equality bp2 bp3 -> bigraph_packed_equality bp1 bp3.
+Lemma bigraph_packed_equality_trans (bp1 bp2 bp3 : bigraph_packed) : bigraph_packed_equality bp1 bp2 -> bigraph_packed_equality bp2 bp3 -> bigraph_packed_equality bp1 bp3.
   Proof.
-  Fail apply bigraph_equality_trans. 
-  Abort.
+  apply bigraph_equality_trans.
+  Qed. 
 
 Record support_equivalent {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
@@ -282,15 +282,14 @@ End EquivalenceBigraphs.
 
 
 #[export] Instance big_Equivalence: Equivalence bigraph_packed_equality.
-constructor. exact @bigraph_packed_equality_refl. exact @bigraph_packed_equality_sym. Abort. 
+constructor. exact @bigraph_packed_equality_refl. exact @bigraph_packed_equality_sym. exact @bigraph_packed_equality_trans. Defined. 
 (* exact @bigraph_packed_equality_trans. Defined. *)
 
-(* TODO when bigraph_equality_trans done *)
-(* Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
+Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
   reflexivity proved by (bigraph_packed_equality_refl)
   symmetry proved by (bigraph_packed_equality_sym)
   transitivity proved by (bigraph_packed_equality_trans)
-    as bigraph_packed_equality_rel. *)
+    as bigraph_packed_equality_rel.
 
 Lemma bigraph_packed_equality_dec  
   (b1 : bigraph_packed) (b2 : bigraph_packed) :
@@ -298,7 +297,8 @@ Lemma bigraph_packed_equality_dec
   Proof. (* same problem, bigraph_packed_equality not transparent enough *)
   Fail decide equality. Abort.
 
-(* Juxtaposition is a tensor product when the sets of names are disjoint 
+(* Juxtaposition is a tensor product when the sets of nodes, edges, innernames, outernames are disjoint 
+  nodes & edges are automatically disjoint bc + is a disjoint sum
   On this we can prove associativity, neutral elt, and distribution to composition (M1 M2 M3 in Milner's book p21) 
   But bascially i'ts just juxtaposition with added hypothesis*)
 Definition bigraph_tensor_product {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList} 
@@ -309,7 +309,7 @@ Definition bigraph_tensor_product {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDu
   Proof.
   apply (Big 
     (findec_sum s1 s2)
-    (app_NoDupList i1 i2)
+    (app_NoDupList i1 i2) (*TODO: prouver que = i1 ++ i2*)
     (findec_sum r1 r2)
     (app_NoDupList o1 o2)
     (findec_sum (get_node b1) (get_node b2))
@@ -327,6 +327,11 @@ Definition bigraph_tensor_product {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDu
   Defined. 
 
 Notation "b1 ⊗ b2" := (bigraph_tensor_product b1 b2) (at level 50, left associativity).
+
+Remark void_disjoint_all_list : forall l:NoDupList, Disjoint EmptyNDL l.
+  Proof.
+    intros. unfold Disjoint. intros. unfold EmptyNDL. auto. 
+  Qed. 
 
 (*juxtaposition, also called parallel product
   in the book, parallel product is defined from tensor product p33 with the sentence "is defined just as tensor product, except that its link map allows name-sharing"
@@ -356,36 +361,33 @@ Definition bigraph_juxtaposition {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDup
 
 Notation "b1 || b2" := (bigraph_juxtaposition b1 b2) (at level 50, left associativity).
 
-Definition void_link (ip : NameSub EmptyNDL + Port void_univ_embedding) :
-  NameSub EmptyNDL + type voidfd. 
-  Proof.
-  destruct ip as [i|p].
-  - left. apply i.
-  - right. apply (bij_port_void void_univ_embedding p).
-  Qed. (*Qed not defined bc very unsure about the definition *)
-
-
 Definition bigraph_empty : bigraph voidfd EmptyNDL voidfd EmptyNDL.
   Proof.
-  refine (Big voidfd EmptyNDL voidfd EmptyNDL
+  eapply (Big voidfd EmptyNDL voidfd EmptyNDL
             voidfd voidfd
             (@void_univ_embedding _)
             (choice void_univ_embedding void_univ_embedding)
-            void_link _ 
+            _ 
             ).
   - intro n.
   destruct n.
-  Defined.
+  Unshelve.
+  intros. destruct X.
+  + left. apply n.
+  + destruct p. right. apply x.
+  Defined. (*TODO unsure of the definition of link*)
 
 Notation "∅" := bigraph_empty.
+
 
 (** * Disjoint juxtaposition/ Tensor Product
   This section deals with the operation of disjoint juxtaposition. This is the act
   of putting two bigraphs with disjoint interfaces "next" to one another. 
-  After the definition, we prove associativity and commutativity of dis_juxtaposition *)
-(* Section DisjointJuxtaposition.
+  After the definition, we prove existence of a unit and associativity.  (commutativity?) *)
+Section DisjointJuxtaposition.
 Lemma arity_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o) n, 
-        Arity (get_control (∅ ⊗ b) n) = Arity (get_control b (bij_void_sum_neutral n)).
+  Arity (get_control (bigraph_tensor_product (dis_i := void_disjoint_all_list i) (dis_o := void_disjoint_all_list o) ∅ b) n) = 
+  Arity (get_control b (bij_void_sum_neutral n)).
   Proof.
   intros s i r o b n.
   destruct n as [ v | n].
@@ -394,7 +396,7 @@ Lemma arity_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o) n,
   Qed.
   
 Theorem bigraph_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o), 
-  bigraph_equality (∅ || b) b.
+  bigraph_equality (bigraph_tensor_product (dis_i := void_disjoint_all_list i) (dis_o := void_disjoint_all_list o) ∅ b) b.
   Proof.
   intros s i r o b.
   apply (BigEq _ _ _ _ _ _ _ _ (∅ || b) b
@@ -420,7 +422,7 @@ Theorem bigraph_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o),
   + apply functional_extensionality.
     destruct x as [i1 | (v1, (k1, Hvk1))]; simpl.
     - unfold funcomp.
-      simpl. (* TODO INTERESTING PART when bij done *)
+      simpl.
       destruct get_link; reflexivity.
     - unfold parallel, sum_shuffle, choice, funcomp, id.
       simpl.
