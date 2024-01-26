@@ -545,11 +545,11 @@ Qed.
 
 Definition bij_subset_forward {A B : Type} {P : A -> Prop} {Q : B -> Prop} 
 (bij_AB : bijection A B) 
-(HEqPQ : forall a, P a <-> Q (forward bij_AB a)) : 
-{a:A | P a} -> {b:B | Q b}.
+(HEqPQ : forall name, P name <-> Q (forward bij_AB name)) : 
+{nameA:A | P nameA} -> {nameB:B | Q nameB}.
 Proof.
 apply 
-(fun aPa => match aPa with (exist _ a Pa) => exist Q ((forward bij_AB) a) (proj1 ((HEqPQ a)) Pa) end).
+(fun aPa => match aPa with (exist _ namea Pnamea) => exist Q ((forward bij_AB) namea) (proj1 ((HEqPQ namea)) Pnamea) end).
 Defined.
 
 Definition bij_subset_backward {A B : Type} {P : A -> Prop} {Q : B -> Prop} (bij_AB : bijection A B) (HEqPQ : forall a, P a <-> Q (forward bij_AB a)) : (@sig B Q) -> (@sig A P).
@@ -609,7 +609,7 @@ apply bij_eq.
 Qed.
 
 Theorem bij_subset_compose_id : forall {A : Type} {P : A -> Prop} 
-  (EqPP : forall a, P a <-> P (bij_id a)),
+  (EqPP : forall name, P name <-> P (bij_id name)),
   <{bij_id | EqPP}> = bij_id.
 Proof.
 intros A P EqPP.
@@ -667,9 +667,9 @@ apply bij_eq; simpl.
 Qed.
 
 Theorem bij_subset_compose_compose_id : forall {A} {P : A -> Prop} {Q : A -> Prop} {R : A -> Prop}
-  (EqPQ : forall a, P a <-> Q (bij_id a))
-  (EqQR : forall b, Q b <-> R (bij_id b)),
-  <{bij_id | EqQR}> <O> <{bij_id | EqPQ}> = <{(bij_id) | (fun a => iff_trans (EqPQ a) (EqQR (bij_id a)))}>.
+  (EqPQ : forall a, P a <-> Q a)
+  (EqQR : forall b, Q b <-> R b),
+  <{bij_id | EqQR}> <O> <{bij_id | EqPQ}> = <{bij_id | fun a => iff_trans (EqPQ a) (EqQR (bij_id a))}>.
 Proof.
 intros A P Q R EqPQ EqQR.
 apply bij_eq; simpl.
