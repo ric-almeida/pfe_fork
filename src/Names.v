@@ -557,7 +557,13 @@ Proof. intros.
     split; intros; simpl in *; apply H.
 Qed.
 
-
+Theorem right_empty (i:NoDupList) :
+forall name : Name,
+  In name (app_merge_NoDupList i EmptyNDL) <->
+  In name i.
+Proof. intros.
+    split; intros; simpl in *. rewrite app_merge'_empty_right in H. apply H. rewrite app_merge'_empty_right. apply H.
+Qed.
 
 
 (* Theorem woopsie : forall l1 l2, app_merge' (ndlist l1) (ndlist l2) = nodup EqDecN ((ndlist l1)++(ndlist l2)).

@@ -328,7 +328,12 @@ Definition bigraph_tensor_product {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDu
 
 Notation "b1 ⊗ b2" := (bigraph_tensor_product b1 b2) (at level 50, left associativity).
 
-Remark void_disjoint_all_list : forall l:NoDupList, Disjoint EmptyNDL l.
+Remark void_disjoint_all_list_left : forall l:NoDupList, Disjoint EmptyNDL l.
+  Proof.
+    intros. unfold Disjoint. intros. unfold EmptyNDL. auto. 
+  Qed. 
+
+Remark void_disjoint_all_list_right : forall l:NoDupList, Disjoint l EmptyNDL.
   Proof.
     intros. unfold Disjoint. intros. unfold EmptyNDL. auto. 
   Qed. 
@@ -382,7 +387,7 @@ Notation "∅" := bigraph_empty.
   After the definition, we prove existence of a unit and associativity.  (commutativity?) *)
 Section DisjointJuxtaposition.
 Lemma arity_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o) n, 
-  Arity (get_control (bigraph_tensor_product (dis_i := void_disjoint_all_list i) (dis_o := void_disjoint_all_list o) ∅ b) n) = 
+  Arity (get_control (bigraph_tensor_product (dis_i := void_disjoint_all_list_left i) (dis_o := void_disjoint_all_list_left o) ∅ b) n) = 
   Arity (get_control b (bij_void_sum_neutral n)).
   Proof.
   intros s i r o b n.
@@ -392,7 +397,7 @@ Lemma arity_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o) n,
   Qed.
   
 Theorem bigraph_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o), 
-  bigraph_equality (bigraph_tensor_product (dis_i := void_disjoint_all_list i) (dis_o := void_disjoint_all_list o) ∅ b) b.
+  bigraph_equality (bigraph_tensor_product (dis_i := void_disjoint_all_list_left i) (dis_o := void_disjoint_all_list_left o) ∅ b) b.
   Proof.
   intros s i r o b.
   apply (BigEq _ _ _ _ _ _ _ _ (∅ ⊗ b) b
@@ -447,8 +452,77 @@ Theorem bigraph_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o),
       reflexivity.
   Qed.
 
+Lemma arity_juxt_right_neutral : forall {s i r o} (b : bigraph s i r o) n, 
+  Arity (get_control (bigraph_tensor_product (dis_i := void_disjoint_all_list_right i) (dis_o := void_disjoint_all_list_right o) b ∅) n) = 
+  Arity (get_control b (bij_void_sum_neutral_r n)).
+  Proof.
+  intros s i r o b n.
+  destruct n as [ n | v].
+  + reflexivity.
+  + destruct v.
+  Qed.
+  
+Theorem bigraph_juxt_right_neutral : forall {s i r o} (b : bigraph s i r o), 
+  bigraph_equality (bigraph_tensor_product (dis_i := void_disjoint_all_list_right i) (dis_o := void_disjoint_all_list_right o) b ∅) b.
+  Proof.
+  intros s i r o b.
+  apply (BigEq _ _ _ _ _ _ _ _ (b ⊗ ∅) b
+          bij_void_sum_neutral_r
+          (right_empty i)
+          bij_void_sum_neutral_r
+          (right_empty o)
+          bij_void_sum_neutral_r
+          bij_void_sum_neutral_r
+          (fun n => bij_rew (P := fin) (arity_juxt_right_neutral b n)) 
+        ).
+  + apply functional_extensionality.
+    intro x.
+    reflexivity. 
+  + apply functional_extensionality.
+    destruct x as [n1 | s1]; simpl.
+    - unfold funcomp.
+      simpl.
+      destruct get_parent; reflexivity.
+    - unfold funcomp.
+      simpl.
+      destruct get_parent; reflexivity.
+  + apply functional_extensionality.
+    destruct x as [i1 | (v1, (k1, Hvk1))]; simpl.
+    - unfold funcomp.
+      simpl. 
+      unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
+      simpl.
+      unfold id. 
+      destruct i1 as [iname1 Hiname1].
+      destruct (in_dec EqDecN iname1 i).
+      *
+      assert (
+        forall n n':Name, forall Hn: In n i, forall Hn':In n' i, 
+        n = n' -> 
+        get_link b (inl (exist _ n Hn)) = get_link b (inl (exist _ n' Hn'))
+      ).
+      ** intros. apply f_equal. apply f_equal. apply subset_eq_compat. apply H.
+      ** rewrite <- (H iname1 iname1 Hiname1).
+      *** destruct get_link.
+      **** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
+      **** reflexivity.
+      *** reflexivity.
+      * exfalso. apply n. apply Hiname1.
+    - unfold bij_list_backward', bij_list_forward, bij_subset_forward, parallel, sum_shuffle, choice, funcomp, id.
+      simpl.
+      unfold bij_join_port_backward, bij_dep_sum_2_forward, bijection_inv, bij_dep_sum_1_forward.
+      simpl.
+      unfold bij_rew_forward, eq_rect_r, funcomp, id.
+      simpl.
+      rewrite <- eq_rect_eq.
+      rewrite <- eq_rect_eq.
+      destruct get_link. apply f_equal. destruct s0. apply subset_eq_compat.
+      reflexivity.
+      reflexivity.
+  Qed.
+
 Lemma arity_juxt_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) n12,
-  Arity (get_control (b1 || b2) n12) = Arity (get_control (b2 || b1) (bij_sum_comm n12)).
+  Arity (get_control (b1 ⊗ b2) n12) = Arity (get_control (b2 ⊗ b1) (bij_sum_comm n12)).
   Proof.
   intros until n12.
   destruct n12.
