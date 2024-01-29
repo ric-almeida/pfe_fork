@@ -305,20 +305,20 @@ Definition bigraph_tensor_product {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDu
   {dis_i : Disjoint i1 i2}
   {dis_o : Disjoint o1 o2}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
-    : bigraph (findec_sum s1 s2) (app_NoDupList i1 i2) (findec_sum r1 r2) (app_NoDupList o1 o2).
-  Proof.
+    : bigraph (findec_sum s1 s2) (app_merge_NoDupList i1 i2) (findec_sum r1 r2) (app_merge_NoDupList o1 o2).
+  Proof. 
   apply (Big 
     (findec_sum s1 s2)
-    (app_NoDupList i1 i2) (*TODO: prouver que = i1 ++ i2*)
+    (app_merge_NoDupList i1 i2) (*TODO: prouver que = i1 ++ i2*)
     (findec_sum r1 r2)
-    (app_NoDupList o1 o2)
+    (app_merge_NoDupList o1 o2)
     (findec_sum (get_node b1) (get_node b2))
     (findec_sum (get_edge b1) (get_edge b2))
     (join (get_control b1) (get_control b2))
     (bij_sum_shuffle <o> (parallel (get_parent b1) (get_parent b2)) <o> (bijection_inv bij_sum_shuffle))
-    ( ((bij_list_names o1 o2) <+> bij_id) <o>
+    ( ((@bij_list_names o1 o2 dis_o) <+> bij_id) <o>
       bij_sum_shuffle <o> (parallel (get_link b1) (get_link b2)) <o> (bijection_inv bij_sum_shuffle) <o> 
-      (bijection_inv ((bij_list_names i1 i2) <+> (bij_join_port (get_control b1) (get_control b2)))))
+      (bijection_inv ((@bij_list_names i1 i2 dis_i) <+> (bij_join_port (get_control b1) (get_control b2)))))
     ).
   rewrite <- tensor_alt.
   apply finite_parent_tensor.
@@ -338,13 +338,13 @@ Remark void_disjoint_all_list : forall l:NoDupList, Disjoint EmptyNDL l.
   but I think we should probably do it the other way around *)
 Definition bigraph_juxtaposition {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
-    : bigraph (findec_sum s1 s2) (app_NoDupList i1 i2) (findec_sum r1 r2) (app_NoDupList o1 o2).
+    : bigraph (findec_sum s1 s2) (app_merge_NoDupList i1 i2) (findec_sum r1 r2) (app_merge_NoDupList o1 o2).
   Proof.
-  apply (Big 
+  Fail apply (Big 
     (findec_sum s1 s2)
-    (app_NoDupList i1 i2)
+    (app_merge_NoDupList i1 i2)
     (findec_sum r1 r2)
-    (app_NoDupList o1 o2)
+    (app_merge_NoDupList o1 o2)
     (findec_sum (get_node b1) (get_node b2))
     (findec_sum (get_edge b1) (get_edge b2))
     (join (get_control b1) (get_control b2))
@@ -352,12 +352,8 @@ Definition bigraph_juxtaposition {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDup
     ( ((bij_list_names o1 o2) <+> bij_id) <o>
       bij_sum_shuffle <o> (parallel (get_link b1) (get_link b2)) <o> (bijection_inv bij_sum_shuffle) <o> 
       (bijection_inv ((bij_list_names i1 i2) <+> (bij_join_port (get_control b1) (get_control b2)))))
-    ).
-  rewrite <- tensor_alt.
-  apply finite_parent_tensor.
-  + exact (ap _ _ _ _ b1).
-  + exact (ap _ _ _ _ b2).
-  Defined.
+    ). (*No bijection if not disjoint! need to find a way around that *)
+  Admitted.
 
 Notation "b1 || b2" := (bigraph_juxtaposition b1 b2) (at level 50, left associativity).
 
@@ -399,7 +395,7 @@ Theorem bigraph_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o),
   bigraph_equality (bigraph_tensor_product (dis_i := void_disjoint_all_list i) (dis_o := void_disjoint_all_list o) ∅ b) b.
   Proof.
   intros s i r o b.
-  apply (BigEq _ _ _ _ _ _ _ _ (∅ || b) b
+  apply (BigEq _ _ _ _ _ _ _ _ (∅ ⊗ b) b
           bij_void_sum_neutral
           (left_empty i)
           bij_void_sum_neutral
@@ -422,21 +418,33 @@ Theorem bigraph_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o),
   + apply functional_extensionality.
     destruct x as [i1 | (v1, (k1, Hvk1))]; simpl.
     - unfold funcomp.
+      simpl. 
+      unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
       simpl.
-      destruct get_link; reflexivity.
-    - unfold parallel, sum_shuffle, choice, funcomp, id.
+      unfold id. 
+      destruct i1 as [iname1 Hiname1].
+      assert (
+        forall n n':Name, forall Hn: In n i, forall Hn':In n' i, 
+        n = n' -> 
+        get_link b (inl (exist _ n Hn)) = get_link b (inl (exist _ n' Hn'))
+      ).
+      * intros. apply f_equal. apply f_equal. apply subset_eq_compat. apply H.
+      * rewrite <- (H iname1 iname1 Hiname1).
+      ** simpl. destruct get_link.
+      *** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
+      *** reflexivity.
+      ** reflexivity.
+    - unfold bij_list_backward', bij_list_forward, bij_subset_forward, parallel, sum_shuffle, choice, funcomp, id.
       simpl.
       unfold bij_join_port_backward, bij_dep_sum_2_forward, bijection_inv, bij_dep_sum_1_forward.
       simpl.
-      unfold bij_rew_forward, eq_rect_r, funcomp.
+      unfold bij_rew_forward, eq_rect_r, funcomp, id.
       simpl.
-    (*
-        erewrite eq_rect_pi.
-        erewrite (eq_rect_pi (x := v1)).
-    *)
       rewrite <- eq_rect_eq.
       rewrite <- eq_rect_eq.
-      destruct get_link; reflexivity.
+      destruct get_link. apply f_equal. destruct s0. apply subset_eq_compat.
+      reflexivity.
+      reflexivity.
   Qed.
 
 Lemma arity_juxt_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) n12,
