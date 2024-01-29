@@ -651,7 +651,7 @@ Section NameSubsets.
 Definition NameSub (nl : NoDupList) : Type :=
   {name:Name | In name nl}.
 
-Remark nodupproofirrelevant : forall l1 l2, 
+Remark nodupproofirrelevantns : forall l1 l2, 
     ndlist l1 = ndlist l2 -> NameSub l1 = NameSub l2.
     Proof. intros. unfold NameSub. rewrite H. reflexivity. Qed. 
 
@@ -681,6 +681,24 @@ Definition bij_list_backward (i1:NoDupList) (i2:NoDupList) :
   apply in_app_or_m_nod_dup' in Hn; assumption.
   Defined.
 
+Definition bij_list_backward' (i1:NoDupList) (i2:NoDupList) {dis_i:Disjoint i1 i2}:
+  NameSub (app_merge_NoDupList i1 i2)
+  ->
+  (NameSub i1) + (NameSub i2).
+  Proof.
+  unfold Disjoint in dis_i.
+  intros.
+  destruct X.
+  destruct (in_dec EqDecN x i1).
+  - left. exists x. apply i0.
+  - right. exists x. specialize (dis_i x). 
+  apply in_app_or_m_nod_dup in i. destruct i.
+  * exfalso; apply n; apply i.
+  * apply i.
+  * destruct i1. assumption.
+  * destruct i2. assumption.
+  Defined.
+  
 
 Definition bij_list_names (i1:NoDupList) (i2:NoDupList) {dis_i:Disjoint i1 i2} : 
   bijection ((NameSub i1) + (NameSub i2)) (NameSub (app_merge_NoDupList i1 i2)).
@@ -688,26 +706,47 @@ Definition bij_list_names (i1:NoDupList) (i2:NoDupList) {dis_i:Disjoint i1 i2} :
   apply 
   (mkBijection _ _ 
   (bij_list_forward i1 i2) 
+  (@bij_list_backward' i1 i2 dis_i)).
+  - apply functional_extensionality.
+  intros. unfold id, funcomp, bij_list_forward, bij_list_backward'.
+  simpl.
+  destruct x.
+  destruct (in_dec EqDecN x i1) as [Hini1 | Hnotini1].
+  + apply subset_eq_compat. reflexivity.
+  + destruct in_app_or_m_nod_dup; apply subset_eq_compat; reflexivity.
+  - apply functional_extensionality.
+  intros. unfold id, funcomp, bij_list_forward, bij_list_backward'.
+  simpl.
+  destruct x as [ns1 | ns2].
+  + destruct ns1 as [name Hini1].
+  destruct (in_dec EqDecN name i1).
+  * apply f_equal. apply subset_eq_compat. reflexivity.
+  * exfalso. apply n. apply Hini1.
+  + destruct ns2 as [name Hini2].
+  destruct (in_dec EqDecN name i1).
+  * exfalso. 
+  unfold Disjoint in dis_i. apply dis_i in i. apply i. apply Hini2.
+  * apply f_equal. apply subset_eq_compat. reflexivity.
+Defined.
+
+
+Definition bij_list_names' (i1:NoDupList) (i2:NoDupList) {dis_i:Disjoint i1 i2} : 
+  bijection ((NameSub i1) + (NameSub i2)) (NameSub (app_merge_NoDupList i1 i2)).
+  Proof.
+  apply 
+  (mkBijection _ _ 
+  (bij_list_forward i1 i2) 
   (bij_list_backward i1 i2)).
   - apply functional_extensionality.
-  intros. 
-  assert (NameSub (app_merge_NoDupList i1 i2) = NameSub (list_to_NDL (i1 ++ i2))). {admit. }
+  intros. unfold id, funcomp, bij_list_forward, bij_list_backward.
+  simpl.
+  destruct i1.
+  destruct i2.
+  destruct (in_app_or_m_nod_dup' ndlist0 ndlist1 nd0 nd1 x); destruct s;
+  destruct x; apply subset_eq_compat. (*Lost information somewhere*)
+  Abort.
 
-  destruct H .
-  unfold app_merge_NoDupList in x.
-  assert (H := nodupmergedisjointlist i1 i2 dis_i).
-
-  assert (bij_list_forward i1 i2 = id).
-  unfold bij_list_forward, bij_list_backward, funcomp, id. 
-  simpl. destruct i1. destruct i2. 
-  destruct in_app_or_m_nod_dup'.
-  + 
-  admit.
-  - apply functional_extensionality.
-  destruct x as [(na1, H1) | (na2, H2)].
-  + unfold id. simpl. unfold funcomp. simpl. 
-  Admitted.
-
+Print bij_list_names.
 
 
 End NameSubsets.
