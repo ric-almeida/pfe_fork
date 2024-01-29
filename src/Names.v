@@ -588,6 +588,17 @@ Section DisjointLists.
 Definition Disjoint (l1:NoDupList) (l2:NoDupList) : Prop :=
 forall name, In name l1 -> ~ In name l2.
 
+Definition rev_disjoint {l1:NoDupList} {l2:NoDupList} (d: Disjoint l1 l2) : Disjoint l2 l1.
+Proof.
+unfold Disjoint in *.
+intros.
+unfold not.
+intros.
+apply d in H0.
+apply H0. apply H.
+Qed. (*Or Defined?*)
+
+
 Lemma disjoint_NoDup_app : forall (l1 l2 : list Name),
   NoDup l1 -> NoDup l2 -> (forall a : Name, In a l1 -> ~ In a l2) -> NoDup (l1 ++ l2).
 Proof.
@@ -648,6 +659,8 @@ intros.
 unfold app_merge_NoDupList.
 Abort.
 
+Theorem not_in_both : forall l1 l2, forall n, In n (ndlist l1) -> In n (ndlist l2) -> Disjoint l1 l2 -> False.
+intros. unfold Disjoint in H1. specialize (H1 n). apply H1; assumption. Qed.
 
 End DisjointLists.
 
