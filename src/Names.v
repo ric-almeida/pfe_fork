@@ -538,6 +538,19 @@ simpl. destruct (in_dec EqDecN a i2).
 intros. apply H1. right. assumption. 
 Qed.
 
+Lemma app_merge'_cong {i1 i2 i3 i4}:  
+(forall name, In name i1 <-> In name i2) -> (forall name, In name i3 <-> In name i4) -> 
+(forall name, In name (app_merge' i1 i3) <-> In name (app_merge' i2 i4)).
+Proof.
+intros H12 H34.
+split; intros H.
+- apply in_app_iff in H. destruct H.
++ apply H12 in H. apply in_left_list. apply H.
++ apply H34 in H. apply in_right_list. apply H.
+- apply in_app_iff in H. destruct H.
++ apply H12 in H. apply in_left_list. apply H.
++ apply H34 in H. apply in_right_list. apply H.
+Qed.
 
 
 (* INTERESTING PART ABOUT NODUPLISTS *)
@@ -548,6 +561,9 @@ ndlist := app_merge' l1 l2 ;
 nd := NoDup_app_merge l1 l2 (nd l1) (nd l2)
 |}.
 
+Lemma app_merge_or {l1 l2 n} :
+ In n (app_merge_NoDupList l1 l2) -> In n l1 \/ In n l2.
+ Proof. apply in_app_iff. Qed.
 
 Theorem left_empty (i:NoDupList) :
 forall name : Name,
