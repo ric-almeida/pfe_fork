@@ -384,7 +384,7 @@ Notation "∅" := bigraph_empty.
 (** * Disjoint juxtaposition/ Tensor Product
   This section deals with the operation of disjoint juxtaposition. This is the act
   of putting two bigraphs with disjoint interfaces "next" to one another. 
-  After the definition, we prove existence of a unit and associativity.  (commutativity?) *)
+  After the definition, we prove existence of a unit, commutativity and associativity. *)
 Section DisjointJuxtaposition.
 Lemma arity_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o) n, 
   Arity (get_control (bigraph_tensor_product (dis_i := void_disjoint_all_list_left i) (dis_o := void_disjoint_all_list_left o) ∅ b) n) = 
@@ -729,8 +729,14 @@ Theorem bigraph_juxt_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2}
         ** reflexivity.
   Qed.
 
-Lemma arity_juxt_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) n12_3,
-  Arity (get_control ((b1 || b2) || b3) n12_3) = Arity (get_control (b1 || (b2 || b3)) (bij_sum_assoc n12_3)).
+Lemma arity_juxt_assoc : 
+  forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} 
+  {dis_i12 : Disjoint i1 i2} {dis_i23 : Disjoint i2 i3} {dis_i13 : Disjoint i1 i3}
+  {dis_o12 : Disjoint o1 o2} {dis_o23 : Disjoint o2 o3} {dis_o13 : Disjoint o1 o3}
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) n12_3,
+  Arity (get_control (bigraph_tensor_product (dis_i := dis_trans dis_i23 dis_i13) (dis_o := dis_trans dis_o23 dis_o13) (bigraph_tensor_product (dis_i:= dis_i12) (dis_o := dis_o12) b1 b2) b3) n12_3) 
+  = 
+  Arity (get_control (bigraph_tensor_product (dis_i := dis_trans_r dis_i12 dis_i13) (dis_o := dis_trans_r dis_o12 dis_o13) b1 (bigraph_tensor_product (dis_i:= dis_i23) (dis_o := dis_o23) b2 b3)) (bij_sum_assoc n12_3)).
   Proof.
   intros until n12_3.
   destruct n12_3 as [[n1 | n2] | n3].
@@ -739,15 +745,21 @@ Lemma arity_juxt_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} (b1 : bigr
   + reflexivity.
   Qed.
 
-Theorem bigraph_juxt_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3),
-  bigraph_equality ((b1 || b2) || b3) (b1 || (b2 || b3)).
+Theorem bigraph_juxt_assoc : 
+  forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} 
+  {dis_i12 : Disjoint i1 i2} {dis_i23 : Disjoint i2 i3} {dis_i13 : Disjoint i1 i3}
+  {dis_o12 : Disjoint o1 o2} {dis_o23 : Disjoint o2 o3} {dis_o13 : Disjoint o1 o3}
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3),
+  bigraph_equality
+    (bigraph_tensor_product (dis_i := dis_trans dis_i23 dis_i13) (dis_o := dis_trans dis_o23 dis_o13) (bigraph_tensor_product (dis_i:= dis_i12) (dis_o := dis_o12) b1 b2) b3) 
+    (bigraph_tensor_product (dis_i := dis_trans_r dis_i12 dis_i13) (dis_o := dis_trans_r dis_o12 dis_o13) b1 (bigraph_tensor_product (dis_i:= dis_i23) (dis_o := dis_o23) b2 b3)).
   Proof.
   intros.
-  apply (BigEq _ _ _ _ _ _ _ _ ((b1 || b2) || b3) (b1 || (b2 || b3))
+  apply (BigEq _ _ _ _ _ _ _ _ ((b1 ⊗ b2) ⊗ b3) (b1 ⊗ (b2 ⊗ b3))
           bij_sum_assoc
+          in_app_merge'_transi
           bij_sum_assoc
-          bij_sum_assoc
-          bij_sum_assoc
+          in_app_merge'_transi
           bij_sum_assoc
           bij_sum_assoc
           (fun n12_3 => bij_rew (P := fin) (arity_juxt_assoc b1 b2 b3 n12_3))
@@ -757,26 +769,230 @@ Theorem bigraph_juxt_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} (b1 : 
   + apply functional_extensionality.
     destruct x as [[n1 | [n2 | n3]] | [s1' | [s2' | s3']]]; simpl; unfold funcomp; simpl; destruct get_parent; reflexivity.
   + apply functional_extensionality.
-    destruct x as [[i1' | [i2' | i3']] | p123]; simpl; unfold funcomp; simpl.
-    - destruct get_link; reflexivity.
-    - destruct get_link; reflexivity.
-    - destruct get_link; reflexivity.
+    destruct x as [[i123] | p123]; simpl; unfold funcomp; simpl.
+    - unfold funcomp.
+      simpl. 
+      unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
+      simpl.
+      unfold id. simpl. 
+      destruct (in_dec EqDecN i123 (app_merge' i1 i2)).
+      * destruct (in_dec EqDecN i123 i1).
+      destruct get_link.
+      ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
+      ** apply f_equal. apply f_equal. reflexivity.
+      ** destruct (in_dec EqDecN i123 i2).
+      *** assert (
+        forall n:Name, forall Hn: In n i2, forall Hn':In n i2,
+        get_link b2 (inl (exist _ n Hn)) = get_link b2 (inl (exist _ n Hn'))
+      ).
+      **** intros. apply f_equal. apply f_equal. apply subset_eq_compat. reflexivity.
+      **** 
+      set (Hn' := match
+          in_app_or_m_nod_dup i1 i2 i123
+            (match
+              i1 as n0
+              return
+                ((In i123 n0 -> ~ In i123 i2) ->
+                  In i123 (app_merge' n0 i2) ->
+                  ~ In i123 n0 -> NoDup n0)
+            with
+            | {|
+                ndlist := ndlist0; nd := nd0
+              |} =>
+                fun
+                  (_ : In i123 ndlist0 ->
+                        ~ In i123 i2)
+                  (_ : In i123
+                        (app_merge' ndlist0
+                        i2))
+                  (_ : ~ In i123 ndlist0) =>
+                nd0
+            end (dis_i12 i123) i4 n)
+            (match
+              i2 as n0
+              return
+                ((In i123 i1 -> ~ In i123 n0) ->
+                  In i123 (app_merge' i1 n0) ->
+                  NoDup n0)
+            with
+            | {|
+                ndlist := ndlist0; nd := nd0
+              |} =>
+                fun
+                  (_ : In i123 i1 ->
+                        ~ In i123 ndlist0)
+                  (_ : In i123
+                        (app_merge' i1
+                        ndlist0)) => nd0
+            end (dis_i12 i123) i4) i4
+        with
+        | inl i6 =>
+            False_ind (In i123 i2) (n i6)
+        | inr i6 => i6
+        end).
+      rewrite (H i123 i5 Hn').      
+      destruct get_link.
+      ***** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity. (*TODO create tactic*)
+      ***** apply f_equal. apply f_equal. apply f_equal. reflexivity.
+      *** exfalso. apply in_app_iff in i4. destruct i4. apply n. apply H. apply n0. apply H.
+      * destruct (in_dec EqDecN i123 i1).
+      ** exfalso. apply n. apply in_left_list. apply i4.
+      ** destruct (in_dec EqDecN i123 i2).
+      *** exfalso. apply n. apply in_right_list. apply i4.
+      *** 
+      set (Hn := 
+          match
+          in_app_or_m_nod_dup (app_merge' i1 i2) i3 i123
+            (NoDup_app_merge i1 i2 (nd i1) (nd i2))
+            (match
+              i3 as n2
+              return
+                ((In i123 (app_merge' i1 i2) -> ~ In i123 n2) ->
+                  In i123 (app_merge' (app_merge' i1 i2) n2) -> NoDup n2)
+            with
+            | {| ndlist := ndlist0; nd := nd0 |} =>
+                fun (_ : In i123 (app_merge' i1 i2) -> ~ In i123 ndlist0)
+                  (_ : In i123 (app_merge' (app_merge' i1 i2) ndlist0)) => nd0
+            end (dis_trans dis_i23 dis_i13 i123)
+              (match in_app_merge'_transi i123 with
+                | conj _ H => H
+                end
+                  (eq_ind_r (fun b : Name => In b (app_merge' i1 (app_merge' i2 i3)))
+                    i0 eq_refl)))
+            (match in_app_merge'_transi i123 with
+            | conj _ H => H
+            end
+              (eq_ind_r (fun b : Name => In b (app_merge' i1 (app_merge' i2 i3))) i0
+                  eq_refl))
+        with
+        | inl i4 => False_ind (In i123 i3) (n i4)
+        | inr i4 => i4
+        end).
+      set (Hn' :=
+        match
+          in_app_or_m_nod_dup i2 i3 i123
+            (match
+                i2 as n2
+                return
+                  ((In i123 n2 -> ~ In i123 i3) ->
+                  In i123 (app_merge' n2 i3) -> ~ In i123 n2 -> NoDup n2)
+              with
+              | {| ndlist := ndlist0; nd := nd0 |} =>
+                  fun (_ : In i123 ndlist0 -> ~ In i123 i3)
+                    (_ : In i123 (app_merge' ndlist0 i3)) 
+                    (_ : ~ In i123 ndlist0) => nd0
+              end (dis_i23 i123)
+                match
+                  in_app_or_m_nod_dup i1 (app_merge' i2 i3) i123
+                    (match
+                      i1 as n2
+                      return
+                        ((In i123 n2 -> ~ In i123 _) ->
+                          In i123 (app_merge' n2 _) -> ~ In i123 n2 -> NoDup n2)
+                    with
+                    | {| ndlist := ndlist0; nd := nd0 |} =>
+                        fun (_ : In i123 ndlist0 -> ~ In i123 (app_merge' i2 i3))
+                          (_ : In i123 (app_merge' ndlist0 (app_merge' i2 i3)))
+                          (_ : ~ In i123 ndlist0) => nd0
+                    end (dis_trans_r dis_i12 dis_i13 i123) i0 n0)
+                    (NoDup_app_merge i2 i3 (nd i2) (nd i3)) i0
+                with
+                | inl i4 => False_ind (In i123 (app_merge' i2 i3)) (n0 i4)
+                | inr i4 => i4
+                end n1)
+            (match
+                i3 as n2
+                return
+                  ((In i123 i2 -> ~ In i123 n2) ->
+                  In i123 (app_merge' i2 n2) -> NoDup n2)
+              with
+              | {| ndlist := ndlist0; nd := nd0 |} =>
+                  fun (_ : In i123 i2 -> ~ In i123 ndlist0)
+                    (_ : In i123 (app_merge' i2 ndlist0)) => nd0
+              end (dis_i23 i123)
+                match
+                  in_app_or_m_nod_dup i1 (app_merge' i2 i3) i123
+                    (match
+                      i1 as n2
+                      return
+                        ((In i123 n2 -> ~ In i123 _) ->
+                          In i123 (app_merge' n2 _) -> ~ In i123 n2 -> NoDup n2)
+                    with
+                    | {| ndlist := ndlist0; nd := nd0 |} =>
+                        fun (_ : In i123 ndlist0 -> ~ In i123 (app_merge' i2 i3))
+                          (_ : In i123 (app_merge' ndlist0 (app_merge' i2 i3)))
+                          (_ : ~ In i123 ndlist0) => nd0
+                    end (dis_trans_r dis_i12 dis_i13 i123) i0 n0)
+                    (NoDup_app_merge i2 i3 (nd i2) (nd i3)) i0
+                with
+                | inl i4 => False_ind (In i123 (app_merge' i2 i3)) (n0 i4)
+                | inr i4 => i4
+                end)
+            match
+              in_app_or_m_nod_dup i1 (app_merge' i2 i3) i123
+                (match
+                    i1 as n2
+                    return
+                      ((In i123 n2 -> ~ In i123 (app_merge' i2 i3)) ->
+                      In i123 (app_merge' n2 (app_merge' i2 i3)) ->
+                      ~ In i123 n2 -> NoDup n2)
+                  with
+                  | {| ndlist := ndlist0; nd := nd0 |} =>
+                      fun (_ : In i123 ndlist0 -> ~ In i123 (app_merge' i2 i3))
+                        (_ : In i123 (app_merge' ndlist0 (app_merge' i2 i3)))
+                        (_ : ~ In i123 ndlist0) => nd0
+                  end (dis_trans_r dis_i12 dis_i13 i123) i0 n0)
+                (NoDup_app_merge i2 i3 (nd i2) (nd i3)) i0
+            with
+            | inl i4 => False_ind (In i123 (app_merge' i2 i3)) (n0 i4)
+            | inr i4 => i4
+            end
+        with
+        | inl i4 => False_ind (In i123 i3) (n1 i4)
+        | inr i4 => i4
+        end).       
+      assert (
+          forall n:Name, forall Hn: In n i3, forall Hn':In n i3,
+          get_link b3 (inl (exist _ n Hn)) = get_link b3 (inl (exist _ n Hn'))
+        ).
+      **** intros. apply f_equal. apply f_equal. apply subset_eq_compat. reflexivity.
+      **** rewrite (H i123 Hn Hn'). destruct get_link.
+      apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
+      apply f_equal. apply f_equal. apply f_equal. reflexivity.
     - destruct p123 as ([v1 | [v2 | v3]], (i123, Hvi123)); simpl.
       * unfold bij_rew_forward, eq_rect_r.
+        simpl. 
+        unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
+        simpl.
+        unfold id. simpl. 
         rewrite <- eq_rect_eq.
         rewrite <- eq_rect_eq.
         simpl.
-        destruct get_link; reflexivity.
+        destruct get_link.
+        ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
+        ** reflexivity.
       * unfold bij_rew_forward, eq_rect_r.
+        simpl. 
+        unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
+        simpl.
+        unfold id. simpl. 
         rewrite <- eq_rect_eq.
         rewrite <- eq_rect_eq.
         simpl.
-        destruct get_link; reflexivity.
+        destruct get_link.
+        ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity. (*TODO best example of tactic use*)
+        ** apply f_equal. reflexivity.
       * unfold bij_rew_forward, eq_rect_r.
+        simpl. 
+        unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
+        simpl.
+        unfold id. simpl. 
         rewrite <- eq_rect_eq.
         rewrite <- eq_rect_eq.
         simpl.
-        destruct get_link; reflexivity.
+        destruct get_link.
+        ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity. (*TODO best example of tactic use*)
+        ** apply f_equal. reflexivity. (*TODO factoriser ici*)
   Qed.
 
 Definition arity_juxt_congruence_forward {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} 
@@ -909,7 +1125,7 @@ Theorem bigraph_juxt_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4
 
 Definition bigraph_packed_juxtaposition (b1 b2 : bigraph_packed) := 
   packing ((big b1) || (big b2)).
-End DisjointJuxtaposition. *)
+End DisjointJuxtaposition. 
 
 (** * Disjoint juxtaposition / Parallel product
   This section deals with the operation of disjoint juxtaposition. This is the act

@@ -662,6 +662,28 @@ Abort.
 Theorem not_in_both : forall l1 l2, forall n, In n (ndlist l1) -> In n (ndlist l2) -> Disjoint l1 l2 -> False.
 intros. unfold Disjoint in H1. specialize (H1 n). apply H1; assumption. Qed.
 
+Theorem dis_trans {i1 i2 i3}
+  (dis_i23 : Disjoint i2 i3) 
+  (dis_i13 : Disjoint i1 i3) : Disjoint (app_merge_NoDupList i1 i2) i3.
+  Proof.
+  unfold Disjoint.
+  intros.
+  apply in_app_iff in H. destruct H.
+  - apply dis_i13. apply H.
+  - apply dis_i23. apply H.
+  Qed.
+
+Theorem dis_trans_r {i1 i2 i3}
+  (dis_i12 : Disjoint i1 i2) 
+  (dis_i13 : Disjoint i1 i3) : Disjoint i1 (app_merge_NoDupList i2 i3).
+  Proof.
+  unfold Disjoint.
+  intros. unfold not. intros.
+  apply in_app_iff in H0. destruct H0.
+  - apply (not_in_both i1 i2 name H H0 dis_i12). 
+  - apply (not_in_both i1 i3 name H H0 dis_i13). 
+  Qed.
+
 End DisjointLists.
 
 
