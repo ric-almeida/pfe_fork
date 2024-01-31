@@ -1630,14 +1630,15 @@ Section CompositionBigraphs.
 Definition bigraph_identity {s i}: bigraph s i s i.
   Proof.
   apply (Big s i s i
-          voidfd 
-          voidfd
-          (@void_univ_embedding _)
-          id).
-  - intros [inner | p].
-    + left. exact inner.
+          voidfd (*node : ∅*)
+          voidfd (*edge : ∅*)
+          (@void_univ_embedding _) (*control : ∅_Kappa*)
+          id (*parent : id*)
+        ).
+  - intros [inner | p]. (*link_|{names} : id*)
+    + left. exact inner. 
     + destruct p. destruct x.
-  - intro n.
+  - intro n. (*acyclic parent*)
     destruct n.
   Defined.
 
@@ -1651,24 +1652,20 @@ Lemma arity_comp_left_neutral : forall {s i r o} (b : bigraph s i r o) n,
   + reflexivity.
   Qed.
 
-Definition reflnames {r} : forall name : Name,
-In name r <-> In name r.
-reflexivity. Defined.
-
-
 Theorem bigraph_comp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
   bigraph_equality (bigraph_identity <<o>> b) b.
   Proof.
   intros s i r o b.
-  apply (BigEq _ _ _ _ _ _ _ _ (bigraph_identity <<o>> b) b
-          bij_id (*s*)
-          (fun (name : Name) => reflexivity (In name i)) (*i*)
-          bij_id (*r*)
-          (fun (name : Name) => reflexivity (In name o)) (*o*)
-          bij_void_sum_neutral (*n*)
-          bij_void_sum_neutral (*e*)
-          (fun n => bij_rew (P := fin) (arity_comp_left_neutral b n)) (*p*)
-        ).
+  apply (
+    BigEq _ _ _ _ _ _ _ _ (bigraph_identity <<o>> b) b
+      bij_id (*s*)
+      (fun (name : Name) => reflexivity (In name i)) (*i*)
+      bij_id (*r*)
+      (fun (name : Name) => reflexivity (In name o)) (*o*)
+      bij_void_sum_neutral (*n*)
+      bij_void_sum_neutral (*e*)
+      (fun n => bij_rew (P := fin) (arity_comp_left_neutral b n)) (*p*)
+    ).
   + apply functional_extensionality.
     intro x.
     reflexivity. 
@@ -1681,17 +1678,21 @@ Theorem bigraph_comp_left_neutral : forall {s i r o} (b : bigraph s i r o),
       simpl.
       destruct get_parent; reflexivity.
   + apply functional_extensionality.
-    destruct x as [name | (v1, (k1, Hvk1))]; simpl.
-    - unfold reflexivity. unfold iff_Reflexive.  unfold id. simpl. 
-    unfold bij_subset_forward, bij_subset_backward. simpl. unfold id. simpl. 
-    unfold funcomp. simpl. unfold rearrange, switch_link, parallel.
-      simpl. 
-      destruct name as [name pf].
-      destruct (iff_refl (In name i)). simpl.
-      destruct get_link eqn:E.
-      * destruct s0 as [outer pf2]. 
-      simpl. 
-      destruct iff_refl. destruct conj. simpl. admit. * admit. 
+    destruct x as [[name] | (v1, (k1, Hvk1))]; simpl.
+    - unfold funcomp.
+    simpl. 
+    unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
+    simpl.
+    unfold rearrange, switch_link, id. simpl.
+    assert (
+      forall n:Name, forall Hn: In n i, forall Hn':In n i,
+      get_link b (inl (exist _ n Hn)) = get_link b (inl (exist _ n Hn'))
+    ).
+    * intros. apply f_equal. apply f_equal. apply subset_eq_compat. reflexivity.
+    * rewrite <- (H name i0).
+    destruct get_link.
+    ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
+    ** reflexivity.
     - unfold parallel, sum_shuffle, choice, funcomp, id.
       simpl.
       unfold bij_join_port_backward, bij_dep_sum_2_forward, bijection_inv, bij_dep_sum_1_forward.
@@ -1707,9 +1708,9 @@ Theorem bigraph_comp_left_neutral : forall {s i r o} (b : bigraph s i r o),
       rewrite <- eq_rect_eq.
       rewrite <- eq_rect_eq.
       destruct get_link.
-      * admit.
+      * apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
       * reflexivity.
-  Admitted.
+  Qed.
 
 Lemma arity_comp_right_neutral : forall {s i r o} (b : bigraph s i r o) n, 
   Arity (get_control (b <<o>> bigraph_identity) n) =
@@ -1721,27 +1722,20 @@ Lemma arity_comp_right_neutral : forall {s i r o} (b : bigraph s i r o) n,
   + destruct v.
   Qed.
 
-Lemma example_goal {l1} {B} (v1 : NameSub l1) (v2 : NameSub l1) :
-  @inl (NameSub l1) B v1 = inl v2 -> v1 = v2.
-  Proof.
-    intros H.
-    inversion H.
-    reflexivity.
-  Qed.
-
 Theorem bigraph_comp_right_neutral : forall {s i r o} (b : bigraph s i r o), 
   bigraph_equality (b <<o>> (bigraph_identity)) b.
   Proof.
   intros s i r o b.
-  apply (BigEq _ _ _ _ _ _ _ _ (b <<o>> bigraph_identity) b
-          bij_id
-          (fun (name : Name) => reflexivity (In name i))
-          bij_id
-          (fun (name : Name) => reflexivity (In name o))
-          bij_void_sum_neutral_r
-          bij_void_sum_neutral_r(*probably not that anymore*)
-          (fun n => bij_rew (P := fin) (arity_comp_right_neutral b n)) 
-        ).
+  apply 
+    (BigEq _ _ _ _ _ _ _ _ (b <<o>> bigraph_identity) b
+      bij_id
+      (fun (name : Name) => reflexivity (In name i))
+      bij_id
+      (fun (name : Name) => reflexivity (In name o))
+      bij_void_sum_neutral_r
+      bij_void_sum_neutral_r (*probably not that anymore*)
+      (fun n => bij_rew (P := fin) (arity_comp_right_neutral b n)) 
+    ).
   + apply functional_extensionality.
     intro x.
     reflexivity. 
@@ -1753,13 +1747,21 @@ Theorem bigraph_comp_right_neutral : forall {s i r o} (b : bigraph s i r o),
     - unfold funcomp.
       simpl.
       destruct get_parent; reflexivity.
-  + apply functional_extensionality.
-    destruct x as [(name,pf) | (v1, (k1, Hvk1))]; simpl.
+  + apply functional_extensionality.      
+    destruct x as [[name] | (v1, (k1, Hvk1))]; simpl.
     - unfold funcomp, bij_subset_forward, extract1, switch_link, parallel, id.
       simpl.
       unfold funcomp, bij_subset_forward, extract1, switch_link, parallel, id.
       simpl.
-      destruct get_link. * destruct s0. admit. * admit.
+      assert (
+        forall n:Name, forall Hn: In n i, forall Hn':In n i,
+        get_link b (inl (exist _ n Hn)) = get_link b (inl (exist _ n Hn'))
+      ).
+      * intros. apply f_equal. apply f_equal. apply subset_eq_compat. reflexivity.
+      * rewrite <- (H name i0).
+        destruct get_link. 
+        ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
+        ** reflexivity.
     - unfold parallel, sum_shuffle, choice, funcomp, id.
       simpl.
       unfold bij_join_port_backward, bij_dep_sum_2_forward, bijection_inv, bij_dep_sum_1_forward.
@@ -1774,8 +1776,10 @@ Theorem bigraph_comp_right_neutral : forall {s i r o} (b : bigraph s i r o),
     *)
       rewrite <- eq_rect_eq.
       rewrite <- eq_rect_eq.
-      destruct get_link. * destruct s0. unfold id.
-      Admitted.
+      destruct get_link. 
+      * apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
+      * reflexivity. 
+  Qed.
 
 
 Lemma arity_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) (b3 : bigraph s3 i3 s2 i2) n12_3,
@@ -1792,16 +1796,17 @@ Theorem bigraph_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i
   bigraph_equality ((b1 <<o>> b2) <<o>> b3) (b1 <<o>> (b2 <<o>> b3)).
   Proof.
   intros.
-  Fail apply (BigEq _ _ _ _ _ _ _ _ ((b1 <<o>> b2) <<o>> b3) (b1 <<o>> (b2 <<o>> b3))
-          bij_id
-          (fun (name : Name) => reflexivity (In name i3))
-          bij_id
-          (fun (name : Name) => reflexivity (In name i3))
-          bij_sum_assoc
-          bij_sum_assoc
-          (fun n12_3 => bij_rew (P := fin) (arity_juxt_assoc b1 b2 b3 n12_3))
-        ). (*TODO why does it not work?*) Admitted.
-  (* + apply functional_extensionality.
+  Search (_ <-> _).
+  apply (BigEq _ _ _ _ _ _ _ _ ((b1 <<o>> b2) <<o>> b3) (b1 <<o>> (b2 <<o>> b3))
+    bij_id
+    (fun (name : Name) => iff_refl (In name i3))
+    bij_id
+    (fun (name : Name) => iff_refl (In name o1))
+    bij_sum_assoc
+    bij_sum_assoc
+    (fun n12_3 => bij_rew (P := fin) (arity_comp_assoc b1 b2 b3 n12_3))
+  ). 
+  + apply functional_extensionality.
     destruct x as [n1 | [n2 | n3]]; reflexivity.
   + apply functional_extensionality.
     destruct x as [[n1' | [n2' | n3']] | s123]; simpl; unfold funcomp; simpl.
@@ -1810,20 +1815,33 @@ Theorem bigraph_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i
     - unfold rearrange; unfold extract1; simpl. destruct get_parent. reflexivity. unfold rearrange. destruct get_parent. reflexivity. unfold extract1. destruct get_parent; reflexivity.
     - unfold rearrange; unfold extract1; simpl. destruct get_parent. reflexivity. unfold rearrange. destruct get_parent. reflexivity. unfold extract1. destruct get_parent; reflexivity. 
   + apply functional_extensionality.
-    destruct x as [i3' | p123]; simpl; unfold funcomp; simpl. 
+    destruct x as [[i3'] | p123]; simpl; unfold funcomp; simpl. 
     - unfold parallel. unfold switch_link. simpl. unfold rearrange.
-     unfold extract1. simpl. destruct get_link.
-     * destruct get_link.
-     ** destruct get_link; reflexivity.
-     ** reflexivity.
-     * reflexivity.
+      unfold extract1, bij_subset_forward, bij_subset_backward, id. simpl.
+      unfold id.
+      assert (
+        forall n:Name, forall Hn: In n i3, forall Hn':In n i3,
+        get_link b3 (inl (exist _ n Hn)) = get_link b3 (inl (exist _ n Hn'))
+      ).
+      * intros. apply f_equal. apply f_equal. apply subset_eq_compat. reflexivity.
+      * rewrite <- (H i3' i0).
+      destruct get_link.
+      ** destruct get_link.
+      *** destruct get_link. apply f_equal. destruct s5. apply subset_eq_compat. reflexivity. reflexivity.
+      *** reflexivity.
+      ** reflexivity.
     - destruct p123 as ([v1 | [v2 | v3]], (i123, Hvi123)); simpl.
-      * unfold bij_rew_forward, eq_rect_r.
+      * unfold parallel. unfold switch_link. simpl. unfold rearrange.
+        unfold extract1, bij_subset_forward, bij_subset_backward, id. simpl.
+        unfold id.
+        unfold bij_rew_forward, eq_rect_r.
         rewrite <- eq_rect_eq.
         rewrite <- eq_rect_eq.
         simpl.
-        destruct get_link; reflexivity.
-      * unfold bij_rew_forward, eq_rect_r.
+        destruct get_link.
+        apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
+        reflexivity.
+      * unfold bij_subset_forward, bij_subset_backward, bij_rew_forward, eq_rect_r.
         rewrite <- eq_rect_eq.
         rewrite <- eq_rect_eq.
         simpl.
@@ -1833,10 +1851,10 @@ Theorem bigraph_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i
         unfold switch_link.
         destruct get_link. 
         destruct get_link. 
+        apply f_equal. destruct s4. apply subset_eq_compat. reflexivity.
         reflexivity.
         reflexivity.
-        reflexivity.
-      * unfold bij_rew_forward, eq_rect_r.
+      * unfold bij_subset_forward, bij_subset_backward, bij_rew_forward, eq_rect_r.
         rewrite <- eq_rect_eq.
         rewrite <- eq_rect_eq.
         unfold rearrange.
@@ -1850,11 +1868,11 @@ Theorem bigraph_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i
         unfold extract1. 
         destruct get_link. 
         destruct get_link. 
+        apply f_equal. destruct s5. apply subset_eq_compat. reflexivity.
         reflexivity.
         reflexivity.
         reflexivity.
-        reflexivity.
-  Qed. *)
+  Qed.
 
 Definition arity_comp_congruence_forward {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 s1 i1) (b4 : bigraph s4 i4 s2 i2)
@@ -2019,6 +2037,13 @@ Theorem arity_comp_juxt_dist : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
   intros.
   destruct n12_34 as [[n1|n2]|[n3|n4]]; reflexivity.
   Qed.
+
+
+Definition reflnames {r} : forall name : Name,
+In name r <-> In name r.
+reflexivity. Defined.
+
+
 
 Theorem bigraph_comp_juxt_dist : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
   (b1 : bigraph s1 i1 r1 o1) 
