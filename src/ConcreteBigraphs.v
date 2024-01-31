@@ -1922,10 +1922,6 @@ Lemma arity_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
       reflexivity.
   Defined.
 
-Definition bij_or_eq (s1:Type) (s2:Type) (H: s1 = s2): bijection s1 s2.
-  rewrite H.
-  exact bij_id. Defined.
-
 Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
   (b1 : bigraph s1 i1 r1 o1) 
   (b2 : bigraph s2 i2 r2 o2) 
@@ -1940,19 +1936,19 @@ Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
   destruct Heqb1b2 as (bij_s12, bij_i12, bij_r12, bij_o12, bij_n12, bij_e12, bij_p12, big_control_eq12, big_parent_eq12, big_link_eq12).
   destruct Heqb3b4 as (bij_s34, bij_i34, bij_r34_s12, bij_o34_i12, bij_n34, bij_e34, bij_p34, big_control_eq34, big_parent_eq34, big_link_eq34).
   apply (BigEq 
-          s3 r1 
-          s4 r2 
-          i3 o1 i4 o2
-          (b1 <<o>> b3)
-          (b2 <<o>> b4)
-          (bij_s34)
-          (bij_i34)
-          (bij_r12)
-          (bij_o12)
-          (bij_n12 <+> bij_n34)
-          (bij_e12 <+> bij_e34)
-          (arity_juxt_congruence b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34) 
-        ).
+    s3 r1 
+    s4 r2 
+    i3 o1 i4 o2
+    (b1 <<o>> b3)
+    (b2 <<o>> b4)
+    (bij_s34)
+    (bij_i34)
+    (bij_r12)
+    (bij_o12)
+    (bij_n12 <+> bij_n34)
+    (bij_e12 <+> bij_e34)
+    (arity_comp_congruence b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34) 
+  ).
   + apply functional_extensionality.
     destruct x as [n2' | n4']; simpl.
     - rewrite <- big_control_eq12.
@@ -1968,17 +1964,63 @@ Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
       destruct get_parent; reflexivity.
     - rewrite <- big_parent_eq34.
       simpl.
-      unfold funcomp.
+      unfold funcomp, parallel.
       simpl.
-      unfold parallel.
-      destruct (get_parent b3 (inl ((bij_n34 ⁻¹) n4'))) eqn:RE.
+      destruct get_parent.
       * reflexivity.
       * rewrite <- big_parent_eq12.
         simpl.
-        unfold funcomp.
-        simpl.
-        unfold parallel. Abort. (*TODO*) 
-        (*Missing a hypothesis that says bij_s12 = bij_r34_s12 in the equalities *)
+        unfold funcomp, parallel.
+        simpl. admit.
+    - rewrite <- big_parent_eq34.
+    simpl.
+    unfold funcomp, parallel.
+    simpl.
+    destruct get_parent.
+    * reflexivity.
+    * rewrite <- big_parent_eq12.
+      simpl.
+      unfold funcomp, parallel.
+      simpl. admit.
+  + apply functional_extensionality.
+    destruct x as [[i4'] | p123]; simpl; unfold funcomp; simpl. 
+    - rewrite <- big_link_eq34. simpl.
+      unfold funcomp, parallel. unfold switch_link. simpl. unfold rearrange.
+      unfold extract1, bij_subset_forward, bij_subset_backward, id. simpl.
+      unfold id.
+      destruct get_link.
+      rewrite <- big_link_eq12. simpl.
+      unfold funcomp, parallel. 
+      unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
+      simpl.
+      unfold rearrange, switch_link, id. 
+      destruct s0.
+      assert (
+        forall n:Name, forall Hn: In n i1, forall Hn':In n i1,
+        get_link b1 (inl (exist _ n Hn)) = get_link b1 (inl (exist _ n Hn'))
+      ).
+      * intros. apply f_equal. apply f_equal. apply subset_eq_compat. reflexivity.
+      * 
+      set (Hn' := match bij_i12 x with
+        | conj _ H0 => H0
+        end
+          (eq_ind_r (fun b : Name => In b i2)
+            (proj1 (bij_o34_i12 x) i5) eq_refl)).
+      rewrite (H x i5 Hn').
+      destruct get_link.
+      apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
+      reflexivity.
+      * reflexivity.
+    - destruct p123 as ([v2 | v3], (i123, Hvi123)); simpl.
+      * unfold bij_list_backward', bij_list_forward, bij_subset_forward, parallel, sum_shuffle, choice, funcomp, id.
+      simpl.
+      unfold bij_join_port_backward, bij_dep_sum_2_forward, bijection_inv, bij_dep_sum_1_forward.
+      simpl.
+      unfold extract1, rearrange, bij_rew_forward, eq_rect_r, funcomp, parallel, id.
+      simpl.
+      unfold extract1. simpl.    
+      Abort. (*TODO*) 
+          (*Missing a hypothesis that says bij_s12 = bij_r34_s12 in the equalities *)
 
 Definition bigraph_packed_composition {s1 i1 r1 o1 s2 i2} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) : bigraph_packed :=
