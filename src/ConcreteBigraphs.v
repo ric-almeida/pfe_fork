@@ -1254,8 +1254,9 @@ Theorem bigraph_juxt_congruence :
       * reflexivity.
   Qed.
 
-Definition bigraph_packed_juxtaposition (b1 b2 : bigraph_packed) := 
-  packing ((big b1) ⊗ (big b2)).
+Definition bigraph_packed_juxtaposition (b1 b2 : bigraph_packed) 
+ {dis_i : Disjoint (i b1) (i b2)} {dis_o : Disjoint (o b1) (o b2)} := 
+  packing (bigraph_tensor_product (dis_i:= dis_i) (dis_o := dis_o) (big b1) (big b2)).
 End DisjointJuxtaposition. 
 
 (** * Disjoint juxtaposition / Parallel product
