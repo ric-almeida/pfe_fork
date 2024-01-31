@@ -1254,8 +1254,8 @@ Theorem bigraph_juxt_congruence :
       * reflexivity.
   Qed.
 
-Definition bigraph_packed_juxtaposition (b1 b2 : bigraph_packed) 
- {dis_i : Disjoint (i b1) (i b2)} {dis_o : Disjoint (o b1) (o b2)} := 
+Definition bigraph_packed_dis_juxtaposition (b1 b2 : bigraph_packed) 
+ (dis_i : Disjoint (i b1) (i b2)) (dis_o : Disjoint (o b1) (o b2)) := 
   packing (bigraph_tensor_product (dis_i:= dis_i) (dis_o := dis_o) (big b1) (big b2)).
 End DisjointJuxtaposition. 
 
@@ -1264,7 +1264,7 @@ End DisjointJuxtaposition.
   of putting two bigraphs with disjoint interfaces "next" to one another. 
   After the definition, we prove associativity and commutativity of dis_juxtaposition *)
 Section Juxtaposition.
-Lemma arity_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o) n, 
+(* Lemma arity_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o) n, 
         Arity (get_control (∅ || b) n) = Arity (get_control b (bij_void_sum_neutral n)).
   Proof.
   intros s i r o b n.
@@ -1551,24 +1551,25 @@ Theorem bigraph_juxt_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4
       instantiate (1 := eq_sym (equal_f (fob_id (type (get_node b3)) (type (get_node b4)) bij_n34) n4')).
       destruct (backward (bij_p34 ((bij_n34 ⁻¹) n4'))).
       destruct get_link; reflexivity.
-  Qed. *)
+  Qed. *) *)
 
 Definition bigraph_packed_juxtaposition (b1 b2 : bigraph_packed) := 
   packing ((big b1) || (big b2)).
 End Juxtaposition.
 
-Add Parametric Morphism : bigraph_packed_juxtaposition with
+Fail Add Parametric Morphism : (*TODO Check w supervisors about that*)
+ (fun b1 b2 => bigraph_packed_dis_juxtaposition b1 b2 dis_i dis_o) with
  signature bigraph_packed_equality ==> 
  bigraph_packed_equality ==> 
  bigraph_packed_equality as juxtaposition_morphism.
-  Proof.
+  (* Proof.
   unfold bigraph_packed_equality, bigraph_packed_juxtaposition.
   destruct x; destruct y; simpl; destruct x0; destruct y0; simpl.
   apply bigraph_juxt_congruence.
   assumption.
-  Qed.
+  Qed. *)
 
-Theorem bigraph_packed_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o), 
+(* Theorem bigraph_packed_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o), 
   bigraph_packed_equality (bigraph_packed_juxtaposition ∅ b) b.
   Proof.
   unfold bigraph_packed_equality, bigraph_packed_juxtaposition.
@@ -1599,7 +1600,7 @@ Lemma bigraph_juxt_right_neutral : forall {s i r o} (b : bigraph s i r o),
   (* rewrite bigraph_packed_juxt_comm.
   rewrite bigraph_packed_juxt_left_neutral.
   reflexivity.
-  Qed. *)
+  Qed. *) *)
 
 Definition bigraph_composition {s1 r1 s2 : FinDecType} {i1 o1 i2 : NoDupList}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) 
