@@ -978,6 +978,7 @@ Qed.
 
 Definition bij_dep_sum_2_forward {A} {P Q : A -> Type} (bij_PQ : forall a, bijection (P a) (Q a)) : (@sigT A P) -> (@sigT A Q).
 Proof.
+Check (bij_PQ a Pa).
 exact (fun aPa => let (a, Pa) := aPa in existT Q a (bij_PQ a Pa)).
 Defined.
 

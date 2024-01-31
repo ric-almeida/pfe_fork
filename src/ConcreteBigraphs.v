@@ -1218,43 +1218,44 @@ Theorem bigraph_juxt_congruence :
       destruct get_link.
       **** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
       **** reflexivity.
+    - rewrite <- big_link_eq12.
+      simpl.
+      unfold sum_shuffle, parallel, choice, funcomp, id.
+      simpl.
+      unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
+      simpl.
+      unfold id.
+      unfold eq_rect_r.
+      unfold parallel, funcomp.
+      simpl.
+      erewrite <- (eq_rect_map (f := inl) (a := n2')).
+      instantiate (1 := eq_sym (equal_f (fob_id (type (get_node b1)) (type (get_node b2)) bij_n12) n2')).
+      destruct (backward (bij_p12 ((bij_n12 ⁻¹) n2'))).
+      destruct get_link.
+      * apply f_equal. destruct s0.
+      apply subset_eq_compat. reflexivity.
+      * reflexivity.
     - rewrite <- big_link_eq34.
       simpl.
       unfold sum_shuffle, parallel, choice, funcomp, id.
       simpl.
+      unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
+      simpl.
+      unfold id.
       unfold eq_rect_r.
       unfold parallel, funcomp.
       simpl.
-      unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
-      simpl.
-      unfold id.
-      erewrite <- (eq_rect_map (f := inl) (a := n2')).
-      instantiate (1 := eq_sym (equal_f (fob_id (type (get_node b1)) (type (get_node b2)) bij_n12) n2')).
-      destruct (backward (bij_p12 ((bij_n12 ⁻¹) n2'))).
-      rewrite <- big_link_eq12.
-      simpl.
-      unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
-      simpl.
-      unfold id.
-      set (n1' := (bij_n12 ⁻¹) n2').
-      assert (
-        forall n:type (get_node b1), forall Hn : Port (get_control b1), forall Hn': Port (get_control b1),
-        get_link b1 (inr (existT _ n Hn)) = get_link b1 (inr (existT _ n Hn'))
-      ).
-      *** intros. apply f_equal. apply f_equal. apply f_equal. apply H. 
-      *** set (Hn := (exist (fun p : nat => p < Arity (get_control b1 n1'))
-      x l)).
-      unfold eq_rect_r.
-      simpl.
-      set (Hn := fin (Arity (get_control b1 n))).
-      set (Hn := (exist (fun p : nat => p < Arity (get_control b1 n1')) x l)).
-      rewrite <- (H n1').
+      erewrite <- (eq_rect_map (f := inr) (a := n4')).
+      instantiate (1 := eq_sym (equal_f (fob_id (type (get_node b3)) (type (get_node b4)) bij_n34) n4')).
+      destruct (backward (bij_p34 ((bij_n34 ⁻¹) n4'))).
       destruct get_link.
-       reflexivity.
+      * apply f_equal. destruct s0.
+      apply subset_eq_compat. reflexivity.
+      * reflexivity.
   Qed.
 
 Definition bigraph_packed_juxtaposition (b1 b2 : bigraph_packed) := 
-  packing ((big b1) || (big b2)).
+  packing ((big b1) ⊗ (big b2)).
 End DisjointJuxtaposition. 
 
 (** * Disjoint juxtaposition / Parallel product
