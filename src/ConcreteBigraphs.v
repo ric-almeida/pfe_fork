@@ -41,7 +41,7 @@ Record bigraph  (site: FinDecType)
     edge : FinDecType ;
     control : (type node) -> Kappa ;
     parent : (type node) + (type site) -> (type node) + (type root) ; 
-    link : (NameSub innername) + Port control -> (NameSub outername) + (type edge); 
+    link : (NameSub innername) + (Port control) -> (NameSub outername) + (type edge); 
     ap : FiniteParent parent ;
   }.
 End IntroBigraphs.
@@ -210,8 +210,7 @@ Lemma bigraph_equality_trans
     rewrite <- bij_fun_compose_compose.
     simpl.
     reflexivity.
-  + 
-    rewrite <- (@bij_subset_compose_compose_id Name (fun name => In name i1) (fun name => In name i2) (fun name => In name i3) bij_i12 bij_i23). 
+  + rewrite <- (@bij_subset_compose_compose_id Name (fun name => In name i1) (fun name => In name i2) (fun name => In name i3) bij_i12 bij_i23). 
     rewrite <- (@bij_subset_compose_compose_id Name (fun name => In name o1) (fun name => In name o2) (fun name => In name o3) bij_o12 bij_o23). 
     rewrite <- big_link_eq23.
     rewrite <- big_link_eq12.
@@ -226,7 +225,8 @@ Lemma bigraph_equality_trans
 Lemma bigraph_equality_dec {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}  
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   {bigraph_equality b1 b2} + {~ bigraph_equality b1 b2}.
-  Proof. (* Need to have access to a more transparent definition of bigraph_equality *)
+  Proof. 
+    (* Need to have access to a more transparent definition of bigraph_equality *)
   Abort.
 
 (** ** On the packed type 
@@ -309,7 +309,7 @@ Definition bigraph_tensor_product {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDu
   Proof. 
   apply (Big 
     (findec_sum s1 s2)
-    (app_merge_NoDupList i1 i2) (*TODO: prouver que = i1 ++ i2*)
+    (app_merge_NoDupList i1 i2) (*app_merge'_id says it's eq to i1 ++ i2*)
     (findec_sum r1 r2)
     (app_merge_NoDupList o1 o2)
     (findec_sum (get_node b1) (get_node b2))
@@ -384,7 +384,7 @@ Notation "∅" := bigraph_empty.
 (** * Disjoint juxtaposition/ Tensor Product
   This section deals with the operation of disjoint juxtaposition. This is the act
   of putting two bigraphs with disjoint interfaces "next" to one another. 
-  After the definition, we prove existence of a unit, commutativity and associativity. *)
+  After the definition, we prove existence of a unit, commutativity, associativity and congruence. *)
 Section DisjointJuxtaposition.
 Lemma arity_juxt_left_neutral : forall {s i r o} (b : bigraph s i r o) n, 
   Arity (get_control (bigraph_tensor_product (dis_i := void_disjoint_all_list_left i) (dis_o := void_disjoint_all_list_left o) ∅ b) n) = 
@@ -1226,7 +1226,7 @@ Theorem bigraph_juxt_congruence :
       simpl.
       unfold id.
       unfold eq_rect_r.
-      unfold parallel, funcomp.
+      unfold parallel, funcomp.     
       simpl.
       erewrite <- (eq_rect_map (f := inl) (a := n2')).
       instantiate (1 := eq_sym (equal_f (fob_id (type (get_node b1)) (type (get_node b2)) bij_n12) n2')).
@@ -1558,7 +1558,7 @@ Definition bigraph_packed_juxtaposition (b1 b2 : bigraph_packed) :=
 End Juxtaposition.
 
 Fail Add Parametric Morphism : (*TODO Check w supervisors about that*)
- (fun b1 b2 => bigraph_packed_dis_juxtaposition b1 b2 dis_i dis_o) with
+ bigraph_packed_dis_juxtaposition with
  signature bigraph_packed_equality ==> 
  bigraph_packed_equality ==> 
  bigraph_packed_equality as juxtaposition_morphism.
@@ -1606,9 +1606,6 @@ Definition bigraph_composition {s1 r1 s2 : FinDecType} {i1 o1 i2 : NoDupList}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) 
     : bigraph s2 i2 r1 o1.
   Proof. 
-  (* l :  i2 + (p1 + p2) -> o1 + (e1 + e2) *)
-  (* l1 : i1 + p1 -> o1 + e1 *)
-  (* l2 : i2 + p2 -> i1 + e2, o2 <=> i1 *)
   apply (Big s2 i2 r1 o1
         (findec_sum (get_node b1) (get_node b2))
         (findec_sum (get_edge b1) (get_edge b2))
@@ -1620,12 +1617,16 @@ Definition bigraph_composition {s1 r1 s2 : FinDecType} {i1 o1 i2 : NoDupList}
   + exact (ap _ _ _ _ b1).
   + exact (ap _ _ _ _ b2).
   Defined.
+  (* l :  i2 + (p1 + p2) -> o1 + (e1 + e2) *)
+  (* l1 : i1 + p1 -> o1 + e1 *)
+  (* l2 : i2 + p2 -> i1 + e2, o2 <=> i1 *)
   
 Notation "b1 '<<o>>' b2" := (bigraph_composition b1 b2) (at level 50, left associativity).
 (** * Composition
   This section deals with the operation of composition. This is the act
-  of putting a bigraph inside another one. To do b1 o b2, the outerface 
-  of b2 needs to be the innerface of b1. WIP: or just a bijection? *)
+  of putting a bigraph inside another one. To do b1 <<o>> b2, the outerface 
+  of b2 needs to be the innerface of b1. TODO/note: or just a bijection? 
+  We prove left and right neutral for identity bigraph and associativity *)
 Section CompositionBigraphs.
 Definition bigraph_identity {s i}: bigraph s i s i.
   Proof.
@@ -1963,25 +1964,20 @@ Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
       simpl.
       destruct get_parent; reflexivity.
     - rewrite <- big_parent_eq34.
+      rewrite <- big_parent_eq12.
       simpl.
       unfold funcomp, parallel.
       simpl.
       destruct get_parent.
       * reflexivity.
-      * rewrite <- big_parent_eq12.
-        simpl.
-        unfold funcomp, parallel.
-        simpl. admit.
+      * simpl. admit.
     - rewrite <- big_parent_eq34.
-    simpl.
-    unfold funcomp, parallel.
-    simpl.
-    destruct get_parent.
-    * reflexivity.
-    * rewrite <- big_parent_eq12.
+      rewrite <- big_parent_eq12.
       simpl.
       unfold funcomp, parallel.
-      simpl. admit.
+      destruct get_parent.
+      * reflexivity.
+      * admit.
   + apply functional_extensionality.
     destruct x as [[i4'] | p123]; simpl; unfold funcomp; simpl. 
     - rewrite <- big_link_eq34. simpl.
@@ -2014,20 +2010,58 @@ Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
     - destruct p123 as ([v2 | v3], (i123, Hvi123)); simpl.
       * unfold bij_list_backward', bij_list_forward, bij_subset_forward, parallel, sum_shuffle, choice, funcomp, id.
       simpl.
+      rewrite <- big_link_eq12. simpl.
+      unfold funcomp, parallel. 
       unfold bij_join_port_backward, bij_dep_sum_2_forward, bijection_inv, bij_dep_sum_1_forward.
       simpl.
       unfold extract1, rearrange, bij_rew_forward, eq_rect_r, funcomp, parallel, id.
+      simpl. (*pourquoi j'ai un get_link b3?*)
+      unfold extract1.
+      erewrite <- (eq_rect_map (f := inl) (a := v2)).
+      instantiate (1 := eq_sym (equal_f (fob_id (type (get_node b1)) (type (get_node b2)) bij_n12) v2)).
+      destruct (backward (bij_p12 ((bij_n12 ⁻¹) v2))).
+      destruct get_link.
+      ** apply f_equal. destruct s0.
+      apply subset_eq_compat. reflexivity.
+      ** reflexivity.
+      * unfold extract1, rearrange, bij_rew_forward, eq_rect_r, funcomp, parallel, id.
       simpl.
-      unfold extract1. simpl.    
-      Abort. (*TODO*) 
-          (*Missing a hypothesis that says bij_s12 = bij_r34_s12 in the equalities *)
+      rewrite <- big_link_eq34. simpl.
+      unfold funcomp, parallel. 
+      unfold extract1, bij_subset_forward, bij_subset_backward, id. simpl.
+      unfold id.
+      erewrite <- (eq_rect_map (f := inr) (a := v3)).
+      instantiate (1 := eq_sym (equal_f (fob_id (type (get_node b3)) (type (get_node b4)) bij_n34) v3)).
+      destruct (backward (bij_p34 ((bij_n34 ⁻¹) v3))).
+      destruct get_link.
+      ** rewrite <- big_link_eq12. simpl.
+      unfold funcomp, parallel. 
+      unfold extract1, bij_subset_forward, bij_subset_backward, id. simpl.
+      unfold id.
+      destruct s0.
+      assert (
+        forall n:Name, forall Hn: In n i1, forall Hn':In n i1,
+        get_link b1 (inl (exist _ n Hn)) = get_link b1 (inl (exist _ n Hn'))
+      ).
+      *** intros. apply f_equal. apply f_equal. apply subset_eq_compat. reflexivity.
+      *** set (Hn := match bij_i12 x0 with
+      | conj _ H0 => H0
+      end (eq_ind_r (fun b : Name => In b i2) (proj1 (bij_o34_i12 x0) i0) eq_refl)).
+      rewrite (H x0 i0 Hn).
+      destruct get_link. 
+      apply f_equal. destruct s0.
+      apply subset_eq_compat. reflexivity.
+      reflexivity.
+      ** reflexivity.
+  Abort. 
+  (*Missing a hypothesis that says bij_s12 = bij_r34_s12 in the equalities *)
 
 Definition bigraph_packed_composition {s1 i1 r1 o1 s2 i2} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) : bigraph_packed :=
   packing ((b1) <<o>> (b2)).
 
 Definition bigraph_packed_composition' (*{s1 i1 r1 o1 s2 i2 : FinDecType} *)
-  (b1 : bigraph_packed) (b2 : bigraph_packed) : bigraph_packed. Abort.
+  (b1 : bigraph_packed) (b2 : bigraph_packed) : bigraph_packed. Admitted.
 
 Theorem bigraph_packed_comp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
   bigraph_packed_equality (bigraph_packed_composition bigraph_identity b) b.
@@ -2037,7 +2071,7 @@ Theorem bigraph_packed_comp_left_neutral : forall {s i r o} (b : bigraph s i r o
   apply bigraph_comp_left_neutral.
   Qed. 
 
-(* Theorem bigraph_packed_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) (b3 : bigraph s3 i3 s2 i2),
+Theorem bigraph_packed_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) (b3 : bigraph s3 i3 s2 i2),
   bigraph_packed_equality 
     (bigraph_packed_composition (bigraph_packed_composition b1 b2) b3) 
     (bigraph_packed_composition b1 (bigraph_packed_composition b2 b3)).
@@ -2045,7 +2079,7 @@ Theorem bigraph_packed_comp_left_neutral : forall {s i r o} (b : bigraph s i r o
   unfold bigraph_packed_equality, bigraph_packed_juxtaposition.
   intros.
   apply bigraph_comp_assoc.
-  Qed.  *)
+  Qed.
 
 Lemma bigraph_packed_comp_right_neutral : forall {s i r o} (b : bigraph s i r o), bigraph_packed_equality (bigraph_packed_composition b bigraph_identity) b.
   Proof.
@@ -2055,7 +2089,7 @@ Lemma bigraph_packed_comp_right_neutral : forall {s i r o} (b : bigraph s i r o)
   Qed. 
 
 End CompositionBigraphs.
-(* Add Parametric Morphism : bigraph_packed_composition with
+Fail Add Parametric Morphism : bigraph_packed_composition with
  signature bigraph_packed_equality ==> 
  bigraph_packed_equality ==> 
  bigraph_packed_equality as composition_morphism.
@@ -2064,7 +2098,7 @@ End CompositionBigraphs.
   destruct x; destruct y; simpl; destruct x0; destruct y0; simpl.
   apply bigraph_comp_congruence.
   assumption.
-  Qed.  *)
+  Qed.
 
 Theorem arity_comp_juxt_dist : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
   (b1 : bigraph s1 i1 r1 o1) 
