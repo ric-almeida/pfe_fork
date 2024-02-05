@@ -88,6 +88,7 @@ Record bigraph_equality {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
     bij_n : bijection (type (get_node b1)) (type (get_node b2)) ;
     bij_e : bijection (type (get_edge b1)) (type (get_edge b2)) ;
     bij_p : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n n1)))) ;
+    (* TODO Could simply be Arity (get_control b1 n1) = Arity (get_control b2 (bij_n n1))*)
     big_control_eq : (bij_n -->> (@bij_id Kappa)) (get_control b1) = get_control b2 ;
     big_parent_eq  : ((bij_n <+> bij_s) -->> (bij_n <+> bij_r)) (get_parent b1) = get_parent b2 ;
     big_link_eq    : ((<{bij_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{bij_id| bij_o}> <+> bij_e)) (get_link b1) = get_link b2
