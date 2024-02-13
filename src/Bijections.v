@@ -375,7 +375,7 @@ Defined.
 Notation "f <+> g" := (bij_sum_compose f g) (at level 70).
 
 Theorem bij_inv_sum :forall {A B C D : Type} (bij_AB : bijection A B) (bij_CD : bijection C D),
-                      bijection_inv (bij_AB <+> bij_CD) = ((bijection_inv bij_AB) <+> (bijection_inv bij_CD)).
+  bijection_inv (bij_AB <+> bij_CD) = ((bijection_inv bij_AB) <+> (bijection_inv bij_CD)).
 Proof.
 intros A B C D bij_AB bij_CD.
 apply bij_eq.
@@ -488,7 +488,7 @@ Defined.
 Notation "f -->> g" := (bij_fun_compose f g) (at level 75).
 
 Theorem bij_inv_fun :forall {A B C D : Type} (bij_AB : bijection A B) (bij_CD : bijection C D),
-                      bijection_inv (bij_AB -->> bij_CD) = ((bijection_inv bij_AB) -->> (bijection_inv bij_CD)).
+  bijection_inv (bij_AB -->> bij_CD) = ((bijection_inv bij_AB) -->> (bijection_inv bij_CD)).
 Proof.
 intros A B C D bij_AB bij_CD.
 apply bij_eq.
@@ -978,7 +978,6 @@ Qed.
 
 Definition bij_dep_sum_2_forward {A} {P Q : A -> Type} (bij_PQ : forall a, bijection (P a) (Q a)) : (@sigT A P) -> (@sigT A Q).
 Proof.
-Check (bij_PQ a Pa).
 exact (fun aPa => let (a, Pa) := aPa in existT Q a (bij_PQ a Pa)).
 Defined.
 

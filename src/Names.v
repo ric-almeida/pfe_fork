@@ -604,7 +604,9 @@ Section DisjointLists.
 Definition Disjoint (l1:NoDupList) (l2:NoDupList) : Prop :=
 forall name, In name l1 -> ~ In name l2.
 
-Definition rev_disjoint {l1:NoDupList} {l2:NoDupList} (d: Disjoint l1 l2) : Disjoint l2 l1.
+Notation "l1 # l2" := (Disjoint l1 l2) (at level 50, left associativity).
+
+Definition rev_disjoint {l1:NoDupList} {l2:NoDupList} (d: Disjoint l1 l2) : l2 # l1.
 Proof.
 unfold Disjoint in *.
 intros.
