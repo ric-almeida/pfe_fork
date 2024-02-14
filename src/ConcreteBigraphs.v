@@ -49,15 +49,15 @@ End IntroBigraphs.
 (** * Getters
   This section is just getters to lightenn some notations *)
 Section GettersBigraphs.
-Definition get_node {s r : FinDecType} {i o : NoDupList} (bg : bigraph s i r o) : FinDecType := 
+Definition get_node {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : FinDecType := 
   node s i r o bg.
-Definition get_edge {s r : FinDecType} {i o : NoDupList} (bg : bigraph s i r o) : FinDecType := 
+Definition get_edge {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : FinDecType := 
   edge s i r o bg.
-Definition get_control {s r : FinDecType} {i o : NoDupList} (bg : bigraph s i r o) : type (get_node bg) -> Kappa :=
+Definition get_control {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : type (get_node bg) -> Kappa :=
   @control s i r o bg.
-Definition get_parent {s r : FinDecType} {i o : NoDupList} (bg : bigraph s i r o) : (type (get_node bg)) + (type s) -> (type (get_node bg)) + (type r) :=
+Definition get_parent {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : (type (get_node bg)) + (fin s) -> (type (get_node bg)) + (fin r) :=
   @parent s i r o bg.
-Definition get_link {s r : FinDecType} {i o : NoDupList} (bg : bigraph s i r o) : {inner:Name | In inner i} + Port (get_control bg) -> {outer:Name | In outer o} + type (get_edge bg) :=
+Definition get_link {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : {inner:Name | In inner i} + Port (get_control bg) -> {outer:Name | In outer o} + type (get_edge bg) :=
   @link s i r o bg.
 End GettersBigraphs.
 
@@ -94,7 +94,7 @@ Record bigraph_equality {s1 r1 s2 r2 : FinDecType} {i1 o1 i2 o2 : NoDupList}
     big_link_eq    : ((<{bij_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{bij_id| bij_o}> <+> bij_e)) (get_link b1) = get_link b2
   }.
 
-Lemma bigraph_equality_refl {s r : FinDecType} {i o : NoDupList} (b : bigraph s i r o) :
+Lemma bigraph_equality_refl {s r : nat} {i o : NoDupList} (b : bigraph s i r o) :
   bigraph_equality b b.
   Proof.
   eapply (BigEq _ _ _ _ _ _ _ _ _ _ bij_id _ bij_id _ bij_id bij_id (fun _ => bij_id)).
