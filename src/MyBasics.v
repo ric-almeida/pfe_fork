@@ -48,6 +48,24 @@ Lemma eq_sigT_intro : forall {A} {P : A -> Type} {x y : A} {Px : P x} (Hxy : x =
   reflexivity.
   Qed.
 
+Lemma eq_rect_exist : forall {A B} {Q : A -> B -> Prop} {a a' : A} (Haa' : a = a') (b : B) (Hb : Q a b),
+  @eq_rect A a (fun a => { b : B | Q a b}) (exist (Q a) b Hb) a' Haa' = exist (Q a') b (@eq_rect A a (fun a => Q a b) Hb a' Haa').
+Proof.
+intros A B Q a a' Haa' b Hb.
+destruct Haa'.
+simpl.
+reflexivity.
+Qed.
+
+Lemma eq_rect_existT : forall {A B} {Q : A -> B -> Type} {a a' : A} (Haa' : a = a') (b : B) (Hb : Q a b),
+                        @eq_rect A a (fun a => { b : B & Q a b}) (existT (Q a) b Hb) a' Haa' = existT (Q a') b (@eq_rect A a (fun a => Q a b) Hb a' Haa').
+Proof.
+intros A B Q a a' Haa' b Hb.
+destruct Haa'.
+simpl.
+reflexivity.
+Qed.
+
 Lemma eq_rect_pi : forall {A} {P : A -> Type} {x y : A} {Px : P x} {H H' : x = y},
   eq_rect x P Px y H = eq_rect x P Px y H'.
   Proof.
@@ -1000,6 +1018,21 @@ Theorem finite_parent_tensor : forall {N1 I1 O1 N2 I2 O2 : Type} (p1 : N1+I1 -> 
     apply Hp2.
   Qed.
 
+Theorem finite_parent_inout : forall { N I O I' O' } (p : N+I -> N+O) (fi : I' -> I) (fo : O -> O'),
+  FiniteParent p -> FiniteParent ((id ||| fo) <o> p <o> (id ||| fi)).
+Proof.
+intros N I O I' O' p fi fo H n.
+induction (H n) as (n', _, Hind).
+apply Acc_intro.
+intros n'' Hn''.
+unfold parallel, id, funcomp in Hn''.
+generalize (Hind n''); clear Hind; intro Hind.
+destruct (p (inl n')).
++ apply Hind.
+  injection Hn''.
+  congruence.
++ discriminate.
+Qed.
 
 (* Theorem acyclic_sequence : forall {P Q I M O : Type} (pp : P+I -> P+M) (pq : Q+M -> Q+O),
   (forall p, ~closure pp (inl p) (inl p)) -> (forall q, ~closure pq (inl q) (inl q)) -> forall p_q, ~closure (pp >> pq) (inl p_q) (inl p_q).
