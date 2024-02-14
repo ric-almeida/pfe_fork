@@ -31,16 +31,16 @@ Include n.
 (** * Definition of a bigraph
   This section defines the Type bigraph *)
 Section IntroBigraphs.
-Record bigraph  (site: FinDecType) 
+Record bigraph  (site: nat) 
                 (innername: NoDupList) 
-                (root: FinDecType) 
+                (root: nat) 
                 (outername: NoDupList) : Type := 
   Big  
   { 
     node : FinDecType ;
     edge : FinDecType ;
     control : (type node) -> Kappa ;
-    parent : (type node) + (type site) -> (type node) + (type root) ; 
+    parent : (type node) + (fin site) -> (type node) + (fin root) ; 
     link : (NameSub innername) + (Port control) -> (NameSub outername) + (type edge); 
     ap : FiniteParent parent ;
   }.
