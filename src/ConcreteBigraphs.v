@@ -1678,7 +1678,7 @@ Lemma bigraph_juxt_right_neutral : forall {s i r o} (b : bigraph s i r o),
   reflexivity.
   Qed. *) *)
 
-Definition bigraph_composition {s1 r1 s2 : FinDecType} {i1 o1 i2 : NoDupList}
+Definition bigraph_composition {s1 r1 s2 : nat} {i1 o1 i2 : NoDupList}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) 
     : bigraph s2 i2 r1 o1.
   Proof. 
@@ -1735,9 +1735,9 @@ Theorem bigraph_comp_left_neutral : forall {s i r o} (b : bigraph s i r o),
   intros s i r o b.
   apply (
     BigEq _ _ _ _ _ _ _ _ (bigraph_identity <<o>> b) b
-      bij_id (*s*)
+      eq_refl (*s*)
       (fun (name : Name) => reflexivity (In name i)) (*i*)
-      bij_id (*r*)
+      eq_refl (*r*)
       (fun (name : Name) => reflexivity (In name o)) (*o*)
       bij_void_sum_neutral (*n*)
       bij_void_sum_neutral (*e*)
@@ -1800,9 +1800,9 @@ Theorem bigraph_comp_right_neutral : forall {s i r o} (b : bigraph s i r o),
   intros s i r o b.
   apply 
     (BigEq _ _ _ _ _ _ _ _ (b <<o>> bigraph_identity) b
-      bij_id
+      eq_refl
       (fun (name : Name) => reflexivity (In name i))
-      bij_id
+      eq_refl
       (fun (name : Name) => reflexivity (In name o))
       bij_void_sum_neutral_r
       bij_void_sum_neutral_r 
@@ -1864,9 +1864,9 @@ Theorem bigraph_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i
   Proof.
   intros.
   apply (BigEq _ _ _ _ _ _ _ _ ((b1 <<o>> b2) <<o>> b3) (b1 <<o>> (b2 <<o>> b3))
-    bij_id
+    eq_refl
     (fun (name : Name) => iff_refl (In name i3))
-    bij_id
+    eq_refl
     (fun (name : Name) => iff_refl (In name o1))
     bij_sum_assoc
     bij_sum_assoc
@@ -2030,14 +2030,20 @@ Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
       simpl.
       destruct get_parent.
       * reflexivity.
-      * simpl. admit.
+      * unfold bij_rew_forward.
+        erewrite eq_rect_compose.
+        instantiate (1 := eq_refl). simpl. 
+        destruct get_parent; reflexivity.
     - rewrite <- big_parent_eq34.
       rewrite <- big_parent_eq12.
       simpl.
       unfold funcomp, parallel.
       destruct get_parent.
       * reflexivity.
-      * admit.
+      * unfold bij_rew_forward.
+        erewrite eq_rect_compose.
+        instantiate (1 := eq_refl). simpl. 
+        destruct get_parent; reflexivity.
   + apply functional_extensionality.
     destruct x as [[i4'] | p123]; simpl; unfold funcomp; simpl. 
     - rewrite <- big_link_eq34. simpl.
@@ -2058,9 +2064,6 @@ Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
             (proj1 (bij_o34_i12 x) i5) eq_refl)).
       rewrite (innername_proof_irrelevant b1 x i5 Hn').
       destruct get_link; try reflexivity.
-      apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-      reflexivity.
-      * reflexivity.
     - destruct p123 as ([v2 | v3], (i123, Hvi123)); simpl.
       * unfold bij_list_backward', bij_list_forward, bij_subset_forward, parallel, sum_shuffle, choice, funcomp, id.
       simpl.
@@ -2075,9 +2078,6 @@ Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
       instantiate (1 := eq_sym (equal_f (fob_id (type (get_node b1)) (type (get_node b2)) bij_n12) v2)).
       destruct (backward (bij_p12 ((bij_n12 ⁻¹) v2))).
       destruct get_link; try reflexivity.
-      ** apply f_equal. destruct s0.
-      apply subset_eq_compat. reflexivity.
-      ** reflexivity.
       * unfold extract1, rearrange, bij_rew_forward, eq_rect_r, funcomp, parallel, id.
       simpl.
       rewrite <- big_link_eq34. simpl.
@@ -2098,11 +2098,7 @@ Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
         end (eq_ind_r (fun b : Name => In b i2) (proj1 (bij_o34_i12 x0) i0) eq_refl)).
       rewrite (innername_proof_irrelevant b1 x0 i0 Hn).
       destruct get_link; try reflexivity. 
-      apply f_equal. destruct s0.
-      apply subset_eq_compat. reflexivity.
-      reflexivity.
-      ** reflexivity.
-  Abort. 
+  Qed. 
   (*Missing a hypothesis that says bij_s12 = bij_r34_s12 in the equalities *)
 
 Definition bigraph_packed_composition {s1 i1 r1 o1 s2 i2} 
