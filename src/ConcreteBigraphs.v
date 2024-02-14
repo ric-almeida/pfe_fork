@@ -2464,7 +2464,7 @@ Definition rm_void_link {i1 o1 node0 edge0: FinDecType} {control0 : (type node0)
     | inr e => inr e 
   end end).   
 
-Lemma acyclic_rm_void_parent {node s r: FinDecType} {n:type node}
+(* Lemma acyclic_rm_void_parent {node s r: FinDecType} {n:type node}
   {p: type node + type (findec_sum voidfd s) ->
   type node + type (findec_sum voidfd r)} :
   Acc (fun n' n : type node => p (inl n) = inl n') n
@@ -2480,7 +2480,7 @@ Lemma acyclic_rm_void_parent {node s r: FinDecType} {n:type node}
     destruct H as [H_acc].
     - admit.
     - admit.
-  Admitted.
+  Admitted. *)
 
 (* Definition rm_void_finDecSum {s1 i1 o1 r1} 
   (b : bigraph (findec_sum voidfd s1) (app_NoDupList i1 EmptyNDL) (findec_sum voidfd r1) (app_NoDupList i1 o1)) : 
@@ -2514,66 +2514,19 @@ Definition nest' {I m X n Y} (* TODO check definition*)
   (rm_void_finDecSum ((@bigraph_identity voidfd X) || G)) <<o>> F. *)
 
 Example I : NoDupList. Admitted.
-Example m : FinDecType. Admitted.
+Example m : nat. Admitted.
 Example X : NoDupList. Admitted.
-Example n : FinDecType. Admitted.
+Example n : nat. Admitted.
 Example Y : NoDupList. Admitted.
-Example F : bigraph voidfd I m X. Admitted.
+Example F : bigraph 0 I m X. Admitted.
 Example G : bigraph m EmptyNDL n Y. Admitted.
 
 
 Example b1 {s1 r1 o1}: bigraph s1 EmptyNDL r1 o1. Admitted.
-Example b2 {s1 i2 i1}: bigraph voidfd i2 s1 i1. Admitted.
+Example b2 {s1 i2 i1}: bigraph 0 i2 s1 i1. Admitted.
 
 
 End NestingBig.
-
-
-
-Definition symmetry_arrow (I J:Type) : bijection (I + J) (J + I).
-  Proof. 
-  apply (bij_sum_comm). 
-  Defined.
-
-Lemma symmetry_S1 {I}: 
-  forall i:I, symmetry_arrow I void (inl i) = inr i.
-  Proof.
-  intros i.
-  auto.
-  Qed.
-  
-Lemma symmetry_S2 {I J}: 
-  forall ij, 
-    ((symmetry_arrow J I) <o> (symmetry_arrow I J)) ij = ij.
-  Proof.
-  intros [i|j];
-  unfold funcomp; auto.
-  Qed.
-
-Lemma symmetry_S3 {I0 J0 I1 J1}
-  {f : bijection I0 I1}
-  {g : bijection J0 J1}: 
-  symmetry_arrow I1 J1 <o> (f <+> g) = 
-    (g <+> f) <o> symmetry_arrow I0 J0.
-  Proof.
-  simpl. unfold funcomp.
-  apply functional_extensionality.
-  intros [xi0 | xj0]; unfold parallel; reflexivity.
-  Qed. 
-  
-Lemma symmetry_S4 {I J K} :
-  forall x,
-  (symmetry_arrow (I+J) K) x =
-    ((bij_sum_assoc) <O> 
-    ((symmetry_arrow I K) <+> (@bij_id J)) <O> 
-    ((bijection_inv bij_sum_assoc) <O> 
-    ((@bij_id I) <+> (symmetry_arrow J K)) 
-    <O> bij_sum_assoc)) x. 
-  Proof.
-  intros [[i | j] | k];
-  simpl; unfold parallel, funcomp; reflexivity.
-  Qed.
-
 
 End Bigraphs.
 
