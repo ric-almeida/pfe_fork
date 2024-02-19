@@ -1989,39 +1989,61 @@ Theorem bigraph_comp_assoc : forall {s1 i1o2 r1 o1 s2 i2o3 o2i1 s3 i3 o3i2}
         apply f_equal. destruct s5. apply subset_eq_compat. reflexivity.
   Qed.
 
-Definition arity_comp_congruence_forward {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 s1 i1) (b4 : bigraph s4 i4 s2 i2)
+Definition arity_comp_congruence_forward 
+  {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
+  {p13 : permutation (ndlist o3i1) (ndlist i1o3)}
+  {p24 : permutation (ndlist o4i2) (ndlist i2o4)}
+  (b1 : bigraph s1 i1o3 r1 o1) 
+  (b2 : bigraph s2 i2o4 r2 o2) 
+  (b3 : bigraph s3 i3 s1 o3i1) 
+  (b4 : bigraph s4 i4 s2 o4i2)
   (bij_n12 : bijection (type (get_node b1)) (type (get_node b2))) (bij_n34 : bijection (type (get_node b3)) (type (get_node b4)))
   (bij_p12 : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n12 n1)))))
   (bij_p34 : forall (n3 : type (get_node b3)), bijection (fin (Arity (get_control b3 n3))) (fin (Arity (get_control b4 (bij_n34 n3)))))
   (n13 : type (get_node (b1 <<o>> b3))) :
-  (fin (Arity (get_control (b1 <<o>> b3) n13))) -> (fin (Arity (get_control (b2 <<o>> b4) ((bij_n12 <+> bij_n34) n13)))).
+  (fin (Arity (get_control (bigraph_composition (p:=p13) b1 b3) n13))) -> 
+  (fin (Arity (get_control (bigraph_composition (p:=p24) b2 b4) ((bij_n12 <+> bij_n34) n13)))).
   Proof.
   destruct n13 as [n1 | n3].
   + exact (bij_p12 n1).
   + exact (bij_p34 n3).
   Defined.
 
-Definition arity_comp_congruence_backward {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 s1 i1) (b4 : bigraph s4 i4 s2 i2)
+Definition arity_comp_congruence_backward
+  {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
+  {p13 : permutation (ndlist o3i1) (ndlist i1o3)}
+  {p24 : permutation (ndlist o4i2) (ndlist i2o4)}
+  (b1 : bigraph s1 i1o3 r1 o1) 
+  (b2 : bigraph s2 i2o4 r2 o2) 
+  (b3 : bigraph s3 i3 s1 o3i1) 
+  (b4 : bigraph s4 i4 s2 o4i2)
   (bij_n12 : bijection (type (get_node b1)) (type (get_node b2))) (bij_n34 : bijection (type (get_node b3)) (type (get_node b4)))
   (bij_p12 : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n12 n1)))))
   (bij_p34 : forall (n3 : type (get_node b3)), bijection (fin (Arity (get_control b3 n3))) (fin (Arity (get_control b4 (bij_n34 n3)))))
   (n13 : type (get_node (b1 <<o>> b3))) :
-  (fin (Arity (get_control (b2 <<o>> b4) ((bij_n12 <+> bij_n34) n13)))) -> (fin (Arity (get_control (b1 <<o>> b3) n13))).
+  (fin (Arity (get_control (bigraph_composition (p:=p24) b2 b4) ((bij_n12 <+> bij_n34) n13)))) -> 
+  (fin (Arity (get_control (bigraph_composition (p:=p13) b1 b3) n13))).
   Proof.
   destruct n13 as [n1 | n3].
   + exact (backward (bij_p12 n1)).
   + exact (backward (bij_p34 n3)).
   Defined.
 
-Lemma arity_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 s1 i1) (b4 : bigraph s4 i4 s2 i2)
+Lemma arity_comp_congruence : forall 
+  {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
+  {p13 : permutation (ndlist o3i1) (ndlist i1o3)}
+  {p24 : permutation (ndlist o4i2) (ndlist i2o4)}
+  (b1 : bigraph s1 i1o3 r1 o1) 
+  (b2 : bigraph s2 i2o4 r2 o2) 
+  (b3 : bigraph s3 i3 s1 o3i1) 
+  (b4 : bigraph s4 i4 s2 o4i2)
   (bij_n12 : bijection (type (get_node b1)) (type (get_node b2))) (bij_n34 : bijection (type (get_node b3)) (type (get_node b4)))
   (bij_p12 : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n12 n1)))))
   (bij_p34 : forall (n3 : type (get_node b3)), bijection (fin (Arity (get_control b3 n3))) (fin (Arity (get_control b4 (bij_n34 n3)))))
   (n13 : type (get_node (b1 <<o>> b3))),
-  bijection (fin (Arity (get_control (b1 <<o>> b3) n13))) (fin (Arity (get_control (b2 <<o>> b4) ((bij_n12 <+> bij_n34) n13)))).
+  bijection 
+  (fin (Arity (get_control (bigraph_composition (p:=p13) b1 b3) n13))) 
+  (fin (Arity (get_control (bigraph_composition (p:=p24) b2 b4) ((bij_n12 <+> bij_n34) n13)))).
   Proof.
   intros until n13.
   apply (mkBijection _ _ (arity_comp_congruence_forward b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34 n13) (arity_comp_congruence_backward b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34 n13)).
@@ -2037,14 +2059,17 @@ Lemma arity_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
       reflexivity.
   Defined.
 
-Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
-  (b1 : bigraph s1 i1 r1 o1) 
-  (b2 : bigraph s2 i2 r2 o2) 
-  (b3 : bigraph s3 i3 s1 i1) 
-  (b4 : bigraph s4 i4 s2 i2)
+Theorem bigraph_comp_congruence : forall 
+  {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
+  {p13 : permutation (ndlist o3i1) (ndlist i1o3)}
+  {p24 : permutation (ndlist o4i2) (ndlist i2o4)}
+  (b1 : bigraph s1 i1o3 r1 o1) 
+  (b2 : bigraph s2 i2o4 r2 o2) 
+  (b3 : bigraph s3 i3 s1 o3i1) 
+  (b4 : bigraph s4 i4 s2 o4i2)
   (be12 : bigraph_equality b1 b2)
   (be34 : bigraph_equality b3 b4), 
-  bigraph_equality (b1 <<o>> b3) (b2 <<o>> b4).
+  bigraph_equality (bigraph_composition (p:=p13) b1 b3) (bigraph_composition (p:=p24) b2 b4).
   Proof.
   intros until b4.
   intros Heqb1b2 Heqb3b4.
@@ -2110,13 +2135,18 @@ Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
       unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
       simpl.
       unfold rearrange, switch_link, id. 
-      destruct s0.
+      destruct s0. unfold permut_list_forward.
       set (Hn' := match bij_i12 x with
-        | conj _ H0 => H0
+        | conj _ H => H
         end
-          (eq_ind_r (fun b : Name => In b i2)
-            (proj1 (bij_o34_i12 x) i5) eq_refl)).
-      rewrite (innername_proof_irrelevant b1 x i5 Hn').
+          (eq_ind_r (fun b : Name => In b i2o4)
+            (match p24 x with
+              | conj H _ => H
+              end (proj1 (bij_o34_i12 x) i1)) eq_refl)).
+      set (Hn := match p13 x with
+        | conj H _ => H
+        end i1). 
+      rewrite (innername_proof_irrelevant b1 x Hn Hn').
       destruct get_link; try reflexivity.
     - destruct p123 as ([v2 | v3], (i123, Hvi123)); simpl.
       * unfold bij_list_backward', bij_list_forward, bij_subset_forward, parallel, sum_shuffle, choice, funcomp, id.
@@ -2146,18 +2176,25 @@ Theorem bigraph_comp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4}
       unfold funcomp, parallel. 
       unfold extract1, bij_subset_forward, bij_subset_backward, id. simpl.
       unfold id.
-      destruct s0.
-      set (Hn := match bij_i12 x0 with
-        | conj _ H0 => H0
-        end (eq_ind_r (fun b : Name => In b i2) (proj1 (bij_o34_i12 x0) i0) eq_refl)).
-      rewrite (innername_proof_irrelevant b1 x0 i0 Hn).
+      destruct s0. unfold permut_list_forward.
+      set (Hn := match p13 x0 with
+        | conj H _ => H
+        end i0).
+      set (Hn' := match bij_i12 x0 with
+        | conj _ H => H
+        end
+          (eq_ind_r (fun b : Name => In b i2o4)
+            (match p24 x0 with
+              | conj H _ => H
+              end (proj1 (bij_o34_i12 x0) i0)) eq_refl)).
+      rewrite (innername_proof_irrelevant b1 x0 Hn Hn').
       destruct get_link; try reflexivity. 
   Qed. 
   (*Missing a hypothesis that says bij_s12 = bij_r34_s12 in the equalities *)
 
-Definition bigraph_packed_composition {s1 i1 r1 o1 s2 i2} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) : bigraph_packed :=
-  packing ((b1) <<o>> (b2)).
+Definition bigraph_packed_composition {s1 i1o2 r1 o1 s2 i2 o2i1} {p: permutation (ndlist o2i1) (ndlist i1o2)}
+  (b1 : bigraph s1 i1o2 r1 o1) (b2 : bigraph s2 i2 s1 o2i1) : bigraph_packed :=
+  packing (bigraph_composition (p := p) b1 b2).
 
 Definition bigraph_packed_composition' (*{s1 i1 r1 o1 s2 i2 : FinDecType} *)
   (b1 : bigraph_packed) (b2 : bigraph_packed) : bigraph_packed. Admitted.
