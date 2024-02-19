@@ -556,6 +556,8 @@ Proof.
   constructor; unfold permutation in *; auto. 
 Qed.
 
+
+
 Lemma app_merge'_cong {i1 i2 i3 i4}:  
 permutation i1 i2 -> permutation i3 i4 -> 
 permutation (app_merge' i1 i3) (app_merge' i2 i4).
@@ -599,6 +601,20 @@ Proof. intros.
     split; intros; simpl in *. rewrite app_merge'_empty_right in H. apply H. rewrite app_merge'_empty_right. apply H.
 Qed.
 
+Theorem permutation_distributive {o3i1 o4i2 i1o3 i2o4}
+(p13 : permutation (ndlist o3i1) (ndlist i1o3))
+(p24 : permutation (ndlist o4i2) (ndlist i2o4)) : 
+permutation
+   (app_merge_NoDupList o3i1 o4i2)
+   (app_merge_NoDupList i1o3 i2o4).
+Proof.
+unfold permutation in *.
+intros; split; intros; specialize (p13 name); specialize (p24 name); destruct p13; destruct p24; apply in_app_or_m in H; destruct H.
+- apply in_left_list. apply H0. apply H.
+- apply in_right_list. apply H2. apply H.
+- apply in_left_list. apply H1. apply H.
+- apply in_right_list. apply H3. apply H.  
+Defined.
 
 (* Theorem woopsie : forall l1 l2, app_merge' (ndlist l1) (ndlist l2) = nodup EqDecN ((ndlist l1)++(ndlist l2)).
 Proof.
