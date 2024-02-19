@@ -1897,8 +1897,15 @@ Theorem bigraph_comp_right_neutral : forall {s i r o i' i''}
   Qed.
 
 
-Lemma arity_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) (b3 : bigraph s3 i3 s2 i2) n12_3,
-  Arity (get_control ((b1 <<o>> b2) <<o>> b3) n12_3) = Arity (get_control (b1 <<o>> (b2 <<o>> b3)) (bij_sum_assoc n12_3)).
+Lemma arity_comp_assoc : 
+  forall {s1 i1o2 r1 o1 s2 i2o3 o2i1 s3 i3 o3i2} 
+  {pi1o2 : permutation (ndlist o2i1) (ndlist i1o2)}
+  {pi2o3 : permutation (ndlist o3i2) (ndlist i2o3)}
+  (b1 : bigraph s1 i1o2 r1 o1) 
+  (b2 : bigraph s2 i2o3 s1 o2i1) 
+  (b3 : bigraph s3 i3 s2 o3i2) n12_3,
+  Arity (get_control (bigraph_composition (p:=pi2o3) (bigraph_composition (p:=pi1o2) b1 b2) b3) n12_3) = 
+  Arity (get_control (bigraph_composition (p:=pi1o2) b1 (bigraph_composition (p:=pi2o3) b2 b3)) (bij_sum_assoc n12_3)).
   Proof.
   intros until n12_3.
   destruct n12_3 as [[n1 | n2] | n3].
@@ -1907,8 +1914,15 @@ Lemma arity_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i1 r1
   + reflexivity.
   Qed.
 
-Theorem bigraph_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) (b3 : bigraph s3 i3 s2 i2),
-  bigraph_equality ((b1 <<o>> b2) <<o>> b3) (b1 <<o>> (b2 <<o>> b3)).
+Theorem bigraph_comp_assoc : forall {s1 i1o2 r1 o1 s2 i2o3 o2i1 s3 i3 o3i2} 
+  {pi1o2 : permutation (ndlist o2i1) (ndlist i1o2)}
+  {pi2o3 : permutation (ndlist o3i2) (ndlist i2o3)}
+  (b1 : bigraph s1 i1o2 r1 o1) 
+  (b2 : bigraph s2 i2o3 s1 o2i1) 
+  (b3 : bigraph s3 i3 s2 o3i2),
+  bigraph_equality (bigraph_composition (p:=pi2o3) 
+  (bigraph_composition (p:=pi1o2) b1 b2) b3) 
+  (bigraph_composition (p:=pi1o2) b1 (bigraph_composition (p:=pi2o3) b2 b3)).
   Proof.
   intros.
   apply (BigEq _ _ _ _ _ _ _ _ ((b1 <<o>> b2) <<o>> b3) (b1 <<o>> (b2 <<o>> b3))
@@ -1936,9 +1950,7 @@ Theorem bigraph_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i
       rewrite <- (innername_proof_irrelevant b3 i3' i0).
       destruct get_link; try reflexivity.
       * destruct get_link; try reflexivity.
-      ** destruct get_link; try reflexivity. apply f_equal. destruct s5. apply subset_eq_compat. reflexivity. reflexivity.
-      ** reflexivity.
-      * reflexivity.
+      ** destruct get_link; try reflexivity. apply f_equal. destruct s5. apply subset_eq_compat. reflexivity. 
     - destruct p123 as ([v1 | [v2 | v3]], (i123, Hvi123)); simpl.
       * unfold parallel. unfold switch_link. simpl. unfold rearrange.
         unfold extract1, bij_subset_forward, bij_subset_backward, id. simpl.
@@ -1949,7 +1961,6 @@ Theorem bigraph_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i
         simpl.
         destruct get_link; try reflexivity.
         apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-        reflexivity.
       * unfold bij_subset_forward, bij_subset_backward, bij_rew_forward, eq_rect_r.
         rewrite <- eq_rect_eq.
         rewrite <- eq_rect_eq.
@@ -1961,8 +1972,6 @@ Theorem bigraph_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i
         destruct get_link; try reflexivity. 
         destruct get_link; try reflexivity. 
         apply f_equal. destruct s4. apply subset_eq_compat. reflexivity.
-        reflexivity.
-        reflexivity.
       * unfold bij_subset_forward, bij_subset_backward, bij_rew_forward, eq_rect_r.
         rewrite <- eq_rect_eq.
         rewrite <- eq_rect_eq.
@@ -1978,9 +1987,6 @@ Theorem bigraph_comp_assoc : forall {s1 i1 r1 o1 s2 i2 s3 i3} (b1 : bigraph s1 i
         destruct get_link; try reflexivity. 
         destruct get_link; try reflexivity. 
         apply f_equal. destruct s5. apply subset_eq_compat. reflexivity.
-        reflexivity.
-        reflexivity.
-        reflexivity.
   Qed.
 
 Definition arity_comp_congruence_forward {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 s4 i4} 
