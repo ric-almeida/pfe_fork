@@ -216,6 +216,10 @@ Lemma bigraph_equality_trans
     reflexivity.
   Qed.
 
+(* Lemma bigraph_equality_refl_permutation {s1 r1: nat} {i1 o1 i2 o2 : NoDupList}  
+  (b1 : bigraph s1 i1 r1 o1):
+  permutation i1 i2 -> permutation o1 o2 -> bigraph_equality b1 b2. *)
+
 Lemma bigraph_equality_dec {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}  
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
   {bigraph_equality b1 b2} + {~ bigraph_equality b1 b2}.
@@ -843,7 +847,6 @@ Theorem bigraph_juxt_assoc :
       * destruct (in_dec EqDecN i123 i1).
       destruct get_link; try reflexivity.
       ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-      ** apply f_equal. apply f_equal. reflexivity.
       ** destruct (in_dec EqDecN i123 i2).
       ***
       set (Hn' := match
@@ -891,8 +894,7 @@ Theorem bigraph_juxt_assoc :
         end).
       rewrite (innername_proof_irrelevant b2 i123 i5 Hn').      
       destruct get_link; try reflexivity.
-      **** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity. (*TODO create tactic*)
-      **** apply f_equal. apply f_equal. apply f_equal. reflexivity.
+      **** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
       *** exfalso. apply in_app_iff in i4. destruct i4. apply n. apply H. apply n0. apply H.
       * destruct (in_dec EqDecN i123 i1).
       ** exfalso. apply n. apply in_left_list. apply i4.
@@ -1012,7 +1014,6 @@ Theorem bigraph_juxt_assoc :
         end).       
       rewrite (innername_proof_irrelevant b3 i123 Hn Hn'). destruct get_link; try reflexivity.
       apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-      apply f_equal. apply f_equal. apply f_equal. reflexivity.
     - destruct p123 as ([v1 | [v2 | v3]], (i123, Hvi123)); simpl.
       * unfold bij_rew_forward, eq_rect_r.
         simpl. 
@@ -1024,7 +1025,16 @@ Theorem bigraph_juxt_assoc :
         simpl.
         destruct get_link; try reflexivity.
         ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-        ** reflexivity.
+      * unfold bij_rew_forward, eq_rect_r.
+        simpl. 
+        unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
+        simpl.
+        unfold id. simpl. 
+        rewrite <- eq_rect_eq.
+        rewrite <- eq_rect_eq.
+        simpl.
+        destruct get_link; try reflexivity.
+        ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
       * unfold bij_rew_forward, eq_rect_r.
         simpl. 
         unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
@@ -1035,18 +1045,6 @@ Theorem bigraph_juxt_assoc :
         simpl.
         destruct get_link; try reflexivity.
         ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity. (*TODO best example of tactic use*)
-        ** apply f_equal. reflexivity.
-      * unfold bij_rew_forward, eq_rect_r.
-        simpl. 
-        unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
-        simpl.
-        unfold id. simpl. 
-        rewrite <- eq_rect_eq.
-        rewrite <- eq_rect_eq.
-        simpl.
-        destruct get_link; try reflexivity.
-        ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity. (*TODO best example of tactic use*)
-        ** apply f_equal. reflexivity. (*TODO factoriser ici*)
   Qed.
 
 Definition arity_juxt_congruence_forward 
@@ -1208,8 +1206,7 @@ Theorem bigraph_juxt_congruence :
         end (eq_ind_r (fun b : Name => In b i2) i6 eq_refl)).
       rewrite (innername_proof_irrelevant b1 i24 i5 Hn').
       destruct get_link; try reflexivity.
-      **** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-      **** reflexivity.
+      apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
       ** exfalso. apply n. apply bij_i12. apply i5.
       * (*link i2 = link i1 *)  
       destruct (in_dec EqDecN i24 i2).
@@ -1293,7 +1290,6 @@ Theorem bigraph_juxt_congruence :
       rewrite (innername_proof_irrelevant b3 i24 Hn Hn'').
       destruct get_link; try reflexivity.
       *** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-      *** reflexivity.
     - rewrite <- big_link_eq12.
       simpl.
       unfold sum_shuffle, parallel, choice, funcomp, id.
@@ -1309,8 +1305,7 @@ Theorem bigraph_juxt_congruence :
       destruct (backward (bij_p12 ((bij_n12 ⁻¹) n2'))).
       destruct get_link; try reflexivity.
       * apply f_equal. destruct s0.
-      apply subset_eq_compat. reflexivity.
-      * reflexivity.
+      apply subset_eq_compat. reflexivity. 
     - rewrite <- big_link_eq34.
       simpl.
       unfold sum_shuffle, parallel, choice, funcomp, id.
@@ -1327,7 +1322,6 @@ Theorem bigraph_juxt_congruence :
       destruct get_link; try reflexivity.
       * apply f_equal. destruct s0.
       apply subset_eq_compat. reflexivity.
-      * reflexivity.
   Qed.
 
 Definition bigraph_packed_dis_juxtaposition (b1 b2 : bigraph_packed) 
@@ -1677,71 +1671,121 @@ Lemma bigraph_juxt_right_neutral : forall {s i r o} (b : bigraph s i r o),
   rewrite bigraph_packed_juxt_left_neutral.
   reflexivity.
   Qed. *) *)
+Definition permut_list_forward (l1 l2 : list Name) (p : permutation l1 l2)
+  (nl1 : {name:Name|In name l1}) : {name:Name|In name l2}.
+  Proof.
+    destruct nl1.
+    exists x.
+    unfold permutation in p. apply p in i0. apply i0.
+  Defined.
 
-Definition bigraph_composition {s1 r1 s2 : nat} {i1 o1 i2 : NoDupList}
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 s1 i1) 
+Definition bij_permut_list (l1 l2 : list Name) (p : permutation l1 l2) :
+  bijection {name:Name|In name l1} {name:Name|In name l2}.
+  Proof.
+    refine (mkBijection
+    {name:Name|In name l1} {name:Name|In name l2}
+    (permut_list_forward l1 l2 p)
+    (permut_list_forward l2 l1 (symmetry p)) _ _
+    ).
+    - apply functional_extensionality. intros nl2. unfold funcomp, permut_list_forward, symmetry, id.
+    destruct nl2. apply subset_eq_compat. reflexivity.
+    - apply functional_extensionality. intros nl2. unfold funcomp, permut_list_forward, symmetry, id.
+    destruct nl2. apply subset_eq_compat. reflexivity.
+    Unshelve. apply symmetric_permutation.
+  Defined.
+
+Definition bigraph_composition {s1 r1 s2 : nat} {i1o2 o2i1 o1 i2 : NoDupList}
+  {p: permutation o2i1 i1o2}
+  (b1 : bigraph s1 i1o2 r1 o1) (b2 : bigraph s2 i2 s1 o2i1) 
     : bigraph s2 i2 r1 o1.
   Proof. 
+  set (sl2:= (bij_id <+> bij_permut_list  o2i1 i1o2 p) <o> (switch_link (get_link b2))). 
+  set (sl1:= switch_link (get_link b1)). 
   apply (Big s2 i2 r1 o1
         (findec_sum (get_node b1) (get_node b2))
         (findec_sum (get_edge b1) (get_edge b2))
         (join (get_control b1) (get_control b2))
         ((get_parent b2) >> (get_parent b1))
-        (switch_link (switch_link (get_link b2) >> switch_link (get_link b1)) <o>
+        (switch_link (sl2 >> sl1) <o>
           (backward (@bij_id _ <+> (bij_join_port (get_control b1) (get_control b2)))))).
   apply (finite_parent_sequence).
   + exact (ap _ _ _ _ b1).
   + exact (ap _ _ _ _ b2).
   Defined.
   (* l :  i2 + (p1 + p2) -> o1 + (e1 + e2) *)
-  (* l1 : i1 + p1 -> o1 + e1 *)
-  (* l2 : i2 + p2 -> i1 + e2, o2 <=> i1 *)
+  (* l1 : i1o2 + p1 -> o1 + e1 *)
+  (* l2 : i2 + p2 -> o2i1 + e2, o2i1 <=> i1o2 *)
   
 Notation "b1 '<<o>>' b2" := (bigraph_composition b1 b2) (at level 50, left associativity).
+Set Typeclasses Unique Instances.
+Set Typeclasses Iterative Deepening.
+Class PermutationNames (l1 l2 : list Name) := { disj : permutation l1 l2 }.
+#[export] Instance permutN_refl (l : list Name) : PermutationNames l l.
+  Proof.
+  constructor.
+  unfold permutation.
+  intros n.
+  reflexivity.
+  Qed.
+
+Lemma permut_refl {l:list Name} : permutation l l.
+  Proof.
+  constructor; auto.
+  Qed.
+
 (** * Composition
   This section deals with the operation of composition. This is the act
   of putting a bigraph inside another one. To do b1 <<o>> b2, the outerface 
   of b2 needs to be the innerface of b1. TODO/note: or just a bijection? 
   We prove left and right neutral for identity bigraph and associativity *)
 Section CompositionBigraphs.
-Definition bigraph_identity {s i}: bigraph s i s i.
+Definition bigraph_identity {s i i'} {p:permutation (ndlist i) (ndlist i')}: bigraph s i s i'. (*actually s i s (permutation i) *)
   Proof.
-  apply (Big s i s i
+  apply (Big s i s i'
           voidfd (*node : ∅*)
           voidfd (*edge : ∅*)
           (@void_univ_embedding _) (*control : ∅_Kappa*)
           id (*parent : id*)
         ).
-  - intros [inner | p]. (*link_|{names} : id*)
-    + left. exact inner. 
-    + destruct p. destruct x.
+  - intros [inner | port]. (*link_|{names} : id*)
+    + left. destruct inner. exists x. unfold permutation in p. apply p in i0. apply i0.
+    + destruct port. destruct x.
   - intro n. (*acyclic parent*)
     destruct n.
   Defined.
 
-Lemma arity_comp_left_neutral : forall {s i r o} (b : bigraph s i r o) n, 
-  Arity (get_control ((bigraph_identity) <<o>> b) n) =
+Lemma arity_comp_left_neutral : forall {s i r o o' o''} 
+  {p : permutation (ndlist o) (ndlist o')} 
+  {p' : permutation (ndlist o') (ndlist o'')}
+  (b : bigraph s i r o) n,  
+  let b_id := bigraph_identity (s := r) (i := o') (i' := o'') (p:=p') in
+  Arity (get_control (bigraph_composition (p := p) (bigraph_identity (p:=p')) b) n) =
   Arity (get_control b (bij_void_sum_neutral n)).
+  (* b : s i r o, -> b_id : r (p o) r (p (p o)) *)
   Proof.
-  intros s i r o b n.
+  intros s i r o o' o'' p p' b n b_id.
   destruct n as [ v | n].
     + destruct v.
   + reflexivity.
   Qed.
 
-Theorem bigraph_comp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
-  bigraph_equality (bigraph_identity <<o>> b) b.
+Theorem bigraph_comp_left_neutral : forall {s i r o o' o''} 
+  {p : permutation (ndlist o) (ndlist o')} 
+  {p' : permutation (ndlist o') (ndlist o'')} (b : bigraph s i r o), 
+  bigraph_equality (bigraph_composition (p := p) (bigraph_identity (p := p')) b) b.
   Proof.
-  intros s i r o b.
-  apply (
-    BigEq _ _ _ _ _ _ _ _ (bigraph_identity <<o>> b) b
+  intros s i r o o' o'' p p' b.
+  Search (_ <-> _ <-> _).
+  refine (
+    BigEq s r s r i o'' i o (bigraph_identity <<o>> b) b
       eq_refl (*s*)
       (fun (name : Name) => reflexivity (In name i)) (*i*)
       eq_refl (*r*)
-      (fun (name : Name) => reflexivity (In name o)) (*o*)
+      (fun (name : Name) => transitivity (symmetry p' name) (symmetry p name)) (*o*)
       bij_void_sum_neutral (*n*)
       bij_void_sum_neutral (*e*)
-      (fun n => bij_rew (P := fin) (arity_comp_left_neutral b n)) (*p*)
+      (fun n => bij_rew (P := fin) (@arity_comp_left_neutral s i r o o' o'' p p' b n)) (*p*)
+      _ _ _
     ).
   + apply functional_extensionality.
     intro x.
@@ -1764,7 +1808,6 @@ Theorem bigraph_comp_left_neutral : forall {s i r o} (b : bigraph s i r o),
     rewrite <- (innername_proof_irrelevant b name i0).
     destruct get_link; try reflexivity.
     * apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-    * reflexivity.
     - unfold parallel, sum_shuffle, choice, funcomp, id.
       simpl.
       unfold bij_join_port_backward, bij_dep_sum_2_forward, bijection_inv, bij_dep_sum_1_forward.
@@ -1781,27 +1824,34 @@ Theorem bigraph_comp_left_neutral : forall {s i r o} (b : bigraph s i r o),
       rewrite <- eq_rect_eq.
       destruct get_link; try reflexivity.
       * apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-      * reflexivity.
+  Unshelve. apply symmetric_permutation. apply symmetric_permutation.
   Qed.
 
-Lemma arity_comp_right_neutral : forall {s i r o} (b : bigraph s i r o) n, 
-  Arity (get_control (b <<o>> bigraph_identity) n) =
+Lemma arity_comp_right_neutral : forall {s i r o i' i''} 
+  {p : permutation (ndlist i'') (ndlist i)} 
+  {p' : permutation (ndlist i') (ndlist i'')}
+  (b : bigraph s i r o) n,  
+  let b_id := bigraph_identity (s := s) (i := i') (i' := i'') (p:=p') in 
+  Arity (get_control (bigraph_composition (p := p) b (bigraph_identity (p:=p'))) n) =
   Arity (get_control b (bij_void_sum_neutral_r n)).
   Proof.
-  intros s i r o b n.
+  intros s i r o i' i'' p p' b n b_id.
   destruct n as [n | v].
   + reflexivity.
   + destruct v.
   Qed.
 
-Theorem bigraph_comp_right_neutral : forall {s i r o} (b : bigraph s i r o), 
-  bigraph_equality (b <<o>> (bigraph_identity)) b.
+Theorem bigraph_comp_right_neutral : forall {s i r o i' i''} 
+  {p : permutation (ndlist i'') (ndlist i)} 
+  {p' : permutation (ndlist i') (ndlist i'')}
+  (b : bigraph s i r o), 
+  bigraph_equality (bigraph_composition (p := p) b (bigraph_identity (p:=p'))) b.
   Proof.
-  intros s i r o b.
+  intros s i r o i' i'' p p' b.
   apply 
     (BigEq _ _ _ _ _ _ _ _ (b <<o>> bigraph_identity) b
       eq_refl
-      (fun (name : Name) => reflexivity (In name i))
+      (fun (name : Name) => transitivity (p' name) (p name))
       eq_refl
       (fun (name : Name) => reflexivity (In name o))
       bij_void_sum_neutral_r
@@ -1828,7 +1878,6 @@ Theorem bigraph_comp_right_neutral : forall {s i r o} (b : bigraph s i r o),
       rewrite <- (innername_proof_irrelevant b name i0).
       destruct get_link; try reflexivity. 
       * apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-      * reflexivity.
     - unfold parallel, sum_shuffle, choice, funcomp, id.
       simpl.
       unfold bij_join_port_backward, bij_dep_sum_2_forward, bijection_inv, bij_dep_sum_1_forward.
@@ -1845,7 +1894,6 @@ Theorem bigraph_comp_right_neutral : forall {s i r o} (b : bigraph s i r o),
       rewrite <- eq_rect_eq.
       destruct get_link; try reflexivity. 
       * apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-      * reflexivity. 
   Qed.
 
 

@@ -538,9 +538,27 @@ simpl. destruct (in_dec EqDecN a i2).
 intros. apply H1. right. assumption. 
 Qed.
 
+Definition permutation (l1: list Name) (l2: list Name) := forall name, In name l1 <-> In name l2.
+Require Import Coq.Classes.CRelationClasses.
+
+Theorem symmetric_permutation: Symmetric permutation.
+Proof.
+  constructor; unfold permutation in H; specialize (H name); destruct H; assumption.
+Qed.
+
+Theorem transitive_permutation: Transitive permutation.
+Proof.
+  constructor; unfold permutation in *; specialize (H name); destruct H; specialize (H0 name); destruct H0; intros; auto.
+Qed.
+
+Theorem reflexive_permutation: Reflexive permutation.
+Proof.
+  constructor; unfold permutation in *; auto. 
+Qed.
+
 Lemma app_merge'_cong {i1 i2 i3 i4}:  
-(forall name, In name i1 <-> In name i2) -> (forall name, In name i3 <-> In name i4) -> 
-(forall name, In name (app_merge' i1 i3) <-> In name (app_merge' i2 i4)).
+permutation i1 i2 -> permutation i3 i4 -> 
+permutation (app_merge' i1 i3) (app_merge' i2 i4).
 Proof.
 intros H12 H34.
 split; intros H.
