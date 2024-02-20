@@ -81,9 +81,9 @@ Record bigraph_equality {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
   BigEq
   {
     bij_s : s1 = s2 ;
-    bij_i : forall name, In name i1 <-> In name i2 ; (*Permutation i1 i2*)
+    bij_i : permutation i1 i2 ; (*Permutation i1 i2*)
     bij_r : r1 = r2 ;
-    bij_o : forall name, In name o1 <-> In name o2 ;
+    bij_o : permutation o1 o2 ;
     bij_n : bijection (type (get_node b1)) (type (get_node b2)) ;
     bij_e : bijection (type (get_edge b1)) (type (get_edge b2)) ;
     bij_p : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n n1)))) ;
@@ -113,8 +113,8 @@ Lemma bigraph_equality_refl {s r : nat} {i o : NoDupList} (b : bigraph s i r o) 
     rewrite bij_fun_compose_id.
     reflexivity.
   Unshelve.
-  - intros. tauto.
-  - intros. tauto.
+  - unfold permutation. intros. reflexivity.
+  - unfold permutation. intros. reflexivity.
   Qed.
 
 Lemma bigraph_equality_sym {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}  
@@ -343,11 +343,49 @@ Remark void_disjoint_all_list_right : forall l:NoDupList, l # EmptyNDL.
 (*juxtaposition, also called parallel product
   in the book, parallel product is defined from tensor product p33 with the sentence "is defined just as tensor product, except that its link map allows name-sharing"
   but I think we should probably do it the other way around *)
+Definition link_juxt {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
+  (ip :NameSub (app_merge_NoDupList i1 i2) + Port (join (get_control b1) (get_control b2))) :
+  NameSub (app_merge_NoDupList o1 o2) + type (findec_sum (get_edge b1) (get_edge b2)). 
+  Proof.
+  destruct ip as [[n npf] | p].
+  + (*inner*)  
+    apply in_app_or_m_nod_dup in npf; try (apply (nd i2); try (apply (nd i1))).
+    destruct npf.
+    * (*inner1*)
+    destruct (get_link b1 (inl (exist (fun name : Name => In name i1) n i0))).
+    ** (*l1 (i1) = o1 *)
+    left. destruct s0. exists x. apply in_left_list. apply i3.
+    ** (*l1 (i1) = e1 *)
+    right. simpl. left. exact t.
+    * (*inner2*) 
+    destruct (get_link b2 (inl (exist (fun name : Name => In name i2) n i0))).
+    ** (*l2 (i2) = o2 *)
+    left. destruct s0. exists x. apply in_right_list. apply i3.
+    ** (*l2 (i2) = e2 *)
+    right. simpl. right. exact t.
+    * apply (nd i1).
+  + (*Port*)
+    destruct p as [np nppf]. destruct np as [np1|np2].
+    * (*Port1*)
+    destruct (get_link b1 (inr (existT _ np1 nppf))).
+    ** (*l1 (p1)=o1*)
+    left. destruct s0. exists x. apply in_left_list. apply i0.
+    ** (*l1 (p1) = e1 *)
+    right. simpl. left. exact t.
+    * (*Port2*) 
+    destruct (get_link b2 (inr (existT _ np2 nppf))).
+    ** (*l2 (p2) = o2 *)
+    left. destruct s0. exists x. apply in_right_list. apply i0.
+    ** (*l2 (p2) = e2 *)
+    right. simpl. right. exact t.
+  Defined.
+
 Definition bigraph_juxtaposition {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
     : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) (r1 + r2) (app_merge_NoDupList o1 o2).
   Proof.
-  Fail apply (Big 
+  refine (Big 
     (s1 + s2)
     (app_merge_NoDupList i1 i2)
     (r1 + r2)
@@ -355,12 +393,17 @@ Definition bigraph_juxtaposition {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
     (findec_sum (get_node b1) (get_node b2))
     (findec_sum (get_edge b1) (get_edge b2))
     (join (get_control b1) (get_control b2))
-    (bij_sum_shuffle <o> (parallel (get_parent b1) (get_parent b2)) <o> (bijection_inv bij_sum_shuffle))
-    ( ((bij_list_names o1 o2) <+> bij_id) <o>
-      bij_sum_shuffle <o> (parallel (get_link b1) (get_link b2)) <o> (bijection_inv bij_sum_shuffle) <o> 
-      (bijection_inv ((bij_list_names i1 i2) <+> (bij_join_port (get_control b1) (get_control b2)))))
-    ). (*No bijection if not disjoint! need to find a way around that *)
-  Admitted.
+    ((bij_id <+> bijection_inv bij_fin_sum) <o>
+      (bij_sum_shuffle <o> (parallel (get_parent b1) (get_parent b2)) <o> (bijection_inv bij_sum_shuffle)) <o> 
+      (bij_id <+> bij_fin_sum))
+    (link_juxt b1 b2) _
+    ). 
+  - rewrite <- tensor_alt.
+  apply finite_parent_inout.
+  apply finite_parent_tensor.
+  + exact (ap _ _ _ _ b1).
+  + exact (ap _ _ _ _ b2).
+  Defined. 
 
 Notation "b1 || b2" := (bigraph_juxtaposition b1 b2) (at level 50, left associativity).
 
@@ -1775,7 +1818,6 @@ Theorem bigraph_comp_left_neutral : forall {s i r o o' o''}
   bigraph_equality (bigraph_composition (p := p) (bigraph_identity (p := p')) b) b.
   Proof.
   intros s i r o o' o'' p p' b.
-  Search (_ <-> _ <-> _).
   refine (
     BigEq s r s r i o'' i o (bigraph_identity <<o>> b) b
       eq_refl (*s*)
