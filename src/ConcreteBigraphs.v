@@ -1359,7 +1359,7 @@ End DisjointJuxtaposition.
   After the definition, we prove associativity and commutativity of dis_juxtaposition *)
 Section Juxtaposition.
 Lemma arity_pp_left_neutral : forall {s i r o} (b : bigraph s i r o) n, 
-        Arity (get_control (∅ || b) n) = Arity (get_control b (bij_void_sum_neutral n)).
+  Arity (get_control (∅ || b) n) = Arity (get_control b (bij_void_sum_neutral n)).
   Proof.
   intros s i r o b n.
   destruct n as [ v | n].
@@ -1479,6 +1479,85 @@ Theorem bigraph_pp_left_neutral : forall {s i r o} (b : bigraph s i r o),
       destruct in_app_or_m_nod_dup.
       * exfalso. apply in_nil in i1. apply i1.
       * rewrite <- (innername_proof_irrelevant b x i0 i1).
+      destruct get_link; try reflexivity.
+      destruct s0. f_equal. apply subset_eq_compat. reflexivity.
+    - unfold parallel, sum_shuffle, choice, funcomp, id, link_juxt.
+      simpl.
+      unfold bij_join_port_backward, bij_dep_sum_2_forward, bijection_inv, bij_dep_sum_1_forward, bij_subset_backward, bij_subset_forward.
+      simpl.
+      unfold bij_rew_forward, eq_rect_r, funcomp.
+      simpl.
+    (*
+        erewrite eq_rect_pi.
+        erewrite (eq_rect_pi (x := v1)).
+    *)
+      rewrite <- eq_rect_eq.
+      rewrite <- eq_rect_eq.
+      destruct get_link; try reflexivity.
+      f_equal. destruct s0. apply subset_eq_compat. reflexivity.
+  Qed.
+
+Lemma arity_pp_right_neutral : forall {s i r o} (b : bigraph s i r o) n, 
+  Arity (get_control (b || ∅) n) = Arity (get_control b (bij_void_sum_neutral_r n)).
+  Proof.
+  intros s i r o b n.
+  destruct n as [n | v].
+  + reflexivity.
+  + destruct v.
+  Qed.
+
+Theorem bigraph_pp_right_neutral : forall {s i r o} (b : bigraph s i r o), 
+  bigraph_equality (b || ∅) b.
+  Proof.
+  intros s i r o b.
+  Search (_+0=_).
+  apply (BigEq _ _ _ _ _ _ _ _ (b || ∅) b
+    (PeanoNat.Nat.add_0_r s)
+    (right_empty i)
+    (PeanoNat.Nat.add_0_r r)
+    (right_empty o)
+    bij_void_sum_neutral_r
+    bij_void_sum_neutral_r
+    (fun n => bij_rew (P := fin) (arity_tp_right_neutral b n)) 
+  ).
+  + apply functional_extensionality.
+    intro x.
+    reflexivity. 
+  + apply functional_extensionality.
+    destruct x as [n1 | s1]; simpl.
+    - unfold funcomp, parallel.
+      simpl. 
+      destruct get_parent; try reflexivity.
+      destruct f. f_equal. 
+      unfold bij_rew_forward.
+      unfold surj_fin_add.
+      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r + O) r _ x _).
+      apply subset_eq_compat. 
+      reflexivity.  
+    - unfold funcomp, parallel, sum_shuffle.
+      destruct s1. unfold eq_sym.
+      unfold bij_rew_forward.
+      unfold inj_fin_add.
+      rewrite (@eq_rect_exist nat nat (fun n x => x < n) s (s + O) _ x _).
+      destruct PeanoNat.Nat.ltb_spec0.
+      * rewrite (proof_irrelevance _ _ l).
+      destruct get_parent; try reflexivity.
+      f_equal.  
+      destruct f.
+      unfold surj_fin_add.
+      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r + O) r _ x0 _).
+      apply subset_eq_compat. 
+      reflexivity.  
+      * exfalso. apply n. apply l. 
+  + apply functional_extensionality.
+    destruct x as [i1 | (v1, (k1, Hvk1))]; simpl.
+    - unfold funcomp, parallel, link_juxt.
+      simpl.
+      unfold bij_subset_backward, bij_subset_forward, id.
+      destruct i1.
+      simpl.
+      unfold id. 
+      rewrite <- (innername_proof_irrelevant b x i0).
       destruct get_link; try reflexivity.
       destruct s0. f_equal. apply subset_eq_compat. reflexivity.
     - unfold parallel, sum_shuffle, choice, funcomp, id, link_juxt.
@@ -1924,13 +2003,13 @@ Theorem bigraph_packed_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} (
   apply bigraph_pp_assoc.
   Qed.
 
-Lemma bigraph_pp_right_neutral : forall {s i r o} (b : bigraph s i r o), 
+Lemma bigraph_packed_pp_right_neutral : forall {s i r o} (b : bigraph s i r o), 
   bigraph_packed_equality (bigraph_packed_pp b ∅) b.
   Proof.
   unfold bigraph_packed_equality, bigraph_packed_pp.
   intros.
-  Fail apply bigraph_pp_right_neutral.
-  Admitted.
+  apply bigraph_pp_right_neutral.
+  Qed.
 
 Definition permut_list_forward (l1 l2 : list Name) (p : permutation l1 l2)
   (nl1 : {name:Name|In name l1}) : {name:Name|In name l2}.
