@@ -394,7 +394,7 @@ Proof.
     destruct (in_dec EqDecN a m).
     - right. apply i. 
     - left. apply not_in_left in H; assumption.
-Qed.
+Defined.
 
 Lemma in_app_or_m_nod_dup' : forall (l m:list Name), 
 NoDup l -> NoDup m -> {a:Name | In a (app_merge' l m)} -> {a | In a l} + {a | In a m}.
@@ -441,7 +441,7 @@ Proof.
     destruct H. 
     + apply in_left_list. apply in_right_list. assumption.
     + apply in_right_list. assumption.
-Qed.
+Defined.
 
 Theorem in_app_merge'_transi {l1 l2 l3 : list Name} : forall a,
 In a (app_merge' (app_merge' l1 l2) l3) <-> In a (app_merge' l1 (app_merge' l2 l3)).
@@ -456,7 +456,7 @@ Proof.
     ++ apply in_right_list. apply in_left_list. assumption.
     + apply in_right_list. apply in_right_list. assumption.
     - apply in_app_merge'_trans.
-Qed.
+Defined.
 
 Lemma rm_headNoDUP {a:Name} {l}: 
 ~ In a l -> (NoDup (a::l) <-> NoDup l).
@@ -539,6 +539,9 @@ intros. apply H1. right. assumption.
 Qed.
 
 Definition permutation (l1: list Name) (l2: list Name) := forall name, In name l1 <-> In name l2.
+Definition permutation_id (l: list Name) : permutation l l.
+Proof. unfold permutation. intros. tauto. Defined.
+
 Require Import Coq.Classes.CRelationClasses.
 
 Theorem symmetric_permutation: Symmetric permutation.
@@ -556,7 +559,27 @@ Proof.
   constructor; unfold permutation in *; auto. 
 Qed.
 
-
+Definition tr_permutation {i1 i2 i3} : 
+  permutation
+    (app_merge' (app_merge' i1 i2) i3)
+    (app_merge' i1 (app_merge' i2 i3)).
+  Proof.
+    unfold permutation. intros. split; intros.
+    - apply in_app_or_m in H.
+    destruct H.
+    + apply in_app_or_m in H.
+    destruct H. 
+    ++ apply in_left_list. assumption.
+    ++ apply in_right_list. apply in_left_list. assumption.
+    + apply in_right_list. apply in_right_list. assumption.
+    - apply in_app_or_m in H.
+    destruct H.
+    + apply in_left_list. apply in_left_list. assumption.
+    + apply in_app_or_m in H.
+    destruct H. 
+    ++ apply in_left_list. apply in_right_list. assumption.
+    ++ apply in_right_list. assumption.
+  Defined.
 
 Lemma app_merge'_cong {i1 i2 i3 i4}:  
 permutation i1 i2 -> permutation i3 i4 -> 
