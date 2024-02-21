@@ -3355,6 +3355,546 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       ** reflexivity.
   Qed.
     
+Theorem arity_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
+  (b1 : bigraph s1 i1o3 r1 o1) 
+  (b2 : bigraph s2 i2o4 r2 o2) 
+  (b3 : bigraph s3 i3 s1 o3i1) 
+  (b4 : bigraph s4 i4 s2 o4i2)
+  {p13 : permutation (ndlist o3i1) (ndlist i1o3)}
+  {p24 : permutation (ndlist o4i2) (ndlist i2o4)}
+  (n12_34:type (get_node (b1 || b2 <<o>> (b3 || b4)))),
+  Arity (get_control
+    (bigraph_composition 
+      (p := permutation_distributive p13 p24)
+      (b1 || b2) (b3 || b4)) 
+        n12_34) =
+  Arity (get_control 
+    ((bigraph_composition (p:=p13) b1 b3) || 
+    (bigraph_composition (p:=p24) b2 b4)) 
+      (sum_shuffle n12_34)).
+  Proof.
+  intros.
+  destruct n12_34 as [[n1|n2]|[n3|n4]]; reflexivity.
+  Qed.
+
+Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
+  (b1 : bigraph s1 i1o3 r1 o1) 
+  (b2 : bigraph s2 i2o4 r2 o2) 
+  (b3 : bigraph s3 i3 s1 o3i1) 
+  (b4 : bigraph s4 i4 s2 o4i2)
+  {p13 : permutation (ndlist o3i1) (ndlist i1o3)}
+  {p24 : permutation (ndlist o4i2) (ndlist i2o4)},
+  bigraph_equality 
+    (bigraph_composition (p := permutation_distributive p13 p24) (b1 || b2)  (b3 || b4))
+    ((bigraph_composition (p:=p13) b1 b3) || (bigraph_composition (p:=p24) b2 b4)) .
+  Proof.
+  intros.
+  apply (BigEq
+    _ _ _ _
+    _ _ _ _ 
+    ((b1 || b2) <<o>> (b3 || b4)) 
+    ((b1 <<o>> b3) || (b2 <<o>> b4))
+    (reflexivity (s3 + s4)) (*s3 + s4*)
+    reflnames (*i3 + i4*)
+    (reflexivity (r1 + r2)) (*r1 + r2*)
+    reflnames (*o1 + o2*)
+    bij_sum_shuffle(* n1 + n2 + n3 + n4*)
+    bij_sum_shuffle (* e1 + e2 + e3 + e4 *)
+    (fun n12_34 => bij_rew (P := fin) (arity_comp_pp_dist b1 b2 b3 b4 n12_34)) (* Port *)
+  ).
+  + apply functional_extensionality.
+    destruct x as [[n1|n3]|[n2|n4]]; reflexivity.
+  + apply functional_extensionality.
+    destruct x as [[[n1|n3]|[n2|n4]]|(s34, Hs34)]; simpl; unfold funcomp; simpl; unfold sequence, extract, inject, sum_shuffle, parallel, id.
+    - destruct get_parent; try reflexivity.
+    - unfold rearrange, extract1. destruct get_parent; try reflexivity.
+      destruct f as (s1', Hs1').
+      simpl.
+      destruct PeanoNat.Nat.ltb_spec0.
+      * rewrite (proof_irrelevance _ l Hs1').
+        destruct get_parent; try reflexivity.
+      * contradiction.
+    - destruct get_parent; try reflexivity.
+    - destruct get_parent; try reflexivity.
+    destruct f as (s2', Hs2'). unfold rearrange, extract1.
+    simpl.
+    destruct PeanoNat.Nat.ltb_spec0.
+    * exfalso. assert (forall a b, ~ a + b < a).
+      {intros. lia. } 
+      apply (H s1 s2'). apply l.
+    * assert 
+    (exist (fun p : nat => p < s2) (s1 + s2' - s1)
+      (ZifyClasses.rew_iff_rev (s1 + s2' - s1 < s2)
+        (BinInt.Z.lt
+            (BinInt.Z.max BinNums.Z0
+              (BinInt.Z.sub (BinInt.Z.of_nat (s1 + s2'))
+                  (BinInt.Z.of_nat s1))) (BinInt.Z.of_nat s2))
+        (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat
+            BinInt.Z.lt Znat.Nat2Z.inj_lt 
+            (s1 + s2' - s1)
+            (BinInt.Z.max BinNums.Z0
+              (BinInt.Z.sub (BinInt.Z.of_nat (s1 + s2'))
+                  (BinInt.Z.of_nat s1)))
+            (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z
+              BinNums.Z PeanoNat.Nat.sub BinInt.Z.of_nat
+              BinInt.Z.of_nat BinInt.Z.of_nat
+              (fun n0 m : BinNums.Z =>
+                BinInt.Z.max BinNums.Z0 (BinInt.Z.sub n0 m))
+              Znat.Nat2Z.inj_sub_max (s1 + s2')
+              (BinInt.Z.of_nat (s1 + s2')) eq_refl s1
+              (BinInt.Z.of_nat s1) eq_refl) s2 
+            (BinInt.Z.of_nat s2) eq_refl)
+        (ZMicromega.ZTautoChecker_sound
+            (Tauto.IMPL
+              (Tauto.OR
+                  (Tauto.AND
+                    (Tauto.X Tauto.isProp
+                        (BinInt.Z.lt BinNums.Z0
+                          (BinInt.Z.sub (BinInt.Z.of_nat (s1 + s2'))
+                              (BinInt.Z.of_nat s1))))
+                    (Tauto.A Tauto.isProp
+                        {|
+                          RingMicromega.Flhs := EnvRing.PEX BinNums.xH;
+                          RingMicromega.Fop := RingMicromega.OpEq;
+                          RingMicromega.Frhs :=
+                            EnvRing.PEsub
+                              (EnvRing.PEX (BinNums.xI BinNums.xH))
+                              (EnvRing.PEX
+                                (BinNums.xO (BinNums.xO BinNums.xH)))
+                        |} tt))
+                  (Tauto.AND
+                    (Tauto.X Tauto.isProp
+                        (BinInt.Z.le
+                          (BinInt.Z.sub (BinInt.Z.of_nat (s1 + s2'))
+                              (BinInt.Z.of_nat s1)) BinNums.Z0))
+                    (Tauto.A Tauto.isProp
+                        {|
+                          RingMicromega.Flhs := EnvRing.PEX BinNums.xH;
+                          RingMicromega.Fop := RingMicromega.OpEq;
+                          RingMicromega.Frhs := EnvRing.PEc BinNums.Z0
+                        |} tt))) None
+              (Tauto.IMPL
+                  (Tauto.A Tauto.isProp
+                    {|
+                      RingMicromega.Flhs :=
+                        EnvRing.PEX (BinNums.xI BinNums.xH);
+                      RingMicromega.Fop := RingMicromega.OpLt;
+                      RingMicromega.Frhs :=
+                        EnvRing.PEadd
+                          (EnvRing.PEX
+                              (BinNums.xO (BinNums.xO BinNums.xH)))
+                          (EnvRing.PEX (BinNums.xO BinNums.xH))
+                    |} tt) None
+                  (Tauto.IMPL
+                    (Tauto.NOT
+                        (Tauto.A Tauto.isProp
+                          {|
+                            RingMicromega.Flhs :=
+                              EnvRing.PEX (BinNums.xI BinNums.xH);
+                            RingMicromega.Fop := RingMicromega.OpLt;
+                            RingMicromega.Frhs :=
+                              EnvRing.PEX
+                                (BinNums.xO (BinNums.xO BinNums.xH))
+                          |} tt)) None
+                    (Tauto.A Tauto.isProp
+                        {|
+                          RingMicromega.Flhs := EnvRing.PEX BinNums.xH;
+                          RingMicromega.Fop := RingMicromega.OpLt;
+                          RingMicromega.Frhs :=
+                            EnvRing.PEX (BinNums.xO BinNums.xH)
+                        |} tt))))
+            [ZMicromega.RatProof
+              (RingMicromega.PsatzAdd
+                  (RingMicromega.PsatzIn BinNums.Z 3)
+                  (RingMicromega.PsatzAdd
+                    (RingMicromega.PsatzIn BinNums.Z 2)
+                    (RingMicromega.PsatzAdd
+                        (RingMicromega.PsatzIn BinNums.Z 1)
+                        (RingMicromega.PsatzIn BinNums.Z 0))))
+              ZMicromega.DoneProof;
+            ZMicromega.RatProof
+              (RingMicromega.PsatzAdd
+                  (RingMicromega.PsatzIn BinNums.Z 3)
+                  (RingMicromega.PsatzAdd
+                    (RingMicromega.PsatzIn BinNums.Z 2)
+                    (RingMicromega.PsatzIn BinNums.Z 0)))
+              ZMicromega.DoneProof] eq_refl
+            (fun p : BinNums.positive =>
+            match p with
+            | BinNums.xI _ => BinInt.Z.of_nat (s1 + s2')
+            | BinNums.xO p0 =>
+                match p0 with
+                | BinNums.xI _ => BinNums.Z0
+                | BinNums.xO _ => BinInt.Z.of_nat s1
+                | BinNums.xH => BinInt.Z.of_nat s2
+                end
+            | BinNums.xH =>
+                BinInt.Z.max BinNums.Z0
+                  (BinInt.Z.sub (BinInt.Z.of_nat (s1 + s2'))
+                      (BinInt.Z.of_nat s1))
+            end)
+            (BinInt.Z.max_spec BinNums.Z0
+              (BinInt.Z.sub (BinInt.Z.of_nat (s1 + s2'))
+                  (BinInt.Z.of_nat s1)))
+            (ZifyClasses.rew_iff (s1 + s2' < s1 + s2)
+              (BinInt.Z.lt (BinInt.Z.of_nat (s1 + s2'))
+                  (BinInt.Z.add (BinInt.Z.of_nat s1)
+                    (BinInt.Z.of_nat s2)))
+              (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat
+                  BinInt.Z.lt Znat.Nat2Z.inj_lt 
+                  (s1 + s2') (BinInt.Z.of_nat (s1 + s2')) eq_refl
+                  (s1 + s2)
+                  (BinInt.Z.add (BinInt.Z.of_nat s1)
+                    (BinInt.Z.of_nat s2))
+                  (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z
+                    BinNums.Z PeanoNat.Nat.add BinInt.Z.of_nat
+                    BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.add
+                    Znat.Nat2Z.inj_add s1 
+                    (BinInt.Z.of_nat s1) eq_refl s2
+                    (BinInt.Z.of_nat s2) eq_refl))
+              (ZifyClasses.rew_iff_rev (s1 + s2' < s1 + s2)
+                  (BinInt.Z.lt
+                    (BinInt.Z.add (BinInt.Z.of_nat s1)
+                        (BinInt.Z.of_nat s2'))
+                    (BinInt.Z.add (BinInt.Z.of_nat s1)
+                        (BinInt.Z.of_nat s2)))
+                  (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat
+                    BinInt.Z.lt Znat.Nat2Z.inj_lt 
+                    (s1 + s2')
+                    (BinInt.Z.add (BinInt.Z.of_nat s1)
+                        (BinInt.Z.of_nat s2'))
+                    (ZifyClasses.mkapp2 nat nat nat BinNums.Z
+                        BinNums.Z BinNums.Z PeanoNat.Nat.add
+                        BinInt.Z.of_nat BinInt.Z.of_nat
+                        BinInt.Z.of_nat BinInt.Z.add
+                        Znat.Nat2Z.inj_add s1 
+                        (BinInt.Z.of_nat s1) eq_refl s2'
+                        (BinInt.Z.of_nat s2') eq_refl) 
+                    (s1 + s2)
+                    (BinInt.Z.add (BinInt.Z.of_nat s1)
+                        (BinInt.Z.of_nat s2))
+                    (ZifyClasses.mkapp2 nat nat nat BinNums.Z
+                        BinNums.Z BinNums.Z PeanoNat.Nat.add
+                        BinInt.Z.of_nat BinInt.Z.of_nat
+                        BinInt.Z.of_nat BinInt.Z.add
+                        Znat.Nat2Z.inj_add s1 
+                        (BinInt.Z.of_nat s1) eq_refl s2
+                        (BinInt.Z.of_nat s2) eq_refl))
+                  (ZMicromega.ZTautoChecker_sound
+                    (Tauto.IMPL
+                        (Tauto.A Tauto.isProp
+                          {|
+                            RingMicromega.Flhs :=
+                              EnvRing.PEX (BinNums.xO BinNums.xH);
+                            RingMicromega.Fop := RingMicromega.OpLt;
+                            RingMicromega.Frhs :=
+                              EnvRing.PEX (BinNums.xI BinNums.xH)
+                          |} tt) None
+                        (Tauto.A Tauto.isProp
+                          {|
+                            RingMicromega.Flhs :=
+                              EnvRing.PEadd 
+                                (EnvRing.PEX BinNums.xH)
+                                (EnvRing.PEX (BinNums.xO BinNums.xH));
+                            RingMicromega.Fop := RingMicromega.OpLt;
+                            RingMicromega.Frhs :=
+                              EnvRing.PEadd 
+                                (EnvRing.PEX BinNums.xH)
+                                (EnvRing.PEX (BinNums.xI BinNums.xH))
+                          |} tt)) [] eq_refl
+                    (fun p : BinNums.positive =>
+                      match p with
+                      | BinNums.xI _ => BinInt.Z.of_nat s2
+                      | BinNums.xO _ => BinInt.Z.of_nat s2'
+                      | BinNums.xH => BinInt.Z.of_nat s1
+                      end)
+                    (ZifyClasses.rew_iff 
+                        (s2' < s2)
+                        (BinInt.Z.lt (BinInt.Z.of_nat s2')
+                          (BinInt.Z.of_nat s2))
+                        (ZifyClasses.mkrel nat BinNums.Z lt
+                          BinInt.Z.of_nat BinInt.Z.lt
+                          Znat.Nat2Z.inj_lt s2' 
+                          (BinInt.Z.of_nat s2') eq_refl s2
+                          (BinInt.Z.of_nat s2) eq_refl) Hs2'))))
+            (ZifyClasses.rew_iff (~ s1 + s2' < s1)
+              (~
+                BinInt.Z.lt (BinInt.Z.of_nat (s1 + s2'))
+                  (BinInt.Z.of_nat s1))
+              (ZifyClasses.not_morph (s1 + s2' < s1)
+                  (BinInt.Z.lt (BinInt.Z.of_nat (s1 + s2'))
+                    (BinInt.Z.of_nat s1))
+                  (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat
+                    BinInt.Z.lt Znat.Nat2Z.inj_lt 
+                    (s1 + s2') (BinInt.Z.of_nat (s1 + s2')) eq_refl
+                    s1 (BinInt.Z.of_nat s1) eq_refl)) n)))
+          = exist (fun p : nat => p < s2) s2' Hs2').
+    apply subset_eq_compat. lia.
+    rewrite <- H.
+    destruct get_parent; try reflexivity.
+    - unfold rearrange, extract1. 
+    destruct PeanoNat.Nat.ltb_spec0.
+    * destruct get_parent; try reflexivity.
+    destruct f as (s2', Hs2').
+    simpl.
+    destruct PeanoNat.Nat.ltb_spec0.
+    ** rewrite (proof_irrelevance _ l0 Hs2').
+      destruct get_parent; try reflexivity.
+    ** contradiction.
+    * destruct get_parent; try reflexivity.
+    destruct f as (s2', Hs2').
+    simpl.
+    destruct PeanoNat.Nat.ltb_spec0.
+    ** exfalso. assert (forall a b, ~ a + b < a).
+      {intros. lia. } 
+      apply (H s1 s2'). apply l.
+    ** 
+    assert (exist (fun p : nat => p < s2) (s1 + s2' - s1)
+      (ZifyClasses.rew_iff_rev (s1 + s2' - s1 < s2)
+       (BinInt.Z.lt
+          (BinInt.Z.max BinNums.Z0
+             (BinInt.Z.sub (BinInt.Z.of_nat (s1 + s2'))
+                (BinInt.Z.of_nat s1))) (BinInt.Z.of_nat s2))
+       (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat
+          BinInt.Z.lt Znat.Nat2Z.inj_lt 
+          (s1 + s2' - s1)
+          (BinInt.Z.max BinNums.Z0
+             (BinInt.Z.sub (BinInt.Z.of_nat (s1 + s2'))
+                (BinInt.Z.of_nat s1)))
+          (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z
+             BinNums.Z PeanoNat.Nat.sub BinInt.Z.of_nat
+             BinInt.Z.of_nat BinInt.Z.of_nat
+             (fun n1 m : BinNums.Z =>
+              BinInt.Z.max BinNums.Z0 (BinInt.Z.sub n1 m))
+             Znat.Nat2Z.inj_sub_max (s1 + s2')
+             (BinInt.Z.of_nat (s1 + s2')) eq_refl s1
+             (BinInt.Z.of_nat s1) eq_refl) s2 
+          (BinInt.Z.of_nat s2) eq_refl)
+       (ZMicromega.ZTautoChecker_sound
+          (Tauto.IMPL
+             (Tauto.OR
+                (Tauto.AND
+                   (Tauto.X Tauto.isProp
+                      (BinInt.Z.lt BinNums.Z0
+                         (BinInt.Z.sub (BinInt.Z.of_nat (s1 + s2'))
+                            (BinInt.Z.of_nat s1))))
+                   (Tauto.A Tauto.isProp
+                      {|
+                        RingMicromega.Flhs := EnvRing.PEX BinNums.xH;
+                        RingMicromega.Fop := RingMicromega.OpEq;
+                        RingMicromega.Frhs :=
+                          EnvRing.PEsub
+                            (EnvRing.PEX (BinNums.xI BinNums.xH))
+                            (EnvRing.PEX
+                               (BinNums.xO (BinNums.xO BinNums.xH)))
+                      |} tt))
+                (Tauto.AND
+                   (Tauto.X Tauto.isProp
+                      (BinInt.Z.le
+                         (BinInt.Z.sub (BinInt.Z.of_nat (s1 + s2'))
+                            (BinInt.Z.of_nat s1)) BinNums.Z0))
+                   (Tauto.A Tauto.isProp
+                      {|
+                        RingMicromega.Flhs := EnvRing.PEX BinNums.xH;
+                        RingMicromega.Fop := RingMicromega.OpEq;
+                        RingMicromega.Frhs := EnvRing.PEc BinNums.Z0
+                      |} tt))) None
+             (Tauto.IMPL
+                (Tauto.A Tauto.isProp
+                   {|
+                     RingMicromega.Flhs :=
+                       EnvRing.PEX (BinNums.xI BinNums.xH);
+                     RingMicromega.Fop := RingMicromega.OpLt;
+                     RingMicromega.Frhs :=
+                       EnvRing.PEadd
+                         (EnvRing.PEX
+                            (BinNums.xO (BinNums.xO BinNums.xH)))
+                         (EnvRing.PEX (BinNums.xO BinNums.xH))
+                   |} tt) None
+                (Tauto.IMPL
+                   (Tauto.NOT
+                      (Tauto.A Tauto.isProp
+                         {|
+                           RingMicromega.Flhs :=
+                             EnvRing.PEX (BinNums.xI BinNums.xH);
+                           RingMicromega.Fop := RingMicromega.OpLt;
+                           RingMicromega.Frhs :=
+                             EnvRing.PEX
+                               (BinNums.xO (BinNums.xO BinNums.xH))
+                         |} tt)) None
+                   (Tauto.A Tauto.isProp
+                      {|
+                        RingMicromega.Flhs := EnvRing.PEX BinNums.xH;
+                        RingMicromega.Fop := RingMicromega.OpLt;
+                        RingMicromega.Frhs :=
+                          EnvRing.PEX (BinNums.xO BinNums.xH)
+                      |} tt))))
+          [ZMicromega.RatProof
+             (RingMicromega.PsatzAdd
+                (RingMicromega.PsatzIn BinNums.Z 3)
+                (RingMicromega.PsatzAdd
+                   (RingMicromega.PsatzIn BinNums.Z 2)
+                   (RingMicromega.PsatzAdd
+                      (RingMicromega.PsatzIn BinNums.Z 1)
+                      (RingMicromega.PsatzIn BinNums.Z 0))))
+             ZMicromega.DoneProof;
+           ZMicromega.RatProof
+             (RingMicromega.PsatzAdd
+                (RingMicromega.PsatzIn BinNums.Z 3)
+                (RingMicromega.PsatzAdd
+                   (RingMicromega.PsatzIn BinNums.Z 2)
+                   (RingMicromega.PsatzIn BinNums.Z 0)))
+             ZMicromega.DoneProof] eq_refl
+          (fun p : BinNums.positive =>
+           match p with
+           | BinNums.xI _ => BinInt.Z.of_nat (s1 + s2')
+           | BinNums.xO p0 =>
+               match p0 with
+               | BinNums.xI _ => BinNums.Z0
+               | BinNums.xO _ => BinInt.Z.of_nat s1
+               | BinNums.xH => BinInt.Z.of_nat s2
+               end
+           | BinNums.xH =>
+               BinInt.Z.max BinNums.Z0
+                 (BinInt.Z.sub (BinInt.Z.of_nat (s1 + s2'))
+                    (BinInt.Z.of_nat s1))
+           end)
+          (BinInt.Z.max_spec BinNums.Z0
+             (BinInt.Z.sub (BinInt.Z.of_nat (s1 + s2'))
+                (BinInt.Z.of_nat s1)))
+          (ZifyClasses.rew_iff (s1 + s2' < s1 + s2)
+             (BinInt.Z.lt (BinInt.Z.of_nat (s1 + s2'))
+                (BinInt.Z.add (BinInt.Z.of_nat s1)
+                   (BinInt.Z.of_nat s2)))
+             (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat
+                BinInt.Z.lt Znat.Nat2Z.inj_lt 
+                (s1 + s2') (BinInt.Z.of_nat (s1 + s2')) eq_refl
+                (s1 + s2)
+                (BinInt.Z.add (BinInt.Z.of_nat s1)
+                   (BinInt.Z.of_nat s2))
+                (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z
+                   BinNums.Z PeanoNat.Nat.add BinInt.Z.of_nat
+                   BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.add
+                   Znat.Nat2Z.inj_add s1 
+                   (BinInt.Z.of_nat s1) eq_refl s2
+                   (BinInt.Z.of_nat s2) eq_refl))
+             (ZifyClasses.rew_iff_rev (s1 + s2' < s1 + s2)
+                (BinInt.Z.lt
+                   (BinInt.Z.add (BinInt.Z.of_nat s1)
+                      (BinInt.Z.of_nat s2'))
+                   (BinInt.Z.add (BinInt.Z.of_nat s1)
+                      (BinInt.Z.of_nat s2)))
+                (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat
+                   BinInt.Z.lt Znat.Nat2Z.inj_lt 
+                   (s1 + s2')
+                   (BinInt.Z.add (BinInt.Z.of_nat s1)
+                      (BinInt.Z.of_nat s2'))
+                   (ZifyClasses.mkapp2 nat nat nat BinNums.Z
+                      BinNums.Z BinNums.Z PeanoNat.Nat.add
+                      BinInt.Z.of_nat BinInt.Z.of_nat
+                      BinInt.Z.of_nat BinInt.Z.add
+                      Znat.Nat2Z.inj_add s1 
+                      (BinInt.Z.of_nat s1) eq_refl s2'
+                      (BinInt.Z.of_nat s2') eq_refl) 
+                   (s1 + s2)
+                   (BinInt.Z.add (BinInt.Z.of_nat s1)
+                      (BinInt.Z.of_nat s2))
+                   (ZifyClasses.mkapp2 nat nat nat BinNums.Z
+                      BinNums.Z BinNums.Z PeanoNat.Nat.add
+                      BinInt.Z.of_nat BinInt.Z.of_nat
+                      BinInt.Z.of_nat BinInt.Z.add
+                      Znat.Nat2Z.inj_add s1 
+                      (BinInt.Z.of_nat s1) eq_refl s2
+                      (BinInt.Z.of_nat s2) eq_refl))
+                (ZMicromega.ZTautoChecker_sound
+                   (Tauto.IMPL
+                      (Tauto.A Tauto.isProp
+                         {|
+                           RingMicromega.Flhs :=
+                             EnvRing.PEX (BinNums.xO BinNums.xH);
+                           RingMicromega.Fop := RingMicromega.OpLt;
+                           RingMicromega.Frhs :=
+                             EnvRing.PEX (BinNums.xI BinNums.xH)
+                         |} tt) None
+                      (Tauto.A Tauto.isProp
+                         {|
+                           RingMicromega.Flhs :=
+                             EnvRing.PEadd 
+                               (EnvRing.PEX BinNums.xH)
+                               (EnvRing.PEX (BinNums.xO BinNums.xH));
+                           RingMicromega.Fop := RingMicromega.OpLt;
+                           RingMicromega.Frhs :=
+                             EnvRing.PEadd 
+                               (EnvRing.PEX BinNums.xH)
+                               (EnvRing.PEX (BinNums.xI BinNums.xH))
+                         |} tt)) [] eq_refl
+                   (fun p : BinNums.positive =>
+                    match p with
+                    | BinNums.xI _ => BinInt.Z.of_nat s2
+                    | BinNums.xO _ => BinInt.Z.of_nat s2'
+                    | BinNums.xH => BinInt.Z.of_nat s1
+                    end)
+                   (ZifyClasses.rew_iff 
+                      (s2' < s2)
+                      (BinInt.Z.lt (BinInt.Z.of_nat s2')
+                         (BinInt.Z.of_nat s2))
+                      (ZifyClasses.mkrel nat BinNums.Z lt
+                         BinInt.Z.of_nat BinInt.Z.lt
+                         Znat.Nat2Z.inj_lt s2' 
+                         (BinInt.Z.of_nat s2') eq_refl s2
+                         (BinInt.Z.of_nat s2) eq_refl) Hs2'))))
+          (ZifyClasses.rew_iff (~ s1 + s2' < s1)
+             (~
+              BinInt.Z.lt (BinInt.Z.of_nat (s1 + s2'))
+                (BinInt.Z.of_nat s1))
+             (ZifyClasses.not_morph (s1 + s2' < s1)
+                (BinInt.Z.lt (BinInt.Z.of_nat (s1 + s2'))
+                   (BinInt.Z.of_nat s1))
+                (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat
+                   BinInt.Z.lt Znat.Nat2Z.inj_lt 
+                   (s1 + s2') (BinInt.Z.of_nat (s1 + s2')) eq_refl
+                   s1 (BinInt.Z.of_nat s1) eq_refl)) n0))) = 
+        exist (fun p : nat => p < s2) s2' Hs2'). 
+    apply subset_eq_compat. lia.
+    rewrite <- H.
+    destruct get_parent; try reflexivity.
+  + apply functional_extensionality.
+    destruct x as [[i']|p].
+    - (*l(i34) =l(i12)*)
+      rewrite bij_subset_compose_id.
+      rewrite bij_subset_compose_id.
+      simpl.
+      unfold bij_list_forward, sequence, switch_link, rearrange, parallel, extract1, funcomp, id.
+      unfold bij_subset_forward.
+      unfold permut_list_forward, permutation_distributive.
+      unfold link_juxt, bij_subset_backward.
+      simpl.
+      unfold id.
+      unfold in_app_or_m_nod_dup.
+      simpl.
+      destruct (in_dec EqDecN i' i4).
+      * (*l(i4) =l(i12)*) 
+      destruct get_link; try reflexivity.
+      destruct s0 as [n npf]. 
+      destruct in_app_or_m.
+      ** destruct (in_dec EqDecN n i2o4).
+      *** symmetry. rewrite <- (innername_proof_irrelevant b2 n i5). 
+      destruct get_link; try reflexivity.
+      *** exfalso. apply n0. apply (p24 n). assumption.
+      ** destruct (in_dec EqDecN n i2o4).
+      *** symmetry. rewrite <- (innername_proof_irrelevant b2 n i5). 
+      destruct get_link; try reflexivity.
+      *** exfalso. apply n0. apply (p24 n). assumption.
+      * (*l(i3) =l(i12)*) 
+      destruct get_link; try reflexivity. 
+      destruct s0 as [n' npf']. 
+      unfold in_app_or_m, sum_shuffle.
+      destruct (in_dec EqDecN n' o4i2).
+      ** destruct (in_dec EqDecN n' i2o4).
+      *** 
+  Admitted.
+    
+
 Section NestingBig.
 
 Definition rm_void_parent {s1 r1 node0: FinDecType} 
@@ -3454,7 +3994,7 @@ Definition rm_void_link {i1 o1 node0 edge0: FinDecType} {control0 : (type node0)
     Qed. *)
 
 
-(* Definition nest {s1 i1 r1 o1 i2} (* TODO check definition*)
+Definition nest {s1 i1 r1 o1 i2} (* TODO check definition*)
   (b1 : bigraph s1 EmptyNDL r1 o1) (b2 : bigraph voidfd i2 s1 i1) :=
   (rm_void_finDecSum ((@bigraph_identity voidfd i1) || b1)) <<o>> b2.
 

@@ -385,7 +385,7 @@ Proof.
     destruct (in_dec EqDecN a m).
     - right. apply i. 
     - left. apply not_in_left in H; assumption.
-Qed.
+Defined.
 
 Lemma in_app_or_m_nod_dup : forall (l m:list Name) (a:Name), 
 NoDup l -> NoDup m -> In a (app_merge' l m) -> In a l + In a m.
