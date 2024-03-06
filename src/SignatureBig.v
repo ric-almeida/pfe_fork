@@ -83,5 +83,3 @@ Definition bij_port_void (c : void -> Kappa) : bijection (Port c) void.
   Defined.
 
 End Signature.
-
-Print Signature.

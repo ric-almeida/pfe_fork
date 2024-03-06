@@ -7,7 +7,9 @@ Require Import MyBasics.
 Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.
 
-Set Printing All.
+Require Import Coq.Sorting.Permutation.
+Require Import Coq.Classes.CRelationClasses.
+
 
 
 Import ListNotations.
@@ -542,7 +544,20 @@ Definition permutation (l1: list Name) (l2: list Name) := forall name, In name l
 Definition permutation_id (l: list Name) : permutation l l.
 Proof. unfold permutation. intros. tauto. Defined.
 
-Require Import Coq.Classes.CRelationClasses.
+Theorem TODO : forall l1 l2, permutation l1 l2 <-> Permutation l1 l2.
+Proof.
+intros.
+split; intros.
+- unfold permutation in H. 
+induction l1.
++ induction l2.
+* constructor.
+* edestruct H. admit.
++ admit.
+- unfold permutation. intros name. destruct H.
++ tauto.
++ Admitted.
+
 
 Theorem symmetric_permutation: Symmetric permutation.
 Proof.
@@ -657,13 +672,23 @@ simpl. destruct (in_dec EqDecN a l2).
 Admitted.  *)
 
 (* PART ABOUT DISJOINT LISTS *)
-Section DisjointLists.
+
 Definition Disjoint (l1:NoDupList) (l2:NoDupList) : Prop :=
 forall name, In name l1 -> ~ In name l2.
 
-Notation "l1 # l2" := (Disjoint l1 l2) (at level 50, left associativity).
+Global Notation "l1 # l2" := (Disjoint l1 l2) (at level 50, left associativity).
 
-Definition rev_disjoint {l1:NoDupList} {l2:NoDupList} (d: Disjoint l1 l2) : l2 # l1.
+Remark void_disjoint_all_list_left : forall l:NoDupList, EmptyNDL # l.
+  Proof.
+    intros. unfold Disjoint. intros. unfold EmptyNDL. auto. 
+  Qed. 
+
+Remark void_disjoint_all_list_right : forall l:NoDupList, l # EmptyNDL.
+  Proof.
+    intros. unfold Disjoint. intros. unfold EmptyNDL. auto. 
+  Qed. 
+
+Definition rev_disjoint {l1:NoDupList} {l2:NoDupList} (d: l1 # l2) : l2 # l1.
 Proof.
 unfold Disjoint in *.
 intros.
@@ -672,6 +697,10 @@ intros.
 apply d in H0.
 apply H0. apply H.
 Qed. (*Or Defined?*)
+
+Definition reflnames {r} : forall name : Name,
+  In name r <-> In name r.
+  reflexivity. Defined.
 
 
 Lemma disjoint_NoDup_app : forall (l1 l2 : list Name),
@@ -759,7 +788,7 @@ Theorem dis_trans_r {i1 i2 i3}
   - apply (not_in_both i1 i3 name H H0 dis_i13). 
   Qed.
 
-End DisjointLists.
+(* End DisjointLists. *)
 
 
 Section NameSubsets.
@@ -862,7 +891,6 @@ Definition bij_list_names' (i1:NoDupList) (i2:NoDupList) {dis_i:Disjoint i1 i2} 
   destruct x; apply subset_eq_compat. (*Lost information somewhere*)
   Abort.
 
-Print bij_list_names.
 
 
 End NameSubsets.

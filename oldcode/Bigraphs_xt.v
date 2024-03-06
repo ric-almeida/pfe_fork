@@ -1232,7 +1232,6 @@ Focus 2.
 induction (H0 q).
 apply Acc_intro.
 intros.
-Print Acc.
  eapply (Acc_incl _ _ _ _ H0).
 
 

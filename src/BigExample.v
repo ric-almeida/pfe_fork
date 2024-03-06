@@ -5,10 +5,7 @@ Require Import MyBasics.
 Require Import Bijections.
 Require Import FunctionalExtensionality.
 
-Set Printing All.
 
-Locate Signature.
-Print SignatureBig.Signature.
 Module MySig <: Signature. (*with (Kappa := type (findec_fin 3)).*)
 Definition Kappa : Type := type (findec_fin 1).
 
