@@ -28,6 +28,11 @@ mkNoDupList
 
 Definition EmptyNDL : NoDupList := {| ndlist := []; nd := NoDup_nil Name |}.
 
+Definition OneelNDL (n : Name): NoDupList.
+eapply (mkNoDupList [n]).
+constructor; auto; constructor. 
+Defined.
+
 Definition list_to_NDL (l:list Name) : NoDupList.
 apply (
     mkNoDupList 

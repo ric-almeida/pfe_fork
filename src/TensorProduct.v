@@ -43,7 +43,7 @@ Definition bigraph_tensor_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
     ((bij_id <+> bijection_inv bij_fin_sum) <o>
       (bij_sum_shuffle <o> (parallel (get_parent b1) (get_parent b2)) <o> (bijection_inv bij_sum_shuffle)) <o> 
       (bij_id <+> bij_fin_sum))
-    ( ((@bij_list_names o1 o2 dis_o) <+> bij_id) <o>
+    (((@bij_list_names o1 o2 dis_o) <+> bij_id) <o>
       bij_sum_shuffle <o> (parallel (get_link b1) (get_link b2)) <o> (bijection_inv bij_sum_shuffle) <o> 
       (bijection_inv ((@bij_list_names i1 i2 dis_i) <+> (bij_join_port (get_control b1) (get_control b2)))))
     ).
