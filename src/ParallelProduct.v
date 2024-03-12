@@ -100,29 +100,32 @@ Definition substitution {i : list NoDupList} {o : NoDupList} :
 
 
 
-Definition tmp {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
-  forall (i:NameSub(intersectionND i1 i2)),
-  match (get_link b1 (inl i)) with
-  | inl e => False
-  | inr o => get_link b2 (inl i) = o
+Definition eq_link_faces {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :=
+  forall (i : NameSub (intersectionND i1 i2)),
+  match (get_link b1 (inl (to_left i))) with
+  | inr e => False
+  | inl o1' => 
+    match get_link b2 (inl (to_right i)) with
+    | inr e => False
+    | inl o2' => proj1_sig o1' = proj1_sig o2' 
+    end
   end.
 
-Definition union_possible {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+(* Definition union_possible {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
-  (i : Name) (ini1 : In i i1) : 
+  (i : Name) : 
   In i (myintersection (ndlist i1) (ndlist i2)) -> 
   (
     match (get_link b1 (inl i)) with
     | inl e => False
     | inr o => get_link b2 (inl i) = o
     end
-  ).
-
+  ). *)
 
 Definition link_juxt {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
-  {up : union_possible b1 b2}
+  {up : eq_link_faces b1 b2}
   (ip :NameSub (app_merge_NoDupList i1 i2) + Port (join (get_control b1) (get_control b2))) :
   NameSub (app_merge_NoDupList o1 o2) + type (findec_sum (get_edge b1) (get_edge b2)). 
   Proof.
@@ -160,8 +163,8 @@ Definition link_juxt {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
   Defined.
 
 Definition bigraph_parallel_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
-  {dis_i : i1 # i2}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
+  {up : eq_link_faces b1 b2}
     : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) (r1 + r2) (app_merge_NoDupList o1 o2).
   Proof.
   refine (Big 
@@ -175,7 +178,7 @@ Definition bigraph_parallel_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList
     ((bij_id <+> bijection_inv bij_fin_sum) <o>
       (bij_sum_shuffle <o> (parallel (get_parent b1) (get_parent b2)) <o> (bijection_inv bij_sum_shuffle)) <o> 
       (bij_id <+> bij_fin_sum))
-    (link_juxt b1 b2 (dis_i := dis_i)) _
+    (link_juxt b1 b2 (up := up)) _
     ). 
   - rewrite <- tensor_alt.
   apply finite_parent_inout.
@@ -186,12 +189,26 @@ Definition bigraph_parallel_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList
 
 Global Notation "b1 || b2" := (bigraph_parallel_product b1 b2) (at level 50, left associativity).
 
+Theorem disjoint_innernames_implies_eq_link_faces {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+  {b1 : bigraph s1 i1 r1 o1} {b2 : bigraph s2 i2 r2 o2} :
+  i1 # i2 -> eq_link_faces b1 b2.
+  Proof.
+  intros.
+  unfold eq_link_faces.
+  intros.
+  destruct i0. exfalso.
+  unfold intersectionND in i0.
+  simpl in i0.
+  rewrite (intersection_disjoint_empty H) in i0.
+  apply i0.
+  Qed. 
+
 Theorem tp_eq_pp {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
-  {dis_i : i1 # i2} {dis_o : o1 # o2}:
+  {dis_i : i1 # i2} {dis_o : o1 # o2} :
   bigraph_equality 
     (bigraph_tensor_product (dis_i:= dis_i) (dis_o := dis_o) b1 b2) 
-    (bigraph_parallel_product (dis_i:= dis_i) b1 b2).
+    (bigraph_parallel_product (up := disjoint_innernames_implies_eq_link_faces dis_i) b1 b2).
   Proof.
   refine (BigEq _ _ _ _ _ _ _ _ (b1 ⊗ b2) (b1 || b2)
     eq_refl
@@ -247,7 +264,9 @@ Theorem tp_eq_pp {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
 
 
 Lemma arity_pp_left_neutral : forall {s i r o} (b : bigraph s i r o) n, 
-  Arity (get_control (bigraph_parallel_product (dis_i := void_disjoint_all_list_left i) ∅ b) n) = Arity (get_control b (bij_void_sum_neutral n)).
+  Arity (get_control (bigraph_parallel_product 
+    (up := disjoint_innernames_implies_eq_link_faces (void_disjoint_all_list_left i)) 
+    ∅ b) n) = Arity (get_control b (bij_void_sum_neutral n)).
   Proof.
   intros s i r o b n.
   destruct n as [ v | n].
@@ -256,7 +275,8 @@ Lemma arity_pp_left_neutral : forall {s i r o} (b : bigraph s i r o) n,
   Qed.
 
 Theorem bigraph_pp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
-  bigraph_equality (bigraph_parallel_product (dis_i := void_disjoint_all_list_left i) ∅ b) b.
+  bigraph_equality (bigraph_parallel_product 
+    (up := disjoint_innernames_implies_eq_link_faces (void_disjoint_all_list_left i)) ∅ b) b.
   Proof.
   intros s i r o b.
   apply (BigEq _ _ _ _ _ _ _ _ (∅ || b) b
@@ -386,7 +406,7 @@ Theorem bigraph_pp_left_neutral : forall {s i r o} (b : bigraph s i r o),
   Qed.
 
 Lemma arity_pp_right_neutral : forall {s i r o} (b : bigraph s i r o) n, 
-  Arity (get_control (bigraph_parallel_product (dis_i := void_disjoint_all_list_right i) b ∅) n) = Arity (get_control b (bij_void_sum_neutral_r n)).
+  Arity (get_control (bigraph_parallel_product (up := disjoint_innernames_implies_eq_link_faces (void_disjoint_all_list_right i)) b ∅) n) = Arity (get_control b (bij_void_sum_neutral_r n)).
   Proof.
   intros s i r o b n.
   destruct n as [n | v].
@@ -395,7 +415,7 @@ Lemma arity_pp_right_neutral : forall {s i r o} (b : bigraph s i r o) n,
   Qed.
 
 Theorem bigraph_pp_right_neutral : forall {s i r o} (b : bigraph s i r o), 
-  bigraph_equality (bigraph_parallel_product (dis_i := void_disjoint_all_list_right i) b ∅) b.
+  bigraph_equality (bigraph_parallel_product (up := disjoint_innernames_implies_eq_link_faces (void_disjoint_all_list_right i)) b ∅) b.
   Proof.
   intros s i r o b.
   apply (BigEq _ _ _ _ _ _ _ _ (b || ∅) b
@@ -519,11 +539,27 @@ Theorem bigraph_pp_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r
   Qed. *)
 Abort. We no longer have commutativity *)
 Lemma arity_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
-  {dis_i12 : i1 # i2} {dis_i23 : i2 # i3} {dis_i13 : i1 # i3}
+  {up12 : eq_link_faces b1 b2} {up23 : eq_link_faces b2 b3}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) n12_3,
-  Arity (get_control (bigraph_parallel_product (dis_i := dis_trans dis_i23 dis_i13) (bigraph_parallel_product (dis_i:= dis_i12) b1 b2) b3) n12_3) 
+  Arity (get_control (
+    bigraph_parallel_product 
+      (up := (dis_trans up12 up23)) 
+      (bigraph_parallel_product 
+        (up := up12) 
+        b1 
+        b2) 
+      b3) 
+    n12_3) 
   = 
-  Arity (get_control (bigraph_parallel_product (dis_i := dis_trans_r dis_i12 dis_i13) b1 (bigraph_parallel_product (dis_i:= dis_i23) b2 b3)) (bij_sum_assoc n12_3)).
+  Arity (get_control (
+    bigraph_parallel_product 
+      (up := dis_trans_r dis_i12 dis_i13) 
+      b1 
+      (bigraph_parallel_product 
+        (up := up23) 
+        b2 
+        b3)) 
+    (bij_sum_assoc n12_3)).
   Proof.
   intros until n12_3.
   destruct n12_3 as [[n1 | n2] | n3].
