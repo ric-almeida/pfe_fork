@@ -908,6 +908,31 @@ Definition bij_list_names' (i1:NoDupList) (i2:NoDupList) {dis_i:Disjoint i1 i2} 
 
 End NameSubsets.
 
+Lemma in_both_in_intersection {i1 i2 : list Name} {i : Name} :
+  In i i1 -> In i i2 ->
+  In i (myintersection i1 i2).
+  Proof.
+  intros H1 H2.
+  unfold myintersection.
+  simpl in *.
+  induction i1.
+  - apply H1.
+  - destruct (in_dec EqDecN a i2).
+  + simpl in *. 
+  destruct (EqDecN a i).
+  * left. apply e.
+  * right. apply IHi1.
+  destruct H1.
+  ** exfalso. apply n. apply H.
+  ** apply H.
+  + apply IHi1.
+  destruct (EqDecN a i).
+  * destruct e. exfalso. apply n. apply H2.
+  * simpl in H1. destruct H1.
+  ** destruct H. exfalso. apply n0. reflexivity.
+  ** apply H.
+  Qed.
+
 Definition from_intersection_left {i1 i2 : NoDupList} {i : Name} :
   In i (myintersection (ndlist i1) (ndlist i2)) ->  In i i1.
   Proof.
@@ -931,18 +956,44 @@ Definition from_intersection_left {i1 i2 : NoDupList} {i : Name} :
       ** apply Hin.
   Qed.
 
-Definition from_intersection_left {i1 i2 : NoDupList} {i : Name} 
-  (ininter : In i (myintersection (ndlist i1) (ndlist i2))) : In i i2.
-  Proof. 
-  unfold myintersection in ininter.
-  destruct i1.
-  induction ndlist0.
-  - exfalso. simpl in ininter. apply ininter.
-  - pose proof nd0 as tmp0.
-  apply nodup_tl in tmp0.
-  apply (IHndlist0 tmp0). 
-  simpl.
-  exists i. 
+Theorem intersection_commutes {i1 i2 : NoDupList} {i : Name} :
+  In i (myintersection (ndlist i1) (ndlist i2)) ->
+  In i (myintersection (ndlist i2) (ndlist i1)).
+  Proof.
+  intros.  
+  unfold myintersection in *.
+  destruct i1 as [i1 nd1].
+  destruct i2 as [i2 nd2].
+  simpl in *.
+  induction i1.
+  - exfalso. apply H.
+  - destruct (EqDecN a i).
+  + destruct e. destruct (in_dec EqDecN a i2).
+  * fold myintersection. apply (in_both_in_intersection i).
+    simpl. left. reflexivity.
+  * exfalso. fold myintersection in *.  Admitted.
+
+
+Definition from_intersection_right {i1 i2 : NoDupList} {i : Name} :
+  In i (myintersection (ndlist i1) (ndlist i2)) ->  In i i2.
+  Proof.
+  intros Hin.
+  apply intersection_commutes in Hin.
+  apply from_intersection_left in Hin.
+  apply Hin. 
+  Qed.
+
+Theorem intersection_eq {i1 i2 : NoDupList} {i : Name} :
+In i (myintersection (ndlist i1) (ndlist i2)) <->  (In i i1 /\ In i i2).
+Proof.
+split; intros.
+- split.
++ apply from_intersection_left in H. apply H.
++ apply from_intersection_right in H. apply H.
+- destruct H. apply in_both_in_intersection; assumption.
+Qed.
+
+
 
 
 End Names.
