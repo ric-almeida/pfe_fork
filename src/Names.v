@@ -11,13 +11,21 @@ Require Import Coq.Sorting.Permutation.
 Require Import Coq.Classes.CRelationClasses.
 
 
-
 Import ListNotations.
 
 
 Module Type Names.
 Parameter Name : Type.
 Parameter EqDecN : forall x y : Name, {x = y} + {x <> y}.
+
+Fixpoint myintersection (l1 : list Name) (l2 : list Name) : list Name := 
+  match l1 with
+    | nil => []
+    | a :: l1' =>  
+      if in_dec EqDecN a l2 then a::myintersection l1' l2
+        else myintersection l1' l2
+  end.
+
 
 Record NoDupList : Type :=
 mkNoDupList
@@ -899,6 +907,42 @@ Definition bij_list_names' (i1:NoDupList) (i2:NoDupList) {dis_i:Disjoint i1 i2} 
 
 
 End NameSubsets.
+
+Definition from_intersection_left {i1 i2 : NoDupList} {i : Name} :
+  In i (myintersection (ndlist i1) (ndlist i2)) ->  In i i1.
+  Proof.
+  intros Hin.
+  unfold myintersection in Hin.
+  destruct i1 as [i1 nd1].
+  destruct i2 as [i2 nd2].
+  simpl in *.
+  induction i1.
+  - apply Hin.
+  - simpl. 
+    destruct (EqDecN a i).
+    + left. apply e.
+    + right.
+      apply IHi1.
+      * apply nodup_tl in nd1. apply nd1.
+      * destruct (in_dec EqDecN a i2).
+      ** simpl in Hin. destruct Hin.
+      *** exfalso. apply n. apply H.
+      *** apply H.
+      ** apply Hin.
+  Qed.
+
+Definition from_intersection_left {i1 i2 : NoDupList} {i : Name} 
+  (ininter : In i (myintersection (ndlist i1) (ndlist i2))) : In i i2.
+  Proof. 
+  unfold myintersection in ininter.
+  destruct i1.
+  induction ndlist0.
+  - exfalso. simpl in ininter. apply ininter.
+  - pose proof nd0 as tmp0.
+  apply nodup_tl in tmp0.
+  apply (IHndlist0 tmp0). 
+  simpl.
+  exists i. 
 
 
 End Names.
