@@ -71,21 +71,6 @@ Definition bigraph_composition {s1 r1 s2 : nat} {i1o2 o2i1 o1 i2 : NoDupList}
   
 Global Notation "b1 '<<o>>' b2" := (bigraph_composition b1 b2) (at level 50, left associativity).
 
-Definition bigraph_identity {s i i'} {p:permutation (ndlist i) (ndlist i')}: bigraph s i s i'. (*actually s i s (permutation i) *)
-  Proof.
-  apply (Big s i s i'
-          voidfd (*node : ∅*)
-          voidfd (*edge : ∅*)
-          (@void_univ_embedding _) (*control : ∅_Kappa*)
-          id (*parent : id*)
-        ).
-  - intros [inner | port]. (*link_|{names} : id*)
-    + left. destruct inner. exists x. unfold permutation in p. apply p in i0. apply i0.
-    + destruct port. destruct x.
-  - intro n. (*acyclic parent*)
-    destruct n.
-  Defined.
-
 Lemma arity_comp_left_neutral : forall {s i r o o' o''} 
   {p : permutation (ndlist o) (ndlist o')} 
   {p' : permutation (ndlist o') (ndlist o'')}

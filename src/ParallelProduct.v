@@ -25,7 +25,7 @@ Module ParallelProduct (s : Signature) (n : Names) (b: Bigraphs s n).
 Module tp := TensorProduct s n b.
 Include tp.
 
-Definition elementary_substitution {i : NoDupList} {o : Name} : bigraph 0 i 0 (OneelNDL o).
+(* Definition elementary_substitution {i : NoDupList} {o : Name} : bigraph 0 i 0 (OneelNDL o).
   refine (Big 
     0 i 0 (OneelNDL o)
     voidfd
@@ -96,11 +96,33 @@ Definition substitution {i : list NoDupList} {o : NoDupList} :
     (dis_i := dis_trans dis_iF dis_iG)
     (dis_o := dis_trans dis_oF dis_oG)
     (bigraph_tensor_product (dis_i := dis_iF) (dis_o := dis_oF) F' (substitution iF iS))
-    G'. *)
+    G'. *) *)
+
+
+
+Definition tmp {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
+  forall (i:NameSub(intersectionND i1 i2)),
+  match (get_link b1 (inl i)) with
+  | inl e => False
+  | inr o => get_link b2 (inl i) = o
+  end.
+
+Definition union_possible {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
+  (i : Name) (ini1 : In i i1) : 
+  In i (myintersection (ndlist i1) (ndlist i2)) -> 
+  (
+    match (get_link b1 (inl i)) with
+    | inl e => False
+    | inr o => get_link b2 (inl i) = o
+    end
+  ).
+
 
 Definition link_juxt {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
-  {dis_i : i1 # i2}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
+  {up : union_possible b1 b2}
   (ip :NameSub (app_merge_NoDupList i1 i2) + Port (join (get_control b1) (get_control b2))) :
   NameSub (app_merge_NoDupList o1 o2) + type (findec_sum (get_edge b1) (get_edge b2)). 
   Proof.
@@ -1476,5 +1498,5 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
       *** exfalso. apply n. apply (p24 x). assumption.
   Qed. 
-  
+
 End ParallelProduct.

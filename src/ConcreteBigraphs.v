@@ -83,5 +83,20 @@ Definition bigraph_empty : bigraph 0 EmptyNDL 0 EmptyNDL.
 
 Global Notation "∅" := bigraph_empty.
 
+Definition bigraph_identity {s i i'} {p:permutation (ndlist i) (ndlist i')}: bigraph s i s i'. (*actually s i s (permutation i) *)
+  Proof.
+  apply (Big s i s i'
+          voidfd (*node : ∅*)
+          voidfd (*edge : ∅*)
+          (@void_univ_embedding _) (*control : ∅_Kappa*)
+          id (*parent : id*)
+        ).
+  - intros [inner | port]. (*link_|{names} : id*)
+    + left. destruct inner. exists x. unfold permutation in p. apply p in i0. apply i0.
+    + destruct port. destruct x.
+  - intro n. (*acyclic parent*)
+    destruct n.
+  Defined.
+  
 End Bigraphs.
 

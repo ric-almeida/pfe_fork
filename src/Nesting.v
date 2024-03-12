@@ -21,6 +21,41 @@ Module NestingBig (s : Signature) (n : Names) (b: Bigraphs s n).
 Module pp := ParallelProduct s n b.
 Include pp.
 
+Example I : NoDupList. Admitted.
+Example m : nat. Admitted.
+Example X : NoDupList. Admitted.
+Example n : nat. Admitted.
+Example Y : NoDupList. Admitted.
+Example F : bigraph 0 I m X. Admitted.
+Example G : bigraph m EmptyNDL n Y. Admitted.
+Example dis_i : X # Y. Admitted.
+
+(* Example id_pp_G := 
+  bigraph_parallel_product 
+    (dis_i := void_disjoint_all_list_right X) 
+    (bigraph_identity (s := 0) (i := X)) 
+    G. *)
+
+
+Definition nest {I m X n Y sF}
+  (F : bigraph sF I m X) (G : bigraph m EmptyNDL n Y) 
+  : bigraph sF I n (app_merge_NoDupList X Y).
+  refine 
+  (bigraph_composition
+    (p := _)
+    (bigraph_parallel_product (dis_i := void_disjoint_all_list_right X) (bigraph_identity (s := 0) (i := X)) G)
+    F).
+  - simpl. rewrite app_merge'_empty_right. exact (permutation_id X).
+  - exact (permutation_id X).
+  Defined.
+
+Theorem nest_associative {I k X m Y n Z sF}
+  (F : bigraph sF I k X) (G : bigraph k EmptyNDL m Y) (H : bigraph m EmptyNDL n Z) :
+  bigraph_equality
+    (nest H (nest G F))
+    (nest (nest H G) F).
+
+ 
 Definition rm_void_parent {s1 r1 node0: FinDecType} 
   (p : type node0 + type (findec_sum voidfd s1) ->
     type node0 + type (findec_sum voidfd r1)) : 
@@ -121,18 +156,9 @@ Definition rm_void_link {i1 o1 node0 edge0: FinDecType} {control0 : (type node0)
   (b1 : bigraph s1 EmptyNDL r1 o1) (b2 : bigraph 0 i2 s1 i1) :=
   (rm_void_finDecSum ((@bigraph_identity voidfd i1) || b1)) <<o>> b2. *)
 
-(* Definition nest' {I m X n Y} (* TODO check definition*)
-  (F : bigraph 0 I m X) (G : bigraph m EmptyNDL n Y) 
-  : bigraph voidfd I n (app_merge' X Y) :=
-  (rm_void_finDecSum ((@bigraph_identity voidfd X) || G)) <<o>> F. *) 
+(* *)
 
-Example I : NoDupList. Admitted.
-Example m : nat. Admitted.
-Example X : NoDupList. Admitted.
-Example n : nat. Admitted.
-Example Y : NoDupList. Admitted.
-Example F : bigraph 0 I m X. Admitted.
-Example G : bigraph m EmptyNDL n Y. Admitted.
+
 
 
 Example b1 {s1 r1 o1}: bigraph s1 EmptyNDL r1 o1. Admitted.
