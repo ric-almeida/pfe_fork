@@ -956,6 +956,28 @@ Definition from_intersection_left {i1 i2 : NoDupList} {i : Name} :
       ** apply Hin.
   Qed.
 
+Definition from_intersection_left_l {i1 i2 : list Name} {i : Name} :
+  In i (myintersection i1 i2) ->  In i i1.
+  Proof.
+  intros Hin.
+  unfold myintersection in Hin.
+  simpl in *.
+  induction i1.
+  - apply Hin.
+  - simpl. 
+    destruct (EqDecN a i).
+    + left. apply e.
+    + right.
+      apply IHi1.
+      destruct (in_dec EqDecN a i2).
+      ** simpl in Hin. destruct Hin.
+      *** exfalso. apply n. apply H.
+      *** apply H.
+      ** apply Hin.
+  Qed.
+
+
+
 Theorem intersection_commutes {i1 i2 : NoDupList} {i : Name} :
   In i (myintersection (ndlist i1) (ndlist i2)) ->
   In i (myintersection (ndlist i2) (ndlist i1)).
@@ -969,10 +991,32 @@ Theorem intersection_commutes {i1 i2 : NoDupList} {i : Name} :
   - exfalso. apply H.
   - destruct (EqDecN a i).
   + destruct e. destruct (in_dec EqDecN a i2).
-  * fold myintersection. apply (in_both_in_intersection i).
+  * fold myintersection in *. apply (in_both_in_intersection i).
     simpl. left. reflexivity.
-  * exfalso. fold myintersection in *.  Admitted.
-
+  * exfalso. fold myintersection in *.
+  apply from_intersection_left_l in H.
+  apply NoDup_cons_iff in nd1. destruct nd1.
+  apply H0. apply H.
+  + apply in_both_in_intersection.  
+  * destruct (in_dec EqDecN a i2).
+  ** simpl in H. destruct H.
+  *** exfalso. apply n. apply H.
+  *** fold myintersection in *.
+  apply nodup_tl in nd1. apply IHi1 in nd1.
+  **** apply from_intersection_left_l in nd1. apply nd1.
+  **** apply H.
+  ** fold myintersection in *.
+  apply nodup_tl in nd1. apply IHi1 in nd1.
+  *** apply from_intersection_left_l in nd1. apply nd1.
+  *** apply H.
+  * destruct (in_dec EqDecN a i2).
+  ** fold myintersection in *. simpl in H. destruct H.
+  *** exfalso. apply n. apply H.
+  *** apply from_intersection_left_l in H.
+  simpl. right. apply H.
+  ** fold myintersection in *. apply from_intersection_left_l in H.
+  simpl. right. apply H.
+  Qed.
 
 Definition from_intersection_right {i1 i2 : NoDupList} {i : Name} :
   In i (myintersection (ndlist i1) (ndlist i2)) ->  In i i2.
