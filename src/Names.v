@@ -1071,6 +1071,17 @@ Definition to_intersection {i1 i2 : NoDupList}
   apply in_both_in_intersection; assumption.
   Defined.
 
+Definition to_commute {i1 i2 : NoDupList}
+  (name:NameSub (intersectionNDL i1 i2)) : 
+    NameSub (intersectionNDL i2 i1).
+    Proof. 
+    unfold NameSub in *.
+    destruct name as [name H].
+    exists name.
+    apply intersection_commutes.
+    apply H.
+    Defined.
+
 Theorem intersection_disjoint_empty_NDL {i1 i2 : NoDupList} : 
   i1 # i2 -> myintersection i1 i2 = [].
   Proof.

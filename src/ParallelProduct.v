@@ -539,6 +539,37 @@ Theorem bigraph_pp_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r
   Qed. *)
 Abort. We no longer have commutativity *)
 
+Lemma eq_link_face_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
+  {b1 : bigraph s1 i1 r1 o1} 
+  {b2 : bigraph s2 i2 r2 o2} 
+  (up12 : eq_link_faces b1 b2):
+  eq_link_faces b2 b1.
+  Proof.
+    unfold eq_link_faces in *.
+    unfold NameSub in *.
+    intros i.
+    specialize (up12 (to_commute i)).
+    unfold to_commute in up12.
+    destruct i as [i H21].
+    unfold to_left,to_right in *.
+    destruct get_link eqn:E.
+    - rewrite <- (innername_proof_irrelevant b2 i (from_intersection_left H21)) in up12. 
+    destruct (get_link b2 (inl (exist (fun name : Name => In name i2) i (from_intersection_left H21)))). 
+    + rewrite <- (innername_proof_irrelevant b1 i (from_intersection_left (intersection_commutes H21))).
+    rewrite E.
+    destruct s0. destruct s3.
+    simpl in *. symmetry. apply up12.
+    + apply up12.
+    - destruct (get_link b2
+    (inl
+      (exist (fun name : Name => In name i2) i
+          (from_intersection_left H21)))) eqn:E'.
+    + rewrite <- (innername_proof_irrelevant b1 i (from_intersection_left (intersection_commutes H21))).
+    rewrite E. apply up12.
+    + apply up12.
+  Qed.
+
+
 Lemma eq_link_face_assoc {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   {b1 : bigraph s1 i1 r1 o1} 
   {b2 : bigraph s2 i2 r2 o2} 
@@ -595,16 +626,16 @@ Lemma eq_link_face_assoc {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
    ** apply up23.
    * apply up23.
    + exfalso. apply n. apply H.
-   Qed.
+  Qed.
    
    
 
 Lemma arity_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
-  {up12 : eq_link_faces b1 b2} {up23 : eq_link_faces b2 b3} n12_3,
+  {up12 : eq_link_faces b1 b2} {up23 : eq_link_faces b2 b3} {up13 : eq_link_faces b1 b3} n12_3,
   Arity (get_control (
     bigraph_parallel_product 
-      (up := (dis_trans up12 up23)) 
+      (up := (eq_link_face_assoc up12 up23 up13)) 
       (bigraph_parallel_product 
         (up := up12) 
         b1 
@@ -614,7 +645,7 @@ Lemma arity_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   = 
   Arity (get_control (
     bigraph_parallel_product 
-      (up := dis_trans_r dis_i12 dis_i13) 
+      (up := eq_link_face_commutes (eq_link_face_assoc up23 (eq_link_face_commutes up13) (eq_link_face_commutes up12))) 
       b1 
       (bigraph_parallel_product 
         (up := up23) 
@@ -629,12 +660,18 @@ Lemma arity_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   + reflexivity.
   Qed.
 
-Theorem bigraph_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
-  {dis_i12 : i1 # i2} {dis_i23 : i2 # i3} {dis_i13 : i1 # i3} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3),
+Theorem bigraph_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
+  {up12 : eq_link_faces b1 b2} {up23 : eq_link_faces b2 b3} {up13 : eq_link_faces b1 b3},
   bigraph_equality 
-    (bigraph_parallel_product (dis_i := dis_trans dis_i23 dis_i13) (bigraph_parallel_product (dis_i:= dis_i12) b1 b2) b3)
-    (bigraph_parallel_product (dis_i := dis_trans_r dis_i12 dis_i13) b1 (bigraph_parallel_product (dis_i:= dis_i23) b2 b3)).
+    (bigraph_parallel_product 
+      (up := (eq_link_face_assoc up12 up23 up13)) 
+      (bigraph_parallel_product (up := up12) b1 b2) 
+      b3)
+    (bigraph_parallel_product 
+      (up := eq_link_face_commutes (eq_link_face_assoc up23 (eq_link_face_commutes up13) (eq_link_face_commutes up12))) 
+      b1 
+      (bigraph_parallel_product (up := up23) b2 b3)).
   Proof.
   intros.
   apply (BigEq _ _ _ _ _ _ _ _ ((b1 || b2) || b3) (b1 || (b2 || b3))
@@ -772,16 +809,16 @@ Theorem bigraph_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
         ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
   Qed.
 
-Definition arity_pp_congruence_forward 
+Definition arity_pp_congruence_forward (*TODO: can't we deduce up24 from up13?*)
   {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} 
-  {dis_i13 : i1 # i3} {dis_i24 : i2 # i4}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4)
+  {up13 : eq_link_faces b1 b3} {up24 : eq_link_faces b2 b4}
   (bij_n12 : bijection (type (get_node b1)) (type (get_node b2))) (bij_n34 : bijection (type (get_node b3)) (type (get_node b4)))
   (bij_p12 : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n12 n1)))))
   (bij_p34 : forall (n3 : type (get_node b3)), bijection (fin (Arity (get_control b3 n3))) (fin (Arity (get_control b4 (bij_n34 n3)))))
   (n13 : type (get_node (b1 || b3))) :
-    (fin (Arity (get_control (bigraph_parallel_product (dis_i := dis_i13) b1 b3) n13))) -> 
-      (fin (Arity (get_control (bigraph_parallel_product (dis_i := dis_i24) b2 b4) ((bij_n12 <+> bij_n34) n13)))).
+    (fin (Arity (get_control (bigraph_parallel_product (up := up13) b1 b3) n13))) -> 
+      (fin (Arity (get_control (bigraph_parallel_product (up := up24) b2 b4) ((bij_n12 <+> bij_n34) n13)))).
   Proof.
   destruct n13 as [n1 | n3].
   + exact (bij_p12 n1).
@@ -790,14 +827,14 @@ Definition arity_pp_congruence_forward
 
 Definition arity_pp_congruence_backward 
   {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} 
-  {dis_i13 : i1 # i3} {dis_i24 : i2 # i4}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4)
+  {up13 : eq_link_faces b1 b3} {up24 : eq_link_faces b2 b4}
   (bij_n12 : bijection (type (get_node b1)) (type (get_node b2))) (bij_n34 : bijection (type (get_node b3)) (type (get_node b4)))
   (bij_p12 : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n12 n1)))))
   (bij_p34 : forall (n3 : type (get_node b3)), bijection (fin (Arity (get_control b3 n3))) (fin (Arity (get_control b4 (bij_n34 n3)))))
   (n13 : type (get_node (b1 || b3))) :
-  (fin (Arity (get_control (bigraph_parallel_product (dis_i := dis_i24) b2 b4) ((bij_n12 <+> bij_n34) n13)))) 
-  -> (fin (Arity (get_control (bigraph_parallel_product (dis_i := dis_i13) b1 b3) n13))).
+  (fin (Arity (get_control (bigraph_parallel_product (up := up24) b2 b4) ((bij_n12 <+> bij_n34) n13)))) 
+  -> (fin (Arity (get_control (bigraph_parallel_product (up := up13) b1 b3) n13))).
   Proof.
   destruct n13 as [n1 | n3].
   + exact (backward (bij_p12 n1)).
@@ -806,15 +843,15 @@ Definition arity_pp_congruence_backward
 
 Lemma arity_pp_congruence : 
   forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} 
-  {dis_i13 : i1 # i3} {dis_i24 : i2 # i4}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4)
+  {up13 : eq_link_faces b1 b3} {up24 : eq_link_faces b2 b4}
   (bij_n12 : bijection (type (get_node b1)) (type (get_node b2))) (bij_n34 : bijection (type (get_node b3)) (type (get_node b4)))
   (bij_p12 : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n12 n1)))))
   (bij_p34 : forall (n3 : type (get_node b3)), bijection (fin (Arity (get_control b3 n3))) (fin (Arity (get_control b4 (bij_n34 n3)))))
   (n13 : type (get_node (b1 || b3))),
   bijection 
-    (fin (Arity (get_control (bigraph_parallel_product (dis_i := dis_i13) b1 b3) n13))) 
-    (fin (Arity (get_control (bigraph_parallel_product (dis_i := dis_i24) b2 b4) ((bij_n12 <+> bij_n34) n13)))).
+    (fin (Arity (get_control (bigraph_parallel_product (up := up13) b1 b3) n13))) 
+    (fin (Arity (get_control (bigraph_parallel_product (up := up24) b2 b4) ((bij_n12 <+> bij_n34) n13)))).
   Proof.
   intros until n13.
   apply (mkBijection _ _ 
@@ -833,13 +870,13 @@ Lemma arity_pp_congruence :
   Defined.
 
 Theorem bigraph_pp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4}
-  {dis_i13 : i1 # i3} {dis_i24 : i2 # i4} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4),
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4)
+  {up13 : eq_link_faces b1 b3} {up24 : eq_link_faces b2 b4},
   bigraph_equality b1 b2 -> bigraph_equality b3 b4 -> 
-    bigraph_equality (bigraph_parallel_product (dis_i := dis_i13) b1 b3) (bigraph_parallel_product (dis_i := dis_i24) b2 b4).
+    bigraph_equality (bigraph_parallel_product (up := up13) b1 b3) (bigraph_parallel_product (up := up24) b2 b4).
   Proof.
   intros until b4.
-  intros Heqb1b2 Heqb3b4.
+  intros up13 up24 Heqb1b2 Heqb3b4.
   destruct Heqb1b2 as (bij_s12, bij_i12, bij_r12, bij_o12, bij_n12, bij_e12, bij_p12, big_control_eq12, big_parent_eq12, big_link_eq12).
   destruct Heqb3b4 as (bij_s34, bij_i34, bij_r34, bij_o34, bij_n34, bij_e34, bij_p34, big_control_eq34, big_parent_eq34, big_link_eq34).
   apply (BigEq _ _ _ _ _ _ _ _ (b1 || b3) (b2 || b4)
@@ -1012,21 +1049,36 @@ Lemma bigraph_packed_pp_right_neutral : forall {s i r o} (b : bigraph s i r o),
   Qed. *)
 
 (* Bifunctorial property *)
+
+Theorem eq_link_face_dist {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
+  {b1 : bigraph s1 i1o3 r1 o1} 
+  {b2 : bigraph s2 i2o4 r2 o2} 
+  {b3 : bigraph s3 i3 s1 o3i1} 
+  {b4 : bigraph s4 i4 s2 o4i2}
+  {p13 : permutation (ndlist o3i1) (ndlist i1o3)}
+  {p24 : permutation (ndlist o4i2) (ndlist i2o4)}
+  (up12 : eq_link_faces b1 b2) (up34 : eq_link_faces b3 b4) :
+  eq_link_faces 
+    (bigraph_composition (p:=p13) b1 b3) 
+    (bigraph_composition (p:=p24) b2 b4).
+  Proof. Admitted.
+
+
 Theorem arity_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
   (b1 : bigraph s1 i1o3 r1 o1) 
   (b2 : bigraph s2 i2o4 r2 o2) 
   (b3 : bigraph s3 i3 s1 o3i1) 
   (b4 : bigraph s4 i4 s2 o4i2)
-  {dis_i12 : i1o3 # i2o4} {dis_i34 : i3 # i4} 
+  {up12 : eq_link_faces b1 b2} {up34 : eq_link_faces b3 b4}
   {p13 : permutation (ndlist o3i1) (ndlist i1o3)}
   {p24 : permutation (ndlist o4i2) (ndlist i2o4)}
   (n12_34:type (get_node (b1 || b2 <<o>> (b3 || b4)))),
   Arity (get_control
     (bigraph_composition (p := permutation_distributive p13 p24)
-      (bigraph_parallel_product (dis_i := dis_i12) b1 b2) 
-      (bigraph_parallel_product (dis_i := dis_i34) b3 b4)) n12_34) =
+      (bigraph_parallel_product (up := up12) b1 b2) 
+      (bigraph_parallel_product (up := up34) b3 b4)) n12_34) =
   Arity (get_control 
-    ((bigraph_parallel_product (dis_i := dis_i34)
+    ((bigraph_parallel_product (up := eq_link_face_dist up12 up34)
     (bigraph_composition (p:=p13) b1 b3) 
     (bigraph_composition (p:=p24) b2 b4))) 
     (sum_shuffle n12_34)).
@@ -1040,14 +1092,14 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
   (b2 : bigraph s2 i2o4 r2 o2) 
   (b3 : bigraph s3 i3 s1 o3i1) 
   (b4 : bigraph s4 i4 s2 o4i2)
-  {dis_i12 : i1o3 # i2o4} {dis_i34 : i3 # i4} 
+  {up12 : eq_link_faces b1 b2} {up34 : eq_link_faces b3 b4}
   {p13 : permutation (ndlist o3i1) (ndlist i1o3)}
   {p24 : permutation (ndlist o4i2) (ndlist i2o4)},
   bigraph_equality 
     (bigraph_composition (p := permutation_distributive p13 p24)
-      (bigraph_parallel_product (dis_i := dis_i12) b1 b2) 
-      (bigraph_parallel_product (dis_i := dis_i34) b3 b4))
-    ((bigraph_parallel_product (dis_i := dis_i34)
+      (bigraph_parallel_product (up := up12) b1 b2) 
+      (bigraph_parallel_product (up := up34) b3 b4))
+    ((bigraph_parallel_product (up := eq_link_face_dist up12 up34)
       (bigraph_composition (p:=p13) b1 b3) 
       (bigraph_composition (p:=p24) b2 b4))) .
   Proof.
