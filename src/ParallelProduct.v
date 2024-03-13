@@ -102,7 +102,7 @@ Definition substitution {i : list NoDupList} {o : NoDupList} :
 
 Definition eq_link_faces {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :=
-  forall (i : NameSub (intersectionND i1 i2)),
+  forall (i : NameSub (i1 ∩ i2)),
   match (get_link b1 (inl (to_left i))) with
   | inr e => False
   | inl o1' => 
@@ -197,9 +197,9 @@ Theorem disjoint_innernames_implies_eq_link_faces {s1 r1 s2 r2 : nat} {i1 o1 i2 
   unfold eq_link_faces.
   intros.
   destruct i0. exfalso.
-  unfold intersectionND in i0.
+  unfold intersectionNDL in i0.
   simpl in i0.
-  rewrite (intersection_disjoint_empty H) in i0.
+  rewrite (intersection_disjoint_empty_NDL H) in i0.
   apply i0.
   Qed. 
 
@@ -538,9 +538,70 @@ Theorem bigraph_pp_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r
         destruct get_link; reflexivity.
   Qed. *)
 Abort. We no longer have commutativity *)
+
+Lemma eq_link_face_assoc {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
+  {b1 : bigraph s1 i1 r1 o1} 
+  {b2 : bigraph s2 i2 r2 o2} 
+  {b3 : bigraph s3 i3 r3 o3}
+  (up12 : eq_link_faces b1 b2) 
+  (up23 : eq_link_faces b2 b3) 
+  (up13 : eq_link_faces b1 b3) :
+  eq_link_faces 
+    (bigraph_parallel_product (up := up12) b1 b2)
+    b3.
+  Proof.
+   unfold eq_link_faces.
+   intros [inter12_3 Hinter12_3].
+   unfold intersectionNDL in *.
+   simpl in *.
+   pose Hinter12_3 as Htmp.
+   rewrite intersection_eq in Htmp.
+   destruct Htmp.
+   unfold in_app_or_m_nod_dup.
+   apply in_app_or_m in H.
+   destruct H.
+   - unfold eq_link_faces in *.
+   destruct (in_dec EqDecN inter12_3 i2).
+   + specialize (up23 (to_intersection inter12_3 i0 H0)).
+   unfold to_intersection,to_left,to_right in up23.
+   rewrite <- (innername_proof_irrelevant b2 inter12_3 i0) in up23.
+   destruct get_link.
+   * set (Hi3 := from_intersection_right Hinter12_3).
+   rewrite <- (innername_proof_irrelevant b3 inter12_3 Hi3) in up23.
+   destruct get_link.
+   ** destruct s0. destruct s4. simpl. simpl in up23. apply up23.
+   ** apply up23.
+   * apply up23.
+   + specialize (up13 (to_intersection inter12_3 H H0)).
+   unfold to_intersection,to_left,to_right in up13.
+   rewrite <- (innername_proof_irrelevant b1 inter12_3 (not_in_left (from_intersection_left Hinter12_3) n)) in up13.
+   destruct get_link. 
+   * set (Hi3 := from_intersection_right Hinter12_3).
+   rewrite <- (innername_proof_irrelevant b3 inter12_3 Hi3) in up13.
+   destruct get_link.
+   ** destruct s0. destruct s4. simpl. simpl in up13. apply up13.
+   ** apply up13.
+   * apply up13.
+   - unfold eq_link_faces in *.
+   destruct (in_dec EqDecN inter12_3 i2).
+   + specialize (up23 (to_intersection inter12_3 i0 H0)).
+   unfold to_intersection,to_left,to_right in up23.
+   rewrite <- (innername_proof_irrelevant b2 inter12_3 i0) in up23.
+   destruct get_link.
+   * set (Hi3 := from_intersection_right Hinter12_3).
+   rewrite <- (innername_proof_irrelevant b3 inter12_3 Hi3) in up23.
+   destruct get_link.
+   ** destruct s0. destruct s4. simpl. simpl in up23. apply up23.
+   ** apply up23.
+   * apply up23.
+   + exfalso. apply n. apply H.
+   Qed.
+   
+   
+
 Lemma arity_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
-  {up12 : eq_link_faces b1 b2} {up23 : eq_link_faces b2 b3}
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) n12_3,
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
+  {up12 : eq_link_faces b1 b2} {up23 : eq_link_faces b2 b3} n12_3,
   Arity (get_control (
     bigraph_parallel_product 
       (up := (dis_trans up12 up23)) 
