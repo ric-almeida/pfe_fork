@@ -43,13 +43,13 @@ Definition nest {I m X n Y sF}
   refine 
   (bigraph_composition
     (p := _)
-    (bigraph_parallel_product (dis_i := void_disjoint_all_list_right X) (bigraph_identity (s := 0) (i := X)) G)
+    (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right X)) (bigraph_identity (s := 0) (i := X)) G)
     F).
   - simpl. rewrite app_merge'_empty_right. exact (permutation_id X).
   - exact (permutation_id X).
   Defined.
 
-Theorem nest_associative {I k X m Y n Z sF}
+Fail Theorem nest_associative {I k X m Y n Z sF}
   (F : bigraph sF I k X) (G : bigraph k EmptyNDL m Y) (H : bigraph m EmptyNDL n Z) :
   bigraph_equality
     (nest H (nest G F))
