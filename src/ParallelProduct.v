@@ -1586,6 +1586,7 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       unfold id.
       unfold in_app_or_m_nod_dup.
       unfold in_app_or_m, sum_shuffle.
+      unfold eq_link_faces in *.
       destruct (in_dec EqDecN i' i4).
       * (*bijs l1234(i4) =l1324(i4)*) 
       destruct get_link; try reflexivity.
@@ -1598,13 +1599,33 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       destruct get_link eqn:E; try reflexivity. 
       destruct s0 as [o' opf']. 
       destruct (in_dec EqDecN o' i2o4).
-      *** exfalso. unfold Disjoint in dis_i12.
-      apply (dis_i12 o').
-      **** apply (p13 o'). assumption.
-      **** assumption. 
-      *** rewrite <- (innername_proof_irrelevant b1 o' (match p13 o' with | conj H _ => H end opf')). 
-      destruct get_link; try reflexivity; destruct get_link; try reflexivity.
+      *** 
+      (* exfalso.  *)
+      (* unfold Disjoint in dis_i12. *)
+      (* apply (dis_i12 o'). *)
+      pose opf' as opf''.
+      unfold permutation in *.
+      apply (p13 o') in opf''.
+      specialize (up12 (to_intersection o' opf'' i0)).
+      unfold to_left, to_right, to_intersection in up12.
+      rewrite <- (innername_proof_irrelevant b1 o' (from_intersection_left
+      (in_both_in_intersection opf'' i0))).
+      destruct get_link eqn:E'.
+      **** rewrite <- (innername_proof_irrelevant b2 o' i0) in up12.      
+      destruct (get_link b2
+      (inl (exist (fun name : Name => In name i2o4) o' i0))).
+      ++ f_equal. destruct s0. destruct s5. apply subset_eq_compat.
+      simpl in up12. symmetry. apply up12.
+      ++ exfalso. apply up12. 
+      **** exfalso. apply up12.
+      *** rewrite <- (innername_proof_irrelevant b1 o' (match p13 o' with
+      | conj H _ => H
+      end opf')).
+      destruct (get_link b1 (inl (exist (fun name : Name => In name i1o3) o' (match p13 o' with | conj H _ => H end opf')))).
+      **** f_equal.
+      **** reflexivity.
     - (*bijs l1234(p34) =l1324(p34)*)
+    unfold eq_link_faces in *.
     destruct p as ([[v1 | v2] | [v3 | v4]], (i1234, Hvi1234)); unfold bij_join_port_backward; simpl; unfold funcomp; simpl; unfold rearrange; unfold extract1; unfold sum_shuffle; unfold parallel; unfold switch_link; simpl.
     * unfold bij_rew_forward, eq_rect_r, extract1, bij_list_forward, bij_subset_forward.
       unfold bij_rew_forward, funcomp.
@@ -1621,11 +1642,30 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       unfold in_app_or_m_nod_dup.
       unfold in_app_or_m, sum_shuffle.
       destruct (in_dec EqDecN x i2o4).
-      ** exfalso. unfold Disjoint in dis_i12. apply (dis_i12 x); try assumption.
-      apply (p13 x). assumption.
+      ** unfold permutation in *.
+      pose i0 as i0'.
+      apply (p13 x) in i0'.
+      clear Hvi1234.
+      specialize (up12 (to_intersection x i0' i1)).
+      unfold to_left, to_right, to_intersection in up12.
+      rewrite <- (innername_proof_irrelevant b1 x (match p13 x with | conj H _ => H end i0)) in up12.
+      destruct get_link eqn:E'.
+      *** rewrite <- (innername_proof_irrelevant b2 x i1) in up12.      
+      destruct (get_link b2
+      (inl (exist (fun name : Name => In name i2o4) x i1))).
+      ++ f_equal. destruct s0. destruct s5. apply subset_eq_compat.
+      simpl in up12. symmetry. apply up12.
+      ++ exfalso. apply up12. 
+      *** exfalso. apply up12.
       ** rewrite <- (innername_proof_irrelevant b1 x (match p13 x with | conj H _ => H end i0)).
-      destruct get_link; try reflexivity.
-      apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
+      destruct (get_link b1
+      (inl
+         (exist (fun inner : Name => In inner i1o3) x
+            (match p13 x with
+             | conj H _ => H
+             end i0)))).
+      **** f_equal. destruct s0. apply subset_eq_compat. reflexivity. 
+      **** reflexivity.
     * unfold bij_rew_forward, eq_rect_r, extract1, bij_list_forward, bij_subset_forward, bij_list_backward', rearrange, extract1.
       rewrite <- eq_rect_eq.
       rewrite <- eq_rect_eq.
