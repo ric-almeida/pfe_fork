@@ -1061,7 +1061,46 @@ Theorem eq_link_face_dist {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2}
   eq_link_faces 
     (bigraph_composition (p:=p13) b1 b3) 
     (bigraph_composition (p:=p24) b2 b4).
-  Proof. Admitted.
+  Proof.
+    unfold eq_link_faces, NameSub in *.
+    unfold bigraph_composition.
+    simpl. 
+    intros.
+    unfold funcomp, parallel, id, sequence, switch_link, permut_list_forward, bij_join_port_backward.
+    unfold rearrange, extract1.
+    simpl.
+    specialize (up34 i0).
+    destruct get_link eqn:E.
+    - destruct s0 as [o' Ho'].
+      destruct (in_dec EqDecN o' i2o4).
+      + pose Ho' as Ho''.
+        apply (p13 o') in Ho''.
+        specialize (up12 (to_intersection o' Ho'' i1)).
+        unfold to_left, to_right, to_intersection in *.
+        rewrite <- (innername_proof_irrelevant b1 o' (from_intersection_left (in_both_in_intersection Ho'' i1))).
+        destruct get_link eqn:E'.
+        ++ destruct i0.
+          destruct (get_link b4 (inl (exist (fun name : Name => In name i4) x (from_intersection_right i0)))) eqn:E''.
+          * destruct s5.
+            simpl in up34. destruct up34.
+            rewrite <- (innername_proof_irrelevant b2 o' (from_intersection_right
+            (in_both_in_intersection Ho'' i1))).
+            destruct (get_link b2 (inl (exist (fun inner : Name => In inner i2o4) o' (from_intersection_right (in_both_in_intersection Ho'' i1))))) eqn:E'''.
+            ** apply up12.
+            ** apply up12.
+          * apply up34.
+        ++ apply up12.
+      + destruct i0.
+      unfold to_left, to_right in *.
+      destruct get_link; destruct get_link.
+      * destruct s0. destruct s5. simpl in *. destruct up34.
+      exfalso. apply n. apply (p24 o'). apply i2.
+      * exfalso. apply up34.
+      * destruct s0. simpl in *. destruct up34.
+      exfalso. apply n. apply (p24 o'). apply i1.
+      * exfalso. apply up34.
+    - apply up34.
+  Qed.
 
 
 Theorem arity_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
