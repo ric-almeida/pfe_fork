@@ -40,10 +40,11 @@ Example dis_i : X # Y. Admitted.
 Definition nest {I m X n Y sF}
   (F : bigraph sF I m X) (G : bigraph m EmptyNDL n Y) 
   : bigraph sF I n (app_merge_NoDupList X Y).
+  Proof. 
   refine 
   (bigraph_composition
     (p := _)
-    (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right X)) (bigraph_identity (s := 0) (i := X)) G)
+    (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_right X))) (bigraph_identity (s := 0) (i := X)) G)
     F).
   - simpl. rewrite app_merge'_empty_right. exact (permutation_id X).
   - exact (permutation_id X).
@@ -59,8 +60,8 @@ Theorem nest_associative_1 {I k X m Y n Z sF}
       (p:=permutation_id' X (app_merge_NoDupList X EmptyNDL) (merge_right_neutral' X))
       (bigraph_composition
         (p:=permutation_id' (app_merge_NoDupList X Y) (app_merge_NoDupList (app_merge_NoDupList X Y) EmptyNDL) (merge_right_neutral' ((app_merge_NoDupList X Y))))
-        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right (app_merge_NoDupList X Y))) (@bigraph_identity 0 (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id (app_merge_NoDupList X Y))) H)
-        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right X)) (@bigraph_identity 0 X X (permutation_id X)) G)
+        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_right (app_merge_NoDupList X Y)))) (@bigraph_identity 0 (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id (app_merge_NoDupList X Y))) H)
+        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_right X))) (@bigraph_identity 0 X X (permutation_id X)) G)
       )
       F
     ). Admitted.
@@ -75,8 +76,8 @@ Theorem nest_associative_2 {I k X m Y n Z sF}
       (p:=permutation_id' X (app_merge_NoDupList X EmptyNDL) (merge_right_neutral' X))
       (bigraph_composition
         (p:=permutation_id' (app_merge_NoDupList X Y) (app_merge_NoDupList (app_merge_NoDupList X Y) EmptyNDL) (merge_right_neutral' ((app_merge_NoDupList X Y))))
-        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right (app_merge_NoDupList X Y))) (@bigraph_id 0 (app_merge_NoDupList X Y)) H)
-        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right X)) (@bigraph_id 0 X) G)
+        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_right (app_merge_NoDupList X Y)))) (@bigraph_id 0 (app_merge_NoDupList X Y)) H)
+        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_right X))) (@bigraph_id 0 X) G)
       )
       F
     )
@@ -85,13 +86,13 @@ Theorem nest_associative_2 {I k X m Y n Z sF}
       (bigraph_composition
         (p:=permutation_id' (app_merge_NoDupList X Y) (app_merge_NoDupList (app_merge_NoDupList X Y) EmptyNDL) (merge_right_neutral' ((app_merge_NoDupList X Y))))
         (bigraph_parallel_product 
-          (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right (app_merge_NoDupList X Y))) 
+          (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_right (app_merge_NoDupList X Y)))) 
           (bigraph_parallel_product
             (up := union_possible_id) 
             (@bigraph_id 0 X)
             (@bigraph_id 0 Y)) 
           H)
-        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right X)) (@bigraph_identity 0 X X (permutation_id X)) G)
+        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_right X))) (@bigraph_identity 0 X X (permutation_id X)) G)
       )
       F
     ).
@@ -105,8 +106,8 @@ Theorem nest_associative_2' {I k X m Y n Z sF}
       (p:=permutation_id' X (app_merge_NoDupList X EmptyNDL) (merge_right_neutral' X))
       (bigraph_composition
         (p:=permutation_id' (app_merge_NoDupList X Y) (app_merge_NoDupList (app_merge_NoDupList X Y) EmptyNDL) (merge_right_neutral' ((app_merge_NoDupList X Y))))
-        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right (app_merge_NoDupList X Y))) (@bigraph_id 0 (app_merge_NoDupList X Y)) H)
-        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right X)) (@bigraph_id 0 X) G)
+        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_right (app_merge_NoDupList X Y)))) (@bigraph_id 0 (app_merge_NoDupList X Y)) H)
+        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_right X))) (@bigraph_id 0 X) G)
       )
       F
     ))
@@ -115,13 +116,13 @@ Theorem nest_associative_2' {I k X m Y n Z sF}
       (bigraph_composition
         (p:=permutation_id' (app_merge_NoDupList X Y) (app_merge_NoDupList (app_merge_NoDupList X Y) EmptyNDL) (merge_right_neutral' ((app_merge_NoDupList X Y))))
         (bigraph_parallel_product 
-          (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right (app_merge_NoDupList X Y))) 
+          (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_right (app_merge_NoDupList X Y)))) 
           (bigraph_parallel_product
             (up := union_possible_id) 
             (@bigraph_id 0 X)
             (@bigraph_id 0 Y)) 
           H)
-        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right X)) (@bigraph_identity 0 X X (permutation_id X)) G)
+        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_right X))) (@bigraph_identity 0 X X (permutation_id X)) G)
       )
       F
     )).

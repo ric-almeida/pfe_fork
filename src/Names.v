@@ -716,7 +716,7 @@ Admitted.  *)
 Definition Disjoint (l1:NoDupList) (l2:NoDupList) : Prop :=
 forall name, In name l1 -> ~ In name l2.
 
-Global Notation "l1 # l2" := (Disjoint l1 l2) (at level 50, left associativity).
+Notation "l1 # l2" := (Disjoint l1 l2) (at level 50, left associativity).
 
 Remark void_disjoint_all_list_left : forall l:NoDupList, EmptyNDL # l.
   Proof.
