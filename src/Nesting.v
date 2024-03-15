@@ -49,6 +49,54 @@ Definition nest {I m X n Y sF}
   - exact (permutation_id X).
   Defined.
 
+Global Notation "b1 <.> b2" := (nest b1 b2) (at level 50, left associativity).
+
+Theorem nest_associative_1 {I k X m Y n Z sF}
+  (F : bigraph sF I k X) (G : bigraph k EmptyNDL m Y) (H : bigraph m EmptyNDL n Z) :
+  bigraph_equality
+    ((F <.> G) <.> H)
+    (bigraph_composition
+      (p:=permutation_id' X (app_merge_NoDupList X EmptyNDL) (merge_right_neutral' X))
+      (bigraph_composition
+        (p:=permutation_id' (app_merge_NoDupList X Y) (app_merge_NoDupList (app_merge_NoDupList X Y) EmptyNDL) (merge_right_neutral' ((app_merge_NoDupList X Y))))
+        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right (app_merge_NoDupList X Y))) (@bigraph_identity 0 (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id (app_merge_NoDupList X Y))) H)
+        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right X)) (@bigraph_identity 0 X X (permutation_id X)) G)
+      )
+      F
+    ). Admitted.
+    (*(idX∪Y ‖ H) ◦ (idX ‖ G) ◦ F*)
+
+Theorem nest_associative_2 {I k X m Y n Z sF}
+  (F : bigraph sF I k X) (G : bigraph k EmptyNDL m Y) (H : bigraph m EmptyNDL n Z) :
+  bigraph_equality
+    (bigraph_composition
+      (p:=permutation_id' X (app_merge_NoDupList X EmptyNDL) (merge_right_neutral' X))
+      (bigraph_composition
+        (p:=permutation_id' (app_merge_NoDupList X Y) (app_merge_NoDupList (app_merge_NoDupList X Y) EmptyNDL) (merge_right_neutral' ((app_merge_NoDupList X Y))))
+        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right (app_merge_NoDupList X Y))) (@bigraph_id 0 (app_merge_NoDupList X Y)) H)
+        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right X)) (@bigraph_id 0 X) G)
+      )
+      F
+    )
+    (bigraph_composition
+      (p:=permutation_id' X (app_merge_NoDupList X EmptyNDL) (merge_right_neutral' X))
+      (bigraph_composition
+        (p:=permutation_id' (app_merge_NoDupList X Y) (app_merge_NoDupList (app_merge_NoDupList X Y) EmptyNDL) (merge_right_neutral' ((app_merge_NoDupList X Y))))
+        (bigraph_parallel_product 
+          (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right (app_merge_NoDupList X Y))) 
+          (bigraph_parallel_product
+            (up := union_possible_id) 
+            (@bigraph_id 0 X)
+            (@bigraph_id 0 Y)) 
+          H)
+        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right X)) (@bigraph_identity 0 X X (permutation_id X)) G)
+      )
+      F
+  ).
+  Proof.
+  Fail rewrite <- id_union. Admitted.
+
+
 Fail Theorem nest_associative {I k X m Y n Z sF}
   (F : bigraph sF I k X) (G : bigraph k EmptyNDL m Y) (H : bigraph m EmptyNDL n Z) :
   bigraph_equality
