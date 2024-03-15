@@ -1651,31 +1651,31 @@ Lemma id_union : forall X Y:NoDupList,
   (@bigraph_id 0 (app_merge_NoDupList X Y))
   (bigraph_parallel_product (up := union_possible_id) (@bigraph_id 0 X) (@bigraph_id 0 Y)).
   Proof.
-  intros X Y.
-  unfold bigraph_id. unfold bigraph_identity.
-  unfold bigraph_parallel_product.
-  simpl.
-  unfold link_juxt, parallel, funcomp.
-  simpl.
-  unfold findec_sum. simpl.
-  unfold join.
-  unfold sum_shuffle.
-  refine 
-    (BigEq 0 0 (0+0) _ _ _ _ _ (bigraph_id) (bigraph_id || bigraph_id)
-      eq_refl
-      (permutation_id (app_merge_NoDupList X Y))
-      eq_refl
-      (permutation_id (app_merge_NoDupList X Y))
-      (bijection_inv bij_void_sum_neutral)
-      (bijection_inv bij_void_sum_neutral)
-      (fun n => void_univ_embedding n) _ _ _
-    ).
-  + apply functional_extensionality.
-    intros [ x | x ]; destruct x. 
-  + apply functional_extensionality.
-    intros [[x | x] | p]; try (destruct x).
-    unfold fin in p. destruct p. exfalso. apply PeanoNat.Nat.nlt_0_r in l. apply l.
-  + rewrite bij_subset_compose_id. simpl.
+    intros X Y.
+    unfold bigraph_id. unfold bigraph_identity.
+    unfold bigraph_parallel_product.
+    simpl.
+    unfold link_juxt, parallel, funcomp.
+    simpl.
+    unfold findec_sum. simpl.
+    unfold join.
+    unfold sum_shuffle.
+    refine 
+      (BigEq 0 0 (0+0) _ _ _ _ _ (bigraph_id) (bigraph_id || bigraph_id)
+        eq_refl
+        (permutation_id (app_merge_NoDupList X Y))
+        eq_refl
+        (permutation_id (app_merge_NoDupList X Y))
+        (bijection_inv bij_void_sum_neutral)
+        (bijection_inv bij_void_sum_neutral)
+        (fun n => void_univ_embedding n) _ _ _
+      ).
+    + apply functional_extensionality.
+      intros [ x | x ]; destruct x. 
+    + apply functional_extensionality.
+      intros [[x | x] | p]; try (destruct x).
+      unfold fin in p. destruct p. exfalso. apply PeanoNat.Nat.nlt_0_r in l. apply l.
+    + rewrite bij_subset_compose_id. simpl.
     apply functional_extensionality.
     intros [[i H]|x].
     * unfold id, parallel, funcomp. simpl. unfold in_app_or_m_nod_dup.
@@ -1683,4 +1683,13 @@ Lemma id_union : forall X Y:NoDupList,
     * destruct x. destruct x as [x | x]; destruct x.
     Unshelve. apply union_possible_id.
   Qed.
+
+Lemma id_union_packed : forall X Y:NoDupList, 
+  bigraph_packed_equality
+  (packing (@bigraph_id 0 (app_merge_NoDupList X Y)))
+  (packing (bigraph_parallel_product (up := union_possible_id) (@bigraph_id 0 X) (@bigraph_id 0 Y))).
+  Proof.
+  apply id_union.
+  Qed.
+
 End ParallelProduct.

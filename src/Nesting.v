@@ -64,7 +64,9 @@ Theorem nest_associative_1 {I k X m Y n Z sF}
       )
       F
     ). Admitted.
-    (*(idX∪Y ‖ H) ◦ (idX ‖ G) ◦ F*)
+    (*Supposed to be H.(G.F) = (idX∪Y ‖ H) ◦ (idX ‖ G) ◦ F
+  or from the bottom (H.G).F = (idX∪Y ‖ H) ◦ (idX ‖ G) ◦ F *)
+    (*But I have     (F.G).H = (idX∪Y ‖ H) ◦ (idX ‖ G) ◦ F *)
 
 Theorem nest_associative_2 {I k X m Y n Z sF}
   (F : bigraph sF I k X) (G : bigraph k EmptyNDL m Y) (H : bigraph m EmptyNDL n Z) :
@@ -92,9 +94,39 @@ Theorem nest_associative_2 {I k X m Y n Z sF}
         (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right X)) (@bigraph_identity 0 X X (permutation_id X)) G)
       )
       F
-  ).
+    ).
   Proof.
-  Fail rewrite <- id_union. Admitted.
+    Fail rewrite <- id_union. Admitted.
+
+Theorem nest_associative_2' {I k X m Y n Z sF}
+  (F : bigraph sF I k X) (G : bigraph k EmptyNDL m Y) (H : bigraph m EmptyNDL n Z) :
+  bigraph_packed_equality
+    (packing (bigraph_composition
+      (p:=permutation_id' X (app_merge_NoDupList X EmptyNDL) (merge_right_neutral' X))
+      (bigraph_composition
+        (p:=permutation_id' (app_merge_NoDupList X Y) (app_merge_NoDupList (app_merge_NoDupList X Y) EmptyNDL) (merge_right_neutral' ((app_merge_NoDupList X Y))))
+        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right (app_merge_NoDupList X Y))) (@bigraph_id 0 (app_merge_NoDupList X Y)) H)
+        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right X)) (@bigraph_id 0 X) G)
+      )
+      F
+    ))
+    (packing (bigraph_composition
+      (p:=permutation_id' X (app_merge_NoDupList X EmptyNDL) (merge_right_neutral' X))
+      (bigraph_composition
+        (p:=permutation_id' (app_merge_NoDupList X Y) (app_merge_NoDupList (app_merge_NoDupList X Y) EmptyNDL) (merge_right_neutral' ((app_merge_NoDupList X Y))))
+        (bigraph_parallel_product 
+          (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right (app_merge_NoDupList X Y))) 
+          (bigraph_parallel_product
+            (up := union_possible_id) 
+            (@bigraph_id 0 X)
+            (@bigraph_id 0 Y)) 
+          H)
+        (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (void_disjoint_all_list_right X)) (@bigraph_identity 0 X X (permutation_id X)) G)
+      )
+      F
+    )).
+  Proof. Admitted.
+
 
 
 Fail Theorem nest_associative {I k X m Y n Z sF}
