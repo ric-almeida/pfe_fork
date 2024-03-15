@@ -549,6 +549,10 @@ Definition permutation (l1: list Name) (l2: list Name) := forall name, In name l
 Definition permutation_id (l: list Name) : permutation l l.
 Proof. unfold permutation. intros. tauto. Defined.
 
+Definition permutation_id' (l: list Name) (l': list Name) : l = l' -> permutation l l'.
+Proof. intros. destruct H. exact (permutation_id l).
+Defined. 
+
 Theorem TODO : forall l1 l2, permutation l1 l2 <-> Permutation l1 l2.
 Proof.
 intros.
@@ -643,6 +647,37 @@ forall name : Name,
 Proof. intros.
     split; intros; simpl in *. rewrite app_merge'_empty_right in H. apply H. rewrite app_merge'_empty_right. apply H.
 Qed.
+
+Theorem eq_NDL (l1:list Name) (l2:list Name) 
+  {nd1 : NoDup l1} {nd2 : NoDup l2} : 
+    {|ndlist := l1 ; nd := nd1|} = {|ndlist := l2 ; nd := nd2|} 
+    <-> l1 = l2.
+    split; intros.
+    - inversion H. reflexivity.
+    - destruct H.
+    rewrite (proof_irrelevance (NoDup l1) nd1 nd2).
+    reflexivity.
+    Qed. 
+
+Theorem merge_right_neutral : forall (l:NoDupList),
+  app_merge_NoDupList l EmptyNDL = l.
+  Proof. intros l. unfold EmptyNDL.
+  unfold app_merge_NoDupList. 
+  destruct l. simpl.
+  apply (eq_NDL (app_merge' ndlist0 []) ndlist0).
+  simpl. apply app_merge'_empty_right.
+  Qed.
+
+Theorem merge_right_neutral' : forall (l:NoDupList),
+  ndlist l = ndlist (app_merge_NoDupList l EmptyNDL).
+  Proof.
+  symmetry.
+  destruct l.
+  simpl.
+  apply  app_merge'_empty_right.
+  Qed.
+
+Print merge_right_neutral'.
 
 Theorem permutation_distributive {o3i1 o4i2 i1o3 i2o4}
 (p13 : permutation (ndlist o3i1) (ndlist i1o3))
