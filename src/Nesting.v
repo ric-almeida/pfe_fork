@@ -37,21 +37,35 @@ Example dis_i : X # Y. Admitted.
     G. *)
 
 
-Definition nest {I m X n Y sF}
-  (F : bigraph sF I m X) (G : bigraph m EmptyNDL n Y) 
-  : bigraph sF I n (app_merge_NoDupList X Y).
+Definition nest {I m X n Y} (* nest G F = G.F *)
+  (G : bigraph m EmptyNDL n Y) (F : bigraph 0 I m X) 
+  : bigraph 0 I n (app_merge_NoDupList X Y).
   Proof. 
   refine 
   (bigraph_composition
     (p := _)
-    (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_right X))) (bigraph_identity (s := 0) (i := X)) G)
+    ((bigraph_identity (s := 0) (i := X)) || G)
     F).
-  - simpl. rewrite app_merge'_empty_right. exact (permutation_id X).
-  - exact (permutation_id X).
+  - rewrite merge_right_neutral. exact (P_NP (permutation_id X)).
+  - unfold union_possible. intros [i].
+  simpl. destruct from_intersection_right.
+  Unshelve. exact (permutation_id X).
   Defined.
 
-Global Notation "b1 <.> b2" := (nest b1 b2) (at level 50, left associativity).
+Global Notation "F '<.>' G" := (nest F G) (at level 50, left associativity).
 
+
+Theorem nest_associative {I X m Y n Z}
+  (F : bigraph 0 I 0 X) (G : bigraph 0 EmptyNDL m Y) (H : bigraph m EmptyNDL n Z) :
+  bigraph_equality
+    (H <.> (G <.> F))
+    ((H <.> G) <.> F).
+  Proof.
+  unfold nest.
+  Fail rewrite id_union'.
+  Admitted.
+
+(* 
 Theorem nest_associative_1 {I k X m Y n Z sF}
   (F : bigraph sF I k X) (G : bigraph k EmptyNDL m Y) (H : bigraph m EmptyNDL n Z) :
   bigraph_equality
@@ -192,7 +206,7 @@ Definition rm_void_link {i1 o1 node0 edge0: FinDecType} {control0 : (type node0)
   | inr p => match l (inr p) with
     | inl i1o1 => inl i1o1
     | inr e => inr e 
-  end end).   
+  end end).    *)
 
 (* Lemma acyclic_rm_void_parent {node s r: FinDecType} {n:type node}
   {p: type node + type (findec_sum voidfd s) ->

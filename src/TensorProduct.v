@@ -697,8 +697,8 @@ Definition bigraph_packed_tp_old (b1 b2 : bigraph_packed)
 
 
 Class DisjointNamesPacked (b1 b2 : bigraph_packed) :=
-  { disj_inner :> DisjointNames (i b1) (i b2);
-    disj_outer :> DisjointNames (o b1) (o b2)
+  { disj_inner :: DisjointNames (i b1) (i b2);
+    disj_outer :: DisjointNames (o b1) (o b2)
   }.
   
 #[export] Instance disj_packed (b1 b2 : bigraph_packed) (Disji12 : DisjointNames (i b1) (i b2)) (Disjo12 : DisjointNames (o b1) (o b2)) : 
@@ -713,7 +713,7 @@ Record bigraph_packed_disjoint_pair :=
   { 
     fst_pp  : bigraph_packed;
     snd_pp  : bigraph_packed;
-    disj_pp :> DisjointNamesPacked fst_pp snd_pp
+    disj_pp :: DisjointNamesPacked fst_pp snd_pp
   }.
 Arguments Build_bigraph_packed_disjoint_pair _ _ {disj_pp}. (*What does this do?*)
   
@@ -828,11 +828,11 @@ Theorem arity_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i
   {p24 : permutation (ndlist o4i2) (ndlist i2o4)}
   (n12_34 : type (get_node (b1 ⊗ b2 <<o>> (b3 ⊗ b4)))),
   Arity (get_control
-    (bigraph_composition (p := permutation_distributive p13 p24)
+    (bigraph_composition (p := P_NP (permutation_distributive p13 p24))
       (b1 ⊗ b2) 
       (b3 ⊗ b4)) n12_34) =
   Arity (get_control 
-    (((bigraph_composition (p:=p13) b1 b3) ⊗ (bigraph_composition (p:=p24) b2 b4))) 
+    (((bigraph_composition (p:=P_NP p13) b1 b3) ⊗ (bigraph_composition (p:=P_NP p24) b2 b4))) 
     (sum_shuffle n12_34)).
   Proof.
   intros.
@@ -856,10 +856,10 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
   {p13 : permutation (ndlist o3i1) (ndlist i1o3)}
   {p24 : permutation (ndlist o4i2) (ndlist i2o4)},
   bigraph_equality 
-  (bigraph_composition (p := permutation_distributive p13 p24)
+  (bigraph_composition (p := P_NP (permutation_distributive p13 p24))
     (b1 ⊗ b2) 
     (b3 ⊗ b4))
-  ((bigraph_composition (p:=p13) b1 b3) ⊗ (bigraph_composition (p:=p24) b2 b4)).
+  ((bigraph_composition (p:=P_NP p13) b1 b3) ⊗ (bigraph_composition (p:=P_NP p24) b2 b4)).
   Proof.
   intros.
   apply (BigEq
@@ -940,39 +940,40 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       unfold permutation_distributive, permut_list_forward.
       destruct s0 as [n npf]. 
       destruct (in_dec EqDecN n i1o3).
-      ***
-      set (npf' := match p13 n with
-        | conj H _ => H
-        end npf).
-      rewrite <- (innername_proof_irrelevant b1 n i2 npf').
+      *** symmetry.
+      rewrite <- (innername_proof_irrelevant b1 n i2).
       destruct get_link; try reflexivity.
       apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
       *** exfalso. apply n0. unfold permutation in p13. destruct (p13 n). apply H. apply npf.
       * unfold permutation_distributive, permut_list_forward.
       set (Hn := 
-        match in_app_or_m_nod_dup i3 i4 i'
-          (match i3 as n0 return ((In i' n0 -> ~ In i' i4) -> In i' (app_merge' n0 i4) -> ~ In i' n0 -> NoDup n0) with
-          | {| ndlist := ndlist0; nd := nd0 |} =>
-              fun (_ : In i' ndlist0 -> ~ In i' i4) (_ : In i' (app_merge' ndlist0 i4)) (_ : ~ In i' ndlist0) => nd0
-          end (DN_D dis_i34 i') i0 n)
-          (match i4 as n0 return ((In i' i3 -> ~ In i' n0) -> In i' (app_merge' i3 n0) -> NoDup n0) with
-          | {| ndlist := ndlist0; nd := nd0 |} =>
-              fun (_ : In i' i3 -> ~ In i' ndlist0) (_ : In i' (app_merge' i3 ndlist0)) => nd0
-          end (DN_D dis_i34 i') i0) i0
-          with
-          | inl i1 => False_ind (In i' i4) (n i1)
-          | inr i1 => i1
-          end).
+        match
+          in_app_or_m_nod_dup i3 i4 i'
+            (match
+              i3 as n0 return ((In i' n0 -> ~ In i' i4) -> In i' (app_merge' n0 i4) -> ~ In i' n0 -> NoDup n0)
+            with
+            | {| ndlist := ndlist0; nd := nd0 |} =>
+                fun (_ : In i' ndlist0 -> ~ In i' i4) (_ : In i' (app_merge' ndlist0 i4)) (_ : ~ In i' ndlist0) =>
+                nd0
+            end (DN_D dis_i34 i') i0 n)
+            (match i4 as n0 return ((In i' i3 -> ~ In i' n0) -> In i' (app_merge' i3 n0) -> NoDup n0) with
+            | {| ndlist := ndlist0; nd := nd0 |} =>
+                fun (_ : In i' i3 -> ~ In i' ndlist0) (_ : In i' (app_merge' i3 ndlist0)) => nd0
+            end (DN_D dis_i34 i') i0) i0
+        with
+        | inl i1 => False_ind (In i' i4) (n i1)
+        | inr i1 => i1
+        end).
       rewrite <- (innername_proof_irrelevant b4 i' Hn).
       destruct get_link; try reflexivity. 
       destruct s0 as [n' npf']. 
       destruct (in_dec EqDecN n' i1o3).
       *** exfalso. set (dis_i12' := DN_D dis_i12). unfold Disjoint in dis_i12'. specialize (dis_i12' n'). apply dis_i12'; try assumption.
       unfold permutation in p24. destruct (p24 n'). apply H; assumption.
-      *** destruct in_app_or_m. {exfalso. apply n0. unfold permutation in p13. destruct (p13 n'). apply H; assumption. }
-      rewrite <- (innername_proof_irrelevant b2 n' ((match p24 n' with
+      ***
+      rewrite <- (innername_proof_irrelevant b2 n' (match PN_P (P_NP p24) n' with
       | conj H _ => H
-      end npf'))).
+      end npf')).
       destruct get_link; try reflexivity.
       apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
     - destruct p as ([[v1 | v2] | [v3 | v4]], (i1234, Hvi1234)); unfold bij_join_port_backward; simpl.
@@ -989,9 +990,8 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       unfold permutation_distributive, permut_list_forward.
       destruct s0.
       destruct (in_dec EqDecN x i1o3).
-      **
-      set (Hn := match p13 x with | conj H _ => H end i0). 
-      rewrite <- (innername_proof_irrelevant b1 x i1 Hn).
+      ** symmetry.
+      rewrite <- (innername_proof_irrelevant b1 x i1).
       destruct get_link; try reflexivity.
       apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
       ** exfalso. apply n. unfold permutation in p13. destruct (p13 x). apply H; assumption.
@@ -1012,8 +1012,10 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       *** exfalso. set (dis_i12' := DN_D dis_i12). unfold Disjoint in dis_i12'. specialize (dis_i12' x).
       apply dis_i12'; try assumption.
       unfold permutation in p24. destruct (p24 x). apply H; assumption. 
-      *** set (i0' := match p24 x with | conj H _ => H end i0).
-      rewrite <- (innername_proof_irrelevant b2 x i0').
+      ***
+      rewrite <- (innername_proof_irrelevant b2 x (match PN_P (P_NP p24) x with
+      | conj H _ => H
+      end i0)).
       destruct get_link; try reflexivity.
       apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
       ** reflexivity.

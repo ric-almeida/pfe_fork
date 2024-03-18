@@ -971,8 +971,8 @@ Theorem union_possible_dist {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2}
   {p24 : permutation (ndlist o4i2) (ndlist i2o4)}
   (up12 : union_possible b1 b2) (up34 : union_possible b3 b4) :
   union_possible 
-    (bigraph_composition (p:=p13) b1 b3) 
-    (bigraph_composition (p:=p24) b2 b4).
+    (bigraph_composition (p:=P_NP p13) b1 b3) 
+    (bigraph_composition (p:=P_NP p24) b2 b4).
   Proof.
     unfold union_possible, NameSub in *.
     unfold bigraph_composition.
@@ -1025,13 +1025,13 @@ Theorem arity_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i
   {p24 : permutation (ndlist o4i2) (ndlist i2o4)}
   (n12_34:type (get_node (b1 || b2 <<o>> (b3 || b4)))),
   Arity (get_control
-    (bigraph_composition (p := permutation_distributive p13 p24)
+    (bigraph_composition (p := P_NP (permutation_distributive p13 p24))
       (bigraph_parallel_product (up := up12) b1 b2) 
       (bigraph_parallel_product (up := up34) b3 b4)) n12_34) =
   Arity (get_control 
     ((bigraph_parallel_product (up := union_possible_dist up12 up34)
-    (bigraph_composition (p:=p13) b1 b3) 
-    (bigraph_composition (p:=p24) b2 b4))) 
+    (bigraph_composition (p:=P_NP p13) b1 b3) 
+    (bigraph_composition (p:=P_NP p24) b2 b4))) 
     (sum_shuffle n12_34)).
   Proof.
   intros.
@@ -1047,12 +1047,12 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
   {p13 : permutation (ndlist o3i1) (ndlist i1o3)}
   {p24 : permutation (ndlist o4i2) (ndlist i2o4)},
   bigraph_equality 
-    (bigraph_composition (p := permutation_distributive p13 p24)
+    (bigraph_composition (p := P_NP (permutation_distributive p13 p24))
       (bigraph_parallel_product (up := up12) b1 b2) 
       (bigraph_parallel_product (up := up34) b3 b4))
     ((bigraph_parallel_product (up := union_possible_dist up12 up34)
-      (bigraph_composition (p:=p13) b1 b3) 
-      (bigraph_composition (p:=p24) b2 b4))) .
+      (bigraph_composition (p:=P_NP p13) b1 b3) 
+      (bigraph_composition (p:=P_NP p24) b2 b4))) .
   Proof.
   intros.
   apply (BigEq
@@ -1161,10 +1161,12 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       simpl in up12. symmetry. apply up12.
       ++ exfalso. apply up12. 
       **** exfalso. apply up12.
-      *** rewrite <- (innername_proof_irrelevant b1 o' (match p13 o' with
+      *** rewrite <- (innername_proof_irrelevant b1 o' (match PN_P (P_NP p13) o' with
       | conj H _ => H
       end opf')).
-      destruct (get_link b1 (inl (exist (fun name : Name => In name i1o3) o' (match p13 o' with | conj H _ => H end opf')))).
+      destruct (get_link b1 (inl (exist (fun name : Name => In name i1o3) o' (match PN_P (P_NP p13) o' with
+      | conj H _ => H
+      end opf')))).
       **** f_equal.
       **** reflexivity.
     - (*bijs l1234(p34) =l1324(p34)*)
@@ -1191,7 +1193,9 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       clear Hvi1234.
       specialize (up12 (to_intersection x i0' i1)).
       unfold to_left, to_right, to_intersection in up12.
-      rewrite <- (innername_proof_irrelevant b1 x (match p13 x with | conj H _ => H end i0)) in up12.
+      rewrite <- (innername_proof_irrelevant b1 x (match PN_P (P_NP p13) x with
+      | conj H _ => H
+      end i0)) in up12.
       destruct get_link eqn:E'.
       *** rewrite <- (innername_proof_irrelevant b2 x i1) in up12.      
       destruct (get_link b2
@@ -1200,13 +1204,12 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       simpl in up12. symmetry. apply up12.
       ++ exfalso. apply up12. 
       *** exfalso. apply up12.
-      ** rewrite <- (innername_proof_irrelevant b1 x (match p13 x with | conj H _ => H end i0)).
-      destruct (get_link b1
-      (inl
-         (exist (fun inner : Name => In inner i1o3) x
-            (match p13 x with
-             | conj H _ => H
-             end i0)))).
+      ** rewrite <- (innername_proof_irrelevant b1 x (match PN_P (P_NP p13) x with
+      | conj H _ => H
+      end i0)).
+      destruct (get_link b1 (inl (exist (fun inner : Name => In inner i1o3) x (match PN_P (P_NP p13) x with
+      | conj H _ => H
+      end i0)))).
       **** f_equal. destruct s0. apply subset_eq_compat. reflexivity. 
       **** reflexivity.
     * unfold bij_rew_forward, eq_rect_r, extract1, bij_list_forward, bij_subset_forward, bij_list_backward', rearrange, extract1.
@@ -1276,6 +1279,14 @@ Lemma id_union : forall X Y:NoDupList,
     destruct (in_dec EqDecN i Y); f_equal; apply subset_eq_compat; reflexivity.
     * destruct x. destruct x as [x | x]; destruct x.
     Unshelve. apply union_possible_id.
+  Qed.
+
+Lemma id_union' : forall X Y:NoDupList, 
+  bigraph_equality
+  (@bigraph_identity 0 (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id (app_merge_NoDupList X Y)))
+  (bigraph_parallel_product (up := union_possible_id) (@bigraph_identity 0 X X (permutation_id X)) (@bigraph_identity 0 Y Y (permutation_id Y))).
+  Proof.
+  apply id_union.
   Qed.
 
 Lemma id_union_packed : forall X Y:NoDupList, 
