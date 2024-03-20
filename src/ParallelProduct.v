@@ -484,7 +484,7 @@ Lemma union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
     + apply up12.
   Qed.
 
-Lemma union_possible_assoc {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
+Lemma union_possible_assoc_pp {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   {b1 : bigraph s1 i1 r1 o1} 
   {b2 : bigraph s2 i2 r2 o2} 
   {b3 : bigraph s3 i3 r3 o3}
@@ -547,7 +547,7 @@ Lemma arity_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   {up12 : union_possible b1 b2} {up23 : union_possible b2 b3} {up13 : union_possible b1 b3} n12_3,
   Arity (get_control (
     bigraph_parallel_product 
-      (up := (union_possible_assoc up12 up23 up13)) 
+      (up := (union_possible_assoc_pp up12 up23 up13)) 
       (bigraph_parallel_product 
         (up := up12) 
         b1 
@@ -557,7 +557,7 @@ Lemma arity_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   = 
   Arity (get_control (
     bigraph_parallel_product 
-      (up := union_possible_commutes (union_possible_assoc up23 (union_possible_commutes up13) (union_possible_commutes up12))) 
+      (up := union_possible_commutes (union_possible_assoc_pp up23 (union_possible_commutes up13) (union_possible_commutes up12))) 
       b1 
       (bigraph_parallel_product 
         (up := up23) 
@@ -577,11 +577,11 @@ Theorem bigraph_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   {up12 : union_possible b1 b2} {up23 : union_possible b2 b3} {up13 : union_possible b1 b3},
   bigraph_equality 
     (bigraph_parallel_product 
-      (up := (union_possible_assoc up12 up23 up13)) 
+      (up := (union_possible_assoc_pp up12 up23 up13)) 
       (bigraph_parallel_product (up := up12) b1 b2) 
       b3)
     (bigraph_parallel_product 
-      (up := union_possible_commutes (union_possible_assoc up23 (union_possible_commutes up13) (union_possible_commutes up12))) 
+      (up := union_possible_commutes (union_possible_assoc_pp up23 (union_possible_commutes up13) (union_possible_commutes up12))) 
       b1 
       (bigraph_parallel_product (up := up23) b2 b3)).
   Proof.

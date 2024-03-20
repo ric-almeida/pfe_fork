@@ -206,6 +206,64 @@ reflexivity.
 reflexivity.
 Defined.
 
+Theorem bij_sum_assoc_mp : forall {A B C}, bijection ((void+void)+(((void+void)+(A+B))+C)) ((void+void)+(A+((void + void)+(B+C)))).
+Proof.
+intros A B C.
+apply (mkBijection ((void+void)+(((void+void)+(A+B))+C)) ((void+void)+(A+((void + void)+(B+C))))
+(fun vvvvabc => 
+match vvvvabc with 
+| inl vv => match vv with | inl v => match v with end | inr v => match v with end end
+| inr vvabc => 
+  match vvabc with 
+  | inl vvab => 
+    match vvab with 
+    | inl vv => match vv with | inl v => match v with end | inr v => match v with end end
+    | inr ab => 
+      match ab with 
+      | inl a => inr (inl a)
+      | inr b => inr (inr (inr (inl b)))
+      end
+    end
+  | inr c => inr (inr (inr (inr c)))
+  end
+end)
+(fun vvavvbc => 
+match vvavvbc with 
+| inl vv => match vv with | inl v => match v with end | inr v => match v with end end
+| inr avvbc => 
+  match avvbc with 
+  | inl a => inr (inl (inr (inl a)))
+  | inr vvbc =>
+    match vvbc with 
+    | inl vv => match vv with | inl v => match v with end | inr v => match v with end end
+    | inr bc =>
+      match bc with  
+      | inl b => inr (inl (inr (inr b)))
+      | inr c => inr (inr c)
+      end
+    end
+  end
+end)).
+apply functional_extensionality.
+destruct x as [[v | v] | [a | [[v|v]|[b|c]]]].
+elim v.
+elim v.
+reflexivity.
+elim v.
+elim v.
+reflexivity.
+reflexivity.
+apply functional_extensionality.
+destruct x as [[v | v] | [[[v|v]|[a|b]]|c]].
+elim v.
+elim v.
+elim v.
+elim v.
+reflexivity.
+reflexivity.
+reflexivity.
+Defined.
+
 Theorem bij_void_prod_absorbing : forall {A : Type}, bijection (void*A) void.
 Proof.
 intros.
