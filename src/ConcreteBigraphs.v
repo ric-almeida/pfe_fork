@@ -98,6 +98,6 @@ Definition bigraph_identity {s i i'} {p:permutation (ndlist i) (ndlist i')}: big
     destruct n.
   Defined.
   
-Definition bigraph_id {s i} := @bigraph_identity s i i (permutation_id i).
+Definition bigraph_id (s: nat) (i : NoDupList) := @bigraph_identity s i i (permutation_id i).
 End Bigraphs.
 

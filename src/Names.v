@@ -668,6 +668,15 @@ Theorem merge_right_neutral : forall (l:NoDupList),
   simpl. apply app_merge'_empty_right.
   Qed.
 
+Theorem merge_left_neutral : forall (l:NoDupList),
+  app_merge_NoDupList EmptyNDL l = l.
+  Proof. intros l. unfold EmptyNDL.
+  unfold app_merge_NoDupList. 
+  destruct l. simpl.
+  apply (eq_NDL (app_merge' [] ndlist0) ndlist0).
+  simpl. apply app_merge'_empty_left.
+  Qed.
+
 Theorem merge_right_neutral' : forall (l:NoDupList),
   ndlist l = ndlist (app_merge_NoDupList l EmptyNDL).
   Proof.

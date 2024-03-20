@@ -1258,7 +1258,7 @@ Lemma id_union : forall X Y:NoDupList,
     unfold join.
     unfold sum_shuffle.
     refine 
-      (BigEq 0 0 (0+0) _ _ _ _ _ (bigraph_id) (bigraph_id || bigraph_id)
+      (BigEq 0 0 (0+0) _ _ _ _ _ (bigraph_id 0 (app_merge_NoDupList X Y)) (bigraph_id 0 X || (bigraph_id 0 Y))
         eq_refl
         (permutation_id (app_merge_NoDupList X Y))
         eq_refl

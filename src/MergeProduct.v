@@ -38,17 +38,43 @@ Definition merge {n:nat} : bigraph n EmptyNDL 1 EmptyNDL. (* merge n+1 = join <<
   destruct n'.
   Defined.
 
+Definition rm_useless_root {s r : nat} {i o : NoDupList} (b : bigraph s i (r + 0) o) : bigraph s i r o.
+destruct b as [n e c p l ap].
+assert (fin (r+0)=fin r).
+- unfold fin. f_equal. apply functional_extensionality. intros. 
+f_equal. auto.
+- refine (Big s i r o n e c _ l _).
+Unshelve. 2:{ clear ap. rewrite H in p. exact p. }
+unfold eq_rect. destruct H. apply ap.
+Defined.
 
-(* Definition bigraph_merge_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+Definition rm_useless_site {s r : nat} {i o : NoDupList} (b : bigraph (s+0) i r o) : bigraph s i r o.
+destruct b as [n e c p l ap].
+assert (fin (s+0)=fin s).
+- unfold fin. f_equal. apply functional_extensionality. intros. f_equal. auto.
+- refine (Big s i r o n e c _ l _).
+Unshelve. 2:{ clear ap. rewrite H in p. exact p. }
+unfold eq_rect. destruct H. apply ap.
+Defined.
+
+Definition rm_useless_outer {s r : nat} {i o : NoDupList} (b : bigraph s i r (app_merge_NoDupList EmptyNDL o)) : bigraph s i r o.
+destruct b as [n e c p l ap].
+exact (Big s i r o n e c p l ap).
+Defined. 
+
+Definition bigraph_merge_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
   {up : union_possible b1 b2}
-    : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) 1 (app_merge_NoDupList o1 o2) := 
-    bigraph_composition
+    : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) 1 (app_merge_NoDupList o1 o2). 
+  set (pp := (@merge (r1 + r2) ⊗ (@bigraph_id 0 (app_merge_NoDupList i1 i2)))).
+  set (pprm := rm_useless_site pp).
+  refine 
+    (rm_useless_outer (bigraph_composition
       (p := _)
-      (merge ) 
-      (bigraph_parallel_product (up := up) b1 b2).
-    
-    bigraph (s1 + s2) (app_merge_NoDupList i1 i2) (r1 + r2) (app_merge_NoDupList o1 o2).
-  Proof. *)
+      (rm_useless_root (rm_useless_site (@merge (r1 + r2) ⊗ (@bigraph_id 0 (app_merge_NoDupList o1 o2))))) 
+      (bigraph_parallel_product (up := up) b1 b2))).
+  rewrite merge_left_neutral.
+  exact (P_NP (permutation_id (app_merge_NoDupList o1 o2))).
+  Defined.
 
 End MergeBig.

@@ -14,3 +14,4 @@ src/Composition.v
 src/TensorProduct.v
 src/ParallelProduct.v
 src/Nesting.v
+src/MergeProduct.v
