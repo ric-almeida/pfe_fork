@@ -117,6 +117,65 @@ reflexivity.
 elim v.
 Defined.
 
+Definition bij_void_void {A} : bijection ((void + void) + (A + void)) A.
+apply (mkBijection ((void + void) + (A + void)) A
+        (fun vvav => 
+        match vvav with 
+          | inl vv => 
+            match vv with 
+            | inl v => match v with end
+            | inr v => match v with end
+            end 
+          | inr av => 
+            match av with 
+            | inl a => a
+            | inr v => match v with end
+            end 
+        end)
+        (fun a => inr (inl a))).
+apply functional_extensionality.
+intro x.
+reflexivity.
+apply functional_extensionality.
+destruct x.
+destruct s.
+elim v.
+elim v.
+destruct s.
+reflexivity.
+elim v. 
+Defined.
+
+Definition bij_void_void_r {A} : bijection ((void + void) + (void + A)) A.
+apply (mkBijection ((void + void) + (void + A)) A
+        (fun vvav => 
+        match vvav with 
+          | inl vv => 
+            match vv with 
+            | inl v => match v with end
+            | inr v => match v with end
+            end 
+          | inr va => 
+            match va with 
+            | inr a => a
+            | inl v => match v with end
+            end 
+        end)
+        (fun a => inr (inr a))).
+apply functional_extensionality.
+intro x.
+reflexivity.
+apply functional_extensionality.
+destruct x.
+destruct s.
+elim v.
+elim v.
+destruct s.
+elim v.
+reflexivity.
+
+Defined.
+
 Theorem bij_sum_comm : forall {A B}, bijection (A+B) (B+A).
 Proof.
 intros A B.
@@ -1299,6 +1358,43 @@ destruct f as [(k, Hk) | (k, Hk)].
 exists k.
 lia.
 exists (n + k).
+lia.
+Defined.
+
+Theorem inj_o_surj_id : forall n p, (@inj_fin_add n p) <o> (@surj_fin_add n p) = id.
+intros n p.
+apply functional_extensionality.
+unfold inj_fin_add.
+unfold surj_fin_add.
+unfold funcomp.
+unfold id.
+destruct x as [(k, Hk) | (k, Hk)].
+destruct (Nat.ltb_spec0 k n).
+apply f_equal.
+apply subset_eq_compat.
+reflexivity.
+destruct (Nat.ltb_spec0 (n + k) n).
+contradiction.
+contradiction.
+destruct (Nat.ltb_spec0 (n + k) n).
+lia.
+apply f_equal.
+apply subset_eq_compat.
+lia.
+Qed.
+
+Theorem surj_o_inj_id : forall n p, (@surj_fin_add n p) <o> (@inj_fin_add n p) = id.
+intros n p.
+apply functional_extensionality.
+unfold inj_fin_add.
+unfold surj_fin_add.
+unfold funcomp.
+unfold id.
+destruct x as (k, Hk).
+destruct (Nat.ltb_spec0 k n).
+apply subset_eq_compat.
+reflexivity.
+apply subset_eq_compat.
 lia.
 Defined.
 
