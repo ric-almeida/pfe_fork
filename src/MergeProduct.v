@@ -431,61 +431,82 @@ Theorem bigraph_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
     destruct x as [[[v | v] | [a | [[v|v]|[b|c]]]] | s1_23']; simpl; unfold funcomp; simpl; try (elim v).
     - f_equal.
       simpl.
-      unfold rearrange, extract1, parallel.
+      unfold rearrange. unfold extract1, parallel.
       destruct get_parent; try reflexivity.
       rewrite <- eq_rect_eq.
       rewrite <- eq_rect_eq.
+      simpl.
       rewrite <- eq_rect_eq.
       unfold sum_shuffle.
-      destruct zero. Admitted.
-      (* unfold id, inj_fin_add, surj_fin_add.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1 + r2 + 0) (r1 + 1 + 0) _ x _).
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
+      f_equal.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
+      f_equal. destruct f1. destruct f2. apply subset_eq_compat. lia.
+    - f_equal.
+      simpl.
+      unfold rearrange. unfold extract1, parallel.
+      destruct get_parent; try reflexivity.
       rewrite <- eq_rect_eq.
-      destruct f; simpl.
-      unfold eq_rect. simpl.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1 + r2 + 0) (r1 + 1 + 0) _ x _).
-      apply subset_eq_compat.
-      reflexivity.
-    - destruct get_parent; try reflexivity.
-      destruct f; simpl.
+      rewrite <- eq_rect_eq.
+      simpl.
+      rewrite <- eq_rect_eq.
+      unfold sum_shuffle.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
       f_equal.
-      unfold bij_rew_forward.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1 + r2 + r3) (r1 + (r2 + r3)) _ (r1 + x) _).
-      apply subset_eq_compat.
-      reflexivity.
-    - destruct get_parent; try reflexivity.
-      destruct f; simpl.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
+      f_equal. destruct f1. destruct f3. apply subset_eq_compat. lia.
+    - f_equal.
+      simpl.
+      unfold rearrange. unfold extract1, parallel.
+      destruct get_parent; try reflexivity.
+      rewrite <- eq_rect_eq.
+      rewrite <- eq_rect_eq.
+      simpl.
+      rewrite <- eq_rect_eq.
+      unfold sum_shuffle.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
       f_equal.
-      unfold bij_rew_forward.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1 + r2 + r3) (r1 + (r2 + r3)) _ (r1 + r2 + x) _).
-      apply subset_eq_compat.
-      rewrite PeanoNat.Nat.add_assoc.
-      reflexivity.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
+      f_equal. destruct f0. destruct f2. apply subset_eq_compat. lia.
     - destruct s1_23'; simpl.
       unfold parallel, id, sum_shuffle, inj_fin_add.
+      unfold rearrange.
       unfold bij_rew_forward.
       rewrite (@eq_rect_exist nat nat (fun n x => x < n) (s1 + (s2 + s3)) (s1 + s2 + s3) _ x _).
       destruct (PeanoNat.Nat.ltb_spec0 x (s1 + s2)); simpl.
-      * destruct (PeanoNat.Nat.ltb_spec0 x s1); simpl.
+      * unfold rearrange. destruct (PeanoNat.Nat.ltb_spec0 x s1); simpl.
       ++ destruct get_parent; try reflexivity.
-      f_equal.
-      destruct f; simpl.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1 + r2 + r3) (r1 + (r2 + r3)) _ x0 _).
-      apply subset_eq_compat.
-      reflexivity.
+      unfold extract1.
+      rewrite <- eq_rect_eq.
+      rewrite <- eq_rect_eq.
+      rewrite <- eq_rect_eq.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
+      f_equal. destruct f1. destruct f2. apply subset_eq_compat. lia.
       ++ destruct (PeanoNat.Nat.ltb_spec0 (x - s1) s2); simpl.
       -- rewrite (proof_irrelevance _ _ l1).
+      unfold rearrange.
       destruct (get_parent b2); try reflexivity.
-      f_equal.
-      destruct f; simpl.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1 + r2 + r3) (r1 + (r2 + r3)) _ (r1 + x0) _).
-      apply subset_eq_compat.
-      reflexivity.
+      unfold extract1.
+      rewrite <- eq_rect_eq.
+      rewrite <- eq_rect_eq.
+      rewrite <- eq_rect_eq.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
+      f_equal. destruct f1. destruct f3. apply subset_eq_compat. lia.
       -- simpl. exfalso. apply n0. lia. 
       * destruct (PeanoNat.Nat.ltb_spec0 x s1).
       ++ lia.
-      ++ destruct (PeanoNat.Nat.ltb_spec0 (x - s1) s2).
-      -- lia.
+      ++ unfold sequence. unfold rearrange.
+      destruct (PeanoNat.Nat.ltb_spec0 (x - s1) s2).
+      -- exfalso. lia.
       -- assert (forall H H', exist (fun p => p < s3) (x - (s1 + s2)) H =
       exist (fun p => p < s3) (x - s1 - s2) H').
       ** intros H H'.
@@ -496,28 +517,31 @@ Theorem bigraph_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
       symmetry.
       rewrite (proof_irrelevance _ _ H').
       destruct get_parent; simpl; try reflexivity.
-      destruct f; simpl.
-      f_equal.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1 + r2 + r3) (r1 + (r2 + r3)) _ (r1 + r2 + x0) _).
-      apply subset_eq_compat.
-      rewrite PeanoNat.Nat.add_assoc.
-      reflexivity.
+      destruct f; simpl. unfold extract1.
+      rewrite <- eq_rect_eq.
+      rewrite <- eq_rect_eq.
+      rewrite <- eq_rect_eq.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
+      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
+      f_equal. destruct f1. destruct f0. apply subset_eq_compat. lia.
   + apply functional_extensionality.
     destruct x as [[i123] | p123]; simpl; unfold funcomp; simpl.
     - unfold funcomp.
       simpl. 
       unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
       simpl.
-      unfold id. simpl. 
-      unfold in_app_or_m_nod_dup.
+      unfold id, rearrange, switch_link. simpl. 
+      unfold in_app_or_m_nod_dup, extract1.
       destruct (in_dec EqDecN i123 (app_merge' i2 i3)).
       * destruct (in_dec EqDecN i123 i3).
       ** destruct get_link; try reflexivity.
-      *** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
+      *** unfold permut_list_forward. 
+      destruct s0. f_equal. apply subset_eq_compat. reflexivity.
       ** destruct (in_dec EqDecN i123 i2).      
       *** symmetry. rewrite <- (innername_proof_irrelevant b2 i123 i5). 
       destruct get_link; try reflexivity.
-      **** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
+      **** unfold permut_list_forward. destruct s0. f_equal. apply subset_eq_compat. reflexivity.
       *** exfalso. apply in_app_or_m in i4. destruct i4.
       -- apply n0. apply H.
       -- apply n. apply H.
@@ -527,38 +551,42 @@ Theorem bigraph_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
       *** exfalso. apply n. apply in_left_list. apply i4.
       *** rewrite <- (innername_proof_irrelevant b1 i123 (not_in_left i0 n)). 
       destruct get_link; try reflexivity.
-      **** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-    - destruct p123 as ([v1 | [v2 | v3]], (i123, Hvi123)); simpl.
-      * unfold bij_rew_forward, eq_rect_r.
+      **** destruct s0. apply f_equal. apply subset_eq_compat. reflexivity.
+    - destruct p123 as ([[v | v] | [a | [[v|v]|[b|c]]]], (i123, Hvi123)); simpl.
+      * simpl in v. destruct v.
+      * simpl in v. destruct v.
+      * unfold bij_subset_forward, parallel, funcomp.
+        unfold bij_rew_forward, eq_rect_r.
+        rewrite <- eq_rect_eq.
+        rewrite <- eq_rect_eq.
         simpl. 
-        unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
+        unfold rearrange, switch_link, bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
         simpl.
-        unfold id. simpl. 
-        rewrite <- eq_rect_eq.
-        rewrite <- eq_rect_eq.
-        simpl.
+        unfold extract1, id. simpl. 
         destruct get_link; try reflexivity.
-        ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-      * unfold bij_rew_forward, eq_rect_r.
+        ** destruct s0. apply f_equal. apply subset_eq_compat. reflexivity.
+      * simpl in v. destruct v.
+      * simpl in v. destruct v.
+      * unfold bij_subset_forward, parallel, funcomp.
+        unfold bij_rew_forward, eq_rect_r.
+        rewrite <- eq_rect_eq.
+        rewrite <- eq_rect_eq.
         simpl. 
-        unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
+        unfold rearrange, switch_link, bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
         simpl.
-        unfold id. simpl. 
-        rewrite <- eq_rect_eq.
-        rewrite <- eq_rect_eq.
-        simpl.
+        unfold extract1, id. simpl. 
         destruct get_link; try reflexivity.
-        ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-      * unfold bij_rew_forward, eq_rect_r.
+        ** destruct s0. apply f_equal. apply subset_eq_compat. reflexivity.
+      * unfold bij_subset_forward, parallel, funcomp.
+        unfold bij_rew_forward, eq_rect_r.
+        rewrite <- eq_rect_eq.
+        rewrite <- eq_rect_eq.
         simpl. 
-        unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
+        unfold rearrange, switch_link, bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
         simpl.
-        unfold id. simpl. 
-        rewrite <- eq_rect_eq.
-        rewrite <- eq_rect_eq.
-        simpl.
+        unfold extract1, id. simpl. 
         destruct get_link; try reflexivity.
-        ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-  Qed. *)
+        ** destruct s0. apply f_equal. apply subset_eq_compat. reflexivity.
+  Qed. 
 
 End MergeBig.
