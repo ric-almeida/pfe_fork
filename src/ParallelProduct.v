@@ -25,6 +25,9 @@ Module ParallelProduct (s : Signature) (n : Names) (b: Bigraphs s n).
 Module tp := TensorProduct s n b.
 Include tp.
 
+Set Typeclasses Unique Instances.
+Set Typeclasses Iterative Deepening.
+
 Definition union_possible {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :=
   forall (i : NameSub (i1 ∩ i2)),
@@ -37,9 +40,25 @@ Definition union_possible {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
     end
   end.
 
+Class UnionPossible {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
+  := { UP : union_possible b1 b2 }.
+
+Definition UP_up {s1 i1 r1 o1 s2 i2 r2 o2} {b1 : bigraph s1 i1 r1 o1} {b2 : bigraph s2 i2 r2 o2}: UnionPossible b1 b2 -> union_possible b1 b2.
+  intros.
+  destruct H.
+  apply UP0.
+  Qed.
+
+Definition up_UP {s1 i1 r1 o1 s2 i2 r2 o2} {b1 : bigraph s1 i1 r1 o1} {b2 : bigraph s2 i2 r2 o2}: union_possible b1 b2 -> UnionPossible b1 b2.
+  intros.
+  constructor.
+  apply H.
+  Qed.
+
 Definition link_juxt {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
-  {up : union_possible b1 b2} (*i don't use it in this definition though*)
+  (*{up : union_possible b1 b2} Ii don't use it in this definition though*)
   (ip :NameSub (app_merge_NoDupList i1 i2) + Port (join (get_control b1) (get_control b2))) :
   NameSub (app_merge_NoDupList o1 o2) + type (findec_sum (get_edge b1) (get_edge b2)). 
   Proof.
@@ -78,7 +97,7 @@ Definition link_juxt {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
 
 Definition bigraph_parallel_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
-  {up : union_possible b1 b2}
+  {up : UnionPossible b1 b2}
     : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) (r1 + r2) (app_merge_NoDupList o1 o2).
   Proof.
   refine (Big 
@@ -92,7 +111,7 @@ Definition bigraph_parallel_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList
     ((bij_id <+> bijection_inv bij_fin_sum) <o>
       (bij_sum_shuffle <o> (parallel (get_parent b1) (get_parent b2)) <o> (bijection_inv bij_sum_shuffle)) <o> 
       (bij_id <+> bij_fin_sum))
-    (link_juxt b1 b2 (up := up)) _
+    (link_juxt b1 b2) _
     ). 
   - rewrite <- tensor_alt.
   apply finite_parent_inout.
@@ -103,11 +122,12 @@ Definition bigraph_parallel_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList
 
 Global Notation "b1 || b2" := (bigraph_parallel_product b1 b2) (at level 50, left associativity).
 
-Theorem disjoint_innernames_implies_union_possible {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+#[export] Instance disjoint_innernames_implies_union_possible {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   {b1 : bigraph s1 i1 r1 o1} {b2 : bigraph s2 i2 r2 o2} :
-  i1 # i2 -> union_possible b1 b2.
+  i1 # i2 -> UnionPossible b1 b2.
   Proof.
   intros.
+  constructor.
   unfold union_possible.
   intros.
   destruct i0. exfalso.
@@ -123,7 +143,7 @@ Theorem tp_eq_pp {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
   {dis_i : i1 # i2} {dis_o : o1 # o2} :
   bigraph_equality 
     (b1 ⊗ b2) 
-    (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible dis_i) b1 b2).
+    (b1 || b2).
   Proof.
   refine (BigEq _ _ _ _ _ _ _ _ (b1 ⊗ b2) (b1 || b2)
     eq_refl
@@ -454,12 +474,13 @@ Theorem bigraph_pp_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r
   Qed. *)
 Abort. We no longer have commutativity *)
 
-Lemma union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
+#[export] Instance union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
   {b1 : bigraph s1 i1 r1 o1} 
   {b2 : bigraph s2 i2 r2 o2} 
-  (up12 : union_possible b1 b2):
-  union_possible b2 b1.
+  (up12 : UnionPossible b1 b2):
+  UnionPossible b2 b1.
   Proof.
+    destruct up12 as [up12]. constructor.
     unfold union_possible in *.
     unfold NameSub in *.
     intros i.
@@ -484,17 +505,21 @@ Lemma union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
     + apply up12.
   Qed.
 
-Lemma union_possible_assoc_pp {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
+#[export] Instance union_possible_assoc_pp {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   {b1 : bigraph s1 i1 r1 o1} 
   {b2 : bigraph s2 i2 r2 o2} 
   {b3 : bigraph s3 i3 r3 o3}
-  (up12 : union_possible b1 b2) 
-  (up23 : union_possible b2 b3) 
-  (up13 : union_possible b1 b3) :
-  union_possible 
-    (bigraph_parallel_product (up := up12) b1 b2)
+  (up12 : UnionPossible b1 b2) 
+  (up23 : UnionPossible b2 b3) 
+  (up13 : UnionPossible b1 b3) :
+  UnionPossible 
+    (b1 || b2)
     b3.
   Proof.
+  destruct up12 as [up12]. 
+  destruct up13 as [up13].
+  destruct up23 as [up23].
+  constructor.
    unfold union_possible.
    intros [inter12_3 Hinter12_3].
    unfold intersectionNDL in *.
@@ -544,26 +569,10 @@ Lemma union_possible_assoc_pp {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
    
 Lemma arity_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
-  {up12 : union_possible b1 b2} {up23 : union_possible b2 b3} {up13 : union_possible b1 b3} n12_3,
-  Arity (get_control (
-    bigraph_parallel_product 
-      (up := (union_possible_assoc_pp up12 up23 up13)) 
-      (bigraph_parallel_product 
-        (up := up12) 
-        b1 
-        b2) 
-      b3) 
-    n12_3) 
+  {up12 : UnionPossible b1 b2} {up23 : UnionPossible b2 b3} {up13 : UnionPossible b1 b3} n12_3,
+  Arity (get_control ((b1 || b2) || b3) n12_3) 
   = 
-  Arity (get_control (
-    bigraph_parallel_product 
-      (up := union_possible_commutes (union_possible_assoc_pp up23 (union_possible_commutes up13) (union_possible_commutes up12))) 
-      b1 
-      (bigraph_parallel_product 
-        (up := up23) 
-        b2 
-        b3)) 
-    (bij_sum_assoc n12_3)).
+  Arity (get_control (b1 || (b2 || b3)) (bij_sum_assoc n12_3)).
   Proof.
   intros until n12_3.
   destruct n12_3 as [[n1 | n2] | n3].
@@ -574,18 +583,15 @@ Lemma arity_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
 
 Theorem bigraph_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
-  {up12 : union_possible b1 b2} {up23 : union_possible b2 b3} {up13 : union_possible b1 b3},
+  {up12 : UnionPossible b1 b2} {up23 : UnionPossible b2 b3} {up13 : UnionPossible b1 b3},
   bigraph_equality 
-    (bigraph_parallel_product 
-      (up := (union_possible_assoc_pp up12 up23 up13)) 
-      (bigraph_parallel_product (up := up12) b1 b2) 
-      b3)
-    (bigraph_parallel_product 
-      (up := union_possible_commutes (union_possible_assoc_pp up23 (union_possible_commutes up13) (union_possible_commutes up12))) 
-      b1 
-      (bigraph_parallel_product (up := up23) b2 b3)).
+  ((b1 || b2) || b3)
+  (b1 || (b2 || b3)).
   Proof.
   intros.
+  destruct up12 as [up12]. 
+  destruct up13 as [up13].
+  destruct up23 as [up23].
   apply (BigEq _ _ _ _ _ _ _ _ ((b1 || b2) || b3) (b1 || (b2 || b3))
     (eq_sym (PeanoNat.Nat.add_assoc _ _ _))
     tr_permutation
@@ -724,13 +730,13 @@ Theorem bigraph_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
 Definition arity_pp_congruence_forward (*TODO: can't we deduce up24 from up13?*)
   {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4)
-  {up13 : union_possible b1 b3} {up24 : union_possible b2 b4}
+  {up13 : UnionPossible b1 b3} {up24 : UnionPossible b2 b4}
   (bij_n12 : bijection (type (get_node b1)) (type (get_node b2))) (bij_n34 : bijection (type (get_node b3)) (type (get_node b4)))
   (bij_p12 : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n12 n1)))))
   (bij_p34 : forall (n3 : type (get_node b3)), bijection (fin (Arity (get_control b3 n3))) (fin (Arity (get_control b4 (bij_n34 n3)))))
   (n13 : type (get_node (b1 || b3))) :
-    (fin (Arity (get_control (bigraph_parallel_product (up := up13) b1 b3) n13))) -> 
-      (fin (Arity (get_control (bigraph_parallel_product (up := up24) b2 b4) ((bij_n12 <+> bij_n34) n13)))).
+    (fin (Arity (get_control (b1 || b3) n13))) -> 
+    (fin (Arity (get_control (b2 || b4) ((bij_n12 <+> bij_n34) n13)))).
   Proof.
   destruct n13 as [n1 | n3].
   + exact (bij_p12 n1).
@@ -740,13 +746,13 @@ Definition arity_pp_congruence_forward (*TODO: can't we deduce up24 from up13?*)
 Definition arity_pp_congruence_backward 
   {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4)
-  {up13 : union_possible b1 b3} {up24 : union_possible b2 b4}
+  {up13 : UnionPossible b1 b3} {up24 : UnionPossible b2 b4}
   (bij_n12 : bijection (type (get_node b1)) (type (get_node b2))) (bij_n34 : bijection (type (get_node b3)) (type (get_node b4)))
   (bij_p12 : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n12 n1)))))
   (bij_p34 : forall (n3 : type (get_node b3)), bijection (fin (Arity (get_control b3 n3))) (fin (Arity (get_control b4 (bij_n34 n3)))))
   (n13 : type (get_node (b1 || b3))) :
-  (fin (Arity (get_control (bigraph_parallel_product (up := up24) b2 b4) ((bij_n12 <+> bij_n34) n13)))) 
-  -> (fin (Arity (get_control (bigraph_parallel_product (up := up13) b1 b3) n13))).
+  (fin (Arity (get_control (b2 || b4) ((bij_n12 <+> bij_n34) n13)))) -> 
+  (fin (Arity (get_control (b1 || b3) n13))).
   Proof.
   destruct n13 as [n1 | n3].
   + exact (backward (bij_p12 n1)).
@@ -756,16 +762,18 @@ Definition arity_pp_congruence_backward
 Lemma arity_pp_congruence : 
   forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4)
-  {up13 : union_possible b1 b3} {up24 : union_possible b2 b4}
+  {up13 : UnionPossible b1 b3} {up24 : UnionPossible b2 b4}
   (bij_n12 : bijection (type (get_node b1)) (type (get_node b2))) (bij_n34 : bijection (type (get_node b3)) (type (get_node b4)))
   (bij_p12 : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n12 n1)))))
   (bij_p34 : forall (n3 : type (get_node b3)), bijection (fin (Arity (get_control b3 n3))) (fin (Arity (get_control b4 (bij_n34 n3)))))
   (n13 : type (get_node (b1 || b3))),
   bijection 
-    (fin (Arity (get_control (bigraph_parallel_product (up := up13) b1 b3) n13))) 
-    (fin (Arity (get_control (bigraph_parallel_product (up := up24) b2 b4) ((bij_n12 <+> bij_n34) n13)))).
+    (fin (Arity (get_control (b1 || b3) n13))) 
+    (fin (Arity (get_control (b2 || b4) ((bij_n12 <+> bij_n34) n13)))).
   Proof.
   intros until n13.
+  destruct up13 as [up13].
+  destruct up24 as [up24].
   apply (mkBijection _ _ 
     (arity_pp_congruence_forward b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34 n13) 
     (arity_pp_congruence_backward b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34 n13)).
@@ -783,12 +791,14 @@ Lemma arity_pp_congruence :
 
 Theorem bigraph_pp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4)
-  {up13 : union_possible b1 b3} {up24 : union_possible b2 b4},
+  {up13 : UnionPossible b1 b3} {up24 : UnionPossible b2 b4},
   bigraph_equality b1 b2 -> bigraph_equality b3 b4 -> 
-    bigraph_equality (bigraph_parallel_product (up := up13) b1 b3) (bigraph_parallel_product (up := up24) b2 b4).
+    bigraph_equality (b1|| b3) (b2 || b4).
   Proof.
   intros until b4.
   intros up13 up24 Heqb1b2 Heqb3b4.
+  destruct up13 as [up13].
+  destruct up24 as [up24].
   destruct Heqb1b2 as (bij_s12, bij_i12, bij_r12, bij_o12, bij_n12, bij_e12, bij_p12, big_control_eq12, big_parent_eq12, big_link_eq12).
   destruct Heqb3b4 as (bij_s34, bij_i34, bij_r34, bij_o34, bij_n34, bij_e34, bij_p34, big_control_eq34, big_parent_eq34, big_link_eq34).
   apply (BigEq _ _ _ _ _ _ _ _ (b1 || b3) (b2 || b4)
@@ -921,14 +931,14 @@ Theorem bigraph_pp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i
       apply subset_eq_compat. reflexivity.
   Qed.
 
-Fail Definition bigraph_packed_pp (b1 b2 : bigraph_packed) := 
+(* Fail Definition bigraph_packed_pp (b1 b2 : bigraph_packed) := 
   packing ((big b1) || (big b2)).
 
 Fail Add Parametric Morphism :
   bigraph_packed_pp with
   signature bigraph_packed_equality ==> 
   bigraph_packed_equality ==> 
-  bigraph_packed_equality as juxtaposition_morphism.
+  bigraph_packed_equality as juxtaposition_morphism. *)
     (* Proof.
     unfold bigraph_packed_equality, bigraph_packed_pp.
     destruct x; destruct y; simpl; destruct x0; destruct y0; simpl.
@@ -962,18 +972,21 @@ Lemma bigraph_packed_pp_right_neutral : forall {s i r o} (b : bigraph s i r o),
 
 (* Bifunctorial property *)
 
-Theorem union_possible_dist {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
+#[export] Instance union_possible_dist {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
   {b1 : bigraph s1 i1o3 r1 o1} 
   {b2 : bigraph s2 i2o4 r2 o2} 
   {b3 : bigraph s3 i3 s1 o3i1} 
   {b4 : bigraph s4 i4 s2 o4i2}
   {p13 : permutation (ndlist o3i1) (ndlist i1o3)}
   {p24 : permutation (ndlist o4i2) (ndlist i2o4)}
-  (up12 : union_possible b1 b2) (up34 : union_possible b3 b4) :
-  union_possible 
+  (up12 : UnionPossible b1 b2) (up34 : UnionPossible b3 b4) :
+  UnionPossible 
     (bigraph_composition (p:=P_NP p13) b1 b3) 
     (bigraph_composition (p:=P_NP p24) b2 b4).
   Proof.
+    destruct up12 as [up12].
+    destruct up34 as [up34].
+    constructor.
     unfold union_possible, NameSub in *.
     unfold bigraph_composition.
     simpl. 
@@ -1020,17 +1033,16 @@ Theorem arity_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i
   (b2 : bigraph s2 i2o4 r2 o2) 
   (b3 : bigraph s3 i3 s1 o3i1) 
   (b4 : bigraph s4 i4 s2 o4i2)
-  {up12 : union_possible b1 b2} {up34 : union_possible b3 b4}
+  {up12 : UnionPossible b1 b2} {up34 : UnionPossible b3 b4}
   {p13 : permutation (ndlist o3i1) (ndlist i1o3)}
   {p24 : permutation (ndlist o4i2) (ndlist i2o4)}
   (n12_34:type (get_node (b1 || b2 <<o>> (b3 || b4)))),
   Arity (get_control
     (bigraph_composition (p := P_NP (permutation_distributive p13 p24))
-      (bigraph_parallel_product (up := up12) b1 b2) 
-      (bigraph_parallel_product (up := up34) b3 b4)) n12_34) =
+      (b1 || b2) 
+      (b3 || b4)) n12_34) =
   Arity (get_control 
-    ((bigraph_parallel_product (up := union_possible_dist up12 up34)
-    (bigraph_composition (p:=P_NP p13) b1 b3) 
+    (((bigraph_composition (p:=P_NP p13) b1 b3) || 
     (bigraph_composition (p:=P_NP p24) b2 b4))) 
     (sum_shuffle n12_34)).
   Proof.
@@ -1043,7 +1055,7 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
   (b2 : bigraph s2 i2o4 r2 o2) 
   (b3 : bigraph s3 i3 s1 o3i1) 
   (b4 : bigraph s4 i4 s2 o4i2)
-  {up12 : union_possible b1 b2} {up34 : union_possible b3 b4}
+  {up12 : UnionPossible b1 b2} {up34 : UnionPossible b3 b4}
   {p13 : permutation (ndlist o3i1) (ndlist i1o3)}
   {p24 : permutation (ndlist o4i2) (ndlist i2o4)},
   bigraph_equality 
@@ -1055,6 +1067,8 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       (bigraph_composition (p:=P_NP p24) b2 b4))) .
   Proof.
   intros.
+  destruct up12 as [up12].
+  destruct up34 as [up34].
   apply (BigEq
     _ _ _ _
     _ _ _ _ 
@@ -1236,8 +1250,9 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
   Qed. 
 
 
-Lemma union_possible_id {X Y: NoDupList} :
-  union_possible (@bigraph_id 0 X) (@bigraph_id 0 Y).
+#[export] Instance union_possible_id {X Y: NoDupList} :
+  UnionPossible (@bigraph_id 0 X) (@bigraph_id 0 Y).
+  constructor.
   unfold union_possible.
   intros [iXY Hi].
   simpl. reflexivity.
@@ -1246,7 +1261,7 @@ Lemma union_possible_id {X Y: NoDupList} :
 Lemma id_union : forall X Y:NoDupList, 
   bigraph_equality
   (@bigraph_id 0 (app_merge_NoDupList X Y))
-  (bigraph_parallel_product (up := union_possible_id) (@bigraph_id 0 X) (@bigraph_id 0 Y)).
+  ((@bigraph_id 0 X) || (@bigraph_id 0 Y)).
   Proof.
     intros X Y.
     unfold bigraph_id. unfold bigraph_identity.
@@ -1278,13 +1293,12 @@ Lemma id_union : forall X Y:NoDupList,
     * unfold id, parallel, funcomp. simpl. unfold in_app_or_m_nod_dup.
     destruct (in_dec EqDecN i Y); f_equal; apply subset_eq_compat; reflexivity.
     * destruct x. destruct x as [x | x]; destruct x.
-    Unshelve. apply union_possible_id.
   Qed.
 
 Lemma id_union' : forall X Y:NoDupList, 
   bigraph_equality
   (@bigraph_identity 0 (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id (app_merge_NoDupList X Y)))
-  (bigraph_parallel_product (up := union_possible_id) (@bigraph_identity 0 X X (permutation_id X)) (@bigraph_identity 0 Y Y (permutation_id Y))).
+  ((@bigraph_identity 0 X X (permutation_id X)) || (@bigraph_identity 0 Y Y (permutation_id Y))).
   Proof.
   apply id_union.
   Qed.
