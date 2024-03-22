@@ -1,3 +1,5 @@
+Set Warnings "-notation-overridden, -notation-overriden".
+
 Require Import ConcreteBigraphs.
 Require Import Names.
 Require Import SignatureBig.
@@ -824,15 +826,13 @@ Theorem arity_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i
   (b4 : bigraph s4 i4 s2 o4i2)
   {dis_i12 : i1o3 # i2o4} {dis_o12 : o1 # o2}
   {dis_i34 : i3 # i4} {dis_o34 : o3i1 # o4i2}
-  {p13 : permutation (ndlist o3i1) (ndlist i1o3)}
-  {p24 : permutation (ndlist o4i2) (ndlist i2o4)}
+  {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
+  {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)}
   (n12_34 : type (get_node (b1 ⊗ b2 <<o>> (b3 ⊗ b4)))),
   Arity (get_control
-    (bigraph_composition (p := P_NP (permutation_distributive p13 p24))
-      (b1 ⊗ b2) 
-      (b3 ⊗ b4)) n12_34) =
+    ((b1 ⊗ b2) <<o>> (b3 ⊗ b4)) n12_34) =
   Arity (get_control 
-    (((bigraph_composition (p:=P_NP p13) b1 b3) ⊗ (bigraph_composition (p:=P_NP p24) b2 b4))) 
+    (((b1 <<o>> b3) ⊗ (b2 <<o>> b4))) 
     (sum_shuffle n12_34)).
   Proof.
   intros.
@@ -853,13 +853,11 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
   (b4 : bigraph s4 i4 s2 o4i2)
   {dis_i12 : i1o3 # i2o4} {dis_o12 : o1 # o2}
   {dis_i34 : i3 # i4} {dis_o34 : o3i1 # o4i2}
-  {p13 : permutation (ndlist o3i1) (ndlist i1o3)}
-  {p24 : permutation (ndlist o4i2) (ndlist i2o4)},
+  {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
+  {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)},
   bigraph_equality 
-  (bigraph_composition (p := P_NP (permutation_distributive p13 p24))
-    (b1 ⊗ b2) 
-    (b3 ⊗ b4))
-  ((bigraph_composition (p:=P_NP p13) b1 b3) ⊗ (bigraph_composition (p:=P_NP p24) b2 b4)).
+  ((b1 ⊗ b2) <<o>> (b3 ⊗ b4))
+  ((b1 <<o>> b3) ⊗ (b2 <<o>> b4)).
   Proof.
   intros.
   apply (BigEq
@@ -944,7 +942,10 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       rewrite <- (innername_proof_irrelevant b1 n i2).
       destruct get_link; try reflexivity.
       apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-      *** exfalso. apply n0. unfold permutation in p13. destruct (p13 n). apply H. apply npf.
+      *** exfalso. apply n0.
+      destruct p13 as [p13].
+      destruct p24 as [p24].
+      unfold permutation in p13. destruct (p13 n). apply H. apply npf.
       * unfold permutation_distributive, permut_list_forward.
       set (Hn := 
         match
@@ -969,9 +970,10 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       destruct s0 as [n' npf']. 
       destruct (in_dec EqDecN n' i1o3).
       *** exfalso. set (dis_i12' := DN_D dis_i12). unfold Disjoint in dis_i12'. specialize (dis_i12' n'). apply dis_i12'; try assumption.
+      destruct p24 as [p24].
       unfold permutation in p24. destruct (p24 n'). apply H; assumption.
       ***
-      rewrite <- (innername_proof_irrelevant b2 n' (match PN_P (P_NP p24) n' with
+      rewrite <- (innername_proof_irrelevant b2 n' (match PN_P p24 n' with
       | conj H _ => H
       end npf')).
       destruct get_link; try reflexivity.
@@ -994,7 +996,10 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       rewrite <- (innername_proof_irrelevant b1 x i1).
       destruct get_link; try reflexivity.
       apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-      ** exfalso. apply n. unfold permutation in p13. destruct (p13 x). apply H; assumption.
+      ** exfalso. apply n. 
+      destruct p13 as [p13].
+      destruct p24 as [p24].
+      unfold permutation in p13. destruct (p13 x). apply H; assumption.
     * unfold bij_rew_forward, eq_rect_r, extract1, bij_list_forward, bij_subset_forward, bij_list_backward', rearrange, extract1.
       rewrite <- eq_rect_eq.
       rewrite <- eq_rect_eq.
@@ -1011,9 +1016,11 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       destruct (in_dec EqDecN x i1o3).
       *** exfalso. set (dis_i12' := DN_D dis_i12). unfold Disjoint in dis_i12'. specialize (dis_i12' x).
       apply dis_i12'; try assumption.
+      destruct p13 as [p13].
+      destruct p24 as [p24].
       unfold permutation in p24. destruct (p24 x). apply H; assumption. 
       ***
-      rewrite <- (innername_proof_irrelevant b2 x (match PN_P (P_NP p24) x with
+      rewrite <- (innername_proof_irrelevant b2 x (match PN_P p24 x with
       | conj H _ => H
       end i0)).
       destruct get_link; try reflexivity.

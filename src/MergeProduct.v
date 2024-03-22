@@ -64,18 +64,12 @@ Defined.
 
 Definition bigraph_merge_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
-  {up : union_possible b1 b2}
-    : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) 1 (app_merge_NoDupList o1 o2). 
-  set (pp := (@merge (r1 + r2) ⊗ (@bigraph_id 0 (app_merge_NoDupList i1 i2)))).
-  set (pprm := rm_useless_site pp).
-  refine 
-    (rm_useless_outer (bigraph_composition
-      (p := _)
-      (rm_useless_root (rm_useless_site (@merge (r1 + r2) ⊗ (@bigraph_id 0 (app_merge_NoDupList o1 o2))))) 
-      (bigraph_parallel_product (up := up) b1 b2))).
-  rewrite merge_left_neutral.
-  exact (P_NP (permutation_id (app_merge_NoDupList o1 o2))).
-  Defined.
+  {up : UnionPossible b1 b2}
+    : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) 1 (app_merge_NoDupList o1 o2) := 
+  let pprm := rm_useless_site (@merge (r1 + r2) ⊗ (@bigraph_id 0 (app_merge_NoDupList i1 i2))) in
+  rm_useless_outer (rm_useless_root (rm_useless_site 
+    (@merge (r1 + r2) ⊗ (@bigraph_id 0 (app_merge_NoDupList o1 o2)))) <<o>>
+    (b1 || b2)).
 
 
 Global Notation "b1 | b2" := (bigraph_merge_product b1 b2) (at level 50, left associativity).
@@ -83,9 +77,7 @@ Global Notation "b1 | b2" := (bigraph_merge_product b1 b2) (at level 50, left as
 Definition big_1 := @merge 0.
 
 Lemma arity_mp_right_neutral {s i o} (b : bigraph s i 1 o): forall n, 
-  Arity (get_control 
-    (bigraph_merge_product (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_right i))) b big_1)
-    n) = Arity (get_control b (bij_void_void n)).
+  Arity (get_control (b | big_1) n) = Arity (get_control b (bij_void_void n)).
   Proof.
     intros n.
     destruct n as [[v | v ] | [n | v]].
@@ -97,7 +89,7 @@ Lemma arity_mp_right_neutral {s i o} (b : bigraph s i 1 o): forall n,
 
 Theorem mp_right_neutral {s i o} (b : bigraph s i 1 o): 
   bigraph_equality
-    (bigraph_merge_product (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_right i))) b big_1) 
+    (b | big_1) 
     b.
   Proof.
   apply (BigEq _ _ _ _ _ _ _ _ (b | big_1) b
@@ -193,9 +185,7 @@ Theorem mp_right_neutral {s i o} (b : bigraph s i 1 o):
   Qed.
 
 Lemma arity_mp_left_neutral {s i o} (b : bigraph s i 1 o): forall n, 
-  Arity (get_control 
-    (bigraph_merge_product (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_left i))) big_1 b)
-    n) = Arity (get_control b (bij_void_void_r n)).
+  Arity (get_control (big_1 | b) n) = Arity (get_control b (bij_void_void_r n)).
   Proof.
     intros n.
     destruct n as [[v | v ] | [v | n]].
@@ -206,9 +196,7 @@ Lemma arity_mp_left_neutral {s i o} (b : bigraph s i 1 o): forall n,
     Qed.
 
 Theorem mp_left_neutral {s i o} (b : bigraph s i 1 o): 
-  bigraph_equality
-    (bigraph_merge_product (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_left i))) big_1 b) 
-    b.
+  bigraph_equality (big_1 | b) b.
   Proof.
   apply (BigEq _ _ _ _ _ _ _ _ (big_1 | b) b
     eq_refl
@@ -308,18 +296,22 @@ Theorem mp_left_neutral {s i o} (b : bigraph s i 1 o):
     Unshelve. simpl. lia.
   Qed.
 
-Lemma union_possible_assoc_mp {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
+#[export] Instance union_possible_assoc_mp {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   {b1 : bigraph s1 i1 r1 o1} 
   {b2 : bigraph s2 i2 r2 o2} 
   {b3 : bigraph s3 i3 r3 o3}
-  (up12 : union_possible b1 b2) 
-  (up23 : union_possible b2 b3) 
-  (up13 : union_possible b1 b3) :
-  union_possible 
-    (bigraph_merge_product (up := up12) b1 b2)
+  (up12 : UnionPossible b1 b2) 
+  (up23 : UnionPossible b2 b3) 
+  (up13 : UnionPossible b1 b3) :
+  UnionPossible 
+    (b1 | b2)
     b3.
   Proof.
-   unfold union_possible.
+  constructor.
+  destruct up12 as [up12].
+  destruct up23 as [up23].
+  destruct up13 as [up13].
+   unfold union_possible in *.
    intros [inter12_3 Hinter12_3].
    unfold intersectionNDL in *.
    simpl in *.
@@ -370,26 +362,13 @@ Lemma union_possible_assoc_mp {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
 
 Lemma arity_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
-  {up12 : union_possible b1 b2} {up23 : union_possible b2 b3} {up13 : union_possible b1 b3} n12_3,
-  Arity (get_control (
-    bigraph_merge_product 
-      (up := (union_possible_assoc_mp up12 up23 up13)) 
-      (bigraph_merge_product 
-        (up := up12) 
-        b1 
-        b2) 
-      b3) 
-    n12_3) 
+  {up12 : UnionPossible b1 b2} {up23 : UnionPossible b2 b3} {up13 : UnionPossible b1 b3} n12_3,
+  Arity (get_control ((b1 | b2) | b3) n12_3) 
   = 
-  Arity (get_control (
-    bigraph_merge_product 
-      (up := union_possible_commutes (union_possible_assoc_mp up23 (union_possible_commutes up13) (union_possible_commutes up12))) 
-      b1 
-      (bigraph_merge_product 
-        (up := up23) 
-        b2 
-        b3)) 
-    (bij_sum_assoc_mp n12_3)). 
+  Arity (get_control (bigraph_merge_product 
+    (up := union_possible_commutes (union_possible_assoc_mp up23 (union_possible_commutes up13) (union_possible_commutes up12))) 
+    b1
+    (b2 | b3)) (bij_sum_assoc_mp n12_3)). 
   Proof.
   intros until n12_3.
   destruct n12_3 as [[v | v] | [[[v|v] |[n1|n2]]|n3]].
@@ -404,16 +383,13 @@ Lemma arity_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
 
 Theorem bigraph_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
-  {up12 : union_possible b1 b2} {up23 : union_possible b2 b3} {up13 : union_possible b1 b3},
+  {up12 : UnionPossible b1 b2} {up23 : UnionPossible b2 b3} {up13 : UnionPossible b1 b3},
   bigraph_equality 
-    (bigraph_merge_product 
-      (up := (union_possible_assoc_mp up12 up23 up13)) 
-      (bigraph_merge_product (up := up12) b1 b2) 
-      b3)
+    ((b1 | b2) |  b3)
     (bigraph_merge_product 
       (up := union_possible_commutes (union_possible_assoc_mp up23 (union_possible_commutes up13) (union_possible_commutes up12))) 
       b1 
-      (bigraph_merge_product (up := up23) b2 b3)).
+      (b2 | b3)).
   Proof.
   intros.
   apply (BigEq _ _ _ _ _ _ _ _ ((b1 | b2) | b3) (b1 | (b2 | b3))

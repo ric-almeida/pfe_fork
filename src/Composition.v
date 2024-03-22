@@ -26,37 +26,7 @@ Include eb.
 Set Typeclasses Unique Instances.
 Set Typeclasses Iterative Deepening.
 
-Class PermutationNames (l1 l2 : NoDupList) := { p : permutation l1 l2 }.
 
-Definition PN_P {l1 l2 : NoDupList} (pn : PermutationNames l1 l2) : permutation l1 l2.
-  Proof. destruct pn. apply p0. Qed.
-
-Definition P_NP {l1 l2 : NoDupList} (p : permutation l1 l2) : PermutationNames l1 l2.
-  Proof. exists. apply p. Qed.
-
-Definition permut_list_forward (l1 l2 : list Name) (p : permutation l1 l2)
-  (nl1 : {name:Name|In name l1}) : {name:Name|In name l2}.
-  Proof.
-    destruct nl1.
-    exists x.
-    unfold permutation in p. 
-    apply p in i0. apply i0.
-  Defined.
-
-Definition bij_permut_list (l1 l2 : list Name) (p : permutation l1 l2) :
-  bijection {name:Name|In name l1} {name:Name|In name l2}.
-  Proof.
-    refine (mkBijection
-    {name:Name|In name l1} {name:Name|In name l2}
-    (permut_list_forward l1 l2 p)
-    (permut_list_forward l2 l1 (symmetry p)) _ _
-    ).
-    - apply functional_extensionality. intros nl2. unfold funcomp, permut_list_forward, symmetry, id.
-    destruct nl2. apply subset_eq_compat. reflexivity.
-    - apply functional_extensionality. intros nl2. unfold funcomp, permut_list_forward, symmetry, id.
-    destruct nl2. apply subset_eq_compat. reflexivity.
-    Unshelve. apply symmetric_permutation.
-  Defined.
 
 Definition bigraph_composition {s1 r1 s2 : nat} {i1o2 o2i1 o1 i2 : NoDupList}
   {p: PermutationNames o2i1 i1o2}
@@ -85,13 +55,12 @@ Global Notation "b1 '<<o>>' b2" := (bigraph_composition b1 b2) (at level 50, lef
 Lemma arity_comp_left_neutral : forall {s i r o o' o''} 
   {p : PermutationNames (ndlist o) (ndlist o')} 
   {p' : PermutationNames (ndlist o') (ndlist o'')}
-  (b : bigraph s i r o) n,  
-  let b_id := bigraph_identity (s := r) (i := o') (i' := o'') (p:= PN_P p') in
-  Arity (get_control (bigraph_identity (p:=PN_P p') <<o>> b) n) =
+  (b : bigraph s i r o) n, 
+  Arity (get_control (bigraph_identity <<o>> b) n) =
   Arity (get_control b (bij_void_sum_neutral n)).
   (* b : s i r o, -> b_id : r (p o) r (p (p o)) *)
   Proof.
-  intros s i r o o' o'' p p' b n b_id.
+  intros s i r o o' o'' p p' b n.
   destruct n as [ v | n].
     + destruct v.
   + reflexivity.
@@ -100,7 +69,7 @@ Lemma arity_comp_left_neutral : forall {s i r o o' o''}
 Theorem bigraph_comp_left_neutral : forall {s i r o o' o''} 
   {p : PermutationNames (ndlist o) (ndlist o')} 
   {p' : PermutationNames (ndlist o') (ndlist o'')} (b : bigraph s i r o), 
-  bigraph_equality ((bigraph_identity (p := PN_P p')) <<o>> b) b.
+  bigraph_equality (bigraph_identity <<o>> b) b.
   Proof.
   intros s i r o o' o'' p p' b.
   refine (
@@ -157,12 +126,11 @@ Theorem bigraph_comp_left_neutral : forall {s i r o o' o''}
 Lemma arity_comp_right_neutral : forall {s i r o i' i''} 
   {p : PermutationNames (ndlist i'') (ndlist i)} 
   {p' : PermutationNames (ndlist i') (ndlist i'')}
-  (b : bigraph s i r o) n,  
-  let b_id := bigraph_identity (s := s) (i := i') (i' := i'') (p:=PN_P p') in 
-  Arity (get_control (b <<o>> (bigraph_identity (p:=PN_P p'))) n) =
+  (b : bigraph s i r o) n, 
+  Arity (get_control (b <<o>> bigraph_identity) n) =
   Arity (get_control b (bij_void_sum_neutral_r n)).
   Proof.
-  intros s i r o i' i'' p p' b n b_id.
+  intros s i r o i' i'' p p' b n.
   destruct n as [n | v].
   + reflexivity.
   + destruct v.
@@ -172,7 +140,7 @@ Theorem bigraph_comp_right_neutral : forall {s i r o i' i''}
   {p : PermutationNames (ndlist i'') (ndlist i)} 
   {p' : PermutationNames (ndlist i') (ndlist i'')}
   (b : bigraph s i r o), 
-  bigraph_equality (b <<o>> (bigraph_identity (p:=PN_P p'))) b.
+  bigraph_equality (b <<o>> bigraph_identity) b.
   Proof.
   intros s i r o i' i'' p p' b.
   apply 
@@ -396,7 +364,7 @@ Theorem bigraph_comp_congruence : forall
   (b4 : bigraph s4 i4 s2 o4i2)
   (be12 : bigraph_equality b1 b2)
   (be34 : bigraph_equality b3 b4), 
-  bigraph_equality (bigraph_composition (p:=p13) b1 b3) (bigraph_composition (p:=p24) b2 b4).
+  bigraph_equality (b1 <<o>> b3) (b2 <<o>> b4).
   Proof.
   intros until b4.
   intros Heqb1b2 Heqb3b4.

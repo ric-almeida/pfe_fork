@@ -78,12 +78,12 @@ Definition bigraph_empty : bigraph 0 EmptyNDL 0 EmptyNDL.
   Unshelve.
   intros. destruct X.
   + left. apply n.
-  + destruct p. right. apply x.
+  + destruct p0. right. apply x.
   Defined. (*TODO unsure of the definition of link def 2.7*)
 
 Global Notation "∅" := bigraph_empty.
 
-Definition bigraph_identity {s i i'} {p:permutation (ndlist i) (ndlist i')}: bigraph s i s i'. (*actually s i s (permutation i) *)
+Definition bigraph_identity {s i i'} {p:PermutationNames (ndlist i) (ndlist i')}: bigraph s i s i'. (*actually s i s (permutation i) *)
   Proof.
   apply (Big s i s i'
           voidfd (*node : ∅*)
@@ -92,12 +92,12 @@ Definition bigraph_identity {s i i'} {p:permutation (ndlist i) (ndlist i')}: big
           id (*parent : id*)
         ).
   - intros [inner | port]. (*link_|{names} : id*)
-    + left. destruct inner. exists x. unfold permutation in p. apply p in i0. apply i0.
+    + left. destruct inner. exists x. destruct p as[p]. unfold permutation in p. apply p in i0. apply i0.
     + destruct port. destruct x.
   - intro n. (*acyclic parent*)
     destruct n.
   Defined.
   
-Definition bigraph_id (s: nat) (i : NoDupList) := @bigraph_identity s i i (permutation_id i).
+Definition bigraph_id (s: nat) (i : NoDupList) := @bigraph_identity s i i (P_NP (permutation_id i)).
 End Bigraphs.
 

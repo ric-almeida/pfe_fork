@@ -1,3 +1,5 @@
+Set Warnings "-notation-overridden, -notation-overriden".
+
 Require Import ConcreteBigraphs.
 Require Import Names.
 Require Import SignatureBig.
@@ -39,18 +41,8 @@ Example dis_i : X # Y. Admitted.
 
 Definition nest {I m X n Y} (* nest G F = G.F *)
   (G : bigraph m EmptyNDL n Y) (F : bigraph 0 I m X) 
-  : bigraph 0 I n (app_merge_NoDupList X Y).
-  Proof. 
-  refine 
-  (bigraph_composition
-    (p := _)
-    ((bigraph_identity (s := 0) (i := X)) || G)
-    F).
-  - rewrite merge_right_neutral. exact (P_NP (permutation_id X)).
-  - unfold union_possible. intros [i].
-  simpl. destruct from_intersection_right.
-  Unshelve. exact (permutation_id X).
-  Defined.
+  : bigraph 0 I n (app_merge_NoDupList X Y) :=
+  ((bigraph_identity (s := 0) (i := X)) || G) <<o>> F.
 
 Global Notation "F '<.>' G" := (nest F G) (at level 50, left associativity).
 

@@ -1,3 +1,5 @@
+Set Warnings "-notation-overridden, -notation-overriden".
+
 Require Import ConcreteBigraphs.
 Require Import Names.
 Require Import SignatureBig.
@@ -199,9 +201,7 @@ Theorem tp_eq_pp {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
 
 
 Lemma arity_pp_left_neutral : forall {s i r o} (b : bigraph s i r o) n, 
-  Arity (get_control (bigraph_parallel_product 
-    (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_left i))) 
-    ∅ b) n) = Arity (get_control b (bij_void_sum_neutral n)).
+  Arity (get_control (∅ || b) n) = Arity (get_control b (bij_void_sum_neutral n)).
   Proof.
   intros s i r o b n.
   destruct n as [ v | n].
@@ -210,8 +210,7 @@ Lemma arity_pp_left_neutral : forall {s i r o} (b : bigraph s i r o) n,
   Qed.
 
 Theorem bigraph_pp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
-  bigraph_equality (bigraph_parallel_product 
-    (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_left i))) ∅ b) b.
+  bigraph_equality (∅ || b) b.
   Proof.
   intros s i r o b.
   apply (BigEq _ _ _ _ _ _ _ _ (∅ || b) b
@@ -341,7 +340,7 @@ Theorem bigraph_pp_left_neutral : forall {s i r o} (b : bigraph s i r o),
   Qed.
 
 Lemma arity_pp_right_neutral : forall {s i r o} (b : bigraph s i r o) n, 
-  Arity (get_control (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_right i))) b ∅) n) = Arity (get_control b (bij_void_sum_neutral_r n)).
+  Arity (get_control (b || ∅) n) = Arity (get_control b (bij_void_sum_neutral_r n)).
   Proof.
   intros s i r o b n.
   destruct n as [n | v].
@@ -350,7 +349,7 @@ Lemma arity_pp_right_neutral : forall {s i r o} (b : bigraph s i r o) n,
   Qed.
 
 Theorem bigraph_pp_right_neutral : forall {s i r o} (b : bigraph s i r o), 
-  bigraph_equality (bigraph_parallel_product (up := disjoint_innernames_implies_union_possible (D_ND (void_disjoint_all_list_right i))) b ∅) b.
+  bigraph_equality (b || ∅) b.
   Proof.
   intros s i r o b.
   apply (BigEq _ _ _ _ _ _ _ _ (b || ∅) b
@@ -474,7 +473,7 @@ Theorem bigraph_pp_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r
   Qed. *)
 Abort. We no longer have commutativity *)
 
-#[export] Instance union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
+Lemma union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
   {b1 : bigraph s1 i1 r1 o1} 
   {b2 : bigraph s2 i2 r2 o2} 
   (up12 : UnionPossible b1 b2):
@@ -572,7 +571,12 @@ Lemma arity_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   {up12 : UnionPossible b1 b2} {up23 : UnionPossible b2 b3} {up13 : UnionPossible b1 b3} n12_3,
   Arity (get_control ((b1 || b2) || b3) n12_3) 
   = 
-  Arity (get_control (b1 || (b2 || b3)) (bij_sum_assoc n12_3)).
+  Arity (get_control (
+    bigraph_parallel_product 
+      (up := union_possible_commutes (union_possible_assoc_pp up23 (union_possible_commutes up13) (union_possible_commutes up12))) 
+      b1 
+      (b2 || b3)) 
+    (bij_sum_assoc n12_3)).
   Proof.
   intros until n12_3.
   destruct n12_3 as [[n1 | n2] | n3].
@@ -586,7 +590,10 @@ Theorem bigraph_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   {up12 : UnionPossible b1 b2} {up23 : UnionPossible b2 b3} {up13 : UnionPossible b1 b3},
   bigraph_equality 
   ((b1 || b2) || b3)
-  (b1 || (b2 || b3)).
+  (bigraph_parallel_product 
+    (up := union_possible_commutes (union_possible_assoc_pp up23 (union_possible_commutes up13) (union_possible_commutes up12))) 
+    b1 
+    (b2 || b3)).
   Proof.
   intros.
   destruct up12 as [up12]. 
@@ -977,12 +984,12 @@ Lemma bigraph_packed_pp_right_neutral : forall {s i r o} (b : bigraph s i r o),
   {b2 : bigraph s2 i2o4 r2 o2} 
   {b3 : bigraph s3 i3 s1 o3i1} 
   {b4 : bigraph s4 i4 s2 o4i2}
-  {p13 : permutation (ndlist o3i1) (ndlist i1o3)}
-  {p24 : permutation (ndlist o4i2) (ndlist i2o4)}
+  {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
+  {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)}
   (up12 : UnionPossible b1 b2) (up34 : UnionPossible b3 b4) :
   UnionPossible 
-    (bigraph_composition (p:=P_NP p13) b1 b3) 
-    (bigraph_composition (p:=P_NP p24) b2 b4).
+    (b1 <<o>> b3) 
+    (b2 <<o>> b4).
   Proof.
     destruct up12 as [up12].
     destruct up34 as [up34].
@@ -999,9 +1006,10 @@ Lemma bigraph_packed_pp_right_neutral : forall {s i r o} (b : bigraph s i r o),
     - destruct s0 as [o' Ho'].
       destruct (in_dec EqDecN o' i2o4).
       + pose Ho' as Ho''.
+        destruct p13 as [p13].
         apply (p13 o') in Ho''.
         specialize (up12 (to_intersection o' Ho'' i1)).
-        unfold to_left, to_right, to_intersection in *.
+        unfold to_left, to_right, to_intersection in *. 
         rewrite <- (innername_proof_irrelevant b1 o' (from_intersection_left (in_both_in_intersection Ho'' i1))).
         destruct get_link eqn:E'.
         ++ destruct i0.
@@ -1010,7 +1018,20 @@ Lemma bigraph_packed_pp_right_neutral : forall {s i r o} (b : bigraph s i r o),
             simpl in up34. destruct up34.
             rewrite <- (innername_proof_irrelevant b2 o' (from_intersection_right
             (in_both_in_intersection Ho'' i1))).
-            destruct (get_link b2 (inl (exist (fun inner : Name => In inner i2o4) o' (from_intersection_right (in_both_in_intersection Ho'' i1))))) eqn:E'''.
+            set (Tmp := from_intersection_right
+            (in_both_in_intersection Ho'' i1)).
+            fold Tmp in up12.
+            assert (@from_intersection_right 
+            (ndlist i1o3) (ndlist i2o4) o'
+            (@in_both_in_intersection
+               (ndlist
+                  (@reverse_coercion NoDupList
+                     (list Name) i1o3 
+                     (ndlist i1o3))) 
+               (ndlist i2o4) o' Ho'' i1) = Tmp).
+               auto.
+               rewrite H in up12.
+            destruct (get_link b2 (inl (exist (fun x : Name => In x i2o4) o' Tmp))) eqn:EI.
             ** apply up12.
             ** apply up12.
           * apply up34.
@@ -1019,10 +1040,10 @@ Lemma bigraph_packed_pp_right_neutral : forall {s i r o} (b : bigraph s i r o),
       unfold to_left, to_right in *.
       destruct get_link; destruct get_link.
       * destruct s0. destruct s5. simpl in *. destruct up34.
-      exfalso. apply n. apply (p24 o'). apply i2.
+      exfalso. apply n. destruct p24 as [p24]. apply (p24 o'). apply i2.
       * exfalso. apply up34.
       * destruct s0. simpl in *. destruct up34.
-      exfalso. apply n. apply (p24 o'). apply i1.
+      exfalso. apply n. destruct p24 as [p24]. apply (p24 o'). apply i1.
       * exfalso. apply up34.
     - apply up34.
   Qed.
@@ -1297,16 +1318,16 @@ Lemma id_union : forall X Y:NoDupList,
 
 Lemma id_union' : forall X Y:NoDupList, 
   bigraph_equality
-  (@bigraph_identity 0 (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id (app_merge_NoDupList X Y)))
-  ((@bigraph_identity 0 X X (permutation_id X)) || (@bigraph_identity 0 Y Y (permutation_id Y))).
+  (bigraph_identity (s := 0) (p := P_NP (permutation_id (app_merge_NoDupList X Y))))
+  ((bigraph_identity (p := P_NP (permutation_id X))) || (bigraph_identity (p := P_NP (permutation_id Y)))).
   Proof.
   apply id_union.
   Qed.
 
 Lemma id_union_packed : forall X Y:NoDupList, 
   bigraph_packed_equality
-  (packing (@bigraph_id 0 (app_merge_NoDupList X Y)))
-  (packing (bigraph_parallel_product (up := union_possible_id) (@bigraph_id 0 X) (@bigraph_id 0 Y))).
+  (packing (bigraph_id 0 (app_merge_NoDupList X Y)))
+  (packing (bigraph_parallel_product (up := union_possible_id) (bigraph_id 0 X) (bigraph_id 0 Y))).
   Proof.
   apply id_union.
   Qed.

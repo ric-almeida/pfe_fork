@@ -1188,5 +1188,60 @@ End IntersectionNDL.
 
 Global Notation "l1 ∩ l2" := (intersectionNDL l1 l2) (at level 50, left associativity).
 
+Class PermutationNames (l1 l2 : NoDupList) := { p : permutation l1 l2 }.
 
+Definition PN_P {l1 l2 : NoDupList} (pn : PermutationNames l1 l2) : permutation l1 l2.
+  Proof. destruct pn. apply p0. Qed.
+
+Definition P_NP {l1 l2 : NoDupList} (p : permutation l1 l2) : PermutationNames l1 l2.
+  Proof. exists. apply p. Qed.
+
+Definition permut_list_forward (l1 l2 : list Name) (p : permutation l1 l2)
+  (nl1 : {name:Name|In name l1}) : {name:Name|In name l2}.
+  Proof.
+    destruct nl1.
+    exists x.
+    unfold permutation in p. 
+    apply p in i. apply i.
+  Defined.
+
+Definition bij_permut_list (l1 l2 : list Name) (p : permutation l1 l2) :
+  bijection {name:Name|In name l1} {name:Name|In name l2}.
+  Proof.
+    refine (mkBijection
+    {name:Name|In name l1} {name:Name|In name l2}
+    (permut_list_forward l1 l2 p)
+    (permut_list_forward l2 l1 (symmetry p)) _ _
+    ).
+    - apply functional_extensionality. intros nl2. unfold funcomp, permut_list_forward, symmetry, id.
+    destruct nl2. apply subset_eq_compat. reflexivity.
+    - apply functional_extensionality. intros nl2. unfold funcomp, permut_list_forward, symmetry, id.
+    destruct nl2. apply subset_eq_compat. reflexivity.
+    Unshelve. apply symmetric_permutation.
+  Defined.
+
+#[export] Instance permutation_distributive_PN {o3i1 o4i2 i1o3 i2o4}
+  (p13 : PermutationNames (ndlist o3i1) (ndlist i1o3))
+  (p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)) : 
+  PermutationNames
+     (app_merge_NoDupList o3i1 o4i2)
+     (app_merge_NoDupList i1o3 i2o4).
+  Proof.
+  destruct p13 as [p13].
+  destruct p24 as [p24].
+  constructor.
+  apply permutation_distributive; assumption.
+  Qed.
+
+#[export] Instance permutation_id_PN (l:NoDupList) : PermutationNames l l.
+constructor. exact (permutation_id (ndlist l)).
+Qed.
+
+#[export] Instance permutation_id_am_PN (X:NoDupList) : PermutationNames X (app_merge_NoDupList X EmptyNDL).
+constructor. rewrite <- merge_right_neutral'. exact (permutation_id (ndlist X)). 
+Qed.
+
+#[export] Instance permutation_id_am_l_PN (X:NoDupList) : PermutationNames X (app_merge_NoDupList EmptyNDL X).
+constructor. rewrite merge_left_neutral. exact (permutation_id (ndlist X)).
+Qed.
 End Names.
