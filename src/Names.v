@@ -25,7 +25,7 @@ mkNoDupList
     ndlist :> list Name ;
     nd : NoDup ndlist ;
   }.
-
+Locate NoDup.
 Definition EmptyNDL : NoDupList := {| ndlist := []; nd := NoDup_nil Name |}.
 
 Definition OneelNDL (n : Name): NoDupList.

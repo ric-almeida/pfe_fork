@@ -28,6 +28,7 @@ Include n.
 (** * Definition of a bigraph
   This section defines the Type bigraph *)
 Section IntroBigraphs.
+
 Record bigraph  (site: nat) 
                 (innername: NoDupList) 
                 (root: nat) 
@@ -37,10 +38,13 @@ Record bigraph  (site: nat)
     node : FinDecType ;
     edge : FinDecType ;
     control : (type node) -> Kappa ;
-    parent : (type node) + (fin site) -> (type node) + (fin root) ; 
-    link : (NameSub innername) + (Port control) -> (NameSub outername) + (type edge); 
+    parent : (type node) + (fin site) -> 
+                (type node) + (fin root) ; 
+    link : (NameSub innername) + (Port control) -> 
+                (NameSub outername) + (type edge); 
     ap : FiniteParent parent ;
   }.
+  
 End IntroBigraphs.
 
 (** * Getters
@@ -99,5 +103,14 @@ Definition bigraph_identity {s i i'} {p:PermutationNames (ndlist i) (ndlist i')}
   Defined.
   
 Definition bigraph_id (s: nat) (i : NoDupList) := @bigraph_identity s i i (P_NP (permutation_id i)).
+
+(* Definition symmetry_big {s i r o} : bigraph s i r o.
+apply (Big s i r o 
+voidfd (*node : ∅*)
+voidfd (*edge : ∅*)
+(@void_univ_embedding _) (*control : ∅_Kappa*)
+(fun n => n + r). 
+(*parent : id*)
+) *)
 End Bigraphs.
 

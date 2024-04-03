@@ -31,7 +31,7 @@ Set Typeclasses Iterative Deepening.
 Definition bigraph_composition {s1 r1 s2 : nat} {i1o2 o2i1 o1 i2 : NoDupList}
   {p: PermutationNames o2i1 i1o2}
   (b1 : bigraph s1 i1o2 r1 o1) (b2 : bigraph s2 i2 s1 o2i1) 
-    : bigraph s2 i2 r1 o1.
+    : bigraph s2 i2 r1 o1. (*s1=s2*)
   Proof. 
   set (sl2:= (bij_id <+> bij_permut_list  o2i1 i1o2 (PN_P p)) <o> (switch_link (get_link b2))). 
   set (sl1:= switch_link (get_link b1)). 

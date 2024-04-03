@@ -180,6 +180,7 @@ Lemma bigraph_equality_dec {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
   objects of the exact same Type and our equality is heterogeneous. The solution we 
   will implement is to create a "packed bigraph" Type that will hold the interfaces 
   inside of it. This is a WIP. *)
+  
 Record bigraph_packed : Type :=
   mkPacked
   {

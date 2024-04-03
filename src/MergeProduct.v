@@ -1,3 +1,5 @@
+Set Warnings "-notation-overridden, -parsing".
+
 Require Import ConcreteBigraphs.
 Require Import Names.
 Require Import SignatureBig.
@@ -39,28 +41,28 @@ Definition merge {n:nat} : bigraph n EmptyNDL 1 EmptyNDL. (* merge n+1 = join <<
   Defined.
 
 Definition rm_useless_root {s r : nat} {i o : NoDupList} (b : bigraph s i (r + 0) o) : bigraph s i r o.
-destruct b as [n e c p l ap].
-assert (fin (r+0)=fin r).
-- unfold fin. f_equal. apply functional_extensionality. intros. 
-f_equal. auto.
-- refine (Big s i r o n e c _ l _).
-Unshelve. 2:{ clear ap. rewrite H in p. exact p. }
-unfold eq_rect. destruct H. apply ap.
-Defined.
+  destruct b as [n e c p l ap].
+  assert (fin (r+0)=fin r).
+  - unfold fin. f_equal. apply functional_extensionality. intros. 
+  f_equal. auto.
+  - refine (Big s i r o n e c _ l _).
+  Unshelve. 2:{ clear ap. rewrite H in p. exact p. }
+  unfold eq_rect. destruct H. apply ap.
+  Defined.
 
 Definition rm_useless_site {s r : nat} {i o : NoDupList} (b : bigraph (s+0) i r o) : bigraph s i r o.
-destruct b as [n e c p l ap].
-assert (fin (s+0)=fin s).
-- unfold fin. f_equal. apply functional_extensionality. intros. f_equal. auto.
-- refine (Big s i r o n e c _ l _).
-Unshelve. 2:{ clear ap. rewrite H in p. exact p. }
-unfold eq_rect. destruct H. apply ap.
-Defined.
+  destruct b as [n e c p l ap].
+  assert (fin (s+0)=fin s).
+  - unfold fin. f_equal. apply functional_extensionality. intros. f_equal. auto.
+  - refine (Big s i r o n e c _ l _).
+  Unshelve. 2:{ clear ap. rewrite H in p. exact p. }
+  unfold eq_rect. destruct H. apply ap.
+  Defined.
 
 Definition rm_useless_outer {s r : nat} {i o : NoDupList} (b : bigraph s i r (app_merge_NoDupList EmptyNDL o)) : bigraph s i r o.
-destruct b as [n e c p l ap].
-exact (Big s i r o n e c p l ap).
-Defined. 
+  destruct b as [n e c p l ap].
+  exact (Big s i r o n e c p l ap).
+  Defined. 
 
 Definition bigraph_merge_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
