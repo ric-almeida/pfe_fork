@@ -14,18 +14,20 @@ Require Import Coq.Classes.CRelationClasses.
 Import ListNotations.
 
 
-Module Type Names.
+Module Type NamesParameter.
 Parameter Name : Type.
 Parameter EqDecN : forall x y : Name, {x = y} + {x <> y}.
+End NamesParameter.
 
 
+Module Names (NP: NamesParameter).
+Include NP.
 Record NoDupList : Type :=
 mkNoDupList
   {
     ndlist :> list Name ;
     nd : NoDup ndlist ;
   }.
-Locate NoDup.
 Definition EmptyNDL : NoDupList := {| ndlist := []; nd := NoDup_nil Name |}.
 
 Definition OneelNDL (n : Name): NoDupList.
@@ -685,8 +687,6 @@ Theorem merge_right_neutral' : forall (l:NoDupList),
   simpl.
   apply  app_merge'_empty_right.
   Qed.
-
-Print merge_right_neutral'.
 
 Theorem permutation_distributive {o3i1 o4i2 i1o3 i2o4}
 (p13 : permutation (ndlist o3i1) (ndlist i1o3))

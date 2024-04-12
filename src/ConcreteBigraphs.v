@@ -22,7 +22,9 @@ Require Import Coq.Lists.List.
 Import ListNotations.
 
 (** This module implements bigraphs and basic operations on bigraphs *)
-Module Type Bigraphs (s : Signature) (n : Names).
+Module Bigraphs (sp : SignatureParameter) (np : Names.NamesParameter).
+Module s := Signature sp.
+Module n := Names np.
 Include s.
 Include n.
 (** * Definition of a bigraph
@@ -37,10 +39,10 @@ Record bigraph  (site: nat)
   { 
     node : FinDecType ;
     edge : FinDecType ;
-    control : (type node) -> Kappa ;
-    parent : (type node) + (fin site) -> 
+    control : type node -> Kappa ;
+    parent : type node + fin site -> 
                 (type node) + (fin root) ; 
-    link : (NameSub innername) + (Port control) -> 
+    link : NameSub innername + Port control -> 
                 (NameSub outername) + (type edge); 
     ap : FiniteParent parent ;
   }.

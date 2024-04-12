@@ -23,8 +23,8 @@ Import ListNotations.
   This section deals with the operation of disjoint juxtaposition. This is the act
   of putting two bigraphs with disjoint interfaces "next" to one another. 
   After the definition, we prove associativity and commutativity of dis_juxtaposition *)
-Module ParallelProduct (s : Signature) (n : Names) (b: Bigraphs s n).
-Module tp := TensorProduct s n b.
+Module ParallelProduct (s : SignatureParameter) (n : NamesParameter).
+Module tp := TensorProduct s n.
 Include tp.
 
 Set Typeclasses Unique Instances.

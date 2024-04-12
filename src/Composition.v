@@ -19,8 +19,8 @@ Import ListNotations.
   of putting a bigraph inside another one. To do b1 <<o>> b2, the outerface 
   of b2 needs to be the innerface of b1. TODO/note: or just a bijection? 
   We prove left and right neutral for identity bigraph and associativity *)
-Module CompositionBigraphs (s : Signature) (n : Names) (b: Bigraphs s n).
-Module eb := EquivalenceBigraphs s n b.
+Module CompositionBigraphs (s : SignatureParameter) (n : NamesParameter).
+Module eb := EquivalenceBigraphs s n.
 Include eb.
 
 Set Typeclasses Unique Instances.

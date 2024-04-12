@@ -19,8 +19,8 @@ Require Import Lia.
 Import ListNotations.
 
 (** Nesting operator *)
-Module NestingBig (s : Signature) (n : Names) (b: Bigraphs s n).
-Module pp := ParallelProduct s n b.
+Module NestingBig (s : SignatureParameter) (n : NamesParameter).
+Module pp := ParallelProduct s n.
 Include pp.
 
 Example I : NoDupList. Admitted.

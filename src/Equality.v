@@ -24,7 +24,8 @@ Import ListNotations.
   We prove that our relation bigraph_equality is reflexive, 
   symmetric and transitive. This is going to be useful to be able to rewrite 
   bigraphs at will. *)
-Module EquivalenceBigraphs (s : Signature) (n : Names) (b: Bigraphs s n).
+Module EquivalenceBigraphs (s : SignatureParameter) (n : NamesParameter).
+Module b := Bigraphs s n.
 Include b. 
 
 (** ** On the heterogeneous type *)

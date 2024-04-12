@@ -24,8 +24,8 @@ Import ListNotations.
   This section deals with the operation of disjoint juxtaposition. This is the act
   of putting two bigraphs with disjoint interfaces "next" to one another. 
   After the definition, we prove existence of a unit, commutativity, associativity and congruence. *)
-Module TensorProduct (s : Signature) (n : Names) (b: Bigraphs s n).
-Module c := CompositionBigraphs s n b.
+Module TensorProduct (s : SignatureParameter) (n : NamesParameter).
+Module c := CompositionBigraphs s n.
 Include c.
 
 Set Typeclasses Unique Instances.

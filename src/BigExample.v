@@ -3,106 +3,73 @@ Require Import SignatureBig.
 Require Import FinDecTypes.
 Require Import MyBasics.
 Require Import Bijections.
+Require Import Names.
+
 Require Import FunctionalExtensionality.
+Require Import ProofIrrelevance.
+Require Import Lia.
+
+Require Import Coq.Arith.PeanoNat.
+Require Import Coq.Lists.List.
+Require Import Coq.Program.Equality.
+Require Import Coq.Sorting.Permutation.
+Require Import Coq.Classes.CRelationClasses.
 
 
-Module MySig <: Signature. (*with (Kappa := type (findec_fin 3)).*)
-Definition Kappa : Type := type (findec_fin 1).
 
-Definition Arity : Kappa -> nat := 
-  (fun 
-    k => match k with 
-    | exist _ n _ => n + 1
-    end
-  ).
-Import SignatureBig.
-Fail End MySig. (*TODO figure out how ot import the definitions*)
 
-Definition Port {node : Type} (control : node -> Kappa): Type :=
-  { n : node & fin (Arity (control n)) }.
 
-Definition join {A B C : Type} (p : A -> C) (q : B -> C) (ac : A+B) : C :=
-  match ac with
-  | inl a => (p a)
-  | inr b => (q b)
-  end.
+Import ListNotations.
 
-Definition bij_join_port_forward { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa) :
-  Port c1 + Port c2 -> 
-  Port (join c1 c2).
-  Proof.
-  refine (fun p => match p with
-              | inl (existT _ vi1 Hvi1) => _
-              | inr (existT _ vi2 Hvi2) => _
-              end).
-  + exists (inl vi1).
-    destruct Hvi1 as (i1, Hi1).
-    exists i1.
-    exact Hi1.
-  + exists (inr vi2).
-    destruct Hvi2 as (i2, Hi2).
-    exists i2.
-    exact Hi2.
-  Defined.
+Module MySigP <: SignatureParameter. (*with (Kappa := type (findec_fin 3)).*)
+Definition Kappa : Type := nat.
 
-Definition bij_join_port_backward { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa)  :
-  Port (join c1 c2) -> Port c1 + Port c2.
-  Proof.
-    destruct 1 as ([v1 | v2], (i, Hvi)).
-    + left.
-      exists v1.
-      exists i.
-      apply Hvi.
-    + right.
-      exists v2.
-      exists i.
-      apply Hvi.
-    Defined.
+Definition Arity : Kappa -> nat := id.
 
-Definition bij_join_port { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa)  :
-  bijection (Port c1 + Port c2) (Port (join c1 c2)).
-  Proof.
-  apply 
-    (mkBijection _ _ 
-    (bij_join_port_forward c1 c2) 
-    (bij_join_port_backward c1 c2)).
-  + apply functional_extensionality.
-    destruct x as ([v1|v2], (i, Hvi)).
-    - reflexivity.
-    - reflexivity.
-  + apply functional_extensionality.
-    destruct x as [(v1, (i1, Hvi1)) | (v2, (i2, Hvi2))].
-    - unfold funcomp, id.
-      simpl.
-      apply f_equal.
-      reflexivity.
-    - unfold funcomp, id.
-      simpl.
-      apply f_equal.
-      reflexivity.
-  Defined.
+End MySigP. (*TODO figure out how ot import the definitions*)
 
-Definition bij_port_void (c : void -> Kappa) : bijection (Port c) void.
-  Proof.
-  apply (mkBijection _ _ (fun vi => match vi with existT _ v _ => void_univ_embedding v end) (void_univ_embedding)).
-  + apply functional_extensionality.
-    destruct x.
-  + apply functional_extensionality.
-    destruct x as (v, (i, H)).
-    destruct v.
-  Defined.
 
-End MySig.
+Module MyNamesP <: Names.NamesParameter.
+Definition Name := nat.
+Definition EqDecN : forall x y : Name, {x = y} + {x <> y} := Nat.eq_dec.
+End MyNamesP.
 
-Module MyBigraph.
-  Module Mb := Bigraphs MySig.
+Module MyBigraph := Bigraphs MySigP MyNamesP.
+Include MyBigraph.
+Locate bigraph.
+Print Kappa.
 
-  Fail Print Mb.Kappa.
-  Fail Import Mb.
+Example zero1 : type (findec_fin 1). exists 0. auto. Defined.
+
+Example simplBig : 
+  bigraph 1 EmptyNDL 1 EmptyNDL.
+  eapply (Big
+    1 EmptyNDL 1 EmptyNDL
+    findec_unit
+    voidfd
+    (fun n => match n with | _ => 0 end) (*control*)
+    (fun ns => match ns with 
+      | inl n => inr zero1
+      | inr s => _
+    end) (*parent*)
+    _ (*link*)
+  ). 
+  Unshelve.
+  3:{ intros [v|v].
+  + destruct v. simpl in i. elim i.
+  + destruct v as [n i].
+  unfold Arity,id in i. destruct i. apply Nat.nlt_0_r in l. elim l. }
+  2:{ left. simpl. exact tt. }
+  unfold FiniteParent. simpl.
+  intros u.
+  apply Acc_intro.
+  intros u' H.
+  exfalso. discriminate H.
+  Defined. 
+
 
   (* Example zero : Kappa. exists 0. auto. Defined. *)
 
-  Example zero1 : type (findec_fin 1). exists 0. auto. Defined.
   (* Variable A : Type.
 
 Variable f : A -> nat.
@@ -132,7 +99,7 @@ Proof.
       apply IHn. admit. }
   intros a. apply (H (S (f a))). apply Nat.lt_succ_diag_r.
 Defined. *)
-
+(* 
 Lemma forallfin1 (P : type (findec_fin 1) -> Prop) :
 forall n0 : type (findec_fin 1), P n0 -> 
   P zero1.
@@ -142,7 +109,7 @@ forall n0 : type (findec_fin 1), P n0 ->
   - induction n as [| n']. 
     + reflexivity.        
     + inversion pf. inversion H0.
-  - Admitted.  
+  - Admitted.   *)
 
 (* Example simplBig : 
   bigraph (findec_fin 1) (findec_fin 1) (findec_fin 1) (findec_fin 1).
@@ -182,5 +149,3 @@ forall n0 : type (findec_fin 1), P n0 ->
   set (p1 := (exist (fun p : nat => p < 1) n pf)). *)
   
 
-
-End MyBigraph.

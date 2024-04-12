@@ -19,8 +19,8 @@ Require Import Lia.
 Import ListNotations.
 
 (** Nesting operator *)
-Module MergeBig (s : Signature) (n : Names) (b: Bigraphs s n).
-Module pp := ParallelProduct s n b.
+Module MergeBig (s : SignatureParameter) (n : NamesParameter).
+Module pp := ParallelProduct s n.
 Include pp.
 
 Example zero : fin 1. exists 0. lia. Defined.

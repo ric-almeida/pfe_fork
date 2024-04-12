@@ -9,6 +9,7 @@ src/SignatureBig.v
 src/Names.v
 src/Ports.v
 src/ConcreteBigraphs.v
+src/BigExample.v
 src/Equality.v
 src/Composition.v
 src/TensorProduct.v

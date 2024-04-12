@@ -3,11 +3,15 @@ Require Import Bijections.
 Require Import FunctionalExtensionality.
 
 (** This module implements a signature *)
-Module Type Signature.
+Module Type SignatureParameter.
 
 Parameter Kappa:Type.
 Parameter Arity:Kappa-> nat.
 
+End SignatureParameter.
+
+Module Signature (SP:SignatureParameter).
+Include SP.
 Definition Port {node : Type} (control : node -> Kappa): Type :=
   { n : node & fin (Arity (control n)) }.
 
