@@ -1,4 +1,4 @@
-Set Warnings "-notation-overridden, -parsing".
+Set Warnings "-notation-overridden, -parsing, -masking-absolute-name".
 
 Require Import ConcreteBigraphs.
 Require Import Names.
