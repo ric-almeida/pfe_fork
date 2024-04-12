@@ -14,6 +14,10 @@ Require Import Coq.Lists.List.
 Require Import Coq.Program.Equality.
 Require Import Coq.Sorting.Permutation.
 Require Import Coq.Classes.CRelationClasses.
+Require Import Coq.Arith.Arith.
+Require Import Coq.Arith.Wf_nat.
+Require Import Coq.Program.Wf.
+Require Import Coq.Strings.String.
 
 
 
@@ -30,14 +34,30 @@ End MySigP. (*TODO figure out how ot import the definitions*)
 
 
 Module MyNamesP <: Names.NamesParameter.
-Definition Name := nat.
-Definition EqDecN : forall x y : Name, {x = y} + {x <> y} := Nat.eq_dec.
+Definition Name := string.
+Definition EqDecN : forall x y : Name, {x = y} + {x <> y} := string_dec.
+Local Open Scope string_scope.
+Definition InfName : forall l : list string, exists n : string, ~ In n l. 
+  intros.
+  induction l as [|x l IHl].
+  - exists "a". auto.
+  - induction l as [|x' l IHl']. 
+  + exists (x ++ "a"). simpl. unfold not. intros. destruct H. 
+  * induction x as [| c x'' IHx']. (* Induct on the string x *)
+    -- (* Base case: x = "" *)
+      simpl in H. (* Simplify the equation *)
+      discriminate H. (* Since "a" is non-empty, x ++ "a" cannot be empty, so it cannot be equal to "" *)
+    -- (* Inductive case: x = c :: x' *)
+      simpl in H. (* Simplify the equation *)
+      inversion H as [H']. (* Since x = c :: x', we can invert H to get H' : c :: x' = c :: x' ++ "a" *)
+      apply IHx' in H'. (* Apply the induction hypothesis to the rest of the string *)
+      apply H'. (* This leads to a contradiction, since we assumed ~ x' = x' ++ "a" *)
+  * apply H.
+  + Admitted.
 End MyNamesP.
 
 Module MyBigraph := Bigraphs MySigP MyNamesP.
 Include MyBigraph.
-Locate bigraph.
-Print Kappa.
 
 Example zero1 : type (findec_fin 1). exists 0. auto. Defined.
 
@@ -45,9 +65,9 @@ Example simplBig :
   bigraph 1 EmptyNDL 1 EmptyNDL.
   eapply (Big
     1 EmptyNDL 1 EmptyNDL
+    (findec_fin 2)
     findec_unit
-    voidfd
-    (fun n => match n with | _ => 0 end) (*control*)
+    (fun n => match n with | exist _ n _ => n+1 end) (*control*)
     (fun ns => match ns with 
       | inl n => inr zero1
       | inr s => _
@@ -55,11 +75,10 @@ Example simplBig :
     _ (*link*)
   ). 
   Unshelve.
-  3:{ intros [v|v].
+  3:{ intros [v|p].
   + destruct v. simpl in i. elim i.
-  + destruct v as [n i].
-  unfold Arity,id in i. destruct i. apply Nat.nlt_0_r in l. elim l. }
-  2:{ left. simpl. exact tt. }
+  + right. exact tt. }
+  2:{ left. simpl. exists 0. lia. }
   unfold FiniteParent. simpl.
   intros u.
   apply Acc_intro.

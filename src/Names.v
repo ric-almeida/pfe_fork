@@ -17,6 +17,7 @@ Import ListNotations.
 Module Type NamesParameter.
 Parameter Name : Type.
 Parameter EqDecN : forall x y : Name, {x = y} + {x <> y}.
+Parameter InfName: forall l:list Name, exists n:Name, ~ In n l.
 End NamesParameter.
 
 
