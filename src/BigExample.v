@@ -60,11 +60,18 @@ Module MyBigraph := Bigraphs MySigP MyNamesP.
 Include MyBigraph.
 
 Example zero1 : type (findec_fin 1). exists 0. auto. Defined.
+Example b : string := "b".
+Example bNDL : NoDupList.
+exists [b]. constructor; auto. constructor. Defined.
+
+Example a : string := "a".
+Example aNDL : NoDupList.
+exists [a]. constructor; auto. constructor. Defined.
 
 Example simplBig : 
-  bigraph 1 EmptyNDL 1 EmptyNDL.
+  bigraph 1 bNDL 1 aNDL.
   eapply (Big
-    1 EmptyNDL 1 EmptyNDL
+    1 bNDL 1 aNDL
     (findec_fin 2)
     findec_unit
     (fun n => match n with | exist _ n _ => n+1 end) (*control*)
@@ -75,10 +82,22 @@ Example simplBig :
     _ (*link*)
   ). 
   Unshelve.
-  3:{ intros [v|p].
-  + destruct v. simpl in i. elim i.
-  + right. exact tt. }
-  2:{ left. simpl. exists 0. lia. }
+  3:{ intros [b|p]. (*link*)
+  + (*link b*) right. exact tt.
+  + destruct p. destruct x.
+  induction x as [|x' H] eqn:E.
+  * right. exact tt.
+  * assert (x'=0).
+  ** lia.
+  ** rewrite H0 in f.
+  simpl in f. unfold Arity,id in f.
+  destruct f as [i Hi].
+  induction i as [|i' Hi'] eqn:Ei.
+  *** right. exact tt.
+  *** left. unfold NameSub. exists a.  
+  unfold aNDL. simpl.
+  left. reflexivity. }
+  2:{ (*p s*) left. simpl. exists 0. lia. }
   unfold FiniteParent. simpl.
   intros u.
   apply Acc_intro.
