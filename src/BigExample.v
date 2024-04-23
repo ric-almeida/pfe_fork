@@ -18,6 +18,7 @@ Require Import Coq.Arith.Arith.
 Require Import Coq.Arith.Wf_nat.
 Require Import Coq.Program.Wf.
 Require Import Coq.Strings.String.
+Require Import Coq.Bool.Sumbool.
 
 
 
@@ -41,19 +42,7 @@ Definition InfName : forall l : list string, exists n : string, ~ In n l.
   intros.
   induction l as [|x l IHl].
   - exists "a". auto.
-  - induction l as [|x' l IHl']. 
-  + exists (x ++ "a"). simpl. unfold not. intros. destruct H. 
-  * induction x as [| c x'' IHx']. (* Induct on the string x *)
-    -- (* Base case: x = "" *)
-      simpl in H. (* Simplify the equation *)
-      discriminate H. (* Since "a" is non-empty, x ++ "a" cannot be empty, so it cannot be equal to "" *)
-    -- (* Inductive case: x = c :: x' *)
-      simpl in H. (* Simplify the equation *)
-      inversion H as [H']. (* Since x = c :: x', we can invert H to get H' : c :: x' = c :: x' ++ "a" *)
-      apply IHx' in H'. (* Apply the induction hypothesis to the rest of the string *)
-      apply H'. (* This leads to a contradiction, since we assumed ~ x' = x' ++ "a" *)
-  * apply H.
-  + Admitted.
+  - Admitted.
 End MyNamesP.
 
 Module MyBigraph := Bigraphs MySigP MyNamesP.
@@ -104,6 +93,42 @@ Example simplBig :
   intros u' H.
   exfalso. discriminate H.
   Defined. 
+
+
+Example simplBigbool : 
+  bigraph 1 bNDL 1 aNDL.
+  eapply (Big
+    1 bNDL 1 aNDL
+    findec_bool
+    findec_unit
+    (fun n => match n with | false => 1 | true => 2 end) (*control*)
+    (fun ns => match ns with 
+      | inl n => inr zero1
+      | inr s => inl false
+    end) (*parent*)
+    _ (*link*)
+  ). 
+  Unshelve.
+  2:{ intros [b|p]. (*link*)
+  + (*link b*) right. exact tt.
+  + destruct p. destruct x eqn:E.
+  * destruct f as [i Hi].
+  induction i as [|i' Hi'] eqn:Ei.
+  *** right. exact tt.
+  *** left. unfold NameSub. exists a.  
+  unfold aNDL. simpl.
+  left. reflexivity.
+  * right. exact tt. 
+  }
+  unfold FiniteParent. simpl.
+  intros u.
+  apply Acc_intro.
+  intros u' H.
+  exfalso. discriminate H.
+  Defined. 
+
+  Print simplBigbool.
+
 
 
   (* Example zero : Kappa. exists 0. auto. Defined. *)

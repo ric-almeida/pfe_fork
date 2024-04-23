@@ -46,18 +46,6 @@ Class UnionPossible {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
   := { UP : union_possible b1 b2 }.
 
-Definition UP_up {s1 i1 r1 o1 s2 i2 r2 o2} {b1 : bigraph s1 i1 r1 o1} {b2 : bigraph s2 i2 r2 o2}: UnionPossible b1 b2 -> union_possible b1 b2.
-  intros.
-  destruct H.
-  apply UP0.
-  Qed.
-
-Definition up_UP {s1 i1 r1 o1 s2 i2 r2 o2} {b1 : bigraph s1 i1 r1 o1} {b2 : bigraph s2 i2 r2 o2}: union_possible b1 b2 -> UnionPossible b1 b2.
-  intros.
-  constructor.
-  apply H.
-  Qed.
-
 Definition link_juxt {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
   (*{up : union_possible b1 b2} Ii don't use it in this definition though*)
@@ -565,18 +553,22 @@ Lemma union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
    * apply up23.
    + exfalso. apply n. apply H.
   Qed.
+
+#[export] Instance union_possible_assoc_pp_r {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
+  {b1 : bigraph s1 i1 r1 o1} 
+  {b2 : bigraph s2 i2 r2 o2} 
+  {b3 : bigraph s3 i3 r3 o3}
+  (up12 : UnionPossible b1 b2) 
+  (up23 : UnionPossible b2 b3) 
+  (up13 : UnionPossible b1 b3) :
+  UnionPossible b1 (b2 || b3):= union_possible_commutes (union_possible_assoc_pp up23 (union_possible_commutes up13) (union_possible_commutes up12)).
    
 Lemma arity_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
   {up12 : UnionPossible b1 b2} {up23 : UnionPossible b2 b3} {up13 : UnionPossible b1 b3} n12_3,
   Arity (get_control ((b1 || b2) || b3) n12_3) 
   = 
-  Arity (get_control (
-    bigraph_parallel_product 
-      (up := union_possible_commutes (union_possible_assoc_pp up23 (union_possible_commutes up13) (union_possible_commutes up12))) 
-      b1 
-      (b2 || b3)) 
-    (bij_sum_assoc n12_3)).
+  Arity (get_control (b1 || (b2 || b3)) (bij_sum_assoc n12_3)).
   Proof.
   intros until n12_3.
   destruct n12_3 as [[n1 | n2] | n3].
@@ -590,10 +582,7 @@ Theorem bigraph_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   {up12 : UnionPossible b1 b2} {up23 : UnionPossible b2 b3} {up13 : UnionPossible b1 b3},
   bigraph_equality 
   ((b1 || b2) || b3)
-  (bigraph_parallel_product 
-    (up := union_possible_commutes (union_possible_assoc_pp up23 (union_possible_commutes up13) (union_possible_commutes up12))) 
-    b1 
-    (b2 || b3)).
+  (b1 || (b2 || b3)).
   Proof.
   intros.
   destruct up12 as [up12]. 
@@ -1393,10 +1382,44 @@ Lemma id_union : forall X Y:NoDupList,
 
 Lemma id_union' : forall X Y:NoDupList, 
   bigraph_equality
-  (bigraph_identity (s := 0) (p := P_NP (permutation_id (app_merge_NoDupList X Y))))
+  (bigraph_identity (s := 0) 
+    (p := permutation_id_PN (@reverse_coercion NoDupList (list Name) 
+			(app_merge_NoDupList X Y) 
+			(ndlist (app_merge_NoDupList X Y)))))
   ((bigraph_identity (p := P_NP (permutation_id X))) || (bigraph_identity (p := P_NP (permutation_id Y)))).
   Proof.
-  apply id_union.
+  intros X Y.
+    unfold bigraph_id. unfold bigraph_identity.
+    unfold bigraph_parallel_product.
+    simpl.
+    unfold link_juxt, parallel, funcomp.
+    simpl.
+    unfold findec_sum. simpl.
+    unfold join.
+    unfold sum_shuffle.
+    refine 
+      (BigEq 0 0 0 0 _ _ _ _
+        (bigraph_identity (s := 0) (p := permutation_id_PN (@reverse_coercion NoDupList (list Name)  (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y)))))  
+        (bigraph_id 0 X || (bigraph_id 0 Y))
+        eq_refl
+        (permutation_id (app_merge_NoDupList X Y))
+        eq_refl
+        (permutation_id (app_merge_NoDupList X Y))
+        (bijection_inv bij_void_sum_neutral)
+        (bijection_inv bij_void_sum_neutral)
+        (fun n => void_univ_embedding n) _ _ _
+      ).
+  + apply functional_extensionality.
+      intros [ x | x ]; destruct x. 
+    + apply functional_extensionality.
+      intros [[x | x] | p]; try (destruct x).
+      unfold fin in p. destruct p. exfalso. apply PeanoNat.Nat.nlt_0_r in l. apply l.
+    + rewrite bij_subset_compose_id. simpl.
+    apply functional_extensionality.
+    intros [[i H]|x].
+    * unfold id, parallel, funcomp. simpl. unfold in_app_or_m_nod_dup.
+    destruct (in_dec EqDecN i Y); f_equal; apply subset_eq_compat; reflexivity.
+    * destruct x. destruct x as [x | x]; destruct x.
   Qed.
 
 Lemma id_union_packed : forall X Y:NoDupList, 
@@ -1407,4 +1430,123 @@ Lemma id_union_packed : forall X Y:NoDupList,
   apply id_union.
   Qed.
 
+Class UnionPossiblePacked (b1 b2 : bigraph_packed) :=
+  { upp :: UnionPossible (big b1) (big b2)}.
+  
+#[export] Instance unionpossible_packed (b1 b2 : bigraph_packed) (upp : UnionPossible (big b1) (big b2)) : 
+  UnionPossiblePacked b1 b2.
+  Proof.
+  constructor. exact upp.
+  Qed.
+
+Record bigraph_packed_up_pair :=
+  { 
+    fst_ppair_pp  : bigraph_packed;
+    snd_ppair_pp  : bigraph_packed;
+    up_ppair_pp :: UnionPossiblePacked fst_ppair_pp snd_ppair_pp
+  }.
+
+Arguments Build_bigraph_packed_up_pair _ _ {up_ppair_pp}.
+  
+Record bigraph_packed_up_pair_equality (pp1 pp2 : bigraph_packed_up_pair) : Prop :=
+  { 
+    fst_ppair_pp_equ : bigraph_packed_equality (fst_ppair_pp pp1) (fst_ppair_pp pp2);
+    snd_ppair_pp_equ : bigraph_packed_equality (snd_ppair_pp pp1) (snd_ppair_pp pp2)
+  }.
+  
+Lemma bigraph_packed_up_pair_equality_refl (pp : bigraph_packed_up_pair) :
+  bigraph_packed_up_pair_equality pp pp.
+  Proof.
+  constructor.
+  + apply bigraph_equality_refl.
+  + apply bigraph_equality_refl.
+  Qed.
+
+Lemma bigraph_packed_up_pair_equality_sym (pp1 pp2 : bigraph_packed_up_pair):
+  bigraph_packed_up_pair_equality pp1 pp2 -> bigraph_packed_up_pair_equality pp2 pp1.
+  Proof.
+  intros H12.
+  constructor.
+  + symmetry.
+    apply (fst_ppair_pp_equ _ _ H12).
+  + symmetry.
+    apply (snd_ppair_pp_equ _ _ H12).
+  Qed.
+  
+Lemma bigraph_packed_up_pair_equality_trans (pp1 pp2 pp3 : bigraph_packed_up_pair):
+  bigraph_packed_up_pair_equality pp1 pp2 -> bigraph_packed_up_pair_equality pp2 pp3 ->
+    bigraph_packed_up_pair_equality pp1 pp3.
+  Proof.
+  intros H12 H23.
+  constructor.
+  + etransitivity.
+    - apply (fst_ppair_pp_equ _ _ H12).
+    - apply (fst_ppair_pp_equ _ _ H23).
+  + etransitivity.
+    - apply (snd_ppair_pp_equ _ _ H12).
+    - apply (snd_ppair_pp_equ _ _ H23).
+  Qed.
+  
+Add Parametric Relation : 
+  bigraph_packed_up_pair bigraph_packed_up_pair_equality
+  reflexivity proved by (bigraph_packed_up_pair_equality_refl)
+  symmetry proved by (bigraph_packed_up_pair_equality_sym)
+  transitivity proved by (bigraph_packed_up_pair_equality_trans)
+    as bigraph_packed_up_pair_equality_rel.
+
+Definition bigraph_packed_pp (b1 b2 : bigraph_packed)
+  {HUP : UnionPossiblePacked b1 b2} := 
+  packing ((big b1) || (big b2)).
+
+Definition bigraph_packed_up_pair_pp (pp : bigraph_packed_up_pair) := 
+  @bigraph_packed_pp (fst_ppair_pp pp) (snd_ppair_pp pp) (up_ppair_pp pp).
+
+
+Add Parametric Morphism : bigraph_packed_up_pair_pp with
+  signature bigraph_packed_up_pair_equality ==> bigraph_packed_equality as pp_morphism.
+  Proof.
+  unfold bigraph_packed_equality, bigraph_packed_up_pair_pp, bigraph_packed_pp.
+  destruct x; destruct y; simpl.
+  destruct 1.
+  simpl in * |- *.
+  apply bigraph_pp_congruence.
+  + assumption.
+  + assumption.
+  Qed.
+
+Notation "b1 [||] b2" := (bigraph_packed_up_pair_pp (Build_bigraph_packed_up_pair b1 b2)) (at level 50, left associativity).
+
+Theorem bigraph_packed_pp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
+  bigraph_packed_equality (bigraph_packed_pp bigraph_empty b) b.
+  Proof.
+  unfold bigraph_packed_equality, bigraph_packed_pp.
+  intros.
+  apply bigraph_pp_left_neutral.
+  Qed.
+
+Theorem bigraph_packed_pp_right_neutral : forall {s i r o} (b : bigraph s i r o), 
+  bigraph_packed_equality (bigraph_packed_pp b bigraph_empty) b.
+  Proof.
+  unfold bigraph_packed_equality, bigraph_packed_pp.
+  intros.
+  apply bigraph_pp_right_neutral.
+  Qed. 
+
+Theorem bigraph_packed_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
+  {HUP12 : UnionPossiblePacked b1 b2} 
+  {HUP13 : UnionPossiblePacked b1 b3} 
+  {HUP23 : UnionPossiblePacked b2 b3},
+  bigraph_packed_equality 
+    (bigraph_packed_pp (bigraph_packed_pp b1 b2) b3)
+    (bigraph_packed_pp b1 (bigraph_packed_pp b2 b3)).
+  Proof.
+  unfold bigraph_packed_equality, bigraph_packed_pp.
+  intros. destruct HUP13. destruct HUP12. destruct HUP23. simpl in upp1. simpl in upp0. simpl in upp2.
+  simpl.
+  apply (@bigraph_pp_assoc s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 b1 b2 b3 upp1 upp2 upp0).
+  Qed. 
+
+
 End ParallelProduct.
+

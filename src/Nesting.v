@@ -42,9 +42,9 @@ Example dis_i : X # Y. Admitted.
 Definition nest {I m X n Y} (* nest G F = G.F *)
   (G : bigraph m EmptyNDL n Y) (F : bigraph 1 I m X) 
   : bigraph 1 I n (app_merge_NoDupList X Y) :=
-  ((bigraph_identity (s := 0) (i := X)) || G) <<o>> F.
+  ((bigraph_identity (s := 0) (i := X)) [||] G) <<o>> F.
 
-Global Notation "F '<.>' G" := (nest F G) (at level 50, left associativity).
+Global Notation "G '<.>' F" := (nest G F) (at level 50, left associativity).
 
 
 Theorem nest_associative {I X Y n Z}
@@ -54,7 +54,10 @@ Theorem nest_associative {I X Y n Z}
     ((H <.> G) <.> F).
   Proof.
   unfold nest.
-  Fail rewrite id_union'.
+  Set Printing All.
+  Print id_union'.
+  rewrite id_union'.
+  
   Admitted.
 
 (* 

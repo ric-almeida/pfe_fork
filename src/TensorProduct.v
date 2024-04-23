@@ -713,16 +713,16 @@ Class DisjointNamesPacked (b1 b2 : bigraph_packed) :=
   
 Record bigraph_packed_disjoint_pair :=
   { 
-    fst_pp  : bigraph_packed;
-    snd_pp  : bigraph_packed;
-    disj_pp :: DisjointNamesPacked fst_pp snd_pp
+    fst_ppair_tp  : bigraph_packed;
+    snd_ppair_tp  : bigraph_packed;
+    disj_ppair_tp :: DisjointNamesPacked fst_ppair_tp snd_ppair_tp
   }.
-Arguments Build_bigraph_packed_disjoint_pair _ _ {disj_pp}. (*What does this do?*)
+Arguments Build_bigraph_packed_disjoint_pair _ _ {disj_ppair_tp}. (*What does this do?*)
   
 Record bigraph_packed_disjoint_pair_equality (pp1 pp2 : bigraph_packed_disjoint_pair) : Prop :=
   { 
-    fst_pp_equ : bigraph_packed_equality (fst_pp pp1) (fst_pp pp2);
-    snd_pp_equ : bigraph_packed_equality (snd_pp pp1) (snd_pp pp2)
+    fst_ppair_tp_equ : bigraph_packed_equality (fst_ppair_tp pp1) (fst_ppair_tp pp2);
+    snd_ppair_tp_equ : bigraph_packed_equality (snd_ppair_tp pp1) (snd_ppair_tp pp2)
   }. (*Why 4 bigraphs?*)
   
 Lemma bigraph_packed_disjoint_pair_equality_refl (pp : bigraph_packed_disjoint_pair) :
@@ -739,9 +739,9 @@ Lemma bigraph_packed_disjoint_pair_equality_sym (pp1 pp2 : bigraph_packed_disjoi
   intros H12.
   constructor.
   + symmetry.
-    apply (fst_pp_equ _ _ H12).
+    apply (fst_ppair_tp_equ _ _ H12).
   + symmetry.
-    apply (snd_pp_equ _ _ H12).
+    apply (snd_ppair_tp_equ _ _ H12).
   Qed.
   
 Lemma bigraph_packed_disjoint_pair_equality_trans (pp1 pp2 pp3 : bigraph_packed_disjoint_pair):
@@ -751,11 +751,11 @@ Lemma bigraph_packed_disjoint_pair_equality_trans (pp1 pp2 pp3 : bigraph_packed_
   intros H12 H23.
   constructor.
   + etransitivity.
-    - apply (fst_pp_equ _ _ H12).
-    - apply (fst_pp_equ _ _ H23).
+    - apply (fst_ppair_tp_equ _ _ H12).
+    - apply (fst_ppair_tp_equ _ _ H23).
   + etransitivity.
-    - apply (snd_pp_equ _ _ H12).
-    - apply (snd_pp_equ _ _ H23).
+    - apply (snd_ppair_tp_equ _ _ H12).
+    - apply (snd_ppair_tp_equ _ _ H23).
   Qed.
   
 Add Parametric Relation : 
@@ -770,7 +770,7 @@ Definition bigraph_packed_tp (b1 b2 : bigraph_packed)
   packing ((big b1) ⊗ (big b2)).
 
 Definition bigraph_packed_disjoint_pair_tp (pp : bigraph_packed_disjoint_pair) := 
-@bigraph_packed_tp (fst_pp pp) (snd_pp pp) (disj_pp pp).
+@bigraph_packed_tp (fst_ppair_tp pp) (snd_ppair_tp pp) (disj_ppair_tp pp).
 
 
 (*Set Typeclasses Debug.*)
@@ -787,8 +787,7 @@ apply bigraph_tp_congruence.
 + assumption.
 Qed.
 
-Notation "b1 [] b2" :=
-(bigraph_packed_disjoint_pair_tp (Build_bigraph_packed_disjoint_pair b1 b2)) (at level 50, left associativity).
+(* Notation "b1 [] b2" := (bigraph_packed_disjoint_pair_tp (Build_bigraph_packed_disjoint_pair b1 b2)) (at level 50, left associativity). *)
 
 Theorem bigraph_packed_tp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
 bigraph_packed_equality (bigraph_packed_tp bigraph_empty b) b.
@@ -808,9 +807,12 @@ Qed.
 
 Theorem bigraph_packed_tp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
-  {Hdisj12 : DisjointNamesPacked b1 b2} {Hdisj13 : DisjointNamesPacked b1 b3} {Hdisj23 : DisjointNamesPacked b2 b3},
-  bigraph_packed_equality (bigraph_packed_tp (bigraph_packed_tp b1 b2) b3)
-            (bigraph_packed_tp b1 (bigraph_packed_tp b2 b3)).
+  {Hdisj12 : DisjointNamesPacked b1 b2} 
+  {Hdisj13 : DisjointNamesPacked b1 b3} 
+  {Hdisj23 : DisjointNamesPacked b2 b3},
+  bigraph_packed_equality 
+    (bigraph_packed_tp (bigraph_packed_tp b1 b2) b3)
+    (bigraph_packed_tp b1 (bigraph_packed_tp b2 b3)).
 Proof.
 unfold bigraph_packed_equality, bigraph_packed_tp.
 intros.
