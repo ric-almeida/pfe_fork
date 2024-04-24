@@ -127,7 +127,6 @@ Example simplBigbool :
   exfalso. discriminate H.
   Defined. 
 
-  Print simplBigbool.
 
 
 

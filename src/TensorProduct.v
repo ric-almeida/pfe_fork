@@ -776,7 +776,8 @@ Definition bigraph_packed_disjoint_pair_tp (pp : bigraph_packed_disjoint_pair) :
 (*Set Typeclasses Debug.*)
 
 Add Parametric Morphism : bigraph_packed_disjoint_pair_tp with
-signature bigraph_packed_disjoint_pair_equality ==> bigraph_packed_equality as tp_morphism.
+signature bigraph_packed_disjoint_pair_equality ==> 
+bigraph_packed_equality as tp_morphism.
 Proof.
 unfold bigraph_packed_equality, bigraph_packed_disjoint_pair_tp, bigraph_packed_tp.
 destruct x; destruct y; simpl.

@@ -1382,13 +1382,10 @@ Lemma id_union : forall X Y:NoDupList,
 
 Lemma id_union' : forall X Y:NoDupList, 
   bigraph_equality
-  (bigraph_identity (s := 0) 
-    (p := permutation_id_PN (@reverse_coercion NoDupList (list Name) 
-			(app_merge_NoDupList X Y) 
-			(ndlist (app_merge_NoDupList X Y)))))
-  ((bigraph_identity (p := P_NP (permutation_id X))) || (bigraph_identity (p := P_NP (permutation_id Y)))).
+  (bigraph_identity (s := 0) (i := app_merge_NoDupList X Y))
+  ((bigraph_identity (i := X)) || (bigraph_identity (i := Y))).
   Proof.
-  intros X Y.
+    intros X Y.
     unfold bigraph_id. unfold bigraph_identity.
     unfold bigraph_parallel_product.
     simpl.
@@ -1399,8 +1396,8 @@ Lemma id_union' : forall X Y:NoDupList,
     unfold sum_shuffle.
     refine 
       (BigEq 0 0 0 0 _ _ _ _
-        (bigraph_identity (s := 0) (p := permutation_id_PN (@reverse_coercion NoDupList (list Name)  (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y)))))  
-        (bigraph_id 0 X || (bigraph_id 0 Y))
+        (bigraph_identity (s := 0) (i := app_merge_NoDupList X Y))
+        ((bigraph_identity (i := X)) || (bigraph_identity (i := Y)))
         eq_refl
         (permutation_id (app_merge_NoDupList X Y))
         eq_refl
@@ -1424,8 +1421,8 @@ Lemma id_union' : forall X Y:NoDupList,
 
 Lemma id_union_packed : forall X Y:NoDupList, 
   bigraph_packed_equality
-  (packing (bigraph_id 0 (app_merge_NoDupList X Y)))
-  (packing (bigraph_parallel_product (up := union_possible_id) (bigraph_id 0 X) (bigraph_id 0 Y))).
+  ((bigraph_id 0 (app_merge_NoDupList X Y)))
+  ((bigraph_parallel_product (up := union_possible_id) (bigraph_id 0 X) (bigraph_id 0 Y))).
   Proof.
   apply id_union.
   Qed.
@@ -1547,6 +1544,47 @@ Theorem bigraph_packed_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   apply (@bigraph_pp_assoc s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 b1 b2 b3 upp1 upp2 upp0).
   Qed. 
 
+(* Lemma id_union'' : forall X Y:NoDupList, 
+  bigraph_equality
+  (bigraph_identity (s := 0) 
+    (p := permutation_id_PN (@reverse_coercion NoDupList (list Name) 
+			(app_merge_NoDupList X Y) 
+			(ndlist (app_merge_NoDupList X Y)))))
+  ((bigraph_identity (p := P_NP (permutation_id X))) [||] (bigraph_identity (p := P_NP (permutation_id Y)))).
+  Proof.
+  intros X Y.
+    unfold bigraph_id. unfold bigraph_identity.
+    unfold bigraph_parallel_product.
+    simpl.
+    unfold link_juxt, parallel, funcomp.
+    simpl.
+    unfold findec_sum. simpl.
+    unfold join.
+    unfold sum_shuffle.
+    refine 
+      (BigEq 0 0 0 0 _ _ _ _
+        (bigraph_identity (s := 0) (p := permutation_id_PN (@reverse_coercion NoDupList (list Name)  (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y)))))  
+        (bigraph_id 0 X || (bigraph_id 0 Y))
+        eq_refl
+        (permutation_id (app_merge_NoDupList X Y))
+        eq_refl
+        (permutation_id (app_merge_NoDupList X Y))
+        (bijection_inv bij_void_sum_neutral)
+        (bijection_inv bij_void_sum_neutral)
+        (fun n => void_univ_embedding n) _ _ _
+      ).
+  + apply functional_extensionality.
+      intros [ x | x ]; destruct x. 
+    + apply functional_extensionality.
+      intros [[x | x] | p]; try (destruct x).
+      unfold fin in p. destruct p. exfalso. apply PeanoNat.Nat.nlt_0_r in l. apply l.
+    + rewrite bij_subset_compose_id. simpl.
+    apply functional_extensionality.
+    intros [[i H]|x].
+    * unfold id, parallel, funcomp. simpl. unfold in_app_or_m_nod_dup.
+    destruct (in_dec EqDecN i Y); f_equal; apply subset_eq_compat; reflexivity.
+    * destruct x. destruct x as [x | x]; destruct x.
+  Qed. *)
 
 End ParallelProduct.
 

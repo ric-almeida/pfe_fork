@@ -104,7 +104,7 @@ Definition bigraph_identity {s i i'} {p:PermutationNames (ndlist i) (ndlist i')}
     destruct n.
   Defined.
   
-Definition bigraph_id (s: nat) (i : NoDupList) := @bigraph_identity s i i (P_NP (permutation_id i)).
+Definition bigraph_id (s: nat) (i : NoDupList) := bigraph_identity (s := s) (i := i) (i' := i).
 
 (* Definition symmetry_big {s i r o} : bigraph s i r o.
 apply (Big s i r o 
