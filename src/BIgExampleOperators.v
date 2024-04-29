@@ -1,9 +1,17 @@
+Set Warnings "-notation-overridden, -parsing".
+
 Require Import ConcreteBigraphs.
-Require Import SignatureBig.
-Require Import FinDecTypes.
-Require Import MyBasics.
-Require Import Bijections.
 Require Import Names.
+Require Import SignatureBig.
+Require Import Equality.
+Require Import Bijections.
+Require Import MyBasics.
+Require Import Fintypes.
+Require Import FinDecTypes.
+Require Import ParallelProduct.
+Require Import MergeProduct.
+Require Import Nesting.
+
 
 Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.
@@ -19,8 +27,6 @@ Require Import Coq.Arith.Wf_nat.
 Require Import Coq.Program.Wf.
 Require Import Coq.Strings.String.
 Require Import Coq.Bool.Sumbool.
-
-
 
 
 
@@ -43,12 +49,34 @@ Definition InfName : forall l : list string, exists n : string, ~ In n l.
   induction l as [|x l IHl].
   - exists "a". auto.
   - Admitted.
+Definition DefaultName := "default".
+Definition freshName : list Name -> Name. 
+Proof. 
+intros l. induction l as [|name l H].
+- exact DefaultName.
+- exact H.
+Defined. 
+Lemma notInfreshName : forall l:list Name, ~ In (freshName l) l. 
+Proof. 
+intros.
+unfold not. intros H. 
+induction l as [|name l Hl].
+- elim H.
+- destruct H.
++ unfold freshName in H. 
+unfold list_rec in *. unfold list_rect in *.
+simpl in H. admit.
++ 
+
+Admitted.
+
 End MyNamesP.
 
-Module MyBigraph := Bigraphs MySigP MyNamesP.
-Include MyBigraph.
 
-Example zero1 : type (findec_fin 1). exists 0. auto. Defined.
+
+Module MB := MergeBig MySigP MyNamesP.
+Import MB.
+
 Example b : string := "b".
 Example bNDL : NoDupList.
 exists [b]. constructor; auto. constructor. Defined.
@@ -64,10 +92,11 @@ Example simplBig :
     (findec_fin 2)
     findec_unit
     (fun n => match n with | exist _ n _ => n+1 end) (*control*)
-    (fun ns => match ns with 
+    _
+    (*(fun ns => match ns with 
       | inl n => inr zero1
       | inr s => _
-    end) (*parent*)
+    end)*) (*parent*)
     _ (*link*)
   ). 
   Unshelve.
@@ -86,7 +115,9 @@ Example simplBig :
   *** left. unfold NameSub. exists a.  
   unfold aNDL. simpl.
   left. reflexivity. }
-  2:{ (*p s*) left. simpl. exists 0. lia. }
+  2:{ intros [n|s]. 
+  - right. exact zero1. 
+  - left. simpl. exists 0. lia. }
   unfold FiniteParent. simpl.
   intros u.
   apply Acc_intro.
@@ -94,6 +125,11 @@ Example simplBig :
   exfalso. discriminate H.
   Defined. 
 
+Definition myfunbb (n : bool) :=  
+  match n with 
+  | false => 1 
+  | true => 2 
+  end.
 
 Example simplBigbool : 
   bigraph 1 bNDL 1 aNDL.
@@ -127,8 +163,8 @@ Example simplBigbool :
   exfalso. discriminate H.
   Defined. 
 
-
-
+(* Example simplBigboolOp : 
+  bigraph 1 EmptyNDL 1 EmptyNDL := (ion (A := findec_bool) true) <|> (atom (A := findec_bool) false). *)
 
   (* Example zero : Kappa. exists 0. auto. Defined. *)
 

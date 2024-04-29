@@ -132,13 +132,17 @@ Theorem nest_associative {I X Y n Z}
     ((H <.> G) <.> F).
   Proof.
   unfold nest.
-  rewrite my_id_union.
-  rewrite (id_union'' X Y).
+  (* rewrite my_id_union.
+  rewrite (id_union'' X Y). *)
   Admitted.
 
 
 Example b1 {s1 r1 o1}: bigraph s1 EmptyNDL r1 o1. Admitted.
 Example b2 {s1 i2 i1}: bigraph 0 i2 s1 i1. Admitted.
 
+(* Theorem atom_is_empty_ion : 
+  bigraph_equality.
+  (discrete_ion <o> ∅)
+  discrete_atom. *)
 
 End NestingBig.

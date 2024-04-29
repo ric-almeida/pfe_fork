@@ -18,11 +18,18 @@ Module Type NamesParameter.
 Parameter Name : Type.
 Parameter EqDecN : forall x y : Name, {x = y} + {x <> y}.
 Parameter InfName: forall l:list Name, exists n:Name, ~ In n l.
+Parameter DefaultName : Name.
+Parameter freshName : list Name -> Name. 
+Parameter notInfreshName : forall l:list Name, ~ In (freshName l) l. 
 End NamesParameter.
 
 
 Module Names (NP: NamesParameter).
 Include NP.
+
+
+
+
 Record NoDupList : Type :=
 mkNoDupList
   {

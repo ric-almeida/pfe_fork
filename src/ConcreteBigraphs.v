@@ -17,6 +17,7 @@ Require Import PropExtensionality.
 Require Import SignatureBig.
 Require Import Names.
 Require Import Coq.Lists.List.
+Require Import Coq.Arith.PeanoNat.
 
 
 Import ListNotations.
@@ -105,6 +106,143 @@ Definition bigraph_identity {s i i'} {p:PermutationNames (ndlist i) (ndlist i')}
   Defined.
   
 Definition bigraph_id (s: nat) (i : NoDupList) := bigraph_identity (s := s) (i := i) (i' := i).
+
+Example zero1 : type (findec_fin 1). exists 0. auto. Defined.
+
+Definition discrete_atom {A} 
+  (a:type A) (k:Kappa) (o:NoDupList) 
+  (Hkappa : Arity k = length (ndlist o)): bigraph 0 EmptyNDL 1 o.
+  eapply (Big
+      0 EmptyNDL 1 o
+      A
+      voidfd
+      (fun n => k) (*control*)
+      (fun ns => match ns with 
+        | inl n => inr zero1
+        | inr s => _
+      end) (*parent*)
+      _ (*link*)
+    ).
+    Unshelve.
+    3:{ intros [i|p].  
+      - destruct i as [i H]. elim H. 
+      - left. unfold NameSub. destruct o as [o Ho]. 
+      destruct p as [i H]. destruct H as [p Hp]. 
+      exists (nth p o DefaultName). 
+      apply nth_In. rewrite <- Hkappa. assumption. } (*link*)
+    2:{ destruct s. apply Nat.nlt_0_r in l. elim l. } (*parent*)
+    unfold FiniteParent. simpl. (*acyclic*)
+    intros u.
+    apply Acc_intro.
+    intros u' H.
+    exfalso. discriminate H.
+    Defined. 
+
+Definition discrete_ion {A} 
+  (a:type A) (k:Kappa) (o:NoDupList) 
+  (Hkappa : Arity k = length (ndlist o)): bigraph 1 EmptyNDL 1 o.
+  eapply (Big
+      1 EmptyNDL 1 o
+      A
+      voidfd
+      (fun n => k) (*control*)
+      (fun ns => match ns with 
+        | inl n => inr zero1
+        | inr s => inl a
+      end) (*parent*)
+      _ (*link*)
+    ).
+    Unshelve.
+    2:{ intros [i|p].  
+      - destruct i as [i H]. elim H. 
+      - left. unfold NameSub. destruct o as [o Ho]. 
+      destruct p as [i H]. destruct H as [p Hp]. 
+      exists (nth p o DefaultName). 
+      apply nth_In. rewrite <- Hkappa. assumption. } (*link*)
+    unfold FiniteParent. simpl.
+    intros u.
+    apply Acc_intro.
+    intros u' H.
+    exfalso. discriminate H.
+    Defined. 
+
+
+Definition placing (s : nat) (r : nat) := bigraph s EmptyNDL r EmptyNDL. (*manque la notion de node-free*)
+
+Definition permutationbig' (n : nat) := placing n n. (*manque la notion de node-free*)
+Definition permutationbig (n : nat) : bigraph n EmptyNDL n EmptyNDL. 
+  Proof. 
+  apply (Big n EmptyNDL n EmptyNDL
+    voidfd (*node : ∅*)
+    voidfd (*edge : ∅*)
+    (@void_univ_embedding _) (*control : ∅_-> Kappa*)
+    (fun sn => match sn with |inr s => inr s | inl n => match n with end end) (*parent : sites -> root*)
+  ).
+  - intros [inner | port]. (*link : ∅*)
+  + left. apply inner.
+  + destruct port. destruct x.
+  - intro n'. (*acyclic parent*)
+  destruct n'.
+  Defined.
+
+Definition prime (m:nat) (X:NoDupList) :=  bigraph m EmptyNDL 1 EmptyNDL.
+
+Definition merge' (n:nat) := placing n 1. (*manque la notion de node-free*)
+Definition merge {n:nat} : bigraph n EmptyNDL 1 EmptyNDL. (* merge n+1 = join <<o>> (id 1 [] ⊗ merge n ) with merge 0 = 1 (1 root that's all)*)
+  Proof. 
+  apply (Big n EmptyNDL 1 EmptyNDL
+    voidfd (*node : ∅*)
+    voidfd (*edge : ∅*)
+    (@void_univ_embedding _) (*control : ∅ ->_Kappa*)
+    (fun s => inr zero1) (*parent : sites -> root*)
+  ).
+  - intros [inner | port]. (*link : ∅*)
+  + left. apply inner.
+  + destruct port. destruct x.
+  - intro n'. (*acyclic parent*)
+  destruct n'.
+  Defined.
+
+Definition big_1 := @merge 0.
+
+
+Definition linking (i : NoDupList) (o : NoDupList) := bigraph 0 i 0 o. (*manque la notion de node-free*)
+
+Lemma noDupSingle (n:Name) :  NoDup [n].
+Proof. constructor; auto. constructor. Qed.
+
+Definition substitution' (i:NoDupList) (name:Name) := linking i (mkNoDupList [name] (noDupSingle name)).
+Definition substitution (i:NoDupList) (name:Name) : bigraph 0 i 0 (mkNoDupList [name] (noDupSingle name)).
+  Proof. 
+  apply (Big 0 i 0 (mkNoDupList [name] (noDupSingle name))
+    voidfd (*node : ∅*)
+    voidfd (*edge : ∅*)
+    (@void_univ_embedding _) (*control : ∅_Kappa*)
+    (void_univ_embedding ||| (void_univ_embedding <o> bij_fin_zero)) (*parent : sites -> root*)
+  ).
+  - intros [inner | port]. (*link : ∅*)
+  + left. exists name. simpl. left. reflexivity.
+  + destruct port. destruct x.
+  - intro n'. (*acyclic parent*)
+  destruct n'.
+  Defined.
+
+Definition closure' (name:Name) := linking (mkNoDupList [name] (noDupSingle name)) EmptyNDL.
+Definition closure (name:Name) : bigraph 0 (mkNoDupList [name] (noDupSingle name)) 0 EmptyNDL.
+  Proof. 
+  apply (Big 0 (mkNoDupList [name] (noDupSingle name)) 0 EmptyNDL
+    voidfd (*node : ∅*)
+    voidfd (*edge : ∅*)
+    (@void_univ_embedding _) (*control : ∅_Kappa*)
+    (void_univ_embedding ||| (void_univ_embedding <o> bij_fin_zero)) (*parent : sites -> root*)
+  ).
+  - intros [inner | port]. (*link : ∅*)
+  +  right. simpl. admit. (*left. exists (). simpl. left. reflexivity.*)
+  + destruct port. destruct x.
+  - intro n'. (*acyclic parent*)
+  destruct n'.
+  Admitted.
+
 
 (* Definition symmetry_big {s i r o} : bigraph s i r o.
 apply (Big s i r o 

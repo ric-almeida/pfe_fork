@@ -23,7 +23,7 @@ Module MergeBig (s : SignatureParameter) (n : NamesParameter).
 Module pp := ParallelProduct s n.
 Include pp.
 
-Example zero : fin 1. exists 0. lia. Defined.
+(* Example zero : fin 1. exists 0. lia. Defined.
 
 Definition merge {n:nat} : bigraph n EmptyNDL 1 EmptyNDL. (* merge n+1 = join <<o>> (id 1 [] ⊗ merge n ) with merge 0 = 1 (1 root that's all)*)
   Proof. 
@@ -38,7 +38,7 @@ Definition merge {n:nat} : bigraph n EmptyNDL 1 EmptyNDL. (* merge n+1 = join <<
   + destruct port. destruct x.
   - intro n'. (*acyclic parent*)
   destruct n'.
-  Defined.
+  Defined. *)
 
 Definition rm_useless_root {s r : nat} {i o : NoDupList} (b : bigraph s i (r + 0) o) : bigraph s i r o.
   destruct b as [n e c p l ap].
@@ -74,12 +74,12 @@ Definition bigraph_merge_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
     (b1 || b2)).
 
 
-Global Notation "b1 | b2" := (bigraph_merge_product b1 b2) (at level 50, left associativity).
+Global Notation "b1 <|> b2" := (bigraph_merge_product b1 b2) (at level 50, left associativity).
 
-Definition big_1 := @merge 0.
+(* Definition big_1 := @merge 0. *)
 
 Lemma arity_mp_right_neutral {s i o} (b : bigraph s i 1 o): forall n, 
-  Arity (get_control (b | big_1) n) = Arity (get_control b (bij_void_void n)).
+  Arity (get_control (b <|> big_1) n) = Arity (get_control b (bij_void_void n)).
   Proof.
     intros n.
     destruct n as [[v | v ] | [n | v]].
@@ -91,10 +91,10 @@ Lemma arity_mp_right_neutral {s i o} (b : bigraph s i 1 o): forall n,
 
 Theorem mp_right_neutral {s i o} (b : bigraph s i 1 o): 
   bigraph_equality
-    (b | big_1) 
+    (b <|> big_1) 
     b.
   Proof.
-  apply (BigEq _ _ _ _ _ _ _ _ (b | big_1) b
+  apply (BigEq _ _ _ _ _ _ _ _ (b <|> big_1) b
     (PeanoNat.Nat.add_0_r s)
     (right_empty i)
     (PeanoNat.Nat.add_0_r 1)
@@ -119,7 +119,7 @@ Theorem mp_right_neutral {s i o} (b : bigraph s i 1 o):
       destruct f.
       destruct (PeanoNat.Nat.ltb_spec0 x 2).
       * f_equal.
-      destruct zero.
+      destruct zero1.
       rewrite (@eq_rect_exist nat nat (fun n x => x < n) 1 1 _ x0 _).
       apply subset_eq_compat.
       assert (x = 0).
@@ -145,7 +145,7 @@ Theorem mp_right_neutral {s i o} (b : bigraph s i 1 o):
       destruct f.
       destruct (PeanoNat.Nat.ltb_spec0 x0 2).
       ** f_equal.
-      destruct zero.
+      destruct zero1.
       symmetry. rewrite (@eq_rect_exist nat nat (fun n x => x < n) 1 1 _ x1 _).
       apply subset_eq_compat.
       assert (x0 = 0).
@@ -187,7 +187,7 @@ Theorem mp_right_neutral {s i o} (b : bigraph s i 1 o):
   Qed.
 
 Lemma arity_mp_left_neutral {s i o} (b : bigraph s i 1 o): forall n, 
-  Arity (get_control (big_1 | b) n) = Arity (get_control b (bij_void_void_r n)).
+  Arity (get_control (big_1 <|> b) n) = Arity (get_control b (bij_void_void_r n)).
   Proof.
     intros n.
     destruct n as [[v | v ] | [v | n]].
@@ -198,9 +198,9 @@ Lemma arity_mp_left_neutral {s i o} (b : bigraph s i 1 o): forall n,
     Qed.
 
 Theorem mp_left_neutral {s i o} (b : bigraph s i 1 o): 
-  bigraph_equality (big_1 | b) b.
+  bigraph_equality (big_1 <|> b) b.
   Proof.
-  apply (BigEq _ _ _ _ _ _ _ _ (big_1 | b) b
+  apply (BigEq _ _ _ _ _ _ _ _ (big_1 <|> b) b
     eq_refl
     (left_empty i)
     eq_refl
@@ -225,7 +225,7 @@ Theorem mp_left_neutral {s i o} (b : bigraph s i 1 o):
       destruct f.
       destruct (PeanoNat.Nat.ltb_spec0 (S x) 2).
       * f_equal.
-      destruct zero.
+      destruct zero1.
       apply subset_eq_compat.
       assert (x = 0).
       ** apply PeanoNat.Nat.lt_1_r. apply l.
@@ -258,7 +258,7 @@ Theorem mp_left_neutral {s i o} (b : bigraph s i 1 o):
       simpl.
       destruct f.
       destruct (PeanoNat.Nat.ltb_spec0 (S x0) 2).
-      destruct zero.
+      destruct zero1.
       ** f_equal. apply subset_eq_compat. lia.
       ** f_equal. apply subset_eq_compat. lia.
       ** lia.
@@ -306,7 +306,7 @@ Theorem mp_left_neutral {s i o} (b : bigraph s i 1 o):
   (up23 : UnionPossible b2 b3) 
   (up13 : UnionPossible b1 b3) :
   UnionPossible 
-    (b1 | b2)
+    (b1 <|> b2)
     b3.
   Proof.
   constructor.
@@ -365,12 +365,12 @@ Theorem mp_left_neutral {s i o} (b : bigraph s i 1 o):
 Lemma arity_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
   {up12 : UnionPossible b1 b2} {up23 : UnionPossible b2 b3} {up13 : UnionPossible b1 b3} n12_3,
-  Arity (get_control ((b1 | b2) | b3) n12_3) 
+  Arity (get_control ((b1 <|> b2) <|> b3) n12_3) 
   = 
   Arity (get_control (bigraph_merge_product 
     (up := union_possible_commutes (union_possible_assoc_mp up23 (union_possible_commutes up13) (union_possible_commutes up12))) 
     b1
-    (b2 | b3)) (bij_sum_assoc_mp n12_3)). 
+    (b2 <|> b3)) (bij_sum_assoc_mp n12_3)). 
   Proof.
   intros until n12_3.
   destruct n12_3 as [[v | v] | [[[v|v] |[n1|n2]]|n3]].
@@ -387,14 +387,14 @@ Theorem bigraph_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
   {up12 : UnionPossible b1 b2} {up23 : UnionPossible b2 b3} {up13 : UnionPossible b1 b3},
   bigraph_equality 
-    ((b1 | b2) |  b3)
+    ((b1 <|> b2) <|>  b3)
     (bigraph_merge_product 
       (up := union_possible_commutes (union_possible_assoc_mp up23 (union_possible_commutes up13) (union_possible_commutes up12))) 
       b1 
-      (b2 | b3)).
+      (b2 <|> b3)).
   Proof.
   intros.
-  apply (BigEq _ _ _ _ _ _ _ _ ((b1 | b2) | b3) (b1 | (b2 | b3))
+  apply (BigEq _ _ _ _ _ _ _ _ ((b1 <|> b2) <|> b3) (b1 <|> (b2 <|> b3))
     (eq_sym (PeanoNat.Nat.add_assoc _ _ _))
     tr_permutation
     (eq_refl)
