@@ -39,8 +39,8 @@ Example dis_i : X # Y. Admitted.
     G. *)
 
 
-Definition nest {I m X n Y} (* nest G F = G.F *)
-  (G : bigraph m EmptyNDL n Y) (F : bigraph 1 I m X) 
+Definition nest {I m X n Y m'} (* nest G F = G.F *)
+  (G : bigraph m EmptyNDL n Y) (F : bigraph 1 I m' X) {eq mm' : MyEqNat m m'}
   : bigraph 1 I n (app_merge_NoDupList X Y) :=
   ((bigraph_identity (s := 0) (i := X)) || G) <<o>> F.
 

@@ -64,14 +64,22 @@ Definition rm_useless_outer {s r : nat} {i o : NoDupList} (b : bigraph s i r (ap
   exact (Big s i r o n e c p l ap).
   Defined. 
 
+#[export] Instance MyEqNat_r_neutral {a} : 
+  MyEqNat (a+0) a.
+Proof. 
+constructor. 
+lia.
+Qed.
+
+(* MyEqNat (r1 + r2 + 0) (r1 + r2) *)
+
+
 Definition bigraph_merge_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
   {up : UnionPossible b1 b2}
-    : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) 1 (app_merge_NoDupList o1 o2) := 
-  let pprm := rm_useless_site (@merge (r1 + r2) ⊗ (@bigraph_id 0 (app_merge_NoDupList i1 i2))) in
-  rm_useless_outer (rm_useless_root (rm_useless_site 
-    (@merge (r1 + r2) ⊗ (@bigraph_id 0 (app_merge_NoDupList o1 o2)))) <<o>>
-    (b1 || b2)).
+    (* : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) 1 (app_merge_NoDupList o1 o2)  *)
+    := 
+  ((@merge (r1 + r2) ⊗ (@bigraph_id 0 (app_merge_NoDupList o1 o2)))) <<o>> (b1 || b2).
 
 
 Global Notation "b1 <|> b2" := (bigraph_merge_product b1 b2) (at level 50, left associativity).
@@ -111,21 +119,15 @@ Theorem mp_right_neutral {s i o} (b : bigraph s i 1 o):
     - unfold funcomp, parallel.
       simpl. 
       unfold bij_rew_forward, sum_shuffle, rearrange, extract1. 
-      destruct get_parent; try reflexivity.
+      destruct get_parent; try reflexivity. 
       rewrite <- eq_rect_eq.
-      rewrite <- eq_rect_eq.
+      destruct f as (s1', Hs1').
       unfold inj_fin_add, surj_fin_add, id.
       simpl.
-      destruct f.
-      destruct (PeanoNat.Nat.ltb_spec0 x 2).
-      * f_equal.
+      destruct (PeanoNat.Nat.ltb_spec0 s1' 2).
+      * f_equal. rewrite <- eq_rect_eq. 
       destruct zero1.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) 1 1 _ x0 _).
-      apply subset_eq_compat.
-      assert (x = 0).
-      ** apply PeanoNat.Nat.lt_1_r. apply l.
-      ** assert (x0 = 0). apply PeanoNat.Nat.lt_1_r. apply l1.
-      lia.
+      apply subset_eq_compat. lia. 
       * exfalso. apply n. lia. 
     - unfold funcomp, parallel, sum_shuffle.
       unfold bij_rew_forward.
@@ -139,19 +141,13 @@ Theorem mp_right_neutral {s i o} (b : bigraph s i 1 o):
       rewrite (proof_irrelevance _ _ l0).
       destruct get_parent; try reflexivity.
       rewrite <- eq_rect_eq.
-      rewrite <- eq_rect_eq.
       unfold inj_fin_add, surj_fin_add, id.
       simpl.
       destruct f.
       destruct (PeanoNat.Nat.ltb_spec0 x0 2).
-      ** f_equal.
+      ** f_equal. rewrite <- eq_rect_eq. 
       destruct zero1.
-      symmetry. rewrite (@eq_rect_exist nat nat (fun n x => x < n) 1 1 _ x1 _).
-      apply subset_eq_compat.
-      assert (x0 = 0).
-      *** apply PeanoNat.Nat.lt_1_r. apply l1.
-      *** assert (x1 = 0). apply PeanoNat.Nat.lt_1_r. apply l3.
-      lia.
+      apply subset_eq_compat. lia. 
       ** exfalso. apply n. lia.
       * exfalso. apply n. apply l. 
   + apply functional_extensionality.
@@ -219,18 +215,13 @@ Theorem mp_left_neutral {s i o} (b : bigraph s i 1 o):
       unfold bij_rew_forward, sum_shuffle, rearrange, extract1. 
       destruct get_parent; try reflexivity.
       rewrite <- eq_rect_eq.
-      rewrite <- eq_rect_eq.
       unfold inj_fin_add, surj_fin_add, id.
       simpl.
       destruct f.
       destruct (PeanoNat.Nat.ltb_spec0 (S x) 2).
-      * f_equal.
+      * f_equal. 
       destruct zero1.
-      apply subset_eq_compat.
-      assert (x = 0).
-      ** apply PeanoNat.Nat.lt_1_r. apply l.
-      ** assert (x0 = 0). apply PeanoNat.Nat.lt_1_r. apply l1.
-      lia.
+      apply subset_eq_compat. lia. 
       * exfalso. apply n. lia. 
     - unfold funcomp, parallel, sum_shuffle.
       unfold bij_rew_forward.
@@ -240,11 +231,10 @@ Theorem mp_left_neutral {s i o} (b : bigraph s i 1 o):
       destruct s1. unfold eq_sym.
       destruct (PeanoNat.Nat.ltb_spec0 x 0).      
       * 
-      rewrite <- eq_rect_eq.
-      rewrite <- eq_rect_eq.
+      rewrite <- eq_rect_eq. destruct zero1. 
       unfold inj_fin_add, surj_fin_add, id.
       simpl.
-      destruct (PeanoNat.Nat.ltb_spec0 0 2).
+      destruct (PeanoNat.Nat.ltb_spec0 x0 2).
       ** exfalso. apply PeanoNat.Nat.nlt_0_r in l0. apply l0.
       ** exfalso. apply n. lia.
       * erewrite <- (parent_proof_irrelevant b (x-0) x). 
@@ -252,7 +242,6 @@ Theorem mp_left_neutral {s i o} (b : bigraph s i 1 o):
       { intros. apply subset_eq_compat. lia. }
       rewrite H.
       destruct get_parent; try reflexivity.
-      rewrite <- eq_rect_eq.
       rewrite <- eq_rect_eq.
       unfold inj_fin_add, surj_fin_add, id.
       simpl.
@@ -383,6 +372,9 @@ Lemma arity_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   + reflexivity.
   Qed. 
 
+
+
+
 Theorem bigraph_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
   {up12 : UnionPossible b1 b2} {up23 : UnionPossible b2 b3} {up13 : UnionPossible b1 b3},
@@ -398,22 +390,31 @@ Theorem bigraph_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
     (eq_sym (PeanoNat.Nat.add_assoc _ _ _))
     tr_permutation
     (eq_refl)
-    tr_permutation
+    permutationtr
     bij_sum_assoc_mp
     bij_sum_assoc_mp
     (fun n12_3 => bij_rew (P := fin) (arity_mp_assoc b1 b2 b3 n12_3))
   ).
   + apply functional_extensionality.
   destruct x as [[v | v] | [a | [[v|v]|[b|c]]]]; try reflexivity; try (elim v).
-  + apply functional_extensionality.
+  + apply functional_extensionality. rewrite bij_rew_id. 
     destruct x as [[[v | v] | [a | [[v|v]|[b|c]]]] | s1_23']; simpl; unfold funcomp; simpl; try (elim v).
-    - f_equal.
-      simpl.
-      unfold rearrange. unfold extract1, parallel.
-      destruct get_parent; try reflexivity.
-      rewrite <- eq_rect_eq.
-      rewrite <- eq_rect_eq.
-      simpl.
+    - f_equal. 
+      simpl. 
+      unfold rearrange. unfold extract1, parallel, sum_shuffle. 
+      destruct get_parent; try reflexivity.  
+      destruct f. 
+      destruct (inj_fin_add (bij_rew_forward (eq_sym eqxy) (surj_fin_add (inl (exist (fun p : nat => p < r1) x l))))). 
+      
+      unfold bij_rew_forward. 
+      simpl. 
+      unfold inj_fin_add. 
+      rewrite <- eq_rect_eq. 
+      unfold inj_fin_add, surj_fin_add, id, bij_rew_forward. simpl. 
+      destruct f. 
+      
+      simpl. 
+      simpl. 
       rewrite <- eq_rect_eq.
       unfold sum_shuffle.
       destruct eq_rect. destruct s0 as [s0|s0];destruct s0.

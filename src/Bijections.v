@@ -643,7 +643,7 @@ apply bij_eq.
 Qed.
 
 Theorem bij_fun_hcompose : forall {A B C D E F : Type} (bij_AB : bijection A B) (bij_CD : bijection C D) (bij_EF : bijection E F) (ac : A -> C) (ce : C -> E),
-                              (bij_CD -->> bij_EF) ce <o> (bij_AB -->> bij_CD) ac = (bij_AB -->> bij_EF) (ce <o> ac).
+   (bij_CD -->> bij_EF) ce <o> (bij_AB -->> bij_CD) ac = (bij_AB -->> bij_EF) (ce <o> ac).
 Proof.
 intros A B C D E F bij_AB bij_CD bij_EF ac ce.
 simpl.
@@ -1440,6 +1440,18 @@ apply f_equal.
 apply subset_eq_compat.
 lia.
 Qed.
+
+Theorem inj_o_surj_id' : forall n p, forall x, (@inj_fin_add n p  (@surj_fin_add n p x)) = x.
+Proof. 
+intros.
+rewrite <- (funcomp_simpl surj_fin_add inj_fin_add).
+rewrite inj_o_surj_id.
+auto. 
+Qed.
+
+
+
+
 
 Theorem surj_o_inj_id : forall n p, (@surj_fin_add n p) <o> (@inj_fin_add n p) = id.
 intros n p.

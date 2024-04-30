@@ -1196,10 +1196,10 @@ End IntersectionNDL.
 
 Global Notation "l1 ∩ l2" := (intersectionNDL l1 l2) (at level 50, left associativity).
 
-Class PermutationNames (l1 l2 : NoDupList) := { p : permutation l1 l2 }.
+Class PermutationNames (l1 l2 : NoDupList) := { pn : permutation l1 l2 }.
 
 Definition PN_P {l1 l2 : NoDupList} (pn : PermutationNames l1 l2) : permutation l1 l2.
-  Proof. destruct pn. apply p0. Qed.
+  Proof. destruct pn. apply pn0. Qed.
 
 Definition P_NP {l1 l2 : NoDupList} (p : permutation l1 l2) : PermutationNames l1 l2.
   Proof. exists. apply p. Qed.
@@ -1252,4 +1252,17 @@ Qed.
 #[export] Instance permutation_id_am_l_PN (X:NoDupList) : PermutationNames X (app_merge_NoDupList EmptyNDL X).
 constructor. rewrite merge_left_neutral. exact (permutation_id (ndlist X)).
 Qed.
+
+Lemma permutationtr {o1 o2 o3}:
+permutation
+    (app_merge_NoDupList EmptyNDL
+       (app_merge_NoDupList (app_merge_NoDupList EmptyNDL (app_merge_NoDupList o1 o2)) o3))
+    (app_merge_NoDupList EmptyNDL
+       (app_merge_NoDupList o1 (app_merge_NoDupList EmptyNDL (app_merge_NoDupList o2 o3)))).
+Proof. simpl. 
+apply tr_permutation. 
+Defined.
+
 End Names.
+
+

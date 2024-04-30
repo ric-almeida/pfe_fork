@@ -968,13 +968,14 @@ Lemma bigraph_packed_pp_right_neutral : forall {s i r o} (b : bigraph s i r o),
 
 (* Bifunctorial property *)
 
-#[export] Instance union_possible_dist {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
+#[export] Instance union_possible_dist {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 r3 r4 i3 o3i1 s4 i4 o4i2} 
   {b1 : bigraph s1 i1o3 r1 o1} 
   {b2 : bigraph s2 i2o4 r2 o2} 
-  {b3 : bigraph s3 i3 s1 o3i1} 
-  {b4 : bigraph s4 i4 s2 o4i2}
+  {b3 : bigraph s3 i3 r3 o3i1} 
+  {b4 : bigraph s4 i4 r4 o4i2}
   {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
   {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)}
+  {eqs2r4 : MyEqNat s2 r4} {eqs1r3 : MyEqNat s1 r3} 
   (up12 : UnionPossible b1 b2) (up34 : UnionPossible b3 b4) :
   UnionPossible 
     (b1 <<o>> b3) 
@@ -1037,28 +1038,29 @@ Lemma bigraph_packed_pp_right_neutral : forall {s i r o} (b : bigraph s i r o),
     - apply up34.
   Qed.
 
-
-Theorem arity_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
-  (b1 : bigraph s1 i1o3 r1 o1) 
-  (b2 : bigraph s2 i2o4 r2 o2) 
-  (b3 : bigraph s3 i3 s1 o3i1) 
-  (b4 : bigraph s4 i4 s2 o4i2)
+Theorem arity_comp_pp_dist : forall {s1r3 i1o3 r1 o1 s2r4 i2o4 r2 o2 r3s1 r4s2 s3 i3 o3i1 s4 i4 o4i2} 
+  (b1 : bigraph s1r3 i1o3 r1 o1) 
+  (b2 : bigraph s2r4 i2o4 r2 o2) 
+  (b3 : bigraph s3 i3 r3s1 o3i1) 
+  (b4 : bigraph s4 i4 r4s2 o4i2)
   {up12 : UnionPossible b1 b2} {up34 : UnionPossible b3 b4}
+  {eqs2r4 : MyEqNat s2r4 r4s2} {eqs1r3 : MyEqNat s1r3 r3s1} 
   {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
   {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)}
-  (n12_34:type (get_node (b1 || b2 <<o>> (b3 || b4)))),
+  (n12_34 : type (get_node (b1 || b2 <<o>> (b3 || b4)))),
   Arity (get_control ((b1 || b2) <<o>> (b3 || b4)) n12_34) =
-  Arity (get_control (( b1 <<o>> b3) || (b2 <<o>> b4)) (sum_shuffle n12_34)).
+  Arity (get_control ((b1 <<o>> b3) || (b2 <<o>> b4)) (sum_shuffle n12_34)).
   Proof.
   intros.
   destruct n12_34 as [[n1|n2]|[n3|n4]]; reflexivity.
   Qed.
 
-Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
+Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o3i1 s4 i4 o4i2} 
   (b1 : bigraph s1 i1o3 r1 o1) 
   (b2 : bigraph s2 i2o4 r2 o2) 
-  (b3 : bigraph s3 i3 s1 o3i1) 
-  (b4 : bigraph s4 i4 s2 o4i2)
+  (b3 : bigraph s3 i3 r3 o3i1) 
+  (b4 : bigraph s4 i4 r4 o4i2)
+  {eqs2r4 : MyEqNat s2 r4} {eqs1r3 : MyEqNat s1 r3} 
   {up12 : UnionPossible b1 b2} {up34 : UnionPossible b3 b4}
   {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
   {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)},
@@ -1088,48 +1090,56 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
     destruct x as [[[n1|n3]|[n2|n4]]|(s34, Hs34)]; simpl; unfold funcomp; simpl; unfold sequence, extract1, inject, sum_shuffle, parallel, id.
     - destruct get_parent; try reflexivity.
     - unfold rearrange, extract1. destruct get_parent; try reflexivity.
+      unfold bij_rew_forward.
       destruct f as (s1', Hs1').
-      simpl.
-      destruct PeanoNat.Nat.ltb_spec0.
-      * rewrite (proof_irrelevance _ l Hs1').
-        destruct get_parent; try reflexivity.
-      * contradiction.
+      destruct eqs2r4 as [eqs2r4].
+      destruct eqs1r3 as [eqs1r3].
+      destruct eqs2r4.
+      destruct eqs1r3.
+      rewrite <- eq_rect_eq. 
+      rewrite <- (funcomp_simpl surj_fin_add inj_fin_add).
+      rewrite inj_o_surj_id. unfold id.
+      rewrite <- eq_rect_eq.
+      destruct get_parent; try reflexivity.
     - destruct get_parent; try reflexivity.
-    - destruct get_parent; try reflexivity.
-    destruct f as (s2', Hs2'). unfold rearrange, extract1.
-    simpl.
-    destruct PeanoNat.Nat.ltb_spec0.
-    * exfalso. assert (forall a b, ~ a + b < a).
-      {intros. lia. } 
-      apply (H s1 s2'). apply l.
-    * erewrite <- (parent_proof_irrelevant b2 (s1 + s2' - s1) s2').
-    assert (forall Hn, exist (fun p : nat => p < s2) s2' Hs2' =
-    exist (fun p : nat => p < s2) (s1 + s2' - s1) Hn).
-    {intros. apply subset_eq_compat. lia. }
-    rewrite <- H. 
-    destruct get_parent; try reflexivity. lia.
+    - unfold rearrange, extract1. destruct get_parent; try reflexivity.
+      unfold bij_rew_forward.
+      destruct f as (s1', Hs1').
+      destruct eqs2r4 as [eqs2r4].
+      destruct eqs1r3 as [eqs1r3].
+      destruct eqs2r4.
+      destruct eqs1r3.
+      rewrite <- eq_rect_eq. 
+      rewrite <- (funcomp_simpl surj_fin_add inj_fin_add).
+      rewrite inj_o_surj_id. unfold id.
+      rewrite <- eq_rect_eq.
+      destruct get_parent; try reflexivity.
     - unfold rearrange, extract1. 
     destruct PeanoNat.Nat.ltb_spec0.
     * destruct get_parent; try reflexivity.
-    destruct f as (s2', Hs2').
-    simpl.
-    destruct PeanoNat.Nat.ltb_spec0.
-    ** rewrite (proof_irrelevance _ l0 Hs2').
+      unfold bij_rew_forward.
+      destruct f as (s1', Hs1').
+      destruct eqs2r4 as [eqs2r4].
+      destruct eqs1r3 as [eqs1r3].
+      destruct eqs2r4.
+      destruct eqs1r3.
+      rewrite <- eq_rect_eq. 
+      rewrite <- (funcomp_simpl surj_fin_add inj_fin_add).
+      rewrite inj_o_surj_id. unfold id.
+      rewrite <- eq_rect_eq.
       destruct get_parent; try reflexivity.
-    ** contradiction.
     * destruct get_parent; try reflexivity.
-    destruct f as (s2', Hs2').
-    simpl.
-    destruct PeanoNat.Nat.ltb_spec0.
-    ** exfalso. assert (forall a b, ~ a + b < a).
-      {intros. lia. } 
-      apply (H s1 s2'). apply l.
-    ** erewrite <- (parent_proof_irrelevant b2 (s1 + s2' - s1) s2').
-    assert (forall Hn, exist (fun p : nat => p < s2) s2' Hs2' =
-    exist (fun p : nat => p < s2) (s1 + s2' - s1) Hn).
-    {intros. apply subset_eq_compat. lia. }
-    rewrite <- H. 
-    destruct get_parent; try reflexivity. lia.
+      unfold bij_rew_forward.
+      destruct f as (s1', Hs1').
+      destruct eqs2r4 as [eqs2r4].
+      destruct eqs1r3 as [eqs1r3].
+      destruct eqs2r4.
+      destruct eqs1r3.
+      rewrite <- eq_rect_eq. 
+      rewrite <- (funcomp_simpl surj_fin_add inj_fin_add).
+      rewrite inj_o_surj_id. unfold id.
+      rewrite <- eq_rect_eq.
+      destruct get_parent; try reflexivity.
   + apply functional_extensionality.
     destruct x as [[i' ipf]|p].
     - (*bijs l1234(i34) =l1324(i34)*)
@@ -1253,7 +1263,7 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       clear Hvi1234.
       specialize (up12 (to_intersection x i0' i1)).
       unfold to_left, to_right, to_intersection in up12.
-      rewrite <- (innername_proof_irrelevant b1 x (match PN_P {| p := p13 |} x with
+      rewrite <- (innername_proof_irrelevant b1 x (match PN_P {| pn := p13 |} x with
       | conj H _ => H
       end i0)) in up12.
       destruct get_link eqn:E'.
@@ -1331,7 +1341,6 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       destruct get_link; try reflexivity.
       apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
       *** exfalso. apply n. destruct p24 as [p24]. apply (p24 x). assumption.
-    Unshelve. simpl. lia. simpl. lia.
   Qed. 
 
 

@@ -13,6 +13,7 @@ Require Import Coq.Lists.List.
 Require Import Coq.Setoids.Setoid.
 Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.
+Require Import Lia.
 
 Import ListNotations.
 
@@ -28,24 +29,92 @@ Include eb.
 Set Typeclasses Unique Instances.
 Set Typeclasses Iterative Deepening.
 
+Class MyEqNat (x y : nat) := { eqxy : x = y }.
+Definition howomg {a b} (m: MyEqNat a b) : a = b := eqxy. 
+#[export] Instance MyEqNat_refl (x:nat) : MyEqNat x x.
+Proof. 
+constructor. reflexivity. 
+Qed.
+#[export] Instance MyEqNat_add {s1 s2 r3 r4} (eqs2r4 : MyEqNat s2 r4) (eqs1r3 : MyEqNat s1 r3) : MyEqNat (s1 + s2) (r3 + r4).
+Proof. 
+constructor. destruct eqs2r4 as [eqs2r4].
+destruct eqs1r3 as [eqs1r3].
+lia.
+Qed.
+
+#[export] Instance MyEqNat_add_bis {s1r3 r3s1 s2r4 r4s2} (eqs2r4 : MyEqNat s2r4 r4s2) (eqs1r3 : MyEqNat s1r3 r3s1) : 
+  MyEqNat (s1r3 + s2r4) (r3s1 + r4s2).
+Proof. 
+constructor. destruct eqs2r4 as [eqs2r4].
+destruct eqs1r3 as [eqs1r3].
+lia.
+Qed.
 
 
-Definition bigraph_composition {s1 r1 s2 : nat} {i1o2 o2i1 o1 i2 : NoDupList}
-  {p: PermutationNames o2i1 i1o2}
-  (b1 : bigraph s1 i1o2 r1 o1) (b2 : bigraph s2 i2 s1 o2i1) 
-    : bigraph s2 i2 r1 o1. (*s1=s2*)
+(* Definition turn_parent {s s' r : nat} {n:FinDecType} {eqsr : MyEqNat s s'} (p : type n + fin s -> type n + fin r) :
+type n + fin s' -> type n + fin r.
+destruct eqsr as [eqsr].
+rewrite <- eqsr. 
+exact p.
+Defined.  *)
+
+(* Lemma turn_parent_parent {s s' r : nat} {n:FinDecType} {eqsr : MyEqNat s s'} : 
+  forall p, forall ns, turn_parent p (eqsr := eqsr) ns = p ns.  *)
+
+Theorem bij_fin_n_m {n m} : MyEqNat n m -> bijection (fin n) (fin m).
+intros [Heq]. 
+eapply (mkBijection (fin n) (fin m)).
+Unshelve. 
+3:{ intros. destruct H. exists x. rewrite <- Heq. apply l. }
+3:{ intros. destruct H. exists x. rewrite Heq. apply l. }
+- apply functional_extensionality. unfold funcomp, id. intros [x l]. apply subset_eq_compat. reflexivity. 
+- apply functional_extensionality. unfold funcomp, id. intros [x l]. apply subset_eq_compat. reflexivity. 
+Defined.
+
+
+Theorem parent_proof_irrelevant {s i r o} (b:bigraph s i r o): 
+  forall n n': nat, forall Hn Hn', n = n' ->
+  get_parent b (inr (exist _ n Hn)) = get_parent b (inr (exist _ n Hn')).
   Proof. 
-  set (sl2:= (bij_id <+> bij_permut_list  o2i1 i1o2 (PN_P p)) <o> (switch_link (get_link b2))). 
+  intros. apply f_equal. apply f_equal. apply subset_eq_compat. reflexivity.
+  Qed.
+  
+
+Definition bigraph_composition {s1 r1 s2 r2 : nat} {i1o2 o2i1 o1 i2 : NoDupList}
+  {p: PermutationNames o2i1 i1o2} {eqsr : MyEqNat s1 r2}
+  (b1 : bigraph s1 i1o2 r1 o1) (b2 : bigraph s2 i2 r2 o2i1) 
+    : bigraph s2 i2 r1 o1. (*s1=r2*)
+  Proof. 
+  set (sl2:= (bij_id <+> bij_permut_list o2i1 i1o2 (PN_P p)) <o> (switch_link (get_link b2))). 
   set (sl1:= switch_link (get_link b1)). 
   apply (Big s2 i2 r1 o1
         (findec_sum (get_node b1) (get_node b2))
         (findec_sum (get_edge b1) (get_edge b2))
         (join (get_control b1) (get_control b2))
-        ((get_parent b2) >> (get_parent b1))
+        ((get_parent b2) >> ((bij_id <+> (bij_rew eqxy) -->> (bij_id <+> bij_id)) (get_parent b1)))
         (switch_link (sl2 >> sl1) <o>
           (backward (@bij_id _ <+> (bij_join_port (get_control b1) (get_control b2)))))).
   apply (finite_parent_sequence).
-  + exact (ap _ _ _ _ b1).
+  + unfold bij_rew. simpl. 
+  unfold parallel, funcomp, id.  (* exact (ap _ _ _ _ b1).*)
+  set (ap1 := ap _ _ _ _ b1).
+  unfold FiniteParent in *.
+  change (forall n : type (node s1 i1o2 r1 o1 b1), Acc (fun n' n0 : type (node s1 i1o2 r1 o1 b1) => match get_parent b1 (inl n0) with
+  | inl a => inl a
+  | inr c => inr c
+  end = inl n') n).
+  assert ((fun n' n0 : type (node s1 i1o2 r1 o1 b1) => parent s1 i1o2 r1 o1 b1 (inl n0) = inl n') 
+    = (fun n' n0 : type (node s1 i1o2 r1 o1 b1) => match get_parent b1 (inl n0) with
+  | inl a => inl a
+  | inr c => inr c
+  end = inl n')).
+  * apply functional_extensionality. intros. apply functional_extensionality. intros. 
+    change ((get_parent b1 (inl x0) = inl x) = (match get_parent b1 (inl x0) with
+  | inl a => inl a
+  | inr c => inr c
+  end = inl x)). 
+  destruct (get_parent b1 (inl x0)); auto. 
+  * rewrite <- H. exact ap1.
   + exact (ap _ _ _ _ b2).
   Defined.
   (* l :  i2 + (p1 + p2) -> o1 + (e1 + e2) *)
@@ -88,14 +157,20 @@ Theorem bigraph_comp_left_neutral : forall {s i r o o' o''}
   + apply functional_extensionality.
     intro x.
     reflexivity. 
-  + apply functional_extensionality.
+  + simpl. apply functional_extensionality.
     destruct x as [n1 | s1]; simpl.
-    - unfold funcomp.
-      simpl.
-      destruct get_parent; reflexivity.
-    - unfold funcomp.
-      simpl.
-      destruct get_parent; reflexivity.
+    - unfold funcomp, parallel.
+      simpl. 
+      unfold rearrange, id. simpl. 
+      destruct get_parent; try reflexivity. 
+      f_equal. unfold bij_rew_forward. 
+      rewrite <- eq_rect_eq. reflexivity.
+    - unfold funcomp, parallel.
+      simpl. 
+      unfold rearrange, id. simpl. 
+      destruct get_parent; try reflexivity.
+      f_equal. unfold bij_rew_forward. 
+      rewrite <- eq_rect_eq. reflexivity.
   + apply functional_extensionality.
     destruct x as [[name] | (v1, (k1, Hvk1))]; simpl.
     - unfold funcomp.
@@ -163,9 +238,12 @@ Theorem bigraph_comp_right_neutral : forall {s i r o i' i''}
     - unfold funcomp.
       simpl.
       destruct get_parent; reflexivity.
-    - unfold funcomp.
-      simpl.
-      destruct get_parent; reflexivity.
+    - unfold funcomp, parallel.
+      simpl. 
+      unfold extract1, id. simpl. 
+      unfold bij_rew_forward. 
+      rewrite <- eq_rect_eq. 
+      destruct get_parent; try reflexivity.
   + apply functional_extensionality.      
     destruct x as [[name] | (v1, (k1, Hvk1))]; simpl.
     - unfold funcomp, bij_subset_forward, extract1, switch_link, parallel, id.
@@ -195,15 +273,16 @@ Theorem bigraph_comp_right_neutral : forall {s i r o i' i''}
 
 
 Lemma arity_comp_assoc : 
-  forall {s1 i1o2 r1 o1 s2 i2o3 o2i1 s3 i3 o3i2} 
+  forall {s1 i1o2 r1 o1 s2 r2 r3 i2o3 o2i1 s3 i3 o3i2} 
   {pi1o2 : PermutationNames (ndlist o2i1) (ndlist i1o2)}
   {pi2o3 : PermutationNames (ndlist o3i2) (ndlist i2o3)}
+  {eqs1r2 : MyEqNat s1 r2} {eqs2r3 : MyEqNat s2 r3}
   (b1 : bigraph s1 i1o2 r1 o1) 
-  (b2 : bigraph s2 i2o3 s1 o2i1) 
-  (b3 : bigraph s3 i3 s2 o3i2) n12_3,
+  (b2 : bigraph s2 i2o3 r2 o2i1) 
+  (b3 : bigraph s3 i3 r3 o3i2) n12_3, 
   Arity (get_control ((b1 <<o>> b2) <<o>> b3) n12_3) = 
   Arity (get_control (b1 <<o>> (b2 <<o>> b3)) (bij_sum_assoc n12_3)).
-  Proof.
+  Proof. (*s1=r2*) (*s2 = r3*)
   intros until n12_3.
   destruct n12_3 as [[n1 | n2] | n3].
   + reflexivity.
@@ -211,12 +290,13 @@ Lemma arity_comp_assoc :
   + reflexivity.
   Qed.
 
-Theorem bigraph_comp_assoc : forall {s1 i1o2 r1 o1 s2 i2o3 o2i1 s3 i3 o3i2} 
+Theorem bigraph_comp_assoc : forall {s1 i1o2 r1 o1 s2 r2 r3 i2o3 o2i1 s3 i3 o3i2} 
   {pi1o2 : PermutationNames (ndlist o2i1) (ndlist i1o2)}
   {pi2o3 : PermutationNames (ndlist o3i2) (ndlist i2o3)}
+  {eqs1r2 : MyEqNat s1 r2} {eqs2r3 : MyEqNat s2 r3}
   (b1 : bigraph s1 i1o2 r1 o1) 
-  (b2 : bigraph s2 i2o3 s1 o2i1) 
-  (b3 : bigraph s3 i3 s2 o3i2),
+  (b2 : bigraph s2 i2o3 r2 o2i1) 
+  (b3 : bigraph s3 i3 r3 o3i2),
   bigraph_equality 
   ((b1 <<o>> b2) <<o>> b3) 
   (b1 <<o>> (b2 <<o>> b3)).
@@ -236,9 +316,15 @@ Theorem bigraph_comp_assoc : forall {s1 i1o2 r1 o1 s2 i2o3 o2i1 s3 i3 o3i2}
   + apply functional_extensionality.
     destruct x as [[n1' | [n2' | n3']] | s123]; simpl; unfold funcomp; simpl.
     - destruct get_parent; reflexivity.
-    - unfold rearrange; unfold extract1; simpl. destruct get_parent. reflexivity. destruct get_parent; reflexivity.
-    - unfold rearrange; unfold extract1; simpl. destruct get_parent. reflexivity. unfold rearrange. destruct get_parent. reflexivity. unfold extract1. destruct get_parent; reflexivity.
-    - unfold rearrange; unfold extract1; simpl. destruct get_parent. reflexivity. unfold rearrange. destruct get_parent. reflexivity. unfold extract1. destruct get_parent; reflexivity. 
+    - unfold rearrange; unfold extract1; simpl; unfold parallel, id. destruct get_parent. reflexivity.
+    destruct s1. unfold bij_fin_n_m. destruct (MyEqNat_refl 0). simpl. destruct f. 
+    destruct get_parent; try reflexivity. destruct get_parent; try reflexivity.
+    - unfold rearrange; unfold extract1; simpl; unfold parallel, id. 
+    unfold rearrange. 
+    destruct get_parent. reflexivity. 
+    destruct get_parent. reflexivity. 
+    unfold extract1. destruct get_parent; reflexivity.
+    - unfold rearrange; unfold extract1; simpl; unfold parallel, id. destruct get_parent. reflexivity. unfold rearrange. destruct get_parent. reflexivity. unfold extract1. destruct get_parent; reflexivity. 
   + apply functional_extensionality.
     destruct x as [[i3'] | p123]; simpl; unfold funcomp; simpl. 
     - unfold parallel. unfold switch_link. simpl. unfold rearrange.
@@ -287,33 +373,35 @@ Theorem bigraph_comp_assoc : forall {s1 i1o2 r1 o1 s2 i2o3 o2i1 s3 i3 o3i2}
   Qed.
 
 Definition arity_comp_congruence_forward 
-  {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
+  {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 r3 r4 i3 o3i1 s4 i4 o4i2} 
   {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
   {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)}
+  {eqs1r3 : MyEqNat s1 r3} {eqs2r4 : MyEqNat s2 r4}
   (b1 : bigraph s1 i1o3 r1 o1) 
   (b2 : bigraph s2 i2o4 r2 o2) 
-  (b3 : bigraph s3 i3 s1 o3i1) 
-  (b4 : bigraph s4 i4 s2 o4i2)
+  (b3 : bigraph s3 i3 r3 o3i1) 
+  (b4 : bigraph s4 i4 r4 o4i2) 
   (bij_n12 : bijection (type (get_node b1)) (type (get_node b2))) (bij_n34 : bijection (type (get_node b3)) (type (get_node b4)))
   (bij_p12 : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n12 n1)))))
   (bij_p34 : forall (n3 : type (get_node b3)), bijection (fin (Arity (get_control b3 n3))) (fin (Arity (get_control b4 (bij_n34 n3)))))
   (n13 : type (get_node (b1 <<o>> b3))) :
   (fin (Arity (get_control (b1 <<o>> b3) n13))) -> 
   (fin (Arity (get_control (b2 <<o>> b4) ((bij_n12 <+> bij_n34) n13)))).
-  Proof.
+  Proof. (*s1 = r3*) (*s2 = r4*)
   destruct n13 as [n1 | n3].
   + exact (bij_p12 n1).
   + exact (bij_p34 n3).
   Defined.
 
 Definition arity_comp_congruence_backward
-  {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
+  {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 r3 r4 i3 o3i1 s4 i4 o4i2} 
   {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
   {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)}
+  {eqs1r3 : MyEqNat s1 r3} {eqs2r4 : MyEqNat s2 r4}
   (b1 : bigraph s1 i1o3 r1 o1) 
   (b2 : bigraph s2 i2o4 r2 o2) 
-  (b3 : bigraph s3 i3 s1 o3i1) 
-  (b4 : bigraph s4 i4 s2 o4i2)
+  (b3 : bigraph s3 i3 r3 o3i1) 
+  (b4 : bigraph s4 i4 r4 o4i2) 
   (bij_n12 : bijection (type (get_node b1)) (type (get_node b2))) (bij_n34 : bijection (type (get_node b3)) (type (get_node b4)))
   (bij_p12 : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n12 n1)))))
   (bij_p34 : forall (n3 : type (get_node b3)), bijection (fin (Arity (get_control b3 n3))) (fin (Arity (get_control b4 (bij_n34 n3)))))
@@ -327,13 +415,14 @@ Definition arity_comp_congruence_backward
   Defined.
 
 Lemma arity_comp_congruence : forall 
-  {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
+  {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 r3 r4 i3 o3i1 s4 i4 o4i2} 
   {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
   {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)}
+  {eqs1r3 : MyEqNat s1 r3} {eqs2r4 : MyEqNat s2 r4}
   (b1 : bigraph s1 i1o3 r1 o1) 
   (b2 : bigraph s2 i2o4 r2 o2) 
-  (b3 : bigraph s3 i3 s1 o3i1) 
-  (b4 : bigraph s4 i4 s2 o4i2)
+  (b3 : bigraph s3 i3 r3 o3i1) 
+  (b4 : bigraph s4 i4 r4 o4i2) 
   (bij_n12 : bijection (type (get_node b1)) (type (get_node b2))) (bij_n34 : bijection (type (get_node b3)) (type (get_node b4)))
   (bij_p12 : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n12 n1)))))
   (bij_p34 : forall (n3 : type (get_node b3)), bijection (fin (Arity (get_control b3 n3))) (fin (Arity (get_control b4 (bij_n34 n3)))))
@@ -357,13 +446,14 @@ Lemma arity_comp_congruence : forall
   Defined.
 
 Theorem bigraph_comp_congruence : forall 
-  {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
+  {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 r3 r4 i3 o3i1 s4 i4 o4i2} 
   {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
   {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)}
+  {eqs1r3 : MyEqNat s1 r3} {eqs2r4 : MyEqNat s2 r4}
   (b1 : bigraph s1 i1o3 r1 o1) 
   (b2 : bigraph s2 i2o4 r2 o2) 
-  (b3 : bigraph s3 i3 s1 o3i1) 
-  (b4 : bigraph s4 i4 s2 o4i2)
+  (b3 : bigraph s3 i3 r3 o3i1) 
+  (b4 : bigraph s4 i4 r4 o4i2) 
   (be12 : bigraph_equality b1 b2)
   (be34 : bigraph_equality b3 b4), 
   bigraph_equality (b1 <<o>> b3) (b2 <<o>> b4).
@@ -393,7 +483,7 @@ Theorem bigraph_comp_congruence : forall
     - rewrite <- big_control_eq34.
       reflexivity.
   + apply functional_extensionality.
-    destruct x as [[n2' | n4'] | s4']; simpl; unfold funcomp; simpl; unfold rearrange; unfold extract1; unfold parallel; simpl; auto.
+    destruct x as [[n2' | n4'] | s4']; simpl; unfold funcomp; simpl; unfold rearrange; unfold extract1; unfold parallel; simpl; auto; unfold id, bij_rew_forward.
     - rewrite <- big_parent_eq12.
       simpl.
       unfold funcomp.
@@ -406,20 +496,23 @@ Theorem bigraph_comp_congruence : forall
       simpl.
       destruct get_parent.
       * reflexivity.
-      * unfold bij_rew_forward.
-        erewrite eq_rect_compose.
-        instantiate (1 := eq_refl). simpl. 
-        destruct get_parent; reflexivity.
+      * unfold bij_rew_forward. 
+      erewrite eq_rect_compose.
+      erewrite eq_rect_compose.
+      instantiate (1 := eq_sym eqxy). 
+      destruct get_parent; try reflexivity.
     - rewrite <- big_parent_eq34.
       rewrite <- big_parent_eq12.
       simpl.
       unfold funcomp, parallel.
+      simpl.
       destruct get_parent.
       * reflexivity.
-      * unfold bij_rew_forward.
-        erewrite eq_rect_compose.
-        instantiate (1 := eq_refl). simpl. 
-        destruct get_parent; reflexivity.
+      * unfold bij_rew_forward. 
+      erewrite eq_rect_compose.
+      erewrite eq_rect_compose.
+      instantiate (1 := eq_sym eqxy). 
+      destruct get_parent; try reflexivity.
   + apply functional_extensionality.
     destruct x as [[i4'] | p123]; simpl; unfold funcomp; simpl. 
     - rewrite <- big_link_eq34. simpl.
@@ -472,6 +565,9 @@ Theorem bigraph_comp_congruence : forall
       end i0). symmetry.
       rewrite <- (innername_proof_irrelevant b1 x0 Hn).
       destruct get_link; try reflexivity. 
+  Unshelve.
+  *** destruct eqs2r4 as [eqs2r4]. lia.
+  *** destruct eqs2r4 as [eqs2r4]. lia.
   Qed. 
   (*Missing a hypothesis that says bij_s12 = bij_r34_s12 in the equalities *)
 

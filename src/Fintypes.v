@@ -1662,7 +1662,7 @@ apply functional_extensionality_dep.
 destruct x as (a, Ha).
 simpl.
 destruct eqA; subst.
-+ rewrite <- eq_rect_eq.
++ rewrite <- eq_rect_eq. 
   rewrite (proof_irrelevance _ (in_eq a q) Ha).
   reflexivity.
 + inversion Ha; subst.

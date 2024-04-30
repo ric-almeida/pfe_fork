@@ -85,7 +85,7 @@ Definition bigraph_empty : bigraph 0 EmptyNDL 0 EmptyNDL.
   Unshelve.
   intros. destruct X.
   + left. apply n.
-  + destruct p0. right. apply x.
+  + destruct p. right. apply x.
   Defined. (*TODO unsure of the definition of link def 2.7*)
 
 Global Notation "∅" := bigraph_empty.
@@ -232,12 +232,12 @@ Definition closure (name:Name) : bigraph 0 (mkNoDupList [name] (noDupSingle name
   Proof. 
   apply (Big 0 (mkNoDupList [name] (noDupSingle name)) 0 EmptyNDL
     voidfd (*node : ∅*)
-    voidfd (*edge : ∅*)
+    findec_unit (*edge : ∅*)
     (@void_univ_embedding _) (*control : ∅_Kappa*)
     (void_univ_embedding ||| (void_univ_embedding <o> bij_fin_zero)) (*parent : sites -> root*)
   ).
   - intros [inner | port]. (*link : ∅*)
-  +  right. simpl. admit. (*left. exists (). simpl. left. reflexivity.*)
+  + right. simpl. exact tt. 
   + destruct port. destruct x.
   - intro n'. (*acyclic parent*)
   destruct n'.

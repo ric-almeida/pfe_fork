@@ -822,13 +822,14 @@ Qed.
 
 
 (* Bifunctorial property*)
-Theorem arity_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
+Theorem arity_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o3i1 s4 i4 o4i2} 
   (b1 : bigraph s1 i1o3 r1 o1) 
   (b2 : bigraph s2 i2o4 r2 o2) 
-  (b3 : bigraph s3 i3 s1 o3i1) 
-  (b4 : bigraph s4 i4 s2 o4i2)
+  (b3 : bigraph s3 i3 r3 o3i1) 
+  (b4 : bigraph s4 i4 r4 o4i2) 
   {dis_i12 : i1o3 # i2o4} {dis_o12 : o1 # o2}
   {dis_i34 : i3 # i4} {dis_o34 : o3i1 # o4i2}
+  {eqs2r4 : MyEqNat s2 r4} {eqs1r3 : MyEqNat s1 r3} 
   {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
   {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)}
   (n12_34 : type (get_node (b1 ⊗ b2 <<o>> (b3 ⊗ b4)))),
@@ -842,20 +843,16 @@ Theorem arity_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i
   destruct n12_34 as [[n1|n2]|[n3|n4]]; reflexivity.
   Qed.
 
-Theorem parent_proof_irrelevant {s i r o} (b:bigraph s i r o): 
-  forall n n': nat, forall Hn Hn', n = n' ->
-  get_parent b (inr (exist _ n Hn)) = get_parent b (inr (exist _ n Hn')).
-  Proof. 
-  intros. apply f_equal. apply f_equal. apply subset_eq_compat. reflexivity.
-  Qed.
 
-Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
+
+Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r3 r4 r2 o2 s3 i3 o3i1 s4 i4 o4i2} 
   (b1 : bigraph s1 i1o3 r1 o1) 
   (b2 : bigraph s2 i2o4 r2 o2) 
-  (b3 : bigraph s3 i3 s1 o3i1) 
-  (b4 : bigraph s4 i4 s2 o4i2)
+  (b3 : bigraph s3 i3 r3 o3i1) 
+  (b4 : bigraph s4 i4 r4 o4i2)
   {dis_i12 : i1o3 # i2o4} {dis_o12 : o1 # o2}
   {dis_i34 : i3 # i4} {dis_o34 : o3i1 # o4i2}
+  {eqs2r4 : MyEqNat s2 r4} {eqs1r3 : MyEqNat s1 r3} 
   {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
   {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)},
   bigraph_equality 
@@ -878,55 +875,61 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
     ).
   + apply functional_extensionality.
     destruct x as [[n1|n3]|[n2|n4]]; reflexivity.
-  + apply functional_extensionality.
+  + apply functional_extensionality. rewrite bij_rew_id. rewrite bij_rew_id. simpl. 
+    unfold funcomp; simpl; unfold sequence, extract1, inject, sum_shuffle, parallel, id.
     destruct x as [[[n1|n3]|[n2|n4]]|(s34, Hs34)]; simpl; unfold funcomp; simpl; unfold sequence, extract1, inject, sum_shuffle, parallel, id.
     - destruct get_parent; try reflexivity.
-    - unfold rearrange, extract1. destruct get_parent; try reflexivity.
+    - unfold rearrange, extract1. destruct get_parent; try reflexivity. 
+      unfold bij_rew_forward.
       destruct f as (s1', Hs1').
-      simpl.
-      destruct PeanoNat.Nat.ltb_spec0.
-      * rewrite (proof_irrelevance _ l Hs1').
-        destruct get_parent; try reflexivity.
-      * contradiction.
+      destruct eqs2r4 as [eqs2r4].
+      destruct eqs1r3 as [eqs1r3].
+      destruct eqs2r4.
+      destruct eqs1r3.
+      rewrite <- eq_rect_eq. 
+      rewrite <- (funcomp_simpl surj_fin_add inj_fin_add).
+      rewrite inj_o_surj_id.  unfold id.
+      rewrite <- eq_rect_eq.
+      destruct get_parent; try reflexivity.
     - destruct get_parent; try reflexivity.
-    - destruct get_parent; try reflexivity.
-    destruct f as (s2', Hs2'). unfold rearrange, extract1.
-    simpl.
-    destruct PeanoNat.Nat.ltb_spec0.
-    * exfalso. assert (forall a b, ~ a + b < a).
-      {intros. lia. } 
-      apply (H s1 s2'). apply l.
-    * symmetry. 
-    erewrite <- (parent_proof_irrelevant b2 (s1 + s2' - s1) s2').
-    assert (forall Hn, exist (fun p : nat => p < s2) s2' Hs2'
-    = exist (fun p : nat => p < s2)
-    (s1 + s2' - s1) Hn). { intros.
-    apply subset_eq_compat. lia. }
-    rewrite <- H.
-    destruct get_parent; try reflexivity. lia.
+    - unfold rearrange, extract1. destruct get_parent; try reflexivity. 
+      unfold bij_rew_forward.
+      destruct f as (s1', Hs1').
+      destruct eqs2r4 as [eqs2r4].
+      destruct eqs1r3 as [eqs1r3].
+      destruct eqs2r4.
+      destruct eqs1r3.
+      rewrite <- eq_rect_eq. 
+      rewrite <- (funcomp_simpl surj_fin_add inj_fin_add).
+      rewrite inj_o_surj_id.  unfold id.
+      rewrite <- eq_rect_eq.
+      destruct get_parent; try reflexivity.
     - unfold rearrange, extract1. 
     destruct PeanoNat.Nat.ltb_spec0.
     * destruct get_parent; try reflexivity.
-    destruct f as (s2', Hs2').
-    simpl.
-    destruct PeanoNat.Nat.ltb_spec0.
-    ** rewrite (proof_irrelevance _ l0 Hs2').
+      unfold bij_rew_forward.
+      destruct f as (s1', Hs1').
+      destruct eqs2r4 as [eqs2r4].
+      destruct eqs1r3 as [eqs1r3].
+      destruct eqs2r4.
+      destruct eqs1r3.
+      rewrite <- eq_rect_eq. 
+      rewrite <- (funcomp_simpl surj_fin_add inj_fin_add).
+      rewrite inj_o_surj_id.  unfold id.
+      rewrite <- eq_rect_eq.
       destruct get_parent; try reflexivity.
-    ** contradiction.
     * destruct get_parent; try reflexivity.
-    destruct f as (s2', Hs2').
-    simpl.
-    destruct PeanoNat.Nat.ltb_spec0.
-    ** exfalso. assert (forall a b, ~ a + b < a).
-      {intros. lia. } 
-      apply (H s1 s2'). apply l.
-    ** erewrite <- (parent_proof_irrelevant b2 (s1 + s2' - s1) s2').
-    assert (forall Hn, exist (fun p : nat => p < s2) s2' Hs2'
-    = exist (fun p : nat => p < s2)
-    (s1 + s2' - s1) Hn). { intros.
-    apply subset_eq_compat. lia. }
-    rewrite <- H.
-    destruct get_parent; try reflexivity. lia.
+      unfold bij_rew_forward.
+      destruct f as (s1', Hs1').
+      destruct eqs2r4 as [eqs2r4].
+      destruct eqs1r3 as [eqs1r3].
+      destruct eqs2r4.
+      destruct eqs1r3.
+      rewrite <- eq_rect_eq. 
+      rewrite <- (funcomp_simpl surj_fin_add inj_fin_add).
+      rewrite inj_o_surj_id.  unfold id.
+      rewrite <- eq_rect_eq.
+      destruct get_parent; try reflexivity.
   + apply functional_extensionality.
     destruct x as [[i']|p]; simpl; unfold funcomp; simpl; unfold rearrange; unfold extract1; unfold sum_shuffle; unfold parallel; unfold switch_link; simpl.
     - unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
@@ -1029,7 +1032,6 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 o3i1 s4
       destruct get_link; try reflexivity.
       apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
       ** reflexivity.
-    Unshelve. *** simpl. lia. *** simpl. lia.
   Qed.
 
 End TensorProduct.
