@@ -29,55 +29,6 @@ Include eb.
 Set Typeclasses Unique Instances.
 Set Typeclasses Iterative Deepening.
 
-Class MyEqNat (x y : nat) := { eqxy : x = y }.
-Definition howomg {a b} (m: MyEqNat a b) : a = b := eqxy. 
-#[export] Instance MyEqNat_refl (x:nat) : MyEqNat x x.
-Proof. 
-constructor. reflexivity. 
-Qed.
-#[export] Instance MyEqNat_add {s1 s2 r3 r4} (eqs2r4 : MyEqNat s2 r4) (eqs1r3 : MyEqNat s1 r3) : MyEqNat (s1 + s2) (r3 + r4).
-Proof. 
-constructor. destruct eqs2r4 as [eqs2r4].
-destruct eqs1r3 as [eqs1r3].
-lia.
-Qed.
-
-#[export] Instance MyEqNat_add_bis {s1r3 r3s1 s2r4 r4s2} (eqs2r4 : MyEqNat s2r4 r4s2) (eqs1r3 : MyEqNat s1r3 r3s1) : 
-  MyEqNat (s1r3 + s2r4) (r3s1 + r4s2).
-Proof. 
-constructor. destruct eqs2r4 as [eqs2r4].
-destruct eqs1r3 as [eqs1r3].
-lia.
-Qed.
-
-
-(* Definition turn_parent {s s' r : nat} {n:FinDecType} {eqsr : MyEqNat s s'} (p : type n + fin s -> type n + fin r) :
-type n + fin s' -> type n + fin r.
-destruct eqsr as [eqsr].
-rewrite <- eqsr. 
-exact p.
-Defined.  *)
-
-(* Lemma turn_parent_parent {s s' r : nat} {n:FinDecType} {eqsr : MyEqNat s s'} : 
-  forall p, forall ns, turn_parent p (eqsr := eqsr) ns = p ns.  *)
-
-Theorem bij_fin_n_m {n m} : MyEqNat n m -> bijection (fin n) (fin m).
-intros [Heq]. 
-eapply (mkBijection (fin n) (fin m)).
-Unshelve. 
-3:{ intros. destruct H. exists x. rewrite <- Heq. apply l. }
-3:{ intros. destruct H. exists x. rewrite Heq. apply l. }
-- apply functional_extensionality. unfold funcomp, id. intros [x l]. apply subset_eq_compat. reflexivity. 
-- apply functional_extensionality. unfold funcomp, id. intros [x l]. apply subset_eq_compat. reflexivity. 
-Defined.
-
-
-Theorem parent_proof_irrelevant {s i r o} (b:bigraph s i r o): 
-  forall n n': nat, forall Hn Hn', n = n' ->
-  get_parent b (inr (exist _ n Hn)) = get_parent b (inr (exist _ n Hn')).
-  Proof. 
-  intros. apply f_equal. apply f_equal. apply subset_eq_compat. reflexivity.
-  Qed.
   
 
 Definition bigraph_composition {s1 r1 s2 r2 : nat} {i1o2 o2i1 o1 i2 : NoDupList}
@@ -317,7 +268,7 @@ Theorem bigraph_comp_assoc : forall {s1 i1o2 r1 o1 s2 r2 r3 i2o3 o2i1 s3 i3 o3i2
     destruct x as [[n1' | [n2' | n3']] | s123]; simpl; unfold funcomp; simpl.
     - destruct get_parent; reflexivity.
     - unfold rearrange; unfold extract1; simpl; unfold parallel, id. destruct get_parent. reflexivity.
-    destruct s1. unfold bij_fin_n_m. destruct (MyEqNat_refl 0). simpl. destruct f. 
+    destruct s1. destruct (MyEqNat_refl 0). simpl. destruct f. 
     destruct get_parent; try reflexivity. destruct get_parent; try reflexivity.
     - unfold rearrange; unfold extract1; simpl; unfold parallel, id. 
     unfold rearrange. 

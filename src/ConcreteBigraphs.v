@@ -18,6 +18,8 @@ Require Import SignatureBig.
 Require Import Names.
 Require Import Coq.Lists.List.
 Require Import Coq.Arith.PeanoNat.
+Require Import ProofIrrelevance.
+Require Import Lia.
 
 
 Import ListNotations.
@@ -64,6 +66,35 @@ Definition get_parent {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : (ty
 Definition get_link {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : {inner:Name | In inner i} + Port (get_control bg) -> {outer:Name | In outer o} + type (get_edge bg) :=
   @link s i r o bg.
 End GettersBigraphs.
+
+Class MyEqNat (x y : nat) := { eqxy : x = y }.
+Definition howomg {a b} (m: MyEqNat a b) : a = b := eqxy. 
+#[export] Instance MyEqNat_refl (x:nat) : MyEqNat x x.
+Proof. 
+constructor. reflexivity. 
+Qed.
+#[export] Instance MyEqNat_add {s1 s2 r3 r4} (eqs2r4 : MyEqNat s2 r4) (eqs1r3 : MyEqNat s1 r3) : MyEqNat (s1 + s2) (r3 + r4).
+Proof. 
+constructor. destruct eqs2r4 as [eqs2r4].
+destruct eqs1r3 as [eqs1r3].
+lia.
+Qed.
+
+#[export] Instance MyEqNat_add_bis {s1r3 r3s1 s2r4 r4s2} (eqs2r4 : MyEqNat s2r4 r4s2) (eqs1r3 : MyEqNat s1r3 r3s1) : 
+  MyEqNat (s1r3 + s2r4) (r3s1 + r4s2).
+Proof. 
+constructor. destruct eqs2r4 as [eqs2r4].
+destruct eqs1r3 as [eqs1r3].
+lia.
+Qed.
+
+
+Theorem parent_proof_irrelevant {s i r o} (b:bigraph s i r o): 
+  forall n n': nat, forall Hn Hn', n = n' ->
+  get_parent b (inr (exist _ n Hn)) = get_parent b (inr (exist _ n Hn')).
+  Proof. 
+  intros. apply f_equal. apply f_equal. apply subset_eq_compat. reflexivity.
+  Qed.
 
 Theorem innername_proof_irrelevant {s i r o} (b:bigraph s i r o): 
   forall n:Name, forall Hn: In n i, forall Hn':In n i,
@@ -139,8 +170,8 @@ Definition discrete_atom {A}
     Defined. 
 
 Definition discrete_ion {A} 
-  (a:type A) (k:Kappa) (o:NoDupList) 
-  (Hkappa : Arity k = length (ndlist o)): bigraph 1 EmptyNDL 1 o.
+  (a:type A) {k:Kappa} (o:NoDupList) 
+  {Hkappa : MyEqNat (Arity k) (length (ndlist o))}: bigraph 1 EmptyNDL 1 o.
   eapply (Big
       1 EmptyNDL 1 o
       A
@@ -158,7 +189,7 @@ Definition discrete_ion {A}
       - left. unfold NameSub. destruct o as [o Ho]. 
       destruct p as [i H]. destruct H as [p Hp]. 
       exists (nth p o DefaultName). 
-      apply nth_In. rewrite <- Hkappa. assumption. } (*link*)
+      apply nth_In. destruct Hkappa as [Hkappa]. rewrite <- Hkappa. assumption. } (*link*)
     unfold FiniteParent. simpl.
     intros u.
     apply Acc_intro.
