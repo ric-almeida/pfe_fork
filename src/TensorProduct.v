@@ -1034,4 +1034,35 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r3 r4 r2 o2 s3 i3 o
       ** reflexivity.
   Qed.
 
+Theorem merge_well_defined : forall n, 
+  bigraph_equality
+    (@merge (n+1))
+    (join_big <<o>> (@bigraph_id 1 EmptyNDL ⊗ @merge n)).
+  Proof. 
+  intros. simpl. 
+  refine (BigEq _ _ _ _ _ _ _ _ 
+    (@merge (n+1))
+    (join_big <<o>> (@bigraph_id 1 EmptyNDL ⊗ @merge n))
+    (PeanoNat.Nat.add_comm n 1)
+    (PN_P permutation_id_am_l_PN_empty_r)
+    eq_refl
+    (PN_P permutation_id_am_l_PN_empty)
+    bij_void_sum_sum
+    bij_void_sum_sum
+    _ _ _ _ 
+  ). 
+  - simpl. apply functional_extensionality. destruct x as [v|[v|v]]; destruct v. 
+  - simpl. apply functional_extensionality. destruct x as [[v|[v|v]]|s]; try destruct v.
+  simpl. unfold parallel, funcomp, rearrange, sum_shuffle, extract1, id, bij_rew_forward. destruct s. 
+  destruct zero1. unfold inj_fin_add. destruct (PeanoNat.Nat.ltb_spec0 x 1). 
+  + f_equal. 
+  + f_equal. 
+  - simpl. apply functional_extensionality. destruct x as [v|s]; try destruct v.
+  + elim f. 
+  + destruct s. destruct x as [v|[v|v]]; destruct v. 
+  Unshelve. 
+  * exact nat. * exact nat. 
+  *intros. simpl in n1. destruct n1. 
+  Qed.
+  
 End TensorProduct.

@@ -264,6 +264,18 @@ reflexivity.
 reflexivity.
 Defined.
 
+Theorem bij_void_sum_sum : forall {A : Type}, bijection void (void + (void + void)).
+Proof.
+intros.
+apply (mkBijection void (void + (void + void)) void_univ_embedding 
+(fun vvv => match vvv with | inl v => match v with end | inr (inl v) => match v with end | inr (inr v) => match v with end end )).
+apply functional_extensionality.
+destruct x. destruct v. destruct s. destruct v. destruct v.  
+apply functional_extensionality.
+destruct x. 
+Defined.
+
+
 Theorem bij_void_prod_absorbing : forall {A : Type}, bijection (void*A) void.
 Proof.
 intros.

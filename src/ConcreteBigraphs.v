@@ -241,8 +241,9 @@ Definition closure (name:Name) : bigraph 0 (mkNoDupList [name] (noDupSingle name
   + destruct port. destruct x.
   - intro n'. (*acyclic parent*)
   destruct n'.
-  Admitted.
+  Defined.
 
+Definition join_big := @merge 2. 
 
 (* Definition symmetry_big {s i r o} : bigraph s i r o.
 apply (Big s i r o 

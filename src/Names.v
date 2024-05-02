@@ -1263,6 +1263,20 @@ Proof. simpl.
 apply tr_permutation. 
 Defined.
 
+#[export] Instance permutation_id_am_l_PN_empty : PermutationNames
+                                  (app_merge_NoDupList EmptyNDL EmptyNDL)
+                                  EmptyNDL.
+constructor. rewrite merge_left_neutral. exact (permutation_id []).
+Qed.
+
+#[export] Instance permutation_id_am_l_PN_empty_r : PermutationNames
+                                  EmptyNDL
+                                  (app_merge_NoDupList EmptyNDL EmptyNDL).
+constructor. rewrite merge_left_neutral. exact (permutation_id []).
+Qed.
+
+
+
 End Names.
 
 
