@@ -141,8 +141,8 @@ Definition bigraph_id (s: nat) (i : NoDupList) := bigraph_identity (s := s) (i :
 Example zero1 : type (findec_fin 1). exists 0. auto. Defined.
 
 Definition discrete_atom {A} 
-  (a:type A) (k:Kappa) (o:NoDupList) 
-  (Hkappa : Arity k = length (ndlist o)): bigraph 0 EmptyNDL 1 o.
+  (a:type A) {k:Kappa} (o:NoDupList) 
+  {Hkappa : MyEqNat (Arity k) (length (ndlist o))}: bigraph 0 EmptyNDL 1 o.
   eapply (Big
       0 EmptyNDL 1 o
       A
@@ -160,7 +160,7 @@ Definition discrete_atom {A}
       - left. unfold NameSub. destruct o as [o Ho]. 
       destruct p as [i H]. destruct H as [p Hp]. 
       exists (nth p o DefaultName). 
-      apply nth_In. rewrite <- Hkappa. assumption. } (*link*)
+      apply nth_In. destruct Hkappa as [Hkappa]. rewrite <- Hkappa. assumption. } (*link*)
     2:{ destruct s. apply Nat.nlt_0_r in l. elim l. } (*parent*)
     unfold FiniteParent. simpl. (*acyclic*)
     intros u.

@@ -85,6 +85,10 @@ Example a : string := "a".
 Example aNDL : NoDupList.
 exists [a]. constructor; auto. constructor. Defined.
 
+Example e : string := "e".
+Example eNDL : NoDupList.
+exists [e]. constructor; auto. constructor. Defined.
+
 Example simplBig : 
   bigraph 1 bNDL 1 aNDL.
   eapply (Big
@@ -158,7 +162,23 @@ Example simplBigbool :
   exfalso. discriminate H.
   Defined. 
 
-(* 
-Example simplBigboolOp : 
-  bigraph 1 EmptyNDL 1 EmptyNDL := 
-    (discrete_ion (A := findec_bool) false EmptyNDL) <|> (discrete_atom (A := findec_bool) true EmptyNDL). *) 
+(* #[export] Instance MyEqNat_refl_0 (x:nat) : MyEqNat x x.
+Proof. 
+constructor. reflexivity. 
+Qed.
+Arity 0 = Datatypes.length EmptyNDL *)
+(* :  bigraph 1 EmptyNDL 1 EmptyNDL  *)
+
+Example eaNDL : NoDupList.
+exists (e::aNDL). constructor; auto.
+- simpl. unfold not. intros. destruct H. ** discriminate H. ** elim H.
+- exact (noDupSingle a). 
+Defined. 
+
+
+Example simplBigboolOp := 
+  ((discrete_ion (A := findec_bool) false (mkNoDupList [e] (noDupSingle e)) (k := 1)) 
+  <|> 
+  (discrete_atom (A := findec_bool) true eaNDL (k := 2))).
+
+Compute (get_edge simplBigboolOp). 
