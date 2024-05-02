@@ -396,114 +396,144 @@ Theorem bigraph_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
     (fun n12_3 => bij_rew (P := fin) (arity_mp_assoc b1 b2 b3 n12_3))
   ).
   + apply functional_extensionality.
-  destruct x as [[v | v] | [a | [[v|v]|[b|c]]]]; try reflexivity; try (elim v).
+    destruct x as [[v | v] | [a | [[v|v]|[b|c]]]]; try reflexivity; try (elim v).
   + apply functional_extensionality. rewrite bij_rew_id. 
-    destruct x as [[[v | v] | [a | [[v|v]|[b|c]]]] | s1_23']; simpl; unfold funcomp; simpl; try (elim v).
+    intros [[[v | v] | [a | [[v|v]|[b|c]]]] | s1_23']; simpl; unfold funcomp; simpl; try (elim v).
     - f_equal. 
       simpl. 
       unfold rearrange. unfold extract1, parallel, sum_shuffle. 
-      destruct get_parent; try reflexivity.  
-      destruct f. 
-      destruct (inj_fin_add (bij_rew_forward (eq_sym eqxy) (surj_fin_add (inl (exist (fun p : nat => p < r1) x l))))). 
-      
-      unfold bij_rew_forward. 
-      simpl. 
-      unfold inj_fin_add. 
-      rewrite <- eq_rect_eq. 
-      unfold inj_fin_add, surj_fin_add, id, bij_rew_forward. simpl. 
-      destruct f. 
-      
-      simpl. 
-      simpl. 
-      rewrite <- eq_rect_eq.
-      unfold sum_shuffle.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      f_equal.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      f_equal. destruct f1. destruct f2. apply subset_eq_compat. lia.
-    - f_equal.
-      simpl.
-      unfold rearrange. unfold extract1, parallel.
       destruct get_parent; try reflexivity.
-      rewrite <- eq_rect_eq.
-      rewrite <- eq_rect_eq.
-      simpl.
-      rewrite <- eq_rect_eq.
-      unfold sum_shuffle.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      f_equal.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      f_equal. destruct f1. destruct f3. apply subset_eq_compat. lia.
-    - f_equal.
-      simpl.
-      unfold rearrange. unfold extract1, parallel.
-      destruct get_parent; try reflexivity.
-      rewrite <- eq_rect_eq.
-      rewrite <- eq_rect_eq.
-      simpl.
-      rewrite <- eq_rect_eq.
-      unfold sum_shuffle.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      f_equal.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      f_equal. destruct f0. destruct f2. apply subset_eq_compat. lia.
-    - destruct s1_23'; simpl.
+      destruct (@inj_fin_add (Nat.add r1 r2) O (@bij_rew_forward nat fin (Nat.add r1 r2) (Nat.add (Nat.add r1 r2) O) (@eq_sym nat (Nat.add (Nat.add r1 r2) O) (Nat.add r1 r2) (@eqxy (Nat.add (Nat.add r1 r2) O) (Nat.add r1 r2) (@MyEqNat_r_neutral (Nat.add r1 r2)))) (@surj_fin_add r1 r2 (@inl (fin r1) (fin r2) f)))).
+      * destruct (@inj_fin_add (S r3) O (@bij_rew_forward nat fin (S r3) (S (Nat.add r3 O)) (@eq_sym nat (S (Nat.add r3 O)) (S r3) (@eqxy (S (Nat.add r3 O)) (S r3) (@MyEqNat_r_neutral (S r3)))) (@surj_fin_add (S O) r3 (@inl (fin (S O)) (fin r3) (@id (fin (S O)) (@surj_fin_add (S O) O (@inl (fin (S O)) (fin O) zero1))))))).
+      destruct zero1. unfold id. 
+      destruct (@inj_fin_add (Nat.add r1 (S O)) O (@bij_rew_forward nat fin (Nat.add r1 (S O)) (Nat.add (Nat.add r1 (S O)) O) (@eq_sym nat (Nat.add (Nat.add r1 (S O)) O) (Nat.add r1 (S O)) (@eqxy (Nat.add (Nat.add r1 (S O)) O) (Nat.add r1 (S O)) (@MyEqNat_r_neutral (Nat.add r1 (S O))))) (@surj_fin_add r1 (S O) (@inl (fin r1) (fin (S O)) f)))).
+      ** reflexivity.
+      ** destruct f2. exfalso. apply PeanoNat.Nat.nlt_0_r in l0. elim l0.
+      ** unfold id. destruct (@inj_fin_add (Nat.add r1 (S O)) O (@bij_rew_forward nat fin (Nat.add r1 (S O)) (Nat.add (Nat.add r1 (S O)) O) (@eq_sym nat (Nat.add (Nat.add r1 (S O)) O) (Nat.add r1 (S O)) (@eqxy (Nat.add (Nat.add r1 (S O)) O) (Nat.add r1 (S O)) (@MyEqNat_r_neutral (Nat.add r1 (S O))))) (@surj_fin_add r1 (S O) (@inl (fin r1) (fin (S O)) f)))).
+      *** destruct f1. exfalso. apply PeanoNat.Nat.nlt_0_r in l. elim l.
+      *** destruct f1. exfalso. apply PeanoNat.Nat.nlt_0_r in l. elim l.
+      * unfold id. destruct (@inj_fin_add (Nat.add r1 (S O)) O (@bij_rew_forward nat fin (Nat.add r1 (S O)) (Nat.add (Nat.add r1 (S O)) O) (@eq_sym nat (Nat.add (Nat.add r1 (S O)) O) (Nat.add r1 (S O)) (@eqxy (Nat.add (Nat.add r1 (S O)) O) (Nat.add r1 (S O)) (@MyEqNat_r_neutral (Nat.add r1 (S O))))) (@surj_fin_add r1 (S O) (@inl (fin r1) (fin (S O)) f)))).
+      ** destruct f0. exfalso. apply PeanoNat.Nat.nlt_0_r in l. elim l.
+      ** destruct f1. exfalso. apply PeanoNat.Nat.nlt_0_r in l. elim l.
+    - f_equal. 
+      simpl. 
+      unfold rearrange. unfold extract1, parallel, sum_shuffle. 
+      destruct get_parent; try reflexivity. 
+      destruct (@inj_fin_add (Nat.add r1 r2) O (@bij_rew_forward nat fin (Nat.add r1 r2) (Nat.add (Nat.add r1 r2) O) (@eq_sym nat (Nat.add (Nat.add r1 r2) O) (Nat.add r1 r2) (@eqxy (Nat.add (Nat.add r1 r2) O) (Nat.add r1 r2) (@MyEqNat_r_neutral (Nat.add r1 r2)))) (@surj_fin_add r1 r2 (@inr (fin r1) (fin r2) f)))).
+      * destruct (@inj_fin_add (S r3) O (@bij_rew_forward nat fin (S r3) (S (Nat.add r3 O)) (@eq_sym nat (S (Nat.add r3 O)) (S r3) (@eqxy (S (Nat.add r3 O)) (S r3) (@MyEqNat_r_neutral (S r3)))) (@surj_fin_add (S O) r3 (@inl (fin (S O)) (fin r3) (@id (fin (S O)) (@surj_fin_add (S O) O (@inl (fin (S O)) (fin O) zero1))))))).
+      ** destruct (@inj_fin_add (Nat.add r2 r3) O (@bij_rew_forward nat fin (Nat.add r2 r3) (Nat.add (Nat.add r2 r3) O) (@eq_sym nat (Nat.add (Nat.add r2 r3) O) (Nat.add r2 r3) (@eqxy (Nat.add (Nat.add r2 r3) O) (Nat.add r2 r3) (@MyEqNat_r_neutral (Nat.add r2 r3)))) (@surj_fin_add r2 r3 (@inl (fin r2) (fin r3) f)))).
+      *** destruct (@inj_fin_add (Nat.add r1 (S O)) O (@bij_rew_forward nat fin (Nat.add r1 (S O)) (Nat.add (Nat.add r1 (S O)) O) (@eq_sym nat (Nat.add (Nat.add r1 (S O)) O) (Nat.add r1 (S O)) (@eqxy (Nat.add (Nat.add r1 (S O)) O) (Nat.add r1 (S O)) (@MyEqNat_r_neutral (Nat.add r1 (S O))))) (@surj_fin_add r1 (S O) (@inr (fin r1) (fin (S O)) (@id (fin (S O)) (@surj_fin_add (S O) O (@inl (fin (S O)) (fin O) zero1))))))).
+      **** unfold id. reflexivity. 
+      **** destruct f3. exfalso. apply PeanoNat.Nat.nlt_0_r in l. elim l.
+      *** destruct f2. exfalso. apply PeanoNat.Nat.nlt_0_r in l. elim l.
+      ** destruct f1. exfalso. apply PeanoNat.Nat.nlt_0_r in l. elim l. 
+      * destruct f0. exfalso. apply PeanoNat.Nat.nlt_0_r in l. elim l. 
+    - f_equal. 
+      simpl. 
+      unfold rearrange. unfold extract1, parallel, sum_shuffle. 
+      destruct get_parent; try reflexivity. 
+      destruct (@inj_fin_add (S r3) O (@bij_rew_forward nat fin (S r3) (S (Nat.add r3 O)) (@eq_sym nat (S (Nat.add r3 O)) (S r3) (@eqxy (S (Nat.add r3 O)) (S r3) (@MyEqNat_r_neutral (S r3)))) (@surj_fin_add (S O) r3 (@inr (fin (S O)) (fin r3) f)))).
+      * destruct (@inj_fin_add (Nat.add r2 r3) O (@bij_rew_forward nat fin (Nat.add r2 r3) (Nat.add (Nat.add r2 r3) O) (@eq_sym nat (Nat.add (Nat.add r2 r3) O) (Nat.add r2 r3) (@eqxy (Nat.add (Nat.add r2 r3) O) (Nat.add r2 r3) (@MyEqNat_r_neutral (Nat.add r2 r3)))) (@surj_fin_add r2 r3 (@inr (fin r2) (fin r3) f)))).
+      ** destruct (@inj_fin_add (Nat.add r1 (S O)) O (@bij_rew_forward nat fin (Nat.add r1 (S O)) (Nat.add (Nat.add r1 (S O)) O) (@eq_sym nat (Nat.add (Nat.add r1 (S O)) O) (Nat.add r1 (S O)) (@eqxy (Nat.add (Nat.add r1 (S O)) O) (Nat.add r1 (S O)) (@MyEqNat_r_neutral (Nat.add r1 (S O))))) (@surj_fin_add r1 (S O) (@inr (fin r1) (fin (S O)) (@id (fin (S O)) (@surj_fin_add (S O) O (@inl (fin (S O)) (fin O) zero1))))))).
+      *** reflexivity.
+      *** destruct f2. exfalso. apply PeanoNat.Nat.nlt_0_r in l. elim l.
+      ** destruct f1. exfalso. apply PeanoNat.Nat.nlt_0_r in l. elim l.
+      * destruct f0. exfalso. apply PeanoNat.Nat.nlt_0_r in l. elim l.
+    - f_equal. 
+      destruct s1_23'; simpl.
       unfold parallel, id, sum_shuffle, inj_fin_add.
       unfold rearrange.
       unfold bij_rew_forward.
+      unfold sequence, extract1, rearrange.
       rewrite (@eq_rect_exist nat nat (fun n x => x < n) (s1 + (s2 + s3)) (s1 + s2 + s3) _ x _).
       destruct (PeanoNat.Nat.ltb_spec0 x (s1 + s2)); simpl.
-      * unfold rearrange. destruct (PeanoNat.Nat.ltb_spec0 x s1); simpl.
-      ++ destruct get_parent; try reflexivity.
-      unfold extract1.
-      rewrite <- eq_rect_eq.
-      rewrite <- eq_rect_eq.
-      rewrite <- eq_rect_eq.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      f_equal. destruct f1. destruct f2. apply subset_eq_compat. lia.
-      ++ destruct (PeanoNat.Nat.ltb_spec0 (x - s1) s2); simpl.
-      -- rewrite (proof_irrelevance _ _ l1).
-      unfold rearrange.
-      destruct (get_parent b2); try reflexivity.
-      unfold extract1.
-      rewrite <- eq_rect_eq.
-      rewrite <- eq_rect_eq.
-      rewrite <- eq_rect_eq.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      f_equal. destruct f1. destruct f3. apply subset_eq_compat. lia.
-      -- simpl. exfalso. apply n0. lia. 
-      * destruct (PeanoNat.Nat.ltb_spec0 x s1).
-      ++ lia.
-      ++ unfold sequence. unfold rearrange.
-      destruct (PeanoNat.Nat.ltb_spec0 (x - s1) s2).
-      -- exfalso. lia.
-      -- assert (forall H H', exist (fun p => p < s3) (x - (s1 + s2)) H =
-      exist (fun p => p < s3) (x - s1 - s2) H').
-      ** intros H H'.
-      apply subset_eq_compat.
-      lia.
-      ** assert (x - s1 - s2 < s3) as H'; [ lia | unfold lt in H' ].
-      rewrite (H _ H').
-      symmetry.
-      rewrite (proof_irrelevance _ _ H').
-      destruct get_parent; simpl; try reflexivity.
-      destruct f; simpl. unfold extract1.
-      rewrite <- eq_rect_eq.
-      rewrite <- eq_rect_eq.
-      rewrite <- eq_rect_eq.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      destruct eq_rect. destruct s0 as [s0|s0];destruct s0.
-      f_equal. destruct f1. destruct f0. apply subset_eq_compat. lia.
+      * destruct (PeanoNat.Nat.ltb_spec0 x s1); simpl.
+      ++ destruct get_parent; try reflexivity. unfold surj_fin_add. 
+      destruct f.
+      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+r2) (r1 + r2 + 0) _ x0 _).
+      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+1) (r1 + 1 + 0) _ x0 _).
+      unfold extract1. 
+      destruct (PeanoNat.Nat.ltb_spec0 x0 (r1 + r2)). 
+      +++ destruct (PeanoNat.Nat.ltb_spec0 x0 (r1 + 1)). 
+      ** destruct zero1. simpl. 
+      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (S r3) _ _ x1 _). 
+      destruct (PeanoNat.Nat.ltb_spec0 x1 (S r3)). 
+      *** f_equal.
+      *** f_equal. apply subset_eq_compat. lia. 
+      ** destruct zero1. simpl. 
+      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (S r3) _ _ x1 _). 
+      destruct (PeanoNat.Nat.ltb_spec0 x1 (S r3)). 
+      *** f_equal. apply subset_eq_compat. lia. 
+      *** f_equal. apply subset_eq_compat. lia. 
+      +++ exfalso.  apply n. lia. 
+      ++  destruct (PeanoNat.Nat.ltb_spec0 (x - s1) s2). 
+      +++ erewrite <- (parent_proof_irrelevant b2 (x-s1) (x-s1) l1).   
+      destruct (get_parent b2); try reflexivity;
+      unfold extract1, surj_fin_add. 
+      ** destruct f. 
+      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r2+r3) _ _ x0 _).
+      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+r2) _ _ (r1+x0) _).
+      destruct (PeanoNat.Nat.ltb_spec0 (r1 + x0) (r1 + r2)).
+      *** destruct (PeanoNat.Nat.ltb_spec0 x0 (r2 + r3)). 
+      **** destruct zero1. rewrite (@eq_rect_exist nat nat (fun n x => x < n) (S r3) _ _ x1 _). 
+      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+1) _ _ (r1+x1) _).
+      destruct (PeanoNat.Nat.ltb_spec0 (r1 + x1) (r1 + 1)).
+      ++++ destruct (PeanoNat.Nat.ltb_spec0 x1 (S r3)). 
+      +++++ reflexivity. 
+      +++++ f_equal. apply subset_eq_compat. lia. 
+      ++++ exfalso. lia. 
+      **** exfalso. lia. 
+      *** exfalso. lia.  
+      ** reflexivity. 
+      +++ exfalso. lia.
+      * destruct (PeanoNat.Nat.ltb_spec0 x s1); simpl.
+      ++ exfalso. lia. 
+      ++ destruct (PeanoNat.Nat.ltb_spec0 (x - s1) s2). 
+      +++ exfalso. lia. 
+      +++ 
+      assert (@get_parent s3 r3 i3 o3 b3 (@inr (type (@get_node s3 r3 i3 o3 b3)) (fin s3) (@exist nat (fun p : nat => lt p s3) (Nat.sub x (Nat.add s1 s2)) (ZifyClasses.rew_iff_rev (lt (Nat.sub x (Nat.add s1 s2)) s3) (BinInt.Z.lt (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat (Nat.add s1 s2)))) (BinInt.Z.of_nat s3)) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (Nat.sub x (Nat.add s1 s2)) (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat (Nat.add s1 s2)))) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.sub BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat (fun n2 m : BinNums.Z => BinInt.Z.max BinNums.Z0 (BinInt.Z.sub n2 m)) Znat.Nat2Z.inj_sub_max x (BinInt.Z.of_nat x) (@eq_refl BinNums.Z (BinInt.Z.of_nat x)) (Nat.add s1 s2) (BinInt.Z.of_nat (Nat.add s1 s2)) (@eq_refl BinNums.Z (BinInt.Z.of_nat (Nat.add s1 s2)))) s3 (BinInt.Z.of_nat s3) (@eq_refl BinNums.Z (BinInt.Z.of_nat s3))) (ZMicromega.ZTautoChecker_sound (@Tauto.IMPL (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.OR (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.AND (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.X (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (BinInt.Z.lt BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat (Nat.add s1 s2))))) (@Tauto.A (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@RingMicromega.Build_Formula BinNums.Z (@EnvRing.PEX BinNums.Z BinNums.xH) RingMicromega.OpEq (@EnvRing.PEsub BinNums.Z (@EnvRing.PEX BinNums.Z (BinNums.xI BinNums.xH)) (@EnvRing.PEX BinNums.Z (BinNums.xO (BinNums.xO BinNums.xH))))) tt)) (@Tauto.AND (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.X (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (BinInt.Z.le (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat (Nat.add s1 s2))) BinNums.Z0)) (@Tauto.A (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@RingMicromega.Build_Formula BinNums.Z (@EnvRing.PEX BinNums.Z BinNums.xH) RingMicromega.OpEq (@EnvRing.PEc BinNums.Z BinNums.Z0)) tt))) (@None unit) (@Tauto.IMPL (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.A (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@RingMicromega.Build_Formula BinNums.Z (@EnvRing.PEX BinNums.Z (BinNums.xI BinNums.xH)) RingMicromega.OpLt (@EnvRing.PEadd BinNums.Z (@EnvRing.PEX BinNums.Z (BinNums.xO (BinNums.xO BinNums.xH))) (@EnvRing.PEX BinNums.Z (BinNums.xO BinNums.xH)))) tt) (@None unit) (@Tauto.IMPL (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.NOT (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.A (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@RingMicromega.Build_Formula BinNums.Z (@EnvRing.PEX BinNums.Z (BinNums.xI BinNums.xH)) RingMicromega.OpLt (@EnvRing.PEX BinNums.Z (BinNums.xO (BinNums.xO BinNums.xH)))) tt)) (@None unit) (@Tauto.A (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@RingMicromega.Build_Formula BinNums.Z (@EnvRing.PEX BinNums.Z BinNums.xH) RingMicromega.OpLt (@EnvRing.PEX BinNums.Z (BinNums.xO BinNums.xH))) tt)))) (@cons ZMicromega.ZArithProof (ZMicromega.RatProof (@RingMicromega.PsatzAdd BinNums.Z (RingMicromega.PsatzIn BinNums.Z (S (S (S O)))) (@RingMicromega.PsatzAdd BinNums.Z (RingMicromega.PsatzIn BinNums.Z (S (S O))) (@RingMicromega.PsatzAdd BinNums.Z (RingMicromega.PsatzIn BinNums.Z (S O)) (RingMicromega.PsatzIn BinNums.Z O)))) ZMicromega.DoneProof) (@cons ZMicromega.ZArithProof (ZMicromega.RatProof (@RingMicromega.PsatzAdd BinNums.Z (RingMicromega.PsatzIn BinNums.Z (S (S (S O)))) (@RingMicromega.PsatzAdd BinNums.Z (RingMicromega.PsatzIn BinNums.Z (S (S O))) (RingMicromega.PsatzIn BinNums.Z O))) ZMicromega.DoneProof) (@nil ZMicromega.ZArithProof))) (@eq_refl bool true) (fun p : BinNums.positive => match p return BinNums.Z with
+| BinNums.xI _ => BinInt.Z.of_nat x
+| BinNums.xO p0 => match p0 return BinNums.Z with
+| BinNums.xI _ => BinNums.Z0
+| BinNums.xO _ => BinInt.Z.of_nat (Nat.add s1 s2)
+| BinNums.xH => BinInt.Z.of_nat s3
+end
+| BinNums.xH => BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat (Nat.add s1 s2)))
+end) (BinInt.Z.max_spec BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat (Nat.add s1 s2)))) (ZifyClasses.rew_iff (lt x (Nat.add (Nat.add s1 s2) s3)) (BinInt.Z.lt (BinInt.Z.of_nat x) (BinInt.Z.add (BinInt.Z.of_nat (Nat.add s1 s2)) (BinInt.Z.of_nat s3))) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt x (BinInt.Z.of_nat x) (@eq_refl BinNums.Z (BinInt.Z.of_nat x)) (Nat.add (Nat.add s1 s2) s3) (BinInt.Z.add (BinInt.Z.of_nat (Nat.add s1 s2)) (BinInt.Z.of_nat s3)) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.add BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.add Znat.Nat2Z.inj_add (Nat.add s1 s2) (BinInt.Z.of_nat (Nat.add s1 s2)) (@eq_refl BinNums.Z (BinInt.Z.of_nat (Nat.add s1 s2))) s3 (BinInt.Z.of_nat s3) (@eq_refl BinNums.Z (BinInt.Z.of_nat s3)))) (@eq_rect nat (Nat.add s1 (Nat.add s2 s3)) (fun a : nat => lt x a) l (Nat.add (Nat.add s1 s2) s3) (@eq_sym nat (Nat.add (Nat.add s1 s2) s3) (Nat.add s1 (Nat.add s2 s3)) (@eq_sym nat (PeanoNat.Nat.add s1 (PeanoNat.Nat.add s2 s3)) (PeanoNat.Nat.add (PeanoNat.Nat.add s1 s2) s3) (PeanoNat.Nat.add_assoc s1 s2 s3))))) (ZifyClasses.rew_iff (not (lt x (Nat.add s1 s2))) (not (BinInt.Z.lt (BinInt.Z.of_nat x) (BinInt.Z.of_nat (Nat.add s1 s2)))) (ZifyClasses.not_morph (lt x (Nat.add s1 s2)) (BinInt.Z.lt (BinInt.Z.of_nat x) (BinInt.Z.of_nat (Nat.add s1 s2))) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt x (BinInt.Z.of_nat x) (@eq_refl BinNums.Z (BinInt.Z.of_nat x)) (Nat.add s1 s2) (BinInt.Z.of_nat (Nat.add s1 s2)) (@eq_refl BinNums.Z (BinInt.Z.of_nat (Nat.add s1 s2))))) n)))))
+= 
+@get_parent s3 r3 i3 o3 b3 (@inr (type (@get_node s3 r3 i3 o3 b3)) (fin s3) (@exist nat (fun p : nat => lt p s3) (Nat.sub (Nat.sub x s1) s2) (ZifyClasses.rew_iff_rev (lt (Nat.sub (Nat.sub x s1) s2) s3) (BinInt.Z.lt (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (Nat.sub x s1)) (BinInt.Z.of_nat s2))) (BinInt.Z.of_nat s3)) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (Nat.sub (Nat.sub x s1) s2) (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (Nat.sub x s1)) (BinInt.Z.of_nat s2))) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.sub BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat (fun n2 m : BinNums.Z => BinInt.Z.max BinNums.Z0 (BinInt.Z.sub n2 m)) Znat.Nat2Z.inj_sub_max (Nat.sub x s1) (BinInt.Z.of_nat (Nat.sub x s1)) (@eq_refl BinNums.Z (BinInt.Z.of_nat (Nat.sub x s1))) s2 (BinInt.Z.of_nat s2) (@eq_refl BinNums.Z (BinInt.Z.of_nat s2))) s3 (BinInt.Z.of_nat s3) (@eq_refl BinNums.Z (BinInt.Z.of_nat s3))) (ZMicromega.ZTautoChecker_sound (@Tauto.IMPL (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.OR (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.AND (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.X (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (BinInt.Z.lt BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (Nat.sub x s1)) (BinInt.Z.of_nat s2)))) (@Tauto.A (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@RingMicromega.Build_Formula BinNums.Z (@EnvRing.PEX BinNums.Z BinNums.xH) RingMicromega.OpEq (@EnvRing.PEsub BinNums.Z (@EnvRing.PEX BinNums.Z (BinNums.xI BinNums.xH)) (@EnvRing.PEX BinNums.Z (BinNums.xO (BinNums.xO BinNums.xH))))) tt)) (@Tauto.AND (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.X (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (BinInt.Z.le (BinInt.Z.sub (BinInt.Z.of_nat (Nat.sub x s1)) (BinInt.Z.of_nat s2)) BinNums.Z0)) (@Tauto.A (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@RingMicromega.Build_Formula BinNums.Z (@EnvRing.PEX BinNums.Z BinNums.xH) RingMicromega.OpEq (@EnvRing.PEc BinNums.Z BinNums.Z0)) tt))) (@None unit) (@Tauto.IMPL (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.A (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@RingMicromega.Build_Formula BinNums.Z (@EnvRing.PEX BinNums.Z (BinNums.xI BinNums.xH)) RingMicromega.OpLt (@EnvRing.PEadd BinNums.Z (@EnvRing.PEX BinNums.Z (BinNums.xO (BinNums.xO BinNums.xH))) (@EnvRing.PEX BinNums.Z (BinNums.xO BinNums.xH)))) tt) (@None unit) (@Tauto.IMPL (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.NOT (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.A (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@RingMicromega.Build_Formula BinNums.Z (@EnvRing.PEX BinNums.Z (BinNums.xI BinNums.xH)) RingMicromega.OpLt (@EnvRing.PEX BinNums.Z (BinNums.xO (BinNums.xO BinNums.xH)))) tt)) (@None unit) (@Tauto.A (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@RingMicromega.Build_Formula BinNums.Z (@EnvRing.PEX BinNums.Z BinNums.xH) RingMicromega.OpLt (@EnvRing.PEX BinNums.Z (BinNums.xO BinNums.xH))) tt)))) (@cons ZMicromega.ZArithProof (ZMicromega.RatProof (@RingMicromega.PsatzAdd BinNums.Z (RingMicromega.PsatzIn BinNums.Z (S (S (S O)))) (@RingMicromega.PsatzAdd BinNums.Z (RingMicromega.PsatzIn BinNums.Z (S (S O))) (@RingMicromega.PsatzAdd BinNums.Z (RingMicromega.PsatzIn BinNums.Z (S O)) (RingMicromega.PsatzIn BinNums.Z O)))) ZMicromega.DoneProof) (@cons ZMicromega.ZArithProof (ZMicromega.RatProof (@RingMicromega.PsatzAdd BinNums.Z (RingMicromega.PsatzIn BinNums.Z (S (S (S O)))) (@RingMicromega.PsatzAdd BinNums.Z (RingMicromega.PsatzIn BinNums.Z (S (S O))) (RingMicromega.PsatzIn BinNums.Z O))) ZMicromega.DoneProof) (@nil ZMicromega.ZArithProof))) (@eq_refl bool true) (fun p : BinNums.positive => match p return BinNums.Z with
+| BinNums.xI _ => BinInt.Z.of_nat (Nat.sub x s1)
+| BinNums.xO p0 => match p0 return BinNums.Z with
+| BinNums.xI _ => BinNums.Z0
+| BinNums.xO _ => BinInt.Z.of_nat s2
+| BinNums.xH => BinInt.Z.of_nat s3
+end
+| BinNums.xH => BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (Nat.sub x s1)) (BinInt.Z.of_nat s2))
+end) (BinInt.Z.max_spec BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (Nat.sub x s1)) (BinInt.Z.of_nat s2))) (ZifyClasses.rew_iff (lt (Nat.sub x s1) (Nat.add s2 s3)) (BinInt.Z.lt (BinInt.Z.of_nat (Nat.sub x s1)) (BinInt.Z.add (BinInt.Z.of_nat s2) (BinInt.Z.of_nat s3))) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (Nat.sub x s1) (BinInt.Z.of_nat (Nat.sub x s1)) (@eq_refl BinNums.Z (BinInt.Z.of_nat (Nat.sub x s1))) (Nat.add s2 s3) (BinInt.Z.add (BinInt.Z.of_nat s2) (BinInt.Z.of_nat s3)) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.add BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.add Znat.Nat2Z.inj_add s2 (BinInt.Z.of_nat s2) (@eq_refl BinNums.Z (BinInt.Z.of_nat s2)) s3 (BinInt.Z.of_nat s3) (@eq_refl BinNums.Z (BinInt.Z.of_nat s3)))) (ZifyClasses.rew_iff_rev (lt (Nat.sub x s1) (Nat.add s2 s3)) (BinInt.Z.lt (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat s1))) (BinInt.Z.of_nat (Nat.add s2 s3))) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (Nat.sub x s1) (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat s1))) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.sub BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat (fun n2 m : BinNums.Z => BinInt.Z.max BinNums.Z0 (BinInt.Z.sub n2 m)) Znat.Nat2Z.inj_sub_max x (BinInt.Z.of_nat x) (@eq_refl BinNums.Z (BinInt.Z.of_nat x)) s1 (BinInt.Z.of_nat s1) (@eq_refl BinNums.Z (BinInt.Z.of_nat s1))) (Nat.add s2 s3) (BinInt.Z.of_nat (Nat.add s2 s3)) (@eq_refl BinNums.Z (BinInt.Z.of_nat (Nat.add s2 s3)))) (ZMicromega.ZTautoChecker_sound (@Tauto.IMPL (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.OR (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.AND (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.X (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (BinInt.Z.lt BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat s1)))) (@Tauto.A (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@RingMicromega.Build_Formula BinNums.Z (@EnvRing.PEX BinNums.Z BinNums.xH) RingMicromega.OpEq (@EnvRing.PEsub BinNums.Z (@EnvRing.PEX BinNums.Z (BinNums.xI BinNums.xH)) (@EnvRing.PEX BinNums.Z (BinNums.xO (BinNums.xO BinNums.xH))))) tt)) (@Tauto.AND (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.X (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (BinInt.Z.le (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat s1)) BinNums.Z0)) (@Tauto.A (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@RingMicromega.Build_Formula BinNums.Z (@EnvRing.PEX BinNums.Z BinNums.xH) RingMicromega.OpEq (@EnvRing.PEc BinNums.Z BinNums.Z0)) tt))) (@None unit) (@Tauto.IMPL (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.A (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@RingMicromega.Build_Formula BinNums.Z (@EnvRing.PEX BinNums.Z (BinNums.xI BinNums.xH)) RingMicromega.OpLt (@EnvRing.PEadd BinNums.Z (@EnvRing.PEX BinNums.Z (BinNums.xO (BinNums.xO BinNums.xH))) (@EnvRing.PEX BinNums.Z (BinNums.xO BinNums.xH)))) tt) (@None unit) (@Tauto.IMPL (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.NOT (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@Tauto.A (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@RingMicromega.Build_Formula BinNums.Z (@EnvRing.PEX BinNums.Z (BinNums.xI BinNums.xH)) RingMicromega.OpLt (@EnvRing.PEX BinNums.Z (BinNums.xO (BinNums.xO BinNums.xH)))) tt)) (@None unit) (@Tauto.A (RingMicromega.Formula BinNums.Z) Tauto.eKind unit unit Tauto.isProp (@RingMicromega.Build_Formula BinNums.Z (@EnvRing.PEX BinNums.Z BinNums.xH) RingMicromega.OpLt (@EnvRing.PEX BinNums.Z (BinNums.xO BinNums.xH))) tt)))) (@cons ZMicromega.ZArithProof (ZMicromega.RatProof (@RingMicromega.PsatzAdd BinNums.Z (RingMicromega.PsatzIn BinNums.Z (S (S (S O)))) (@RingMicromega.PsatzAdd BinNums.Z (RingMicromega.PsatzIn BinNums.Z (S (S O))) (@RingMicromega.PsatzAdd BinNums.Z (RingMicromega.PsatzIn BinNums.Z (S O)) (RingMicromega.PsatzIn BinNums.Z O)))) ZMicromega.DoneProof) (@cons ZMicromega.ZArithProof (ZMicromega.RatProof (@RingMicromega.PsatzAdd BinNums.Z (RingMicromega.PsatzIn BinNums.Z (S (S (S O)))) (@RingMicromega.PsatzAdd BinNums.Z (RingMicromega.PsatzIn BinNums.Z (S (S O))) (RingMicromega.PsatzIn BinNums.Z O))) ZMicromega.DoneProof) (@nil ZMicromega.ZArithProof))) (@eq_refl bool true) (fun p : BinNums.positive => match p return BinNums.Z with
+| BinNums.xI _ => BinInt.Z.of_nat x
+| BinNums.xO p0 => match p0 return BinNums.Z with
+| BinNums.xI _ => BinNums.Z0
+| BinNums.xO _ => BinInt.Z.of_nat s1
+| BinNums.xH => BinInt.Z.of_nat (Nat.add s2 s3)
+end
+| BinNums.xH => BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat s1))
+end) (BinInt.Z.max_spec BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat s1))) (ZifyClasses.rew_iff (lt x (Nat.add s1 (Nat.add s2 s3))) (BinInt.Z.lt (BinInt.Z.of_nat x) (BinInt.Z.add (BinInt.Z.of_nat s1) (BinInt.Z.of_nat (Nat.add s2 s3)))) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt x (BinInt.Z.of_nat x) (@eq_refl BinNums.Z (BinInt.Z.of_nat x)) (Nat.add s1 (Nat.add s2 s3)) (BinInt.Z.add (BinInt.Z.of_nat s1) (BinInt.Z.of_nat (Nat.add s2 s3))) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.add BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.add Znat.Nat2Z.inj_add s1 (BinInt.Z.of_nat s1) (@eq_refl BinNums.Z (BinInt.Z.of_nat s1)) (Nat.add s2 s3) (BinInt.Z.of_nat (Nat.add s2 s3)) (@eq_refl BinNums.Z (BinInt.Z.of_nat (Nat.add s2 s3))))) l) (ZifyClasses.rew_iff (not (lt x s1)) (not (BinInt.Z.lt (BinInt.Z.of_nat x) (BinInt.Z.of_nat s1))) (ZifyClasses.not_morph (lt x s1) (BinInt.Z.lt (BinInt.Z.of_nat x) (BinInt.Z.of_nat s1)) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt x (BinInt.Z.of_nat x) (@eq_refl BinNums.Z (BinInt.Z.of_nat x)) s1 (BinInt.Z.of_nat s1) (@eq_refl BinNums.Z (BinInt.Z.of_nat s1)))) n0)))) (ZifyClasses.rew_iff (not (lt (Nat.sub x s1) s2)) (not (BinInt.Z.lt (BinInt.Z.of_nat (Nat.sub x s1)) (BinInt.Z.of_nat s2))) (ZifyClasses.not_morph (lt (Nat.sub x s1) s2) (BinInt.Z.lt (BinInt.Z.of_nat (Nat.sub x s1)) (BinInt.Z.of_nat s2)) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (Nat.sub x s1) (BinInt.Z.of_nat (Nat.sub x s1)) (@eq_refl BinNums.Z (BinInt.Z.of_nat (Nat.sub x s1))) s2 (BinInt.Z.of_nat s2) (@eq_refl BinNums.Z (BinInt.Z.of_nat s2)))) n1)))))).
+f_equal. f_equal.  apply subset_eq_compat. lia. 
+    rewrite <- H. unfold extract1. clear H.  
+    destruct get_parent; try reflexivity.
+    unfold surj_fin_add. 
+    destruct f. 
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (S r3) _ _ (1+x0) _). 
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r2 + r3) _ _ (r2+x0) _).
+    destruct (PeanoNat.Nat.ltb_spec0 (1 + x0) (S r3)).
+    *** destruct zero1. destruct (PeanoNat.Nat.ltb_spec0 (r2 + x0) (r2 + r3)). 
+    **** unfold id. f_equal.  
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1 + 1) _ _ (r1+x1) _).
+    destruct (PeanoNat.Nat.ltb_spec0 (r1 + x1) (r1 + 1)).
+    ***** reflexivity. 
+    ***** exfalso. lia. 
+    **** exfalso. lia. 
+    *** exfalso. lia. 
   + apply functional_extensionality.
     destruct x as [[i123] | p123]; simpl; unfold funcomp; simpl.
     - unfold funcomp.
