@@ -75,7 +75,7 @@ End MyNamesP.
 
 
 Module MB := MergeBig MySigP MyNamesP.
-Import MB.
+Include MB.
 
 Example b : string := "b".
 Example bNDL : NoDupList.
@@ -175,10 +175,62 @@ exists (e::aNDL). constructor; auto.
 - exact (noDupSingle a). 
 Defined. 
 
+Definition myPN : PermutationNames
+     (app_merge_NoDupList
+        (app_merge_NoDupList EmptyNDL
+           (app_merge_NoDupList {| ndlist := [e]; nd := noDupSingle e |}
+              eaNDL)) {| ndlist := [e]; nd := noDupSingle e |})
+     (app_merge_NoDupList {| ndlist := [e]; nd := noDupSingle e |} aNDL).
+simpl. unfold app_merge_NoDupList. 
+simpl. constructor. simpl. 
+unfold permutation. intros. split; intros. 
+- destruct H.
++ rewrite H. simpl. right. left. reflexivity.
++ destruct H.
+* rewrite H. simpl. left. reflexivity.
+* elim H. 
+- destruct H.
++ rewrite H. simpl. right. left. reflexivity.
++ destruct H.
+* rewrite H. simpl. left. reflexivity.
+* elim H. 
+Qed.
 
+
+
+Definition mydisi : {| ndlist := [e]; nd := noDupSingle e |} # aNDL.
+constructor.
+intros. simpl in *. 
+destruct H; destruct H0.
+- rewrite <- H in H0. discriminate H0.
+- elim H0. 
+- elim H. 
+- elim H.
+Qed.
+
+(*produit tensoriel implicite? *)
 Example simplBigboolOp := 
+  (bigraph_composition (p:=myPN)
+  (bigraph_tensor_product (dis_i := mydisi) (closure e) (bigraph_id 1 aNDL))
   ((discrete_ion (A := findec_bool) false (mkNoDupList [e] (noDupSingle e)) (k := 1)) 
   <|> 
-  (discrete_atom (A := findec_bool) true eaNDL (k := 2))).
+  (discrete_atom (A := findec_bool) true eaNDL (k := 2))
+  ||
+  (substitution bNDL e))).
+(*manque innername b*)
 
-Compute (get_edge simplBigboolOp). 
+Definition btmp : {inner : Name
+   | In inner
+       (app_merge_NoDupList (app_merge_NoDupList EmptyNDL EmptyNDL) bNDL)} +
+   Port (get_control simplBigboolOp). 
+
+   left. exists b. simpl. left. reflexivity. Defined.
+
+Compute ((s simplBigboolOp)). 
+Compute (ndlist (i simplBigboolOp)). 
+Compute ((r simplBigboolOp)). 
+Compute (ndlist (o simplBigboolOp)). 
+Compute (type (get_edge simplBigboolOp)). 
+Compute (type (get_node simplBigboolOp)). 
+Compute ((get_parent simplBigboolOp (inr zero1))).  
+Compute ((get_link simplBigboolOp btmp)).  
