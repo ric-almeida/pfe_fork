@@ -194,8 +194,18 @@ unfold permutation. intros. split; intros.
 + destruct H.
 * rewrite H. simpl. left. reflexivity.
 * elim H. 
-Qed.
+Defined.
 
+Definition myPN' :
+PermutationNames
+     (app_merge_NoDupList EmptyNDL
+        (app_merge_NoDupList
+           (app_merge_NoDupList {| ndlist := [e]; nd := noDupSingle e |} eNDL)
+           eaNDL))
+     (app_merge_NoDupList {| ndlist := [e]; nd := noDupSingle e |} aNDL).
+simpl. constructor. simpl. 
+exact (permutation_id [e;a]).
+Defined.
 
 
 Definition mydisi : {| ndlist := [e]; nd := noDupSingle e |} # aNDL.
@@ -206,27 +216,68 @@ destruct H; destruct H0.
 - elim H0. 
 - elim H. 
 - elim H.
-Qed.
+Defined.
 
 (*produit tensoriel implicite? *)
 Example simplBigboolOp := 
   (bigraph_composition (p:=myPN)
-  (bigraph_tensor_product (dis_i := mydisi) (closure e) (bigraph_id 1 aNDL))
+  (bigraph_tensor_product (dis_i := mydisi) (closure e) (bigraph_id 1 aNDL)) 
   ((discrete_ion (A := findec_bool) false (mkNoDupList [e] (noDupSingle e)) (k := 1)) 
   <|> 
   (discrete_atom (A := findec_bool) true eaNDL (k := 2))
   ||
   (substitution bNDL e))).
-(*manque innername b*)
+
+
+Theorem eqmesbig : 
+  bigraph_equality simplBigbool simplBigboolOp. 
+  Admitted.
+  
+
+(* Example simplBigboolOp := 
+  ((closure e) ⊗ (bigraph_id 1 aNDL)) 
+  <<o>> 
+  ((discrete_ion (A := findec_bool) false (mkNoDupList [e] (noDupSingle e)) (k := 1)) 
+  <|> 
+  (discrete_atom (A := findec_bool) true eaNDL (k := 2))
+  ||
+  (substitution bNDL e))). *)
+(*cest moi qui ait compris que faut rajouter l'id*)
+
+
+(*myPN' should be found on its own*) (*: bigraph 1 bNDL 1 aNDL *)
+Example simplBigboolOp' 
+  := 
+  (bigraph_composition (p:=myPN')
+    (bigraph_tensor_product (dis_i := mydisi) (closure e) (bigraph_id 1 aNDL))
+    ((substitution bNDL e)
+    ||
+    (discrete_ion (A := findec_bool) false eNDL (k := 1)) 
+    <|> 
+    (discrete_atom (A := findec_bool) true eaNDL (k := 2))
+    )).
+
+
 
 Definition btmp : {inner : Name
    | In inner
        (app_merge_NoDupList (app_merge_NoDupList EmptyNDL EmptyNDL) bNDL)} +
    Port (get_control simplBigboolOp). 
-
+Proof.
    left. exists b. simpl. left. reflexivity. Defined.
 
-Compute ((s simplBigboolOp)). 
+
+Definition btmp' :
+({inner : Name
+   | In inner
+       (app_merge_NoDupList (app_merge_NoDupList bNDL EmptyNDL) EmptyNDL)} +
+   Port (get_control simplBigboolOp')).
+Proof.
+   left. exists b. simpl. left. reflexivity. Defined.
+
+
+
+(* Compute ((s simplBigboolOp)). 
 Compute (ndlist (i simplBigboolOp)). 
 Compute ((r simplBigboolOp)). 
 Compute (ndlist (o simplBigboolOp)). 
@@ -234,3 +285,12 @@ Compute (type (get_edge simplBigboolOp)).
 Compute (type (get_node simplBigboolOp)). 
 Compute ((get_parent simplBigboolOp (inr zero1))).  
 Compute ((get_link simplBigboolOp btmp)).  
+
+Compute ((s simplBigboolOp')). 
+Compute (ndlist (i simplBigboolOp')). 
+Compute ((r simplBigboolOp')). 
+Compute (ndlist (o simplBigboolOp')). 
+Compute (type (get_edge simplBigboolOp')). 
+Compute (type (get_node simplBigboolOp')). 
+Compute ((get_parent simplBigboolOp' (inr zero1))).  
+Compute ((get_link simplBigboolOp' btmp')).   *)

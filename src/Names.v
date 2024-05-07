@@ -1239,19 +1239,19 @@ Definition bij_permut_list (l1 l2 : list Name) (p : permutation l1 l2) :
   destruct p24 as [p24].
   constructor.
   apply permutation_distributive; assumption.
-  Qed.
+  Defined.
 
 #[export] Instance permutation_id_PN (l:NoDupList) : PermutationNames l l.
 constructor. exact (permutation_id (ndlist l)).
-Qed.
+Defined.
 
 #[export] Instance permutation_id_am_PN (X:NoDupList) : PermutationNames X (app_merge_NoDupList X EmptyNDL).
 constructor. rewrite <- merge_right_neutral'. exact (permutation_id (ndlist X)). 
-Qed.
+Defined.
 
 #[export] Instance permutation_id_am_l_PN (X:NoDupList) : PermutationNames X (app_merge_NoDupList EmptyNDL X).
 constructor. rewrite merge_left_neutral. exact (permutation_id (ndlist X)).
-Qed.
+Defined.
 
 Lemma permutationtr {o1 o2 o3}:
 permutation
@@ -1267,13 +1267,13 @@ Defined.
                                   (app_merge_NoDupList EmptyNDL EmptyNDL)
                                   EmptyNDL.
 constructor. rewrite merge_left_neutral. exact (permutation_id []).
-Qed.
+Defined.
 
 #[export] Instance permutation_id_am_l_PN_empty_r : PermutationNames
                                   EmptyNDL
                                   (app_merge_NoDupList EmptyNDL EmptyNDL).
 constructor. rewrite merge_left_neutral. exact (permutation_id []).
-Qed.
+Defined.
 
 
 

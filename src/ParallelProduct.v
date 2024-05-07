@@ -208,7 +208,7 @@ Theorem bigraph_pp_left_neutral : forall {s i r o} (b : bigraph s i r o),
     (left_empty o)
     bij_void_sum_neutral
     bij_void_sum_neutral
-    (fun n => bij_rew (P := fin) (arity_tp_left_neutral b n)) 
+    (fun n => bij_rew (P := fin) (arity_pp_left_neutral b n)) 
   ).
   + apply functional_extensionality.
     intro x.
@@ -347,7 +347,7 @@ Theorem bigraph_pp_right_neutral : forall {s i r o} (b : bigraph s i r o),
     (right_empty o)
     bij_void_sum_neutral_r
     bij_void_sum_neutral_r
-    (fun n => bij_rew (P := fin) (arity_tp_right_neutral b n)) 
+    (fun n => bij_rew (P := fin) (arity_pp_right_neutral b n)) 
   ).
   + apply functional_extensionality.
     intro x.

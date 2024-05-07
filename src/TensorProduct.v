@@ -71,6 +71,28 @@ Class DisjointNames (l1 l2 : NoDupList) := { disj : forall n, In n l1 -> In n l2
 
 Global Notation "l1 # l2" := (DisjointNames l1 l2) (at level 50, left associativity). 
 
+Definition tmptest
+{s1 r1 s2 r2 : nat}
+
+{i1 o1 i2 o2 : NoDupList}
+
+{dis_i : i1 # i2}
+
+{dis_o : o1 # o2}
+
+{b1 : bigraph s1 i1 r1 o1}
+
+{b2 : bigraph s2 i2 r2 o2}
+
+: FiniteParent (((bij_id <+> bijection_inv bij_fin_sum) <o> ((bij_sum_shuffle <o> (get_parent b1 ||| get_parent b2)) <o> bijection_inv bij_sum_shuffle)) <o> (bij_id <+> bij_fin_sum)).
+rewrite <- tensor_alt.
+  apply finite_parent_inout.
+  apply finite_parent_tensor.
+  + exact (ap _ _ _ _ b1).
+  + exact (ap _ _ _ _ b2).
+  Qed.
+
+
 Definition DN_D {l1 l2} : l1 # l2 -> Disjoint l1 l2.
   Proof. 
   intros.
@@ -93,9 +115,10 @@ Definition bigraph_tensor_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
   {dis_i : i1 # i2}
   {dis_o : o1 # o2}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
-    : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) (r1 + r2) (app_merge_NoDupList o1 o2).
-  Proof. 
-  apply (Big 
+    : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) (r1 + r2) (app_merge_NoDupList o1 o2)
+    := 
+    
+    (Big 
     (s1 + s2)
     (app_merge_NoDupList i1 i2) (*app_merge'_id says it's eq to i1 ++ i2*)
     (r1 + r2)
@@ -109,44 +132,44 @@ Definition bigraph_tensor_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
     (((@bij_list_names o1 o2 (DN_D dis_o)) <+> bij_id) <o>
       bij_sum_shuffle <o> (parallel (get_link b1) (get_link b2)) <o> (bijection_inv bij_sum_shuffle) <o> 
       (bijection_inv ((@bij_list_names i1 i2 (DN_D dis_i)) <+> (bij_join_port (get_control b1) (get_control b2)))))
+      tmptest
     ).
-  rewrite <- tensor_alt.
-  apply finite_parent_inout.
-  apply finite_parent_tensor.
-  + exact (ap _ _ _ _ b1).
-  + exact (ap _ _ _ _ b2).
-  Defined. 
+
+  (* 
+  Defined.  *)
 
 Global Notation "b1 ⊗ b2" := (bigraph_tensor_product b1 b2) (at level 50, left associativity).
 
 
 Lemma arity_tp_left_neutral : forall {s i r o} (b : bigraph s i r o) n, 
-  Arity (get_control (∅ ⊗ b) n) =  Arity (get_control b (bij_void_sum_neutral n)).
+  Arity (get_control (∅ ⊗ b) (bijection_inv bij_void_sum_neutral n)) =  Arity (get_control b n).
   Proof.
   intros s i r o b n.
-  destruct n as [ v | n].
-  + destruct v.
-  + reflexivity.
+  unfold bijection_inv. simpl. 
+  reflexivity.
   Qed.
 
 Theorem bigraph_tp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
-  bigraph_equality (∅ ⊗ b) b.
+  bigraph_equality b (∅ ⊗ b).
   Proof.
   intros s i r o b.
-  apply (BigEq _ _ _ _ _ _ _ _ (∅ ⊗ b) b
+  apply (BigEq s r s r i o (app_merge_NoDupList EmptyNDL i) (app_merge_NoDupList EmptyNDL o) b (∅ ⊗ b)
     eq_refl
     (left_empty i)
     eq_refl
     (left_empty o)
-    bij_void_sum_neutral
-    bij_void_sum_neutral
+    (bijection_inv bij_void_sum_neutral)
+    (bijection_inv bij_void_sum_neutral)
     (fun n => bij_rew (P := fin) (arity_tp_left_neutral b n)) 
-    ).
+    ). 
   + apply functional_extensionality.
-    intro x.
+    intros [v|x]. 
+    - elim v.
+    - unfold bijection_inv. simpl. unfold funcomp. 
     reflexivity. 
-  + apply functional_extensionality.
-    destruct x as [n1 | s1]; simpl.
+  + apply functional_extensionality. 
+    destruct x as [[v|n1] | s1]; simpl. 
+    - elim v.
     - unfold funcomp.
       simpl.
       destruct get_parent; try reflexivity.
@@ -166,22 +189,25 @@ Theorem bigraph_tp_left_neutral : forall {s i r o} (b : bigraph s i r o),
         apply subset_eq_compat.
         reflexivity.
   + apply functional_extensionality.
-    destruct x as [i1 | (v1, (k1, Hvk1))]; simpl.
+    destruct x as [i1 | ([v|v1], (k1, Hvk1))]; simpl.
     - unfold funcomp.
       simpl. 
       unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
-      simpl.
+      simpl. 
       unfold id. 
-      destruct i1 as [iname1 Hiname1].
+      destruct i1 as [iname1 Hiname1]. 
       rewrite <- (innername_proof_irrelevant b iname1 Hiname1).
-      simpl. destruct get_link; try reflexivity.
-      f_equal. destruct s0. apply subset_eq_compat. reflexivity.
+      symmetry.
+      rewrite <- (innername_proof_irrelevant b iname1 Hiname1).
+      simpl. symmetry. destruct get_link; try reflexivity. 
+      f_equal. destruct s0. simpl. apply subset_eq_compat. reflexivity.
+    - exfalso. simpl in v. destruct v. 
     - unfold bij_list_backward', bij_list_forward, bij_subset_forward, parallel, sum_shuffle, choice, funcomp, id.
       simpl.
       unfold bij_join_port_backward, bij_dep_sum_2_forward, bijection_inv, bij_dep_sum_1_forward.
       simpl.
       unfold bij_rew_forward, eq_rect_r, funcomp, id.
-      simpl.
+      simpl. 
       rewrite <- eq_rect_eq.
       rewrite <- eq_rect_eq.
       destruct get_link; try reflexivity. apply f_equal. destruct s0. apply subset_eq_compat.
@@ -790,15 +816,18 @@ Qed.
 
 (* Notation "b1 [] b2" := (bigraph_packed_disjoint_pair_tp (Build_bigraph_packed_disjoint_pair b1 b2)) (at level 50, left associativity). *)
 
-Theorem bigraph_packed_tp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
+(* Theorem bigraph_packed_tp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
 bigraph_packed_equality (bigraph_packed_tp bigraph_empty b) b.
 Proof.
 unfold bigraph_packed_equality, bigraph_packed_tp.
-intros.
-apply bigraph_tp_left_neutral.
-Qed.
+intros. simpl. Set Printing All.  
+Print bigraph_tp_left_neutral. 
+Check bigraph_tp_left_neutral.  
 
-Theorem bigraph_packed_tp_right_neutral : forall {s i r o} (b : bigraph s i r o), 
+apply bigraph_tp_left_neutral.
+Qed. *)
+
+(* Theorem bigraph_packed_tp_right_neutral : forall {s i r o} (b : bigraph s i r o), 
 bigraph_packed_equality (bigraph_packed_tp b bigraph_empty) b.
 Proof.
 unfold bigraph_packed_equality, bigraph_packed_tp.
@@ -818,7 +847,7 @@ Proof.
 unfold bigraph_packed_equality, bigraph_packed_tp.
 intros.
 apply bigraph_tp_assoc.
-Qed.
+Qed. *)
 
 
 (* Bifunctorial property*)

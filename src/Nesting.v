@@ -23,14 +23,14 @@ Module NestingBig (s : SignatureParameter) (n : NamesParameter).
 Module pp := ParallelProduct s n.
 Include pp.
 
-Example I : NoDupList. Admitted.
+(* Example I : NoDupList. Admitted.
 Example m : nat. Admitted.
 Example X : NoDupList. Admitted.
 Example n : nat. Admitted.
 Example Y : NoDupList. Admitted.
 Example F : bigraph 0 I m X. Admitted.
 Example G : bigraph m EmptyNDL n Y. Admitted.
-Example dis_i : X # Y. Admitted.
+Example dis_i : X # Y. Admitted. *)
 
 (* Example id_pp_G := 
   bigraph_parallel_product 
@@ -86,7 +86,7 @@ Lemma id_union'' : forall X Y:NoDupList,
   Qed.
 
 Lemma my_id_union : forall X Y:NoDupList, 
-  bigraph_equality
+  bigraph_packed_equality
     (@bigraph_identity O (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id_PN (@reverse_coercion NoDupList (list Name) (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y)))))
     ((bigraph_identity (i := X)) || (bigraph_identity (i := Y))).
   Proof.
@@ -113,10 +113,10 @@ Lemma my_id_union : forall X Y:NoDupList,
       ).
   + apply functional_extensionality.
       intros [ x | x ]; destruct x. 
-    + apply functional_extensionality.
+  + apply functional_extensionality.
       intros [[x | x] | p]; try (destruct x).
       unfold fin in p. destruct p. exfalso. apply PeanoNat.Nat.nlt_0_r in l. apply l.
-    + rewrite bij_subset_compose_id. simpl.
+  + rewrite bij_subset_compose_id. simpl.
     apply functional_extensionality.
     intros [[i H]|x].
     * unfold id, parallel, funcomp. simpl. unfold in_app_or_m_nod_dup.
@@ -124,16 +124,23 @@ Lemma my_id_union : forall X Y:NoDupList,
     * destruct x. destruct x as [x | x]; destruct x.
   Qed.
 
+Theorem testimportant {I X Y}
+  (F : bigraph 1 I 1 X) (G : bigraph 1 EmptyNDL 1 Y) :
+bigraph_packed_equality F G -> bigraph_packed_equality F F.
+Proof. intros H. 
+rewrite H. auto. reflexivity. Qed. 
 
 Theorem nest_associative {I X Y n Z}
   (F : bigraph 1 I 1 X) (G : bigraph 1 EmptyNDL 1 Y) (H : bigraph 1 EmptyNDL n Z) :
-  bigraph_equality
+  bigraph_packed_equality
     (H <.> (G <.> F))
     ((H <.> G) <.> F).
   Proof.
-  unfold nest.
-  (* rewrite my_id_union.
-  rewrite (id_union'' X Y). *)
+  (* unfold nest. simpl. constructor. unfold bigraph_packed_equality. simpl. 
+  rewrite my_id_union. 
+  Set Printing All. *)
+  (* rewrite my_id_union.  *)
+  (* rewrite (id_union'' X Y). *)
   Admitted.
 
 
