@@ -200,6 +200,12 @@ Coercion packing {s i r o} (b : bigraph s i r o) :=
 Definition bigraph_packed_equality (bp1 bp2 : bigraph_packed) := 
   bigraph_equality (big bp1) (big bp2).
 
+Theorem eq_packed_eq_eq {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}  
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
+   bigraph_equality b1 b2 <-> bigraph_packed_equality b1 b2.
+   split. auto. auto. 
+   Qed. 
+
 Lemma bigraph_packed_equality_refl (bp : bigraph_packed) : bigraph_packed_equality bp bp.
   Proof.
   apply bigraph_equality_refl.

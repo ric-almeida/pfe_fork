@@ -522,8 +522,8 @@ Theorem bigraph_comp_congruence : forall
   Qed. 
   (*Missing a hypothesis that says bij_s12 = bij_r34_s12 in the equalities *)
 
-Definition bigraph_packed_composition {s1 i1o2 r1 o1 s2 i2 o2i1} {p: PermutationNames o2i1 i1o2}
-  (b1 : bigraph s1 i1o2 r1 o1) (b2 : bigraph s2 i2 s1 o2i1) : bigraph_packed :=
+Definition bigraph_packed_composition {s1 i1o2 r1 o1 s2 i2 o2i1 r2} {p: PermutationNames o2i1 i1o2} {myeq: MyEqNat s1 r2}
+  (b1 : bigraph s1 i1o2 r1 o1) (b2 : bigraph s2 i2 r2 o2i1) : bigraph_packed :=
   packing (b1 <<o>> b2).
 
 (* Definition bigraph_packed_composition' (*{s1 i1 r1 o1 s2 i2 : FinDecType} *)

@@ -1445,6 +1445,13 @@ Class UnionPossiblePacked (b1 b2 : bigraph_packed) :=
   constructor. exact upp.
   Qed.
 
+#[export] Instance unionpossible_packed_nesting 
+  {s r o X} (G : bigraph s EmptyNDL r o):
+  UnionPossiblePacked (bigraph_identity (s := 0) (i := X)) G. 
+  constructor. apply disjoint_innernames_implies_union_possible. 
+  constructor. intros. simpl. simpl in H0. apply H0.
+  Qed.
+
 Record bigraph_packed_up_pair :=
   { 
     fst_ppair_pp  : bigraph_packed;
