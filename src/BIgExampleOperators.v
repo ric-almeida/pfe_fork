@@ -277,7 +277,7 @@ Proof.
 
 
 
-(* Compute ((s simplBigboolOp)). 
+(*Compute ((s simplBigboolOp)). 
 Compute (ndlist (i simplBigboolOp)). 
 Compute ((r simplBigboolOp)). 
 Compute (ndlist (o simplBigboolOp)). 
