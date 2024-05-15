@@ -14,7 +14,7 @@ Then compile with
 
 To generate LaTeX documentation: 
 
-    coqdoc -g -toc --latex --lib-subtitles src/AbstractBigraphs.v
+    coqdoc -g -toc --latex --lib-subtitles src/ConcreteBigraphs.v
 
 To clean:
 
