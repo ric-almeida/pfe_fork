@@ -1,4 +1,4 @@
-Require Import ConcreteBigraphs.
+Require Import AbstractBigraphs.
 Require Import SignatureBig.
 Require Import FinDecTypes.
 Require Import MyBasics.

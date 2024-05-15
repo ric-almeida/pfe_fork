@@ -1,6 +1,6 @@
 Set Warnings "-notation-overridden, -parsing, -masking-absolute-name, -cannot-define-projection".
 
-Require Import ConcreteBigraphs.
+Require Import AbstractBigraphs.
 Require Import Bijections.
 Require Import Names.
 Require Import SignatureBig.

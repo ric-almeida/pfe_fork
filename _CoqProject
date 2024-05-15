@@ -7,7 +7,7 @@ src/Fintypes.v
 src/SignatureBig.v
 src/Names.v
 src/Ports.v
-src/ConcreteBigraphs.v
+src/AbstractBigraphs.v
 src/Equality.v
 src/Composition.v
 src/TensorProduct.v

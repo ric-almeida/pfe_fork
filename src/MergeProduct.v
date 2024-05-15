@@ -1,6 +1,6 @@
 Set Warnings "-notation-overridden, -parsing, -masking-absolute-name".
 
-Require Import ConcreteBigraphs.
+Require Import AbstractBigraphs.
 Require Import Names.
 Require Import SignatureBig.
 Require Import Equality.

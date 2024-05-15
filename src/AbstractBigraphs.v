@@ -70,23 +70,25 @@ End GettersBigraphs.
 Class MyEqNat (x y : nat) := { eqxy : x = y }.
 Definition howomg {a b} (m: MyEqNat a b) : a = b := eqxy. 
 #[export] Instance MyEqNat_refl (x:nat) : MyEqNat x x.
-Proof. 
-constructor. reflexivity. 
-Qed.
-#[export] Instance MyEqNat_add {s1 s2 r3 r4} (eqs2r4 : MyEqNat s2 r4) (eqs1r3 : MyEqNat s1 r3) : MyEqNat (s1 + s2) (r3 + r4).
-Proof. 
-constructor. destruct eqs2r4 as [eqs2r4].
-destruct eqs1r3 as [eqs1r3].
-lia.
-Qed.
+  Proof. 
+  constructor. reflexivity. 
+  Qed.
 
-#[export] Instance MyEqNat_add_bis {s1r3 r3s1 s2r4 r4s2} (eqs2r4 : MyEqNat s2r4 r4s2) (eqs1r3 : MyEqNat s1r3 r3s1) : 
-  MyEqNat (s1r3 + s2r4) (r3s1 + r4s2).
-Proof. 
-constructor. destruct eqs2r4 as [eqs2r4].
-destruct eqs1r3 as [eqs1r3].
-lia.
-Qed.
+#[export] Instance MyEqNat_add {s1 s2 r3 r4} (eqs2r4 : MyEqNat s2 r4) (eqs1r3 : MyEqNat s1 r3) : 
+  MyEqNat (s1 + s2) (r3 + r4).
+  Proof. 
+  constructor. destruct eqs2r4 as [eqs2r4].
+  destruct eqs1r3 as [eqs1r3].
+  lia.
+  Qed.
+
+#[export] Instance MyEqNat_add_bis {s1 r3 s2 r4} (eqs2r4 : MyEqNat s2 r4) (eqs1r3 : MyEqNat s1 r3) : 
+  MyEqNat (s1 + s2) (r3 + r4).
+  Proof. 
+  constructor. destruct eqs2r4 as [eqs2r4].
+  destruct eqs1r3 as [eqs1r3].
+  lia.
+  Qed.
 
 
 Theorem parent_proof_irrelevant {s i r o} (b:bigraph s i r o): 
