@@ -1,6 +1,6 @@
 Set Warnings "-notation-overridden, -parsing, -masking-absolute-name".
 
-Require Import ConcreteBigraphs.
+Require Import AbstractBigraphs.
 Require Import Names.
 Require Import SignatureBig.
 Require Import Equality.
@@ -40,7 +40,7 @@ Definition merge {n:nat} : bigraph n EmptyNDL 1 EmptyNDL. (* merge n+1 = join <<
   destruct n'.
   Defined. *)
 
-Definition rm_useless_root {s r : nat} {i o : NoDupList} (b : bigraph s i (r + 0) o) : bigraph s i r o.
+(* Definition rm_useless_root {s r : nat} {i o : NoDupList} (b : bigraph s i (r + 0) o) : bigraph s i r o.
   destruct b as [n e c p l ap].
   assert (fin (r+0)=fin r).
   - unfold fin. f_equal. apply functional_extensionality. intros. 
@@ -62,7 +62,7 @@ Definition rm_useless_site {s r : nat} {i o : NoDupList} (b : bigraph (s+0) i r 
 Definition rm_useless_outer {s r : nat} {i o : NoDupList} (b : bigraph s i r (app_merge_NoDupList EmptyNDL o)) : bigraph s i r o.
   destruct b as [n e c p l ap].
   exact (Big s i r o n e c p l ap).
-  Defined. 
+  Defined.  *)
 
 #[export] Instance MyEqNat_r_neutral {a} : 
   MyEqNat (a+0) a.

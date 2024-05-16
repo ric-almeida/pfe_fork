@@ -1,6 +1,6 @@
 Set Warnings "-notation-overridden, -parsing".
 
-Require Import ConcreteBigraphs.
+Require Import AbstractBigraphs.
 Require Import Names.
 Require Import SignatureBig.
 Require Import Equality.
@@ -95,7 +95,7 @@ Example simplBig :
     1 bNDL 1 aNDL
     (findec_fin 2)
     findec_unit
-    (fun n => match n with | exist _ n _ => n+1 end) (*control*)
+    (fun n => match n with | exist n _  => n+1 end) (*control*)
     _
     (*(fun ns => match ns with 
       | inl n => inr zero1

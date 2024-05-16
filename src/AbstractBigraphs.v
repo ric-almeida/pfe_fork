@@ -21,6 +21,9 @@ Require Import Coq.Arith.PeanoNat.
 Require Import ProofIrrelevance.
 Require Import Lia.
 
+Require Import mathcomp.ssreflect.fintype. 
+Require Import ssrfun.
+
 
 Import ListNotations.
 
@@ -50,6 +53,21 @@ Record bigraph  (site: nat)
     ap : FiniteParent parent ;
   }.
   
+Record bigraph'  (site': nat) 
+                (innername': NoDupList) 
+                (root': nat) 
+                (outername': NoDupList) : Type := 
+  Big'  
+  { 
+    node' : finType ;
+    edge' : finType ;
+    control' : node' -> Kappa ;
+    parent' : node' + fin site' -> 
+                node' + (fin root') ; 
+    link' : NameSub innername' + Port control' -> 
+                (NameSub outername') + edge'; 
+    ap' : FiniteParent parent' ;
+  }.
 End IntroBigraphs.
 
 (** * Getters
@@ -120,6 +138,23 @@ Definition bigraph_empty : bigraph 0 EmptyNDL 0 EmptyNDL.
   + left. apply n.
   + destruct p. right. apply x.
   Defined. (*TODO unsure of the definition of link def 2.7*)
+
+Definition bigraph_empty' : bigraph' 0 EmptyNDL 0 EmptyNDL.
+  Proof. 
+  eapply (Big' 0 EmptyNDL 0 EmptyNDL
+            void void 
+            (of_void Kappa)
+            (of_void _ ||| (void_univ_embedding <o> bij_fin_zero))
+            _ 
+            ).
+  - intro n.
+  destruct n.
+  Unshelve.
+  intros. destruct X.
+  + left. apply n.
+  + destruct p. right. apply x.
+  Defined. (*TODO unsure of the definition of link def 2.7*)
+
 
 Global Notation "∅" := bigraph_empty.
 
