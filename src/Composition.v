@@ -1,6 +1,6 @@
 Set Warnings "-notation-overridden, -parsing, -masking-absolute-name".
 
-Require Import ConcreteBigraphs.
+Require Import AbstractBigraphs.
 Require Import Names.
 Require Import SignatureBig.
 Require Import Equality.
@@ -36,39 +36,39 @@ Definition bigraph_composition {s1 r1 s2 r2 : nat} {i1o2 o2i1 o1 i2 : NoDupList}
   (b1 : bigraph s1 i1o2 r1 o1) (b2 : bigraph s2 i2 r2 o2i1) 
     : bigraph s2 i2 r1 o1. (*s1=r2*)
   Proof. 
-  set (sl2:= (bij_id <+> bij_permut_list o2i1 i1o2 (PN_P p)) <o> (switch_link (get_link b2))). 
-  set (sl1:= switch_link (get_link b1)). 
-  apply (Big s2 i2 r1 o1
-        (findec_sum (get_node b1) (get_node b2))
-        (findec_sum (get_edge b1) (get_edge b2))
-        (join (get_control b1) (get_control b2))
-        ((get_parent b2) >> ((bij_id <+> (bij_rew eqxy) -->> (bij_id <+> bij_id)) (get_parent b1)))
-        (switch_link (sl2 >> sl1) <o>
-          (backward (@bij_id _ <+> (bij_join_port (get_control b1) (get_control b2)))))).
-  apply (finite_parent_sequence).
-  + unfold bij_rew. simpl. 
-  unfold parallel, funcomp, id.  (* exact (ap _ _ _ _ b1).*)
-  set (ap1 := ap _ _ _ _ b1).
-  unfold FiniteParent in *.
-  change (forall n : type (node s1 i1o2 r1 o1 b1), Acc (fun n' n0 : type (node s1 i1o2 r1 o1 b1) => match get_parent b1 (inl n0) with
-  | inl a => inl a
-  | inr c => inr c
-  end = inl n') n).
-  assert ((fun n' n0 : type (node s1 i1o2 r1 o1 b1) => parent s1 i1o2 r1 o1 b1 (inl n0) = inl n') 
-    = (fun n' n0 : type (node s1 i1o2 r1 o1 b1) => match get_parent b1 (inl n0) with
-  | inl a => inl a
-  | inr c => inr c
-  end = inl n')).
-  * apply functional_extensionality. intros. apply functional_extensionality. intros. 
-    change ((get_parent b1 (inl x0) = inl x) = (match get_parent b1 (inl x0) with
-  | inl a => inl a
-  | inr c => inr c
-  end = inl x)). 
-  destruct (get_parent b1 (inl x0)); auto. 
-  * rewrite <- H. exact ap1.
-  + exact (ap _ _ _ _ b2).
-  Defined.
-  (* l :  i2 + (p1 + p2) -> o1 + (e1 + e2) *)
+    set (sl2:= (bij_id <+> bij_permut_list o2i1 i1o2 (PN_P p)) <o> (switch_link (get_link b2))). 
+    set (sl1:= switch_link (get_link b1)). 
+    apply (Big s2 i2 r1 o1
+          (findec_sum (get_node b1) (get_node b2))
+          (findec_sum (get_edge b1) (get_edge b2))
+          (join (get_control b1) (get_control b2))
+          ((get_parent b2) >> ((bij_id <+> (bij_rew eqxy) -->> (bij_id <+> bij_id)) (get_parent b1)))
+          (switch_link (sl2 >> sl1) <o>
+            (backward (@bij_id _ <+> (bij_join_port (get_control b1) (get_control b2)))))).
+    apply (finite_parent_sequence).
+    + unfold bij_rew. simpl. 
+    unfold parallel, funcomp, id.  (* exact (ap _ _ _ _ b1).*)
+    set (ap1 := ap _ _ _ _ b1).
+    unfold FiniteParent in *.
+    change (forall n : type (node s1 i1o2 r1 o1 b1), Acc (fun n' n0 : type (node s1 i1o2 r1 o1 b1) => match get_parent b1 (inl n0) with
+    | inl a => inl a
+    | inr c => inr c
+    end = inl n') n).
+    assert ((fun n' n0 : type (node s1 i1o2 r1 o1 b1) => parent s1 i1o2 r1 o1 b1 (inl n0) = inl n') 
+      = (fun n' n0 : type (node s1 i1o2 r1 o1 b1) => match get_parent b1 (inl n0) with
+    | inl a => inl a
+    | inr c => inr c
+    end = inl n')).
+    * apply functional_extensionality. intros. apply functional_extensionality. intros. 
+      change ((get_parent b1 (inl x0) = inl x) = (match get_parent b1 (inl x0) with
+    | inl a => inl a
+    | inr c => inr c
+    end = inl x)). 
+    destruct (get_parent b1 (inl x0)); auto. 
+    * rewrite <- H. exact ap1.
+    + exact (ap _ _ _ _ b2).
+    Defined.
+  (* l :  i2 + (p1 + px2) -> o1 + (e1 + e2) *)
   (* l1 : i1o2 + p1 -> o1 + e1 *)
   (* l2 : i2 + p2 -> o2i1 + e2, o2i1 <=> i1o2 *)
   
