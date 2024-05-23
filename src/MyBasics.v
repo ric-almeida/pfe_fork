@@ -1114,14 +1114,14 @@ Theorem finite_parent_sequence_right : forall {N1 N2 S1 S2 R1 : Type} (p1 : N1+S
     unfold sequence in Hn1'.
     unfold rearrange in Hn1'.
     unfold extract1 in Hn1'.
-    destruct (p1 (inl n1)); apply Hindn1'; congruence.
+    destruct (p1 (inl n1)); apply Hindn1'. inversion Hn1'. f_equal. discriminate Hn1'.
   + intro Hn2'.
     unfold sequence in Hn2'.
     unfold rearrange in Hn2'.
     unfold extract1 in Hn2'.
     destruct (p1 (inl n1)).
-    ++ congruence.
-    ++ congruence. 
+    ++ discriminate Hn2'. 
+    ++ discriminate Hn2'.
   Qed.
 
 Theorem finite_parent_sequence_left : forall {N1 N2 S1 S2 R1 : Type} (p1 : N1+S1 -> N1+R1) (p2 : N2+S2 -> N2+S1) (n2:N2),

@@ -110,6 +110,147 @@ Definition bigraph_parallel_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList
   + exact (ap _ _ _ _ b2).
   Defined. 
 
+
+
+Fixpoint mkFreshNames' (l:list Name) (o1o2:list Name) : list Name :=
+  match l with 
+  | [] => []
+  | t::q =>  let fn := freshName o1o2 in 
+  fn :: mkFreshNames' q (fn::o1o2)
+  end.
+
+(* Lemma mkFreshNamesOK (l:list Name) (o1o2:list Name) :
+  match mkFreshNames' l o1o2 with 
+  | [] => True 
+  | t::q => ~ In t o1o2 /\ mkFreshNamesOK 
+  end.
+  Proof. induction l. 
+  - simpl. auto. 
+  - simpl. apply notInfreshName. 
+  Qed.  *)
+
+
+
+
+
+Fixpoint mkFreshNames (l:list Name) (o1o2:NoDupList) : list Name :=
+  match l with 
+  | [] => []
+  | t::q =>  let fn := freshName o1o2 in 
+  fn :: mkFreshNames q (app_merge_NoDupList o1o2 (mkNoDupList [fn] (noDupSingle fn)))
+  end.
+
+Lemma mkFreshNamesOK (l:list Name) (o1o2:NoDupList) :
+  match mkFreshNames l o1o2 with 
+  | [] => True 
+  | t::q => ~ In t o1o2 
+  end.
+  Proof. induction l. 
+  - simpl. auto. 
+  - simpl. apply notInfreshName. 
+  Qed. 
+
+
+Lemma mkFreshNamesOK' (l:list Name) (o1o2:NoDupList) :
+  forall t, In t (mkFreshNames l o1o2) -> ~ In t o1o2.
+  Proof.
+  intros.
+  apply in_split in H. 
+  destruct H as [l1 [l2 H]].
+  induction l1.  
+  - simpl in H.  set (H' := mkFreshNamesOK l o1o2). 
+  rewrite H in H'. 
+  apply H'.
+  - induction l. 
+  + simpl in *. discriminate H.  
+  + apply IHl. 
+  * rewrite <- H. 
+
+   apply IHl1. 
+
+
+
+
+  Admitted. 
+
+
+
+
+Lemma mkFreshNamesNoReapeat (l:list Name) (o1o2:NoDupList) :
+  match mkFreshNames l o1o2 with 
+  | [] => True 
+  | t::q => ~ In t q
+  end.
+  Proof. induction l. 
+  - simpl. auto. 
+  - simpl. unfold app_merge_NoDupList. simpl.
+  set (fn := freshName o1o2). 
+  (* apply (mkFreshNamesOK).  *)
+  Admitted.
+  (* mkFreshNames. simpl.  *)
+
+
+(*VIRER que o1o2 est une NODUPLIST*)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Lemma mkFreshNamesNoDup : forall l, forall o1o2, NoDup (mkFreshNames l o1o2).
+Proof. 
+intros. induction l.
+- auto. unfold mkFreshNames. constructor.
+-  
+assert (MH:forall n, forall l, In n (ndlist l) -> forall l', ~ In n (mkFreshNames l' l)).
+* intros. destruct l0 as [l0 HL0].
+  induction l0. 
+  ** simpl in H. elim H.
+  ** induction l'. 
+  *** auto. 
+  *** simpl. unfold not. intros H'. destruct H' as[H'|H'].
+  **** 
+  destruct HL0 as [| n' l'' HL0].
+  -- elim H. 
+  -- destruct H. destruct H. apply (notInfreshName (n'::l'')).
+  rewrite H'. constructor. reflexivity.
+  **** destruct H'. 
+  assert (~ In (freshName (n' :: l'')) l''). 
+  ++ clear IHl'. clear IHl0. 
+  unfold not. intros. apply (notInfreshName (n'::l'')). simpl. 
+  right. apply H. 
+  ++ apply H0. apply H. 
+  **  admit. 
+* constructor. 
+** admit.
+** 
+
+ admit. 
+Admitted.
+
+Definition bigraph_parallel_product' {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
+  {up : UnionPossible b1 b2}
+    : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) (r1 + r2) (app_merge_NoDupList o1 o2).
+Proof.
+set (FN := mkFreshNames (o1 ∩ o2) (app_merge_NoDupList o1 o2)).
+set (FNNDL := mkNoDupList FN (mkFreshNamesNoDup (o1 ∩ o2) (app_merge_NoDupList o1 o2))).
+
+(*exact (
+  ((substitution (o1 ∩ o2) (freshName (app_merge_NoDupList o1 o2))) <<o>> b1) 
+    ⊗
+  ((substitution (o1 ∩ o2) (freshName (app_merge_NoDupList o1 o2))) <<o>> b2) 
+  ).  *)
+  Admitted.
+
 Global Notation "b1 || b2" := (bigraph_parallel_product b1 b2) (at level 50, left associativity).
 
 #[export] Instance disjoint_innernames_implies_union_possible {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
