@@ -40,6 +40,7 @@ Definition Arity : Kappa -> nat := id.
 End MySigP. 
 
 
+
 Module MyNamesP <: Names.NamesParameter.
 Definition Name := string.
 Definition EqDecN : forall x y : Name, {x = y} + {x <> y} := string_dec.
@@ -54,7 +55,7 @@ Definition freshName : list Name -> Name.
 Proof. 
 intros l. induction l as [|name l H].
 - exact DefaultName.
-- exact H.
+- exact (H ++ "g").
 Defined. 
 Lemma notInfreshName : forall l:list Name, ~ In (freshName l) l. 
 Proof. 
@@ -88,6 +89,9 @@ exists [a]. constructor; auto. constructor. Defined.
 Example e : string := "e".
 Example eNDL : NoDupList.
 exists [e]. constructor; auto. constructor. Defined.
+
+
+
 
 Example simplBig : 
   bigraph 1 bNDL 1 aNDL.
@@ -174,6 +178,11 @@ exists (e::aNDL). constructor; auto.
 - simpl. unfold not. intros. destruct H. ** discriminate H. ** elim H.
 - exact (noDupSingle a). 
 Defined. 
+
+
+Compute (mkFreshNames eNDL eaNDL).
+Compute (mkFreshNames eNDL eNDL).
+Compute (mkFreshNames EmptyNDL eNDL).
 
 Definition myPN : PermutationNames
      (app_merge_NoDupList

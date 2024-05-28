@@ -19,6 +19,12 @@ Require Import Lia.
 Import ListNotations.
 
 
+Require Import List.
+
+(* Définir le type Name si ce n'est pas déjà fait *)
+Definition Name := nat.
+
+
 (** * Juxtaposition / Parallel product
   This section deals with the operation of disjoint juxtaposition. This is the act
   of putting two bigraphs with disjoint interfaces "next" to one another. 
@@ -49,8 +55,8 @@ Class UnionPossible {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
 Definition link_juxt {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
   (*{up : union_possible b1 b2} Ii don't use it in this definition though*)
-  (ip :NameSub (app_merge_NoDupList i1 i2) + Port (join (get_control b1) (get_control b2))) :
-  NameSub (app_merge_NoDupList o1 o2) + type (findec_sum (get_edge b1) (get_edge b2)). 
+  (ip :NameSub (i1 ∪ i2) + Port (join (get_control b1) (get_control b2))) :
+  NameSub (o1 ∪ o2) + type (findec_sum (get_edge b1) (get_edge b2)). 
   Proof.
   destruct ip as [[n npf] | p].
   + (*inner*)  
@@ -88,13 +94,13 @@ Definition link_juxt {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
 Definition bigraph_parallel_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
   {up : UnionPossible b1 b2}
-    : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) (r1 + r2) (app_merge_NoDupList o1 o2).
+    : bigraph (s1 + s2) (i1 ∪ i2) (r1 + r2) (o1 ∪ o2).
   Proof.
   refine (Big 
     (s1 + s2)
-    (app_merge_NoDupList i1 i2)
+    (i1 ∪ i2)
     (r1 + r2)
-    (app_merge_NoDupList o1 o2)
+    (o1 ∪ o2)
     (findec_sum (get_node b1) (get_node b2))
     (findec_sum (get_edge b1) (get_edge b2))
     (join (get_control b1) (get_control b2))
@@ -110,30 +116,198 @@ Definition bigraph_parallel_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList
   + exact (ap _ _ _ _ b2).
   Defined. 
 
+Definition twoFreshNames (o1uniono2:NoDupList) (l:list Name) (e:Name): list Name := 
+  let fn := freshName (e::l++o1uniono2) in 
+  fn :: [freshName (fn::e::o1uniono2)].
 
+Definition mkFreshNames (o1:NoDupList) (o2:NoDupList) : list Name
+  := 
+  fold_left 
+    (twoFreshNames (o1 ∪ o2))
+    (o1 ∩ o2)
+    [] 
+    . 
 
-Fixpoint mkFreshNames' (l:list Name) (o1o2:list Name) : list Name :=
-  match l with 
-  | [] => []
-  | t::q =>  let fn := freshName o1o2 in 
-  fn :: mkFreshNames' q (fn::o1o2)
+Compute (mkFreshNames EmptyNDL EmptyNDL).
+  
+Lemma mkFreshNamesHeadOK (o1:NoDupList) (o2:NoDupList) :
+  match mkFreshNames o1 o2 with 
+  | [] => True 
+  | t::q => ~ In t (o1 ∪ o2) 
   end.
+  Proof. 
+  destruct (mkFreshNames o1 o2) eqn:E; auto.
+  unfold mkFreshNames in E.
+  unfold fold_left in E.
+  simpl in E.
+  unfold twoFreshNames in E.
+  simpl in E.
+  simpl in *. 
+  induction (myintersection o1 o2) eqn:Hinter.
+  - discriminate E.
+  - simpl in *.
+  apply IHl0.
 
-(* Lemma mkFreshNamesOK (l:list Name) (o1o2:list Name) :
+  Admitted.
+
+
+Definition twoFreshNames' (o1uniono2:list Name) (l:list Name) (e:Name): list Name := 
+  let fn := freshName (e::l++o1uniono2) in 
+  fn :: [freshName (fn::e::l++o1uniono2)].
+
+Theorem notInFreshName_hd : forall l t,
+  ~ In (freshName (t::l)) l.
+  Proof. 
+    intros.
+    unfold not. intros.
+    induction l.
+    elim H.
+    destruct H.
+    * set (H' := notInfreshName (t :: a :: l)).
+    apply H'.
+    rewrite <- H.
+    simpl. right. left. reflexivity.
+    * set (H' := notInfreshName (t :: a :: l)).
+    apply H'.
+    apply in_split in H. 
+    destruct H as [l1 [l2 H]].
+    set (fn := freshName (t :: a :: l)).
+    rewrite H.
+    simpl. right. right. 
+    apply in_or_app.
+    right. left. reflexivity.
+  Qed.
+
+Theorem notInFreshName_hd_lst : forall l l',
+  ~ In (freshName (l'++l)) l.
+  Proof.
+    intros.
+    induction l'.
+    simpl. apply notInfreshName.
+    simpl.
+    unfold not. intros.
+    set (H' := notInfreshName (a :: l' ++ l)).
+    apply H'.
+    apply in_split in H. 
+    destruct H as [l1 [l2 H]].
+    set (fn := freshName (a :: l' ++ l)).
+    rewrite H.
+    simpl. right.
+    apply in_or_app. right.
+    apply in_or_app. right. simpl. left. reflexivity.
+  Qed.
+
+
+Lemma notInTwoFreshName (o1uniono2:list Name) (l:list Name) (e:Name) :
+  match twoFreshNames' o1uniono2 l e with 
+  |[] => False 
+  |fn::fn'::[] => ~ In fn (l++o1uniono2) /\ ~ In fn' (l++o1uniono2) /\ fn <> fn'
+  |_::_ => False
+  end.
+  Proof.
+    unfold twoFreshNames'. split.
+    change (~ In (freshName ([e] ++ (l ++ o1uniono2))) (l ++ o1uniono2)).
+    apply notInFreshName_hd_lst.
+    split.
+    set (fn := freshName (e :: l ++ o1uniono2)).
+    change (~ In (freshName ((fn :: [e])  ++ (l ++ o1uniono2))) (l ++ o1uniono2)).
+    apply notInFreshName_hd_lst.
+    unfold not. intros.
+    set (fn := freshName (e :: l ++ o1uniono2)).
+    fold fn in H.
+    apply (notInfreshName (fn :: e :: l ++ o1uniono2)). 
+    set (fn' := freshName (fn :: e :: l ++ o1uniono2)).
+    assert (fn = fn'). rewrite H. reflexivity.
+    rewrite H0. constructor. reflexivity.
+  Qed.
+
+Definition twoFreshNames'' (l:list Name): list Name := 
+  let fn := freshName (l) in 
+  fn :: [freshName (fn::l)].
+
+Definition mkFreshNames' (o1:list Name) (o2:list Name) : list Name
+  := 
+  fold_left 
+    (fun myOldFreshNames _ => (twoFreshNames'' (o1 ++ o2 ++ myOldFreshNames)) ++ myOldFreshNames)
+    (myintersection o1 o2)
+    [] 
+    .  
+
+(* Check fold_left.
+
+Compute (mkFreshNames' [] []). *)
+  
+Lemma mkFreshNamesHeadOK' (o1:list Name) (o2:list Name) :
+  match mkFreshNames' o1 o2 with 
+  | [] => True 
+  | t::q => ~ In t (o1 ++ o2) 
+  end.
+  Proof. 
+  destruct (mkFreshNames' o1 o2) eqn:E; auto.
+  set (inter := myintersection o1 o2).
+  unfold not.
+  intros. 
+  induction inter as [|in_inter inter' IHinter] eqn:Einter.
+  - unfold mkFreshNames' in E.
+  unfold fold_left in E.
+  fold inter in E.
+  rewrite Einter in E.
+  discriminate E.
+  - unfold mkFreshNames' in E.
+  fold inter in E.
+  rewrite Einter in E.
+  simpl in E.
+  (* set (fnn := twoFreshNames'' (o1 ++ o2) [] in_inter).
+  fold fnn in E.
+  unfold twoFreshNames' in E. *)
+
+  Admitted.
+
+
+
+
+
+
+
+
+
+
+
+  
+(* 
+Lemma mkFreshNamesOK (l:list Name) (o1o2:NoDupList) :
+  forall t, In t (mkFreshNames' l o1o2) -> ~ In t o1o2.
+  Proof.
+  intros.
+  (* unfold mkFreshNames' in H. *)
+  induction l.
+  - elim H.
+  -  destruct H as [H|H].
+  + destruct H. apply notInfreshName.
+  + destruct (EqDecN t (freshName o1o2)).
+  * rewrite e. apply notInfreshName.
+  * apply IHl.
+  unfold mkFreshNames' in H.
+  simpl in H. 
+
+
+  Admitted. 
+
+Lemma mkFreshNamesNoRepeat (l:list Name) (o1o2:NoDupList) :
   match mkFreshNames' l o1o2 with 
   | [] => True 
-  | t::q => ~ In t o1o2 /\ mkFreshNamesOK 
+  | t::q => ~ In t q
   end.
   Proof. induction l. 
   - simpl. auto. 
-  - simpl. apply notInfreshName. 
-  Qed.  *)
+  - simpl. unfold app_merge_NoDupList. simpl.
+  set (fn := freshName o1o2). 
+  (* apply (mkFreshNamesOK).  *)
+  Admitted. *)
 
+(* 
 
-
-
-
-Fixpoint mkFreshNames (l:list Name) (o1o2:NoDupList) : list Name :=
+Fixpoint mkFreshNames''' (l:list Name) (o1o2:NoDupList) : list Name :=
   match l with 
   | [] => []
   | t::q =>  let fn := freshName o1o2 in 
@@ -234,9 +408,9 @@ assert (MH:forall n, forall l, In n (ndlist l) -> forall l', ~ In n (mkFreshName
 ** 
 
  admit. 
-Admitted.
+Admitted. *)
 
-Definition bigraph_parallel_product' {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+(* Definition bigraph_parallel_product' {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
   {up : UnionPossible b1 b2}
     : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) (r1 + r2) (app_merge_NoDupList o1 o2).
@@ -249,7 +423,7 @@ set (FNNDL := mkNoDupList FN (mkFreshNamesNoDup (o1 ∩ o2) (app_merge_NoDupList
     ⊗
   ((substitution (o1 ∩ o2) (freshName (app_merge_NoDupList o1 o2))) <<o>> b2) 
   ).  *)
-  Admitted.
+  Admitted. *)
 
 Global Notation "b1 || b2" := (bigraph_parallel_product b1 b2) (at level 50, left associativity).
 
@@ -1495,7 +1669,7 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o
 
 Lemma id_union : forall X Y:NoDupList, 
   bigraph_equality
-  (@bigraph_id 0 (app_merge_NoDupList X Y))
+  (@bigraph_id 0 (X ∪ Y))
   ((@bigraph_id 0 X) || (@bigraph_id 0 Y)).
   Proof.
     intros X Y.
@@ -1508,11 +1682,11 @@ Lemma id_union : forall X Y:NoDupList,
     unfold join.
     unfold sum_shuffle.
     refine 
-      (BigEq 0 0 (0+0) _ _ _ _ _ (bigraph_id 0 (app_merge_NoDupList X Y)) (bigraph_id 0 X || (bigraph_id 0 Y))
+      (BigEq 0 0 (0+0) _ _ _ _ _ (bigraph_id 0 (X ∪ Y)) (bigraph_id 0 X || (bigraph_id 0 Y))
         eq_refl
-        (permutation_id (app_merge_NoDupList X Y))
+        (permutation_id (X ∪ Y))
         eq_refl
-        (permutation_id (app_merge_NoDupList X Y))
+        (permutation_id (X ∪ Y))
         (bijection_inv bij_void_sum_neutral)
         (bijection_inv bij_void_sum_neutral)
         (fun n => void_univ_embedding n) _ _ _
@@ -1532,7 +1706,7 @@ Lemma id_union : forall X Y:NoDupList,
 
 Lemma id_union' : forall X Y:NoDupList, 
   bigraph_equality
-  (bigraph_identity (s := 0) (i := app_merge_NoDupList X Y))
+  (bigraph_identity (s := 0) (i := X ∪ Y))
   ((bigraph_identity (i := X)) || (bigraph_identity (i := Y))).
   Proof.
     intros X Y.
@@ -1546,12 +1720,12 @@ Lemma id_union' : forall X Y:NoDupList,
     unfold sum_shuffle.
     refine 
       (BigEq 0 0 0 0 _ _ _ _
-        (bigraph_identity (s := 0) (i := app_merge_NoDupList X Y))
+        (bigraph_identity (s := 0) (i := X ∪ Y))
         ((bigraph_identity (i := X)) || (bigraph_identity (i := Y)))
         eq_refl
-        (permutation_id (app_merge_NoDupList X Y))
+        (permutation_id (X ∪ Y))
         eq_refl
-        (permutation_id (app_merge_NoDupList X Y))
+        (permutation_id (X ∪ Y))
         (bijection_inv bij_void_sum_neutral)
         (bijection_inv bij_void_sum_neutral)
         (fun n => void_univ_embedding n) _ _ _
@@ -1571,7 +1745,7 @@ Lemma id_union' : forall X Y:NoDupList,
 
 Lemma id_union_packed : forall X Y:NoDupList, 
   bigraph_packed_equality
-  ((bigraph_id 0 (app_merge_NoDupList X Y)))
+  ((bigraph_id 0 (X ∪ Y)))
   ((bigraph_parallel_product (up := union_possible_id) (bigraph_id 0 X) (bigraph_id 0 Y))).
   Proof.
   apply id_union.

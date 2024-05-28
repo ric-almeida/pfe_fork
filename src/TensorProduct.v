@@ -47,7 +47,7 @@ Class DisjointNames (l1 l2 : NoDupList) := { disj : forall n, In n l1 -> In n l2
   elim (Hn).
   Qed.
 
-#[export] Instance disj_app_right (l1 l2 l3 : NoDupList) (Disj12 : DisjointNames l1 l2) (Disj13 : DisjointNames l1 l3) : DisjointNames l1 (app_merge_NoDupList l2 l3).
+#[export] Instance disj_app_right (l1 l2 l3 : NoDupList) (Disj12 : DisjointNames l1 l2) (Disj13 : DisjointNames l1 l3) : DisjointNames l1 (l2 ∪ l3).
   Proof.
   constructor.
   intros n H1 H23.
@@ -58,7 +58,7 @@ Class DisjointNames (l1 l2 : NoDupList) := { disj : forall n, In n l1 -> In n l2
   * apply (disj1 n); try assumption.
   Qed.
 
-#[export] Instance disj_app_left (l1 l2 l3 : NoDupList) (Disj13 : DisjointNames l1 l3) (Disj23 : DisjointNames l2 l3) : DisjointNames (app_merge_NoDupList l1 l2) l3.
+#[export] Instance disj_app_left (l1 l2 l3 : NoDupList) (Disj13 : DisjointNames l1 l3) (Disj23 : DisjointNames l2 l3) : DisjointNames (l1 ∪ l2) l3.
   Proof.
   constructor.
   intros n H12 H3.
@@ -115,14 +115,14 @@ Definition bigraph_tensor_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
   {dis_i : i1 # i2}
   {dis_o : o1 # o2}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
-    : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) (r1 + r2) (app_merge_NoDupList o1 o2)
+    : bigraph (s1 + s2) (i1 ∪ i2) (r1 + r2) (o1 ∪ o2)
     := 
     
     (Big 
     (s1 + s2)
-    (app_merge_NoDupList i1 i2) (*app_merge'_id says it's eq to i1 ++ i2*)
+    (i1 ∪ i2) (*app_merge'_id says it's eq to i1 ++ i2*)
     (r1 + r2)
-    (app_merge_NoDupList o1 o2)
+    (o1 ∪ o2)
     (findec_sum (get_node b1) (get_node b2))
     (findec_sum (get_edge b1) (get_edge b2))
     (join (get_control b1) (get_control b2))
@@ -153,7 +153,7 @@ Theorem bigraph_tp_left_neutral : forall {s i r o} (b : bigraph s i r o),
   bigraph_equality b (∅ ⊗ b).
   Proof.
   intros s i r o b.
-  apply (BigEq s r s r i o (app_merge_NoDupList EmptyNDL i) (app_merge_NoDupList EmptyNDL o) b (∅ ⊗ b)
+  apply (BigEq s r s r i o (EmptyNDL ∪ i) (EmptyNDL ∪ o) b (∅ ⊗ b)
     eq_refl
     (left_empty i)
     eq_refl

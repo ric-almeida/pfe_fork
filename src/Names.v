@@ -638,6 +638,9 @@ ndlist := app_merge' l1 l2 ;
 nd := NoDup_app_merge l1 l2 (nd l1) (nd l2)
 |}.
 
+Notation "l1 ∪ l2" := (app_merge_NoDupList l1 l2) (at level 50, left associativity).
+
+
 Lemma app_merge_or {l1 l2 n} :
  In n (app_merge_NoDupList l1 l2) -> In n l1 \/ In n l2.
  Proof. apply in_app_iff. Qed.
