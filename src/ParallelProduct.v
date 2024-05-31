@@ -402,38 +402,98 @@ Definition freshNames (o:list Name) (n:nat): list Name.
 Admitted.
 
 Fixpoint substitution_list (i:list Name) (o:list Name)
+  (H:length i = length o) : list bigraph_packed. 
+  induction i as [|ti qi Hi].
+  - exact ([]).
+  - induction o as [|to qo Ho].
+  + exfalso. simpl in H. apply PeanoNat.Nat.neq_succ_0 in H. apply H.
+  +  
+  set (s := substitution (mkNoDupList [ti] (noDupSingle ti)) to).
+  set (sp := packing s).
+  assert (Hl : length qi = length qo). {rewrite length_head in H. rewrite length_head in H.
+  inversion H. reflexivity. }
+  set (slp := substitution_list qi qo Hl).
+  exact (sp::slp).
+  Defined.
+
+Definition tp_substitution_list (i:list Name) (o:list Name)
   (ndi : NoDup i) (ndo : NoDup o)
-  (H:length i = length o) : bigraph_packed. 
-  eapply 
-  (match i with 
+  (H:length i = length o) :=
+  let slist := substitution_list i o H in 
+  fold_left 
+    (fun qt t => bigraph_tensor_product (dis_i := _) (dis_o := _) (unpacking t) (unpacking qt))
+    slist 
+    bigraph_empty.
+
+Fixpoint substitution_tp (i:list Name) (o:list Name)
+  (ndi : NoDup i) (ndo : NoDup o)
+  (H:length i = length o) : bigraph_packed.
+  Proof. 
+  induction i as [|ti qi Hi].
+  - exact (packing bigraph_empty).
+  - induction o as [|to qo Ho].
+  + exfalso. simpl in H. apply PeanoNat.Nat.neq_succ_0 in H. apply H.
+  +  
+  set (s := substitution (mkNoDupList [ti] (noDupSingle ti)) to).
+  eapply (packing (bigraph_tensor_product (dis_i := _) (dis_o := _) s (unpacking (substitution_tp qi qo (nodup_tl ti qi ndi) (nodup_tl to qo ndo) _)) )).
+  Unshelve.
+  3:{ rewrite length_head in H. rewrite length_head in H.
+  inversion H. reflexivity. }
+  - simpl. constructor. intros.
+  destruct H0. destruct H0.
+  set (Hlength := (match eq_ind (S (length qo)) (fun n : nat => S (length qi) = n) (eq_ind (S (length qi)) (fun n : nat => n = S (length qo)) H (S (length qi)) (length_head ti qi)) (S (length qo)) (length_head to qo) in (_ = n) return (n = S (length qo) -> length qi = length qo) with
+| eq_refl => fun H0 : S (length qi) = S (length qo) => eq_ind (length qi) (fun n : nat => length qi = n) eq_refl (length qo) (f_equal (fun e : nat => match e with
+| 0 => (fix length (l : list Name) : nat := match l with
+| [] => 0
+| _ :: l' => S (length l')
+end) qi
+| S n => n
+end) H0)
+end eq_refl)).
+fold Hlength in H1. remove Hlength.
+  destruct H1.
+  simpl in H1. 
+   unfold substitution_tp.
+
+  (* set (sp := packing s).
+  assert (Hl : length qi = length qo). {rewrite length_head in H. rewrite length_head in H.
+  inversion H. reflexivity. }
+  set (slp := substitution_list qi qo Hl).
+  exact (sp::slp).
+  Defined.
+
+  eapply ((match i with 
   |[] => packing bigraph_empty 
   |ti::qi => 
     match o with 
     | [] => packing bigraph_empty (*impossible case*)
-    | to ::qo => 
-      let slp := 
-        (substitution_list 
-          qi 
-          qo 
-          (nodup_tl ti qi _) 
-          (nodup_tl to qo _) _) in _      
+    | to ::qo => let s := substitution (mkNoDupList [ti] (noDupSingle ti)) to in 
+    packing (bigraph_tensor_product (dis_i := _) (dis_o := _) s (unpacking (substitution_tp qi qo (nodup_tl ti qi _) (nodup_tl to qo _) _)) )
     end
-  end).
+  end)).
   Unshelve.
-  
+  3:{ Check nodup_tl. apply ndi. (nodup_tl i). }
+  - constructor. intros. unfold substitution_tp in H1. unfold DisjointNames. simpl. 
+
+  induction i as [|ti qi Hi].
+  - exact ([]).
+  - induction o as [|to qo Ho].
+  + exfalso. simpl in H. apply PeanoNat.Nat.neq_succ_0 in H. apply H.
+  +  
   set (s := substitution (mkNoDupList [ti] (noDupSingle ti)) to).
   set (sp := packing s).
-  assert (i = ti::qi). { auto. admit. }
-  rewrite H0 in ndi.
-  apply NoDup_cons_iff in ndi. destruct ndi.
-  set (slp := (substitution_list qi qo H2 ndo _)).
-  exists (bigraph_packed_tp sp (substitution_list qi qo _ _ _)). 
+  assert (Hl : length qi = length qo). {rewrite length_head in H. rewrite length_head in H.
+  inversion H. reflexivity. }
+  set (slp := substitution_list qi qo Hl).
+  exact (sp::slp).
+  Defined.
 
-(* Definition substitution_list (i:NoDupList) (o:NoDupList)
-  (H:length i = length o) :=
+Definition tp_list (i:list Name) (o:list Name)
+  (ndi : NoDup i) (ndo : NoDup o)
+  (H:length i = length o) : bigraph_packed := 
   fold_left 
-    (fun qt t => packing (bigraph_packed_tp (packing (substitution EmptyNDL t)) qt))
-    (ndlist i) 
+    (fun qt t => bigraph_packed_tp (Hdisj12 := _) t qt)
+    (substitution_list i o H) 
     (packing bigraph_empty). *)
 
 

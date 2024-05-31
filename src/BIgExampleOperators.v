@@ -513,12 +513,6 @@ destruct H; destruct H0.
 - elim H.
 Defined.
 
-Inductive mytypes :
-| Process 
-|Semantic
-
-Example ionProcess : bigraph 1 EmptyNDL 1 eNDL. 
-apply (ion Process )
 
 
 (*produit tensoriel implicite? *)

@@ -197,6 +197,9 @@ Record bigraph_packed : Type :=
 Coercion packing {s i r o} (b : bigraph s i r o) := 
   (mkPacked s i r o b).
 
+Definition unpacking (b : bigraph_packed) : bigraph (s b) (i b) (r b) (o b) := 
+  big b.
+
 Definition bigraph_packed_equality (bp1 bp2 : bigraph_packed) := 
   bigraph_equality (big bp1) (big bp2).
 
