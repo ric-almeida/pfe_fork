@@ -133,37 +133,323 @@ Example simplBig :
   exfalso. discriminate H.
   Defined. 
 
+Definition mycontrol (node:type findec_bool) : Kappa := 
+  match node with | false => 1 | true => 2 end.
 
-Example simplBigbool : 
-  bigraph 1 bNDL 1 aNDL.
-  eapply (Big
-    1 bNDL 1 aNDL
-    findec_bool
-    findec_unit
-    (fun n => match n with | false => 1 | true => 2 end) (*control*)
-    (fun ns => match ns with 
-      | inl n => inr zero1
-      | inr s => inl false
-    end) (*parent*)
-    _ (*link*)
-  ). 
-  Unshelve.
-  2:{ intros [b|p]. (*link*)
-  + (*link b*) right. exact tt.
-  + destruct p. destruct x eqn:E.
-  * destruct f as [i Hi].
+Definition myparent (ns : type findec_bool + fin 1) : 
+  type findec_bool + fin 1 :=
+  match ns with | inl n => inr zero1 | inr s => inl false end.
+
+Definition mylink (ip : NameSub bNDL + Port mycontrol) : 
+  NameSub aNDL +  type findec_unit.
+Proof.
+  destruct ip as [b|p].
+  + right. exact tt.
+  + destruct p as [n ps]. destruct n eqn:E.
+  * destruct ps as [i Hi].
   induction i as [|i' Hi'] eqn:Ei.
   *** right. exact tt.
   *** left. unfold NameSub. exists a.  
   unfold aNDL. simpl.
   left. reflexivity.
   * right. exact tt. 
-  }
+Defined.
+
+Example simplBigbool : 
+  bigraph 1 bNDL 1 aNDL.
+  Proof.
+  eapply (Big
+    1 bNDL 1 aNDL (*s i r o*)
+    findec_bool (*node*)
+    findec_unit (*edge*)
+    mycontrol (*control*)
+    myparent (*parent*)
+    mylink (*link*)
+  ). 
   unfold FiniteParent. simpl.
   intros u.
   apply Acc_intro.
   intros u' H.
   exfalso. discriminate H.
+  Defined. 
+
+
+Inductive MyNodes : Type :=
+| Process
+| Semantic 
+| Component 
+| NodeType 
+| Persistent 
+| Init 
+| On.
+
+Definition MyNodesFDT : FinDecType.
+exists MyNodes.
+Proof.
+  - unfold Finite. 
+  exists [Process; Semantic; Component; NodeType; Persistent; Init; On].
+  split.
+  + unfold SurjectiveList. intros. induction n; simpl.
+  * left. reflexivity.
+  * right. left. reflexivity.
+  * right. right. left. reflexivity.
+  * right. right. right. left. reflexivity.
+  * right. right. right. right. left. reflexivity.
+  * right. right. right. right. right. left. reflexivity.
+  * right. right. right. right. right.  right. left. reflexivity.
+  + unfold InjectiveXTList. 
+  intros i j Hi.
+  destruct i; simpl.
+  * destruct j; simpl.
+    ** reflexivity.
+    ** intro H.  
+    destruct j; simpl.
+    discriminate.
+    simpl in H. 
+    destruct j. 
+    simpl in H. discriminate.
+    destruct j.
+    simpl in H. discriminate.
+    destruct j.
+    simpl in H. discriminate.
+    destruct j.
+    simpl in H. discriminate.
+    destruct j.
+    simpl in H. discriminate.
+    destruct j.
+    simpl in H. discriminate.
+    simpl in H. discriminate.
+  * destruct j; simpl.
+    ** destruct i0; simpl.
+      discriminate.
+      destruct i0. discriminate.
+      destruct i0. discriminate.
+      destruct i0. discriminate.
+      destruct i0. discriminate.
+      destruct i0. discriminate.
+      destruct i0. discriminate.
+      discriminate. 
+      destruct i0; simpl.
+      ++ destruct j; simpl.
+      reflexivity.
+      intros. destruct j. discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl. simpl in H.
+      discriminate.
+      discriminate.
+      ++ destruct i0; simpl.
+      destruct j; simpl.
+      intros. discriminate.
+      destruct j; simpl. 
+      reflexivity.
+      destruct j; simpl. 
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      discriminate.
+      ++ destruct i0; simpl.
+      destruct j; simpl.
+      intros. discriminate.
+      destruct j; simpl. 
+      discriminate.
+      destruct j; simpl.
+      reflexivity.
+      destruct j; simpl. 
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      discriminate.
+      ++ destruct i0; simpl.
+      destruct j; simpl.
+      intros. discriminate.
+      destruct j; simpl. 
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      reflexivity.
+      destruct j; simpl. 
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      discriminate.
+      ++ destruct i0; simpl.
+      destruct j; simpl.
+      intros. discriminate.
+      destruct j; simpl. 
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      reflexivity.
+      destruct j; simpl. 
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      discriminate.
+      ++ destruct i0; simpl.
+      destruct j; simpl.
+      intros. discriminate.
+      destruct j; simpl. 
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      reflexivity.
+      destruct j; simpl. 
+      discriminate.
+      discriminate.
+      ++ destruct i0; simpl.
+      destruct j; simpl.
+      intros. discriminate.
+      destruct j; simpl. 
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl.
+      discriminate.
+      destruct j; simpl. 
+      reflexivity.    
+      simpl in Hi; lia.
+      ++ destruct i0; simpl.
+      simpl in Hi; lia.
+      simpl in Hi; lia.
+  - unfold FinFun.EqDec. 
+  decide equality.
+Defined.
+
+
+Definition controlComponent (node:type MyNodesFDT) : Kappa := 
+match node with 
+  | Process => 1
+  | Semantic => 0
+  | Component => 0
+  | NodeType => 0
+  | Persistent=> 0 
+  | Init => 0
+  | On  => 0
+end.
+
+Definition parentComponent (ns : type MyNodesFDT + fin 2) : 
+  type MyNodesFDT + fin 1 :=
+  match ns with 
+  | inl Process => inr zero1
+  | inl Semantic => inl Process
+  | inl Component => inl Semantic
+  | inl NodeType => inl Process
+  | inl Persistent => inl NodeType
+  | inl Init => inl Process
+  | inl On => inl Init
+  | inr (exist s' _) => 
+    match s' with 
+    | 0 => inl Component 
+    | _ => inr zero1
+    end
+end.
+
+Definition linkComponent (ip : NameSub EmptyNDL + Port controlComponent) : 
+  NameSub eNDL +  type voidfd.
+Proof.
+  destruct ip as [b|p].
+  + destruct b; elim i0.
+  + destruct p as [n ps]. 
+  destruct n eqn:E; simpl in ps; unfold Arity,id in ps; destruct ps as [i Hi]; try apply Nat.nlt_0_r in Hi; try elim Hi.
+  left. unfold NameSub. exists e. constructor. reflexivity.
+Defined. 
+
+Example componentBig : 
+  bigraph 2 EmptyNDL 1 eNDL.
+  Proof.
+  eapply (Big
+    2 EmptyNDL 1 eNDL (*s i r o*)
+    MyNodesFDT (*node*)
+    voidfd (*edge*)
+    controlComponent (*control*)
+    parentComponent (*parent*)
+    linkComponent (*link*)
+  ). 
+  unfold FiniteParent. simpl.
+  intros n.
+  destruct n. 
+  - (*Process*) 
+  apply Acc_intro.
+  intros u' H. discriminate H.
+  - (*Semantic*)
+  apply Acc_intro.
+  intros u' H.
+  apply Acc_intro.
+  intros u'' H'.
+  destruct u'; try discriminate.
+  - (*Component*)
+  apply Acc_intro.
+  intros u'' H'.
+  apply Acc_intro.
+  intros u''' H''.
+  apply Acc_intro.
+  intros x Hx.
+  destruct u''; try discriminate;
+  destruct u'''; try discriminate.
+  - (*NodeType*)
+  apply Acc_intro.
+  intros u' H.
+  apply Acc_intro.
+  intros u'' H'.
+  destruct u'; try discriminate.
+  - (*Persistent*)
+  apply Acc_intro.
+  intros u'' H'.
+  apply Acc_intro.
+  intros u''' H''.
+  apply Acc_intro.
+  intros x Hx.
+  destruct u''; try discriminate;
+  destruct u'''; try discriminate.
+  - (* Init*)
+  apply Acc_intro.
+  intros u' H.
+  apply Acc_intro.
+  intros u'' H'.
+  destruct u'; try discriminate.
+  - (*On*)
+  apply Acc_intro.
+  intros u'' H'.
+  apply Acc_intro.
+  intros u''' H''.
+  apply Acc_intro.
+  intros x Hx.
+  destruct u''; try discriminate;
+  destruct u'''; try discriminate.
   Defined. 
 
 (* #[export] Instance MyEqNat_refl_0 (x:nat) : MyEqNat x x.
@@ -226,6 +512,14 @@ destruct H; destruct H0.
 - elim H. 
 - elim H.
 Defined.
+
+Inductive mytypes :
+| Process 
+|Semantic
+
+Example ionProcess : bigraph 1 EmptyNDL 1 eNDL. 
+apply (ion Process )
+
 
 (*produit tensoriel implicite? *)
 Example simplBigboolOp := 

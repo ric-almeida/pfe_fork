@@ -366,19 +366,6 @@ Lemma mkFreshNamesNoReapeat (l:list Name) (o1o2:NoDupList) :
 
 (*VIRER que o1o2 est une NODUPLIST*)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 Lemma mkFreshNamesNoDup : forall l, forall o1o2, NoDup (mkFreshNames l o1o2).
 Proof. 
 intros. induction l.
@@ -410,20 +397,64 @@ assert (MH:forall n, forall l, In n (ndlist l) -> forall l', ~ In n (mkFreshName
  admit. 
 Admitted. *)
 
-(* Definition bigraph_parallel_product' {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+(*function that makes a list of n elements that are not in o where o is o1 ∪ o2 *)
+Definition freshNames (o:list Name) (n:nat): list Name.
+Admitted.
+
+Fixpoint substitution_list (i:list Name) (o:list Name)
+  (ndi : NoDup i) (ndo : NoDup o)
+  (H:length i = length o) : bigraph_packed. 
+  eapply 
+  (match i with 
+  |[] => packing bigraph_empty 
+  |ti::qi => 
+    match o with 
+    | [] => packing bigraph_empty (*impossible case*)
+    | to ::qo => 
+      let slp := 
+        (substitution_list 
+          qi 
+          qo 
+          (nodup_tl ti qi _) 
+          (nodup_tl to qo _) _) in _      
+    end
+  end).
+  Unshelve.
+  
+  set (s := substitution (mkNoDupList [ti] (noDupSingle ti)) to).
+  set (sp := packing s).
+  assert (i = ti::qi). { auto. admit. }
+  rewrite H0 in ndi.
+  apply NoDup_cons_iff in ndi. destruct ndi.
+  set (slp := (substitution_list qi qo H2 ndo _)).
+  exists (bigraph_packed_tp sp (substitution_list qi qo _ _ _)). 
+
+(* Definition substitution_list (i:NoDupList) (o:NoDupList)
+  (H:length i = length o) :=
+  fold_left 
+    (fun qt t => packing (bigraph_packed_tp (packing (substitution EmptyNDL t)) qt))
+    (ndlist i) 
+    (packing bigraph_empty). *)
+
+
+Definition bigraph_parallel_product' {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
   {up : UnionPossible b1 b2}
     : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) (r1 + r2) (app_merge_NoDupList o1 o2).
 Proof.
-set (FN := mkFreshNames (o1 ∩ o2) (app_merge_NoDupList o1 o2)).
-set (FNNDL := mkNoDupList FN (mkFreshNamesNoDup (o1 ∩ o2) (app_merge_NoDupList o1 o2))).
+set (lenInterOuternames := length (o1 ∩ o2)).
+set (NO := freshNames (o1 ∪ o2) lenInterOuternames).
+set (NO' := freshNames ((o1 ∪ o2) ++ NO) lenInterOuternames). (*++ could be ∪ if i can prove freshNames gives NDL*)
+set (lenInterInnernames := length (i1 ∩ i2)).
+set (NI := freshNames (i1 ∪ i2) lenInterInnernames).
+set (NI' := freshNames ((i1 ∪ i2) ++ NI) lenInterInnernames).
 
 (*exact (
   ((substitution (o1 ∩ o2) (freshName (app_merge_NoDupList o1 o2))) <<o>> b1) 
     ⊗
   ((substitution (o1 ∩ o2) (freshName (app_merge_NoDupList o1 o2))) <<o>> b2) 
   ).  *)
-  Admitted. *)
+  Admitted.
 
 Global Notation "b1 || b2" := (bigraph_parallel_product b1 b2) (at level 50, left associativity).
 
