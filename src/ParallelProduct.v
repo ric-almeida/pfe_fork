@@ -397,10 +397,14 @@ assert (MH:forall n, forall l, In n (ndlist l) -> forall l', ~ In n (mkFreshName
  admit. 
 Admitted. *)
 
+
+
 (*function that makes a list of n elements that are not in o where o is o1 ∪ o2 *)
 Definition freshNames (o:list Name) (n:nat): list Name.
 Admitted.
 
+(* makes a list of elementary substitutions from i(n) to o(n) with n<length(i)*)
+(*not in galina bc can't write H directly in it, for some reason it forgets that i=ti::qi*)
 Fixpoint substitution_list (i:list Name) (o:list Name)
   (H:length i = length o) : list bigraph_packed. 
   induction i as [|ti qi Hi].
@@ -416,6 +420,8 @@ Fixpoint substitution_list (i:list Name) (o:list Name)
   exact (sp::slp).
   Defined.
 
+(*function that computes the tensor product of a list of substitutions (need ndi ndo to prove disjointness of the names and do the tensor product)*)
+(*can't compute the output type i think that's why it never compile this Definition*)
 Definition tp_substitution_list (i:list Name) (o:list Name)
   (ndi : NoDup i) (ndo : NoDup o)
   (H:length i = length o) :=
@@ -423,9 +429,9 @@ Definition tp_substitution_list (i:list Name) (o:list Name)
   fold_left 
     (fun qt t => bigraph_tensor_product (dis_i := _) (dis_o := _) (unpacking t) (unpacking qt))
     slist 
-    bigraph_empty.
+    bigraph_empty. 
 
-Fixpoint substitution_tp (i:list Name) (o:list Name)
+(* Fixpoint substitution_tp (i:list Name) (o:list Name)
   (ndi : NoDup i) (ndo : NoDup o)
   (H:length i = length o) : bigraph_packed.
   Proof. 
@@ -453,7 +459,7 @@ end eq_refl)).
 fold Hlength in H1. remove Hlength.
   destruct H1.
   simpl in H1. 
-   unfold substitution_tp.
+   unfold substitution_tp. *)
 
   (* set (sp := packing s).
   assert (Hl : length qi = length qo). {rewrite length_head in H. rewrite length_head in H.
@@ -497,6 +503,13 @@ Definition tp_list (i:list Name) (o:list Name)
     (packing bigraph_empty). *)
 
 
+(*function that makes a substitution of i union i' to o by connecting i(n) and i'(n) to o*)
+Definition tp_substitution_two_list (i:list Name) (i':list Name) (o:list Name)
+  (ndi : NoDup i) (ndi' : NoDup i') (ndo : NoDup o)
+  (H:length i = length o) (H':length i' = length o) := True.
+
+
+(*A definition of bigraph_parallel_product that derives from tensor product and composition*)
 Definition bigraph_parallel_product' {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
   {up : UnionPossible b1 b2}
@@ -508,13 +521,25 @@ set (NO' := freshNames ((o1 ∪ o2) ++ NO) lenInterOuternames). (*++ could be �
 set (lenInterInnernames := length (i1 ∩ i2)).
 set (NI := freshNames (i1 ∪ i2) lenInterInnernames).
 set (NI' := freshNames ((i1 ∪ i2) ++ NI) lenInterInnernames).
+set (sub_NO_o1intero2 := tp_substitution_list (o1 ∩ o2) NO). 
+set (sub_NO'_o1intero2 := tp_substitution_list (o1 ∩ o2) NO'). 
+set (sub_i1interi2_NI := tp_substitution_list NI (i1 ∩ i2)). 
+set (sub_i1interi2_NI' := tp_substitution_list NI' (i1 ∩ i2)). 
+set (sub_o1intero2_NOunionNO' := tp_substitution_two_list NO NO' (o1 ∩ o2)).
+set (sub_NIunionNI'_i1interi2 := tp_substitution_two_list NI NI' (i1 ∩ i2)).
 
-(*exact (
-  ((substitution (o1 ∩ o2) (freshName (app_merge_NoDupList o1 o2))) <<o>> b1) 
+(*exact ( 
+  sub_o1intero2_NOunionNO' <<o>>
+  (sub_NO_o1intero2 <<o>> b1 <<o>> sub_i1interi2_NI) 
     ⊗
-  ((substitution (o1 ∩ o2) (freshName (app_merge_NoDupList o1 o2))) <<o>> b2) 
-  ).  *)
+  (sub_NO'_o1intero2 <<o>> b2 <<o>> sub_i1interi2_NI') 
+  <<o>>
+  sub_NIunionNI'_i1interi2).  *)
   Admitted.
+
+
+Theorem eq_bigraph_parallel_product : 
+  bigraph_equality (bigraph_parallel_product b1 b2) (bigraph_parallel_product' b1 b2).
 
 Global Notation "b1 || b2" := (bigraph_parallel_product b1 b2) (at level 50, left associativity).
 
