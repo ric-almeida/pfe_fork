@@ -420,16 +420,89 @@ Fixpoint substitution_list (i:list Name) (o:list Name)
   exact (sp::slp).
   Defined.
 
+
 (*function that computes the tensor product of a list of substitutions (need ndi ndo to prove disjointness of the names and do the tensor product)*)
 (*can't compute the output type i think that's why it never compile this Definition*)
-Definition tp_substitution_list (i:list Name) (o:list Name)
-  (ndi : NoDup i) (ndo : NoDup o)
-  (H:length i = length o) :=
-  let slist := substitution_list i o H in 
-  fold_left 
+Fixpoint tp_substitution_list (i:NoDupList) (o:NoDupList) 
+  (H:length i = length o) : bigraph 0 i 0 o. 
+  Proof.
+  destruct i as [i ndi].
+  destruct o as [o ndo].
+  induction i as [|ti qi Hi].
+  - assert ({| ndlist := []; nd := ndi |} = EmptyNDL).
+    + apply nodupproofirrelevant. reflexivity.
+    + rewrite H0. assert ({| ndlist := o; nd := ndo |} = EmptyNDL).
+    * inversion H. symmetry in H2. apply length_zero_iff_nil in H2. unfold EmptyNDL.
+      apply nodupproofirrelevant. apply H2. 
+      rewrite H1. exact bigraph_empty.
+  - induction o as [|to qo Ho].
+  + exfalso. simpl in H. apply PeanoNat.Nat.neq_succ_0 in H. apply H.
+  + set (s := substitution (OneelNDL ti) to).
+  assert (Hl : length qi = length qo). { simpl in H. inversion H. reflexivity. }
+  set (slp := tp_substitution_list (mkNoDupList qi (nodup_tl ti qi ndi)) (mkNoDupList qo (nodup_tl to qo ndo)) Hl).
+  assert (dis_i' : (i s)#(i slp)). 
+  * constructor. simpl. intros n [Hin|] Hin'. 
+  subst n. inversion ndi. contradiction. apply H0. 
+  * assert (dis_o' : (o s)#(o slp)). 
+  ** constructor. simpl. intros n [Hon|] Hon'. 
+  subst n. inversion ndo. contradiction. apply H0. 
+  ** assert (ParallelProduct.s s + ParallelProduct.s slp = 0).
+  { simpl. reflexivity. }
+  assert (i s ∪ i slp = {| ndlist := ti :: qi; nd := ndi |}).
+  { simpl. unfold app_merge_NoDupList.
+  apply nodupproofirrelevant. 
+  simpl.
+  destruct (in_dec EqDecN ti qi). 
+  inversion ndi. contradiction. reflexivity. }
+  assert (o s ∪ o slp = {| ndlist := to :: qo; nd := ndo |}).
+  { simpl. unfold app_merge_NoDupList.
+  apply nodupproofirrelevant. 
+  simpl.
+  destruct (in_dec EqDecN to qo). 
+  inversion ndo. contradiction. reflexivity. }
+  rewrite <- H0.
+  rewrite <- H1.
+  rewrite <- H2.
+  eapply ( 
+    bigraph_tensor_product 
+      (dis_i := dis_i') 
+      (dis_o := dis_o') (unpacking s) (unpacking slp)
+  ).
+  Fail Defined. (*Cannot guess decreasing argument :'()*)
+  Admitted.
+
+(*function that computes the tensor product of a list of substitutions (need ndi ndo to prove disjointness of the names and do the tensor product)*)
+(*can't compute the output type i think that's why it never compile this Definition*)
+Definition tp_substitution_list (i:NoDupList) (o:NoDupList)
+  (H:length i = length o) : bigraph 0 i 0 o.
+  set (slist := substitution_list i o H).
+  induction slist as [|s slist' Hs] eqn:Eslist.
+  - assert (i=EmptyNDL). 
+    + admit.
+    + assert (o=EmptyNDL). 
+    * clear Eslist. clear slist. rewrite H0 in H. inversion H.
+    symmetry in H2. apply length_zero_iff_nil in H2. unfold EmptyNDL.
+    apply nodupproofirrelevant. apply H2.
+    * rewrite H0. rewrite H1. exact bigraph_empty.
+  - destruct s as [s_subst i_subst r_subst o_subst big_subst].
+  destruct i_subst as [i_subst Hi_subst].
+  assert (exists i_subst_el, i_subst = i_subst_el::[]).
+  + admit.
+  + destruct H0.
+  
+   eapply (
+    bigraph_tensor_product 
+      (dis_i := _) 
+      (dis_o := _) (unpacking s) (tp_substitution_list )
+  ).
+  
+  unfold slist in Eslist.
+   
+  eapply  
+  (fold_left 
     (fun qt t => bigraph_tensor_product (dis_i := _) (dis_o := _) (unpacking t) (unpacking qt))
     slist 
-    bigraph_empty. 
+    bigraph_empty). 
 
 (* Fixpoint substitution_tp (i:list Name) (o:list Name)
   (ndi : NoDup i) (ndo : NoDup o)
