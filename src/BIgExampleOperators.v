@@ -466,9 +466,9 @@ exists (e::aNDL). constructor; auto.
 Defined. 
 
 
-Compute (mkFreshNames eNDL eaNDL).
-Compute (mkFreshNames eNDL eNDL).
-Compute (mkFreshNames EmptyNDL eNDL).
+Compute (freshNames eNDL 1).
+Compute (freshNames eNDL 2).
+Compute (freshNames EmptyNDL 3).
 
 Definition myPN : PermutationNames
      (app_merge_NoDupList

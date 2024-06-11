@@ -1195,6 +1195,170 @@ Theorem intersection_eqNDL {i1 i2 : NoDupList} {i : Name} :
     apply intersection_eq. 
   Qed.
 
+Fixpoint inb (x : Name) (l : list Name) : bool :=
+    match l with
+    | [] => false
+    | y :: ys => if EqDecN x y then true else inb x ys
+    end.
+
+Lemma inb_eq_in (x : Name) (l : list Name) : 
+  match inb x l with
+  | true => In x l
+  | false => ~ In x l
+  end.
+  Proof.
+  induction l.
+  simpl. auto.
+  simpl. destruct (EqDecN x a).
+  left. auto.
+  destruct (inb x l) eqn:H.
+  right. apply IHl.
+  unfold not.
+  intros.
+  destruct H0.
+  auto. auto.
+  Qed.
+
+Lemma in_eq_inb (x : Name) (l : list Name) :
+  In x l <-> inb x l = true.
+  Proof. split. 
+  - intros.
+  unfold inb.
+  induction l.
+  elim H.
+  simpl in *.
+  destruct (EqDecN x a).
+  reflexivity.
+  destruct H. exfalso. apply n. symmetry. apply H.
+  apply IHl. apply H.
+  - intros. set (inb_eq_in x l).
+  rewrite H in y. apply y.
+  Qed.
+
+Lemma in_eq_inb_neg (x : Name) (l : list Name) :
+  ~ In x l <-> inb x l = false.
+  Proof. split. 
+  - intros.
+  unfold inb.
+  induction l.
+  reflexivity.
+  simpl in *.
+  destruct (EqDecN x a).
+  destruct H. 
+  left. symmetry. apply e.
+  apply IHl.
+  apply Decidable.not_or in H.
+  destruct H.
+  apply H0. 
+  - intros. set (inb_eq_in x l).
+  rewrite H in y. apply y.
+  Qed.
+
+Definition not_in_intersection (i1 i2 : NoDupList) : NoDupList.
+  Proof.
+  exists 
+  (filter
+    (fun i => negb (inb i (intersectionNDL i1 i2)))
+    (i1 ∪ i2)).
+  apply NoDup_filter.
+  apply NoDup_app_merge; 
+  destruct i1; destruct i2; auto.
+  Defined.
+
+Open Scope bool_scope.
+
+Definition not_in_intersection_inl (i1 i2 : NoDupList) : NoDupList.
+  Proof.
+  exists 
+  (filter
+    (fun i => negb (inb i (intersectionNDL i1 i2)) && inb i i1)
+    (i1 ∪ i2)).
+  apply NoDup_filter.
+  apply NoDup_app_merge; 
+  destruct i1; destruct i2; auto.
+  Defined.
+
+Theorem not_in_intersection_inl_ini1 (i1 i2 : NoDupList) : 
+  forall n, 
+  In n (not_in_intersection_inl i1 i2) -> In n i1.
+  intros.
+  destruct i1 as [i1 ndi1]. simpl in *.
+  apply filter_In in H.
+  destruct H.
+  apply Bool.andb_true_iff in H0.
+  destruct H0.
+  apply in_eq_inb. apply H1.
+  Qed. 
+
+Theorem not_in_intersection_inl_notini2 (i1 i2 : NoDupList) : 
+  forall n, 
+  In n (not_in_intersection_inl i1 i2) -> ~ In n i2.
+  intros.
+  destruct i1 as [i1 ndi1]. simpl in *.
+  apply filter_In in H.
+  destruct H.
+  apply Bool.andb_true_iff in H0.
+  destruct H0.
+  unfold not. intros.
+  apply in_eq_inb in H1.
+  apply Bool.negb_true_iff in H0.
+  apply in_eq_inb_neg in H0.
+  apply H0. apply in_both_in_intersection; auto.
+  Qed. 
+
+Theorem not_in_intersection_inl_OK (i1 i2 : NoDupList) : 
+  forall n, 
+  In n (not_in_intersection_inl i1 i2) -> In n i1 /\ ~ In n i2.
+  intros. split.
+  apply (not_in_intersection_inl_ini1 i1 i2); assumption.
+  apply (not_in_intersection_inl_notini2 i1 i2); assumption.
+  Qed.
+
+
+Theorem merge_not_inl_and_inl (i1 i2 : NoDupList) : 
+  permutation 
+    i1
+    (app_merge' (intersectionNDL i1 i2) (not_in_intersection_inl i1 i2)).
+  unfold permutation.
+  intros.
+  split;intros; simpl in *.
+  - destruct i1 as [i1 ndi1]. simpl in *.
+    apply in_app_iff.
+    destruct (inb name (myintersection i1 i2)) eqn:E.
+    + left. induction (myintersection i1 i2) as [|inter qinter Hinter].
+    discriminate E. simpl. simpl in E.
+    destruct (EqDecN name inter). subst name. left. reflexivity. 
+    right. apply Hinter. apply E.
+    + right.
+    apply filter_In.
+    split. 
+    * apply in_left_list. apply H.
+    * apply Bool.andb_true_iff. split.
+    apply Bool.negb_true_iff. apply E.
+    apply in_eq_inb in H. apply H.
+  - apply in_app_iff in H.
+    destruct H.
+    + apply from_intersection_left in H. apply H.
+    + apply filter_In in H.
+    destruct H. 
+    apply Bool.andb_true_iff in H0.
+    destruct H0.
+    set (inb_eq_in name i1).
+    rewrite H1 in y. apply y.
+  Qed.
+
+
+  Theorem disjoint_not_in_inter_inter (i1 i2 : NoDupList) : forall n : Name, In n (intersectionNDL i1 i2) -> In n (not_in_intersection_inl i1 i2) -> False.
+  unfold intersectionNDL. simpl.
+  intros n H H'.
+  apply filter_In in H'.
+  destruct H'.
+  apply Bool.andb_true_iff in H1.
+  destruct H1.
+  apply Bool.negb_true_iff in H1.
+  apply in_eq_inb in H. rewrite H in H1. discriminate H1.
+  Qed.
+
 End IntersectionNDL.
 
 Global Notation "l1 ∩ l2" := (intersectionNDL l1 l2) (at level 50, left associativity).
@@ -1278,7 +1442,11 @@ Defined.
 constructor. rewrite merge_left_neutral. exact (permutation_id []).
 Defined.
 
-
+#[export] Instance permutation_not_in_inter {o1 o2} : 
+  PermutationNames o1 ((o1 ∩ o2) ∪ (not_in_intersection_inl o1 o2)).
+  Proof.
+  constructor. apply (merge_not_inl_and_inl o1 o2).
+  Qed.
 
 End Names.
 

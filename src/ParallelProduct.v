@@ -116,470 +116,127 @@ Definition bigraph_parallel_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList
   + exact (ap _ _ _ _ b2).
   Defined. 
 
-Definition twoFreshNames (o1uniono2:NoDupList) (l:list Name) (e:Name): list Name := 
-  let fn := freshName (e::l++o1uniono2) in 
-  fn :: [freshName (fn::e::o1uniono2)].
+Theorem freshName_merge_list : forall l l', ~ In (freshName (app_merge' l l')) l.
+Proof.
+intros.
+set (notInfreshName (app_merge' l l')).
+unfold not in *. intros. apply n. apply in_left_list. apply H.
+Qed.
 
-Definition mkFreshNames (o1:NoDupList) (o2:NoDupList) : list Name
-  := 
-  fold_left 
-    (twoFreshNames (o1 ∪ o2))
-    (o1 ∩ o2)
-    [] 
-    . 
-
-Compute (mkFreshNames EmptyNDL EmptyNDL).
-  
-Lemma mkFreshNamesHeadOK (o1:NoDupList) (o2:NoDupList) :
-  match mkFreshNames o1 o2 with 
-  | [] => True 
-  | t::q => ~ In t (o1 ∪ o2) 
-  end.
-  Proof. 
-  destruct (mkFreshNames o1 o2) eqn:E; auto.
-  unfold mkFreshNames in E.
-  unfold fold_left in E.
-  simpl in E.
-  unfold twoFreshNames in E.
-  simpl in E.
-  simpl in *. 
-  induction (myintersection o1 o2) eqn:Hinter.
-  - discriminate E.
-  - simpl in *.
-  apply IHl0.
-
-  Admitted.
-
-
-Definition twoFreshNames' (o1uniono2:list Name) (l:list Name) (e:Name): list Name := 
-  let fn := freshName (e::l++o1uniono2) in 
-  fn :: [freshName (fn::e::l++o1uniono2)].
-
-Theorem notInFreshName_hd : forall l t,
-  ~ In (freshName (t::l)) l.
-  Proof. 
-    intros.
-    unfold not. intros.
-    induction l.
-    elim H.
-    destruct H.
-    * set (H' := notInfreshName (t :: a :: l)).
-    apply H'.
-    rewrite <- H.
-    simpl. right. left. reflexivity.
-    * set (H' := notInfreshName (t :: a :: l)).
-    apply H'.
-    apply in_split in H. 
-    destruct H as [l1 [l2 H]].
-    set (fn := freshName (t :: a :: l)).
-    rewrite H.
-    simpl. right. right. 
-    apply in_or_app.
-    right. left. reflexivity.
-  Qed.
-
-Theorem notInFreshName_hd_lst : forall l l',
-  ~ In (freshName (l'++l)) l.
-  Proof.
-    intros.
-    induction l'.
-    simpl. apply notInfreshName.
-    simpl.
-    unfold not. intros.
-    set (H' := notInfreshName (a :: l' ++ l)).
-    apply H'.
-    apply in_split in H. 
-    destruct H as [l1 [l2 H]].
-    set (fn := freshName (a :: l' ++ l)).
-    rewrite H.
-    simpl. right.
-    apply in_or_app. right.
-    apply in_or_app. right. simpl. left. reflexivity.
-  Qed.
-
-
-Lemma notInTwoFreshName (o1uniono2:list Name) (l:list Name) (e:Name) :
-  match twoFreshNames' o1uniono2 l e with 
-  |[] => False 
-  |fn::fn'::[] => ~ In fn (l++o1uniono2) /\ ~ In fn' (l++o1uniono2) /\ fn <> fn'
-  |_::_ => False
-  end.
-  Proof.
-    unfold twoFreshNames'. split.
-    change (~ In (freshName ([e] ++ (l ++ o1uniono2))) (l ++ o1uniono2)).
-    apply notInFreshName_hd_lst.
-    split.
-    set (fn := freshName (e :: l ++ o1uniono2)).
-    change (~ In (freshName ((fn :: [e])  ++ (l ++ o1uniono2))) (l ++ o1uniono2)).
-    apply notInFreshName_hd_lst.
-    unfold not. intros.
-    set (fn := freshName (e :: l ++ o1uniono2)).
-    fold fn in H.
-    apply (notInfreshName (fn :: e :: l ++ o1uniono2)). 
-    set (fn' := freshName (fn :: e :: l ++ o1uniono2)).
-    assert (fn = fn'). rewrite H. reflexivity.
-    rewrite H0. constructor. reflexivity.
-  Qed.
-
-Definition twoFreshNames'' (l:list Name): list Name := 
-  let fn := freshName (l) in 
-  fn :: [freshName (fn::l)].
-
-Definition mkFreshNames' (o1:list Name) (o2:list Name) : list Name
-  := 
-  fold_left 
-    (fun myOldFreshNames _ => (twoFreshNames'' (o1 ++ o2 ++ myOldFreshNames)) ++ myOldFreshNames)
-    (myintersection o1 o2)
-    [] 
-    .  
-
-(* Check fold_left.
-
-Compute (mkFreshNames' [] []). *)
-  
-Lemma mkFreshNamesHeadOK' (o1:list Name) (o2:list Name) :
-  match mkFreshNames' o1 o2 with 
-  | [] => True 
-  | t::q => ~ In t (o1 ++ o2) 
-  end.
-  Proof. 
-  destruct (mkFreshNames' o1 o2) eqn:E; auto.
-  set (inter := myintersection o1 o2).
-  unfold not.
-  intros. 
-  induction inter as [|in_inter inter' IHinter] eqn:Einter.
-  - unfold mkFreshNames' in E.
-  unfold fold_left in E.
-  fold inter in E.
-  rewrite Einter in E.
-  discriminate E.
-  - unfold mkFreshNames' in E.
-  fold inter in E.
-  rewrite Einter in E.
-  simpl in E.
-  (* set (fnn := twoFreshNames'' (o1 ++ o2) [] in_inter).
-  fold fnn in E.
-  unfold twoFreshNames' in E. *)
-
-  Admitted.
-
-
-
-
-
-
-
-
-
-
-
-  
-(* 
-Lemma mkFreshNamesOK (l:list Name) (o1o2:NoDupList) :
-  forall t, In t (mkFreshNames' l o1o2) -> ~ In t o1o2.
-  Proof.
-  intros.
-  (* unfold mkFreshNames' in H. *)
-  induction l.
-  - elim H.
-  -  destruct H as [H|H].
-  + destruct H. apply notInfreshName.
-  + destruct (EqDecN t (freshName o1o2)).
-  * rewrite e. apply notInfreshName.
-  * apply IHl.
-  unfold mkFreshNames' in H.
-  simpl in H. 
-
-
-  Admitted. 
-
-Lemma mkFreshNamesNoRepeat (l:list Name) (o1o2:NoDupList) :
-  match mkFreshNames' l o1o2 with 
-  | [] => True 
-  | t::q => ~ In t q
-  end.
-  Proof. induction l. 
-  - simpl. auto. 
-  - simpl. unfold app_merge_NoDupList. simpl.
-  set (fn := freshName o1o2). 
-  (* apply (mkFreshNamesOK).  *)
-  Admitted. *)
-
-(* 
-
-Fixpoint mkFreshNames''' (l:list Name) (o1o2:NoDupList) : list Name :=
-  match l with 
-  | [] => []
-  | t::q =>  let fn := freshName o1o2 in 
-  fn :: mkFreshNames q (app_merge_NoDupList o1o2 (mkNoDupList [fn] (noDupSingle fn)))
-  end.
-
-Lemma mkFreshNamesOK (l:list Name) (o1o2:NoDupList) :
-  match mkFreshNames l o1o2 with 
-  | [] => True 
-  | t::q => ~ In t o1o2 
-  end.
-  Proof. induction l. 
-  - simpl. auto. 
-  - simpl. apply notInfreshName. 
-  Qed. 
-
-
-Lemma mkFreshNamesOK' (l:list Name) (o1o2:NoDupList) :
-  forall t, In t (mkFreshNames l o1o2) -> ~ In t o1o2.
-  Proof.
-  intros.
-  apply in_split in H. 
-  destruct H as [l1 [l2 H]].
-  induction l1.  
-  - simpl in H.  set (H' := mkFreshNamesOK l o1o2). 
-  rewrite H in H'. 
-  apply H'.
-  - induction l. 
-  + simpl in *. discriminate H.  
-  + apply IHl. 
-  * rewrite <- H. 
-
-   apply IHl1. 
-
-
-
-
-  Admitted. 
-
-
-
-
-Lemma mkFreshNamesNoReapeat (l:list Name) (o1o2:NoDupList) :
-  match mkFreshNames l o1o2 with 
-  | [] => True 
-  | t::q => ~ In t q
-  end.
-  Proof. induction l. 
-  - simpl. auto. 
-  - simpl. unfold app_merge_NoDupList. simpl.
-  set (fn := freshName o1o2). 
-  (* apply (mkFreshNamesOK).  *)
-  Admitted.
-  (* mkFreshNames. simpl.  *)
-
-
-(*VIRER que o1o2 est une NODUPLIST*)
-
-Lemma mkFreshNamesNoDup : forall l, forall o1o2, NoDup (mkFreshNames l o1o2).
-Proof. 
-intros. induction l.
-- auto. unfold mkFreshNames. constructor.
--  
-assert (MH:forall n, forall l, In n (ndlist l) -> forall l', ~ In n (mkFreshNames l' l)).
-* intros. destruct l0 as [l0 HL0].
-  induction l0. 
-  ** simpl in H. elim H.
-  ** induction l'. 
-  *** auto. 
-  *** simpl. unfold not. intros H'. destruct H' as[H'|H'].
-  **** 
-  destruct HL0 as [| n' l'' HL0].
-  -- elim H. 
-  -- destruct H. destruct H. apply (notInfreshName (n'::l'')).
-  rewrite H'. constructor. reflexivity.
-  **** destruct H'. 
-  assert (~ In (freshName (n' :: l'')) l''). 
-  ++ clear IHl'. clear IHl0. 
-  unfold not. intros. apply (notInfreshName (n'::l'')). simpl. 
-  right. apply H. 
-  ++ apply H0. apply H. 
-  **  admit. 
-* constructor. 
-** admit.
-** 
-
- admit. 
-Admitted. *)
-
-
+Theorem freshName_merge_list_opp : forall l l', 
+  ~ In (freshName (app_merge' l' l)) l.
+Proof.
+intros.
+set (notInfreshName (app_merge' l' l)).
+unfold not in *. intros. apply n. apply in_right_list. apply H.
+Qed.
 
 (*function that makes a list of n elements that are not in o where o is o1 ∪ o2 *)
-Definition freshNames (o:list Name) (n:nat): list Name.
-Admitted.
+Definition freshNames (o:NoDupList) (n:nat): NoDupList.
+Proof.
+induction n.
+- exact EmptyNDL.
+- exists (freshName (IHn ∪ o) ::IHn).
+constructor. apply freshName_merge_list.
+apply (nd IHn).
+Defined.
 
-(* makes a list of elementary substitutions from i(n) to o(n) with n<length(i)*)
-(*not in galina bc can't write H directly in it, for some reason it forgets that i=ti::qi*)
-Fixpoint substitution_list (i:list Name) (o:list Name)
-  (H:length i = length o) : list bigraph_packed. 
-  induction i as [|ti qi Hi].
-  - exact ([]).
-  - induction o as [|to qo Ho].
-  + exfalso. simpl in H. apply PeanoNat.Nat.neq_succ_0 in H. apply H.
-  +  
-  set (s := substitution (mkNoDupList [ti] (noDupSingle ti)) to).
-  set (sp := packing s).
-  assert (Hl : length qi = length qo). {rewrite length_head in H. rewrite length_head in H.
-  inversion H. reflexivity. }
-  set (slp := substitution_list qi qo Hl).
-  exact (sp::slp).
-  Defined.
+Lemma freshnamesOK (o:NoDupList) (len:nat) :
+  forall n, In n (freshNames o len) -> 
+    ~ In n o.
+  intro n.  
+  induction len as [|len' IHlen].
+  - intros. elim H.
+  - unfold freshNames. simpl. intros.
+  destruct H.
+  + subst n.
+  unfold not.
+  intros.
+  set (tmp := nat_rect (fun _ : nat => NoDupList) EmptyNDL (fun (_ : nat) (IHn : NoDupList) => {| ndlist := freshName (app_merge' IHn o) :: IHn; nd := NoDup_cons (freshName (app_merge' IHn o)) (freshName_merge_list IHn o) (nd IHn) |}) len').
+  fold tmp in H.
+  apply (freshName_merge_list_opp o tmp); assumption.
+  + unfold not. intros.
+  apply IHlen; auto.
+  Qed. 
+
+Theorem freshnames_correct_length (o:NoDupList) (len:nat) :
+  length (freshNames o len) = len.
+  Proof.
+  induction len.
+  - auto.
+  - simpl. rewrite IHlen. reflexivity.
+  Qed. 
+
+Theorem freshNamesdisjoint (o1:NoDupList) (o2:NoDupList) (len:nat) : forall n : Name, In n (freshNames (o1 ∪ o2) len) -> In n (not_in_intersection_inl o1 o2) -> False.
+  intros.
+  apply not_in_intersection_inl_OK in H0.
+  destruct H0 as [Ho1 Hno2].
+  apply freshnamesOK in H.
+  destruct H.
+  simpl.
+  apply in_left_list. apply Ho1.
+  Qed.
+
+#[export] Instance disj_freshNames (l1 l2 : NoDupList) (len:nat): 
+  DisjointNames (freshNames (l1 ∪ l2) len) (not_in_intersection_inl l1 l2).
+  Proof.
+  constructor.
+  apply freshNamesdisjoint.
+  Qed.
 
 
-(*function that computes the tensor product of a list of substitutions (need ndi ndo to prove disjointness of the names and do the tensor product)*)
-(*can't compute the output type i think that's why it never compile this Definition*)
-Fixpoint tp_substitution_list (i:NoDupList) (o:NoDupList) 
+(*function that computes the tensor product of a list of substitutions 
+(need ndi ndo to prove disjointness of the names and do the tensor product)*)
+Definition tp_substitution_list (i:NoDupList) (o:NoDupList) 
   (H:length i = length o) : bigraph 0 i 0 o. 
   Proof.
-  destruct i as [i ndi].
-  destruct o as [o ndo].
-  induction i as [|ti qi Hi].
+  destruct i as [i ndi]. 
+  revert o H ; induction i as [|ti qi Hi] ; intros [o ndo] H.
   - assert ({| ndlist := []; nd := ndi |} = EmptyNDL).
     + apply nodupproofirrelevant. reflexivity.
     + rewrite H0. assert ({| ndlist := o; nd := ndo |} = EmptyNDL).
     * inversion H. symmetry in H2. apply length_zero_iff_nil in H2. unfold EmptyNDL.
-      apply nodupproofirrelevant. apply H2. 
-      rewrite H1. exact bigraph_empty.
+      apply nodupproofirrelevant.  simpl. apply H2.  
+      rewrite H1.  exact bigraph_empty.
   - induction o as [|to qo Ho].
-  + exfalso. simpl in H. apply PeanoNat.Nat.neq_succ_0 in H. apply H.
-  + set (s := substitution (OneelNDL ti) to).
-  assert (Hl : length qi = length qo). { simpl in H. inversion H. reflexivity. }
-  set (slp := tp_substitution_list (mkNoDupList qi (nodup_tl ti qi ndi)) (mkNoDupList qo (nodup_tl to qo ndo)) Hl).
-  assert (dis_i' : (i s)#(i slp)). 
-  * constructor. simpl. intros n [Hin|] Hin'. 
-  subst n. inversion ndi. contradiction. apply H0. 
-  * assert (dis_o' : (o s)#(o slp)). 
-  ** constructor. simpl. intros n [Hon|] Hon'. 
-  subst n. inversion ndo. contradiction. apply H0. 
-  ** assert (ParallelProduct.s s + ParallelProduct.s slp = 0).
-  { simpl. reflexivity. }
-  assert (i s ∪ i slp = {| ndlist := ti :: qi; nd := ndi |}).
-  { simpl. unfold app_merge_NoDupList.
-  apply nodupproofirrelevant. 
-  simpl.
-  destruct (in_dec EqDecN ti qi). 
-  inversion ndi. contradiction. reflexivity. }
-  assert (o s ∪ o slp = {| ndlist := to :: qo; nd := ndo |}).
-  { simpl. unfold app_merge_NoDupList.
-  apply nodupproofirrelevant. 
-  simpl.
-  destruct (in_dec EqDecN to qo). 
-  inversion ndo. contradiction. reflexivity. }
-  rewrite <- H0.
-  rewrite <- H1.
-  rewrite <- H2.
+    +  exfalso. simpl in H. apply PeanoNat.Nat.neq_succ_0 in H. apply H.
+    +  set (s := substitution (OneelNDL ti) to).
+    assert (Hl : length qi = length qo). { simpl in H. inversion H. reflexivity. }
+    set (slp := (Hi (nodup_tl ti qi ndi) (mkNoDupList qo (nodup_tl to qo ndo)) Hl)).
+    assert (dis_i' : (i s)#(i slp)). 
+    * constructor. simpl. intros n [Hin|] Hin'. 
+    subst n. inversion ndi. contradiction. apply H0. 
+    * assert (dis_o' : (o s)#(o slp)). 
+    ** constructor. simpl. intros n [Hon|] Hon'. 
+    subst n. inversion ndo. contradiction. apply H0.
+    assert (i s ∪ i slp = {| ndlist := ti :: qi; nd := ndi |}).
+    { simpl. unfold app_merge_NoDupList.
+    apply nodupproofirrelevant. 
+    simpl.
+    destruct (in_dec EqDecN ti qi). 
+    inversion ndi. contradiction. reflexivity. }
+    assert (o s ∪ o slp = {| ndlist := to :: qo; nd := ndo |}).
+    { simpl. unfold app_merge_NoDupList.
+    apply nodupproofirrelevant. 
+    simpl.
+    destruct (in_dec EqDecN to qo). 
+    inversion ndo. contradiction. reflexivity. }
+    rewrite <- H0.
+    rewrite <- H1.
   eapply ( 
     bigraph_tensor_product 
       (dis_i := dis_i') 
-      (dis_o := dis_o') (unpacking s) (unpacking slp)
+      (dis_o := dis_o') s (Hi (nodup_tl ti qi ndi) (mkNoDupList qo (nodup_tl to qo ndo)) Hl)
   ).
-  Fail Defined. (*Cannot guess decreasing argument :'()*)
-  Admitted.
-
-(*function that computes the tensor product of a list of substitutions (need ndi ndo to prove disjointness of the names and do the tensor product)*)
-(*can't compute the output type i think that's why it never compile this Definition*)
-Definition tp_substitution_list (i:NoDupList) (o:NoDupList)
-  (H:length i = length o) : bigraph 0 i 0 o.
-  set (slist := substitution_list i o H).
-  induction slist as [|s slist' Hs] eqn:Eslist.
-  - assert (i=EmptyNDL). 
-    + admit.
-    + assert (o=EmptyNDL). 
-    * clear Eslist. clear slist. rewrite H0 in H. inversion H.
-    symmetry in H2. apply length_zero_iff_nil in H2. unfold EmptyNDL.
-    apply nodupproofirrelevant. apply H2.
-    * rewrite H0. rewrite H1. exact bigraph_empty.
-  - destruct s as [s_subst i_subst r_subst o_subst big_subst].
-  destruct i_subst as [i_subst Hi_subst].
-  assert (exists i_subst_el, i_subst = i_subst_el::[]).
-  + admit.
-  + destruct H0.
-  
-   eapply (
-    bigraph_tensor_product 
-      (dis_i := _) 
-      (dis_o := _) (unpacking s) (tp_substitution_list )
-  ).
-  
-  unfold slist in Eslist.
-   
-  eapply  
-  (fold_left 
-    (fun qt t => bigraph_tensor_product (dis_i := _) (dis_o := _) (unpacking t) (unpacking qt))
-    slist 
-    bigraph_empty). 
-
-(* Fixpoint substitution_tp (i:list Name) (o:list Name)
-  (ndi : NoDup i) (ndo : NoDup o)
-  (H:length i = length o) : bigraph_packed.
-  Proof. 
-  induction i as [|ti qi Hi].
-  - exact (packing bigraph_empty).
-  - induction o as [|to qo Ho].
-  + exfalso. simpl in H. apply PeanoNat.Nat.neq_succ_0 in H. apply H.
-  +  
-  set (s := substitution (mkNoDupList [ti] (noDupSingle ti)) to).
-  eapply (packing (bigraph_tensor_product (dis_i := _) (dis_o := _) s (unpacking (substitution_tp qi qo (nodup_tl ti qi ndi) (nodup_tl to qo ndo) _)) )).
-  Unshelve.
-  3:{ rewrite length_head in H. rewrite length_head in H.
-  inversion H. reflexivity. }
-  - simpl. constructor. intros.
-  destruct H0. destruct H0.
-  set (Hlength := (match eq_ind (S (length qo)) (fun n : nat => S (length qi) = n) (eq_ind (S (length qi)) (fun n : nat => n = S (length qo)) H (S (length qi)) (length_head ti qi)) (S (length qo)) (length_head to qo) in (_ = n) return (n = S (length qo) -> length qi = length qo) with
-| eq_refl => fun H0 : S (length qi) = S (length qo) => eq_ind (length qi) (fun n : nat => length qi = n) eq_refl (length qo) (f_equal (fun e : nat => match e with
-| 0 => (fix length (l : list Name) : nat := match l with
-| [] => 0
-| _ :: l' => S (length l')
-end) qi
-| S n => n
-end) H0)
-end eq_refl)).
-fold Hlength in H1. remove Hlength.
-  destruct H1.
-  simpl in H1. 
-   unfold substitution_tp. *)
-
-  (* set (sp := packing s).
-  assert (Hl : length qi = length qo). {rewrite length_head in H. rewrite length_head in H.
-  inversion H. reflexivity. }
-  set (slp := substitution_list qi qo Hl).
-  exact (sp::slp).
-  Defined.
-
-  eapply ((match i with 
-  |[] => packing bigraph_empty 
-  |ti::qi => 
-    match o with 
-    | [] => packing bigraph_empty (*impossible case*)
-    | to ::qo => let s := substitution (mkNoDupList [ti] (noDupSingle ti)) to in 
-    packing (bigraph_tensor_product (dis_i := _) (dis_o := _) s (unpacking (substitution_tp qi qo (nodup_tl ti qi _) (nodup_tl to qo _) _)) )
-    end
-  end)).
-  Unshelve.
-  3:{ Check nodup_tl. apply ndi. (nodup_tl i). }
-  - constructor. intros. unfold substitution_tp in H1. unfold DisjointNames. simpl. 
-
-  induction i as [|ti qi Hi].
-  - exact ([]).
-  - induction o as [|to qo Ho].
-  + exfalso. simpl in H. apply PeanoNat.Nat.neq_succ_0 in H. apply H.
-  +  
-  set (s := substitution (mkNoDupList [ti] (noDupSingle ti)) to).
-  set (sp := packing s).
-  assert (Hl : length qi = length qo). {rewrite length_head in H. rewrite length_head in H.
-  inversion H. reflexivity. }
-  set (slp := substitution_list qi qo Hl).
-  exact (sp::slp).
-  Defined.
-
-Definition tp_list (i:list Name) (o:list Name)
-  (ndi : NoDup i) (ndo : NoDup o)
-  (H:length i = length o) : bigraph_packed := 
-  fold_left 
-    (fun qt t => bigraph_packed_tp (Hdisj12 := _) t qt)
-    (substitution_list i o H) 
-    (packing bigraph_empty). *)
+  Defined. 
 
 
-(*function that makes a substitution of i union i' to o by connecting i(n) and i'(n) to o*)
-Definition tp_substitution_two_list (i:list Name) (i':list Name) (o:list Name)
-  (ndi : NoDup i) (ndi' : NoDup i') (ndo : NoDup o)
-  (H:length i = length o) (H':length i' = length o) := True.
+#[export] Instance disj_inter_not_in_inter (l1 l2 : NoDupList) : 
+  DisjointNames (l1 ∩ l2) (not_in_intersection_inl l1 l2).
+  Proof.
+  constructor.
+  apply disjoint_not_in_inter_inter.
+  Qed.
 
 
 (*A definition of bigraph_parallel_product that derives from tensor product and composition*)
@@ -590,16 +247,32 @@ Definition bigraph_parallel_product' {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupLis
 Proof.
 set (lenInterOuternames := length (o1 ∩ o2)).
 set (NO := freshNames (o1 ∪ o2) lenInterOuternames).
-set (NO' := freshNames ((o1 ∪ o2) ++ NO) lenInterOuternames). (*++ could be ∪ if i can prove freshNames gives NDL*)
+set (NO' := freshNames ((o1 ∪ o2) ∪ NO) lenInterOuternames). (*++ could be ∪ if i can prove freshNames gives NDL*)
 set (lenInterInnernames := length (i1 ∩ i2)).
 set (NI := freshNames (i1 ∪ i2) lenInterInnernames).
-set (NI' := freshNames ((i1 ∪ i2) ++ NI) lenInterInnernames).
-set (sub_NO_o1intero2 := tp_substitution_list (o1 ∩ o2) NO). 
-set (sub_NO'_o1intero2 := tp_substitution_list (o1 ∩ o2) NO'). 
-set (sub_i1interi2_NI := tp_substitution_list NI (i1 ∩ i2)). 
-set (sub_i1interi2_NI' := tp_substitution_list NI' (i1 ∩ i2)). 
+set (NI' := freshNames ((i1 ∪ i2) ∪ NI) lenInterInnernames).
+assert (Hl : length (o1 ∩ o2) = length NO). 
+  {subst NO. rewrite freshnames_correct_length. auto. }
+set (sub_NO_o1intero2 := tp_substitution_list (o1 ∩ o2) NO Hl). 
+assert (Hl' : length (o1 ∩ o2) = length NO').
+  {subst NO'. rewrite freshnames_correct_length. auto. }
+set (sub_NO'_o1intero2 := tp_substitution_list (o1 ∩ o2) NO' Hl'). 
+assert (Hl'' : length NI = length (i1 ∩ i2)). 
+  {subst NI. rewrite freshnames_correct_length. auto. }
+set (sub_i1interi2_NI := tp_substitution_list NI (i1 ∩ i2) Hl''). 
+assert (Hl''' : length NI' = length (i1 ∩ i2)).
+  {subst NI'. rewrite freshnames_correct_length. auto. }
+set (sub_i1interi2_NI' := tp_substitution_list NI' (i1 ∩ i2) Hl''').
+
+set (pre_b1 := ((sub_NO_o1intero2 ⊗ (bigraph_id r1 (not_in_intersection_inl o1 o2))))).
+
+  
+   (* <<o>> sub_i1interi2_NI)). 
+    ⊗
+  (sub_NO'_o1intero2 <<o>> b2 <<o>> sub_i1interi2_NI')).
+
 set (sub_o1intero2_NOunionNO' := tp_substitution_two_list NO NO' (o1 ∩ o2)).
-set (sub_NIunionNI'_i1interi2 := tp_substitution_two_list NI NI' (i1 ∩ i2)).
+set (sub_NIunionNI'_i1interi2 := tp_substitution_two_list NI NI' (i1 ∩ i2)). *)
 
 (*exact ( 
   sub_o1intero2_NOunionNO' <<o>>
@@ -611,8 +284,11 @@ set (sub_NIunionNI'_i1interi2 := tp_substitution_two_list NI NI' (i1 ∩ i2)).
   Admitted.
 
 
-Theorem eq_bigraph_parallel_product : 
+Theorem eq_bigraph_parallel_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
+  {up : UnionPossible b1 b2}: 
   bigraph_equality (bigraph_parallel_product b1 b2) (bigraph_parallel_product' b1 b2).
+  Admitted.
 
 Global Notation "b1 || b2" := (bigraph_parallel_product b1 b2) (at level 50, left associativity).
 
@@ -1893,7 +1569,7 @@ Lemma id_union : forall X Y:NoDupList,
     * destruct x. destruct x as [x | x]; destruct x.
   Qed.
 
-Lemma id_union' : forall X Y:NoDupList, 
+(* Lemma id_union' : forall X Y:NoDupList, 
   bigraph_equality
   (bigraph_identity (s := 0) (i := X ∪ Y))
   ((bigraph_identity (i := X)) || (bigraph_identity (i := Y))).
@@ -1919,7 +1595,7 @@ Lemma id_union' : forall X Y:NoDupList,
         (bijection_inv bij_void_sum_neutral)
         (fun n => void_univ_embedding n) _ _ _
       ).
-  + apply functional_extensionality.
+    + apply functional_extensionality.
       intros [ x | x ]; destruct x. 
     + apply functional_extensionality.
       intros [[x | x] | p]; try (destruct x).
@@ -1930,7 +1606,7 @@ Lemma id_union' : forall X Y:NoDupList,
     * unfold id, parallel, funcomp. simpl. unfold in_app_or_m_nod_dup.
     destruct (in_dec EqDecN i Y); f_equal; apply subset_eq_compat; reflexivity.
     * destruct x. destruct x as [x | x]; destruct x.
-  Qed.
+  Qed. *)
 
 Lemma id_union_packed : forall X Y:NoDupList, 
   bigraph_packed_equality
@@ -1949,12 +1625,12 @@ Class UnionPossiblePacked (b1 b2 : bigraph_packed) :=
   constructor. exact upp.
   Qed.
 
-#[export] Instance unionpossible_packed_nesting 
+(* #[export] Instance unionpossible_packed_nesting 
   {s r o X} (G : bigraph s EmptyNDL r o):
   UnionPossiblePacked (bigraph_identity (s := 0) (i := X)) G. 
   constructor. apply disjoint_innernames_implies_union_possible. 
   constructor. intros. simpl. simpl in H0. apply H0.
-  Qed.
+  Qed. *)
 
 Record bigraph_packed_up_pair :=
   { 
