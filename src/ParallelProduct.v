@@ -167,7 +167,8 @@ Theorem freshnames_correct_length (o:NoDupList) (len:nat) :
   - simpl. rewrite IHlen. reflexivity.
   Qed. 
 
-Theorem freshNamesdisjoint (o1:NoDupList) (o2:NoDupList) (len:nat) : forall n : Name, In n (freshNames (o1 ∪ o2) len) -> In n (not_in_intersection_inl o1 o2) -> False.
+Theorem freshNamesdisjoint (o1:NoDupList) (o2:NoDupList) (len:nat) : 
+  forall n : Name, In n (freshNames (o1 ∪ o2) len) -> In n (not_in_intersection_inl o1 o2) -> False.
   intros.
   apply not_in_intersection_inl_OK in H0.
   destruct H0 as [Ho1 Hno2].
@@ -184,6 +185,62 @@ Theorem freshNamesdisjoint (o1:NoDupList) (o2:NoDupList) (len:nat) : forall n : 
   apply freshNamesdisjoint.
   Qed.
 
+
+Theorem freshNamesdisjointInr (o1:NoDupList) (o2:NoDupList) (NO:NoDupList) (len:nat) : 
+  forall n : Name, In n (freshNames (o1 ∪ o2 ∪ NO) len) -> In n (not_in_intersection_inr o1 o2) -> False.
+  intros.
+  apply not_in_intersection_inr_OK in H0.
+  destruct H0 as [Ho2 Hno1].
+  apply freshnamesOK in H.
+  destruct H.
+  simpl.
+  apply in_left_list.
+  apply in_right_list. apply Ho2.
+  Qed.
+
+#[export] Instance disj_freshNames_inr (l1 l2 : NoDupList) (NO : NoDupList) (len:nat): 
+  DisjointNames (freshNames (l1 ∪ l2 ∪ NO) len) (not_in_intersection_inr l1 l2).
+  Proof.
+  constructor.
+  apply freshNamesdisjointInr.
+  Qed.
+
+Theorem freshNamesdisjointInr_inner (i1:NoDupList) (i2:NoDupList) (len:nat) : 
+  forall n : Name, In n (freshNames (i1 ∪ i2) len ∪ not_in_intersection_inl i1 i2) -> In n (freshNames (i1 ∪ i2 ∪ freshNames (i1 ∪ i2) len) len ∪ not_in_intersection_inr i1 i2) -> False.
+  Proof.
+    intros.
+    apply in_app_iff in H.
+    apply in_app_iff in H0.
+    destruct H. 
+    - destruct H0. 
+    + apply freshnamesOK in H0.
+    apply H0.
+    apply in_right_list.
+    apply H.
+    + apply (freshNamesdisjointInr i1 i2 EmptyNDL len n); try assumption.
+    rewrite merge_right_neutral. assumption.
+    - destruct H0. 
+    + apply not_in_intersection_inl_ini1 in H.
+    apply freshnamesOK in H0.
+    apply H0.
+    apply in_left_list.
+    apply in_left_list.
+    apply H.
+    + apply not_in_intersection_inl_OK in H.
+    apply not_in_intersection_inr_OK in H0.
+    destruct H.
+    destruct H0.
+    auto.
+  Qed.
+
+#[export] Instance disj_fresh_innernames (i1 i2 : NoDupList) (len:nat): 
+  DisjointNames 
+    (freshNames (i1 ∪ i2) len ∪ not_in_intersection_inl i1 i2) 
+    (freshNames (i1 ∪ i2 ∪ freshNames (i1 ∪ i2) len) len ∪ not_in_intersection_inr i1 i2).
+  Proof.
+  constructor.
+  apply freshNamesdisjointInr_inner.
+  Qed.
 
 (*function that computes the tensor product of a list of substitutions 
 (need ndi ndo to prove disjointness of the names and do the tensor product)*)
@@ -238,6 +295,14 @@ Definition tp_substitution_list (i:NoDupList) (o:NoDupList)
   apply disjoint_not_in_inter_inter.
   Qed.
 
+#[export] Instance disj_inter_not_in_inter_inr (l1 l2 : NoDupList) : 
+  DisjointNames (l1 ∩ l2) (not_in_intersection_inr l1 l2).
+  Proof.
+  constructor.
+  apply disjoint_not_in_inter_inter_inr.
+  Qed.
+
+
 
 (*A definition of bigraph_parallel_product that derives from tensor product and composition*)
 Definition bigraph_parallel_product' {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
@@ -265,7 +330,14 @@ assert (Hl''' : length NI' = length (i1 ∩ i2)).
 set (sub_i1interi2_NI' := tp_substitution_list NI' (i1 ∩ i2) Hl''').
 
 set (pre_b1 := ((sub_NO_o1intero2 ⊗ (bigraph_id r1 (not_in_intersection_inl o1 o2))))).
+set (post_b1 := ((sub_i1interi2_NI ⊗ (bigraph_id s1 (not_in_intersection_inl i1 i2))))).
+set (new_b1 := pre_b1 <<o>> b1 <<o>> post_b1).
 
+set (pre_b2 := ((sub_NO'_o1intero2 ⊗ (bigraph_id r2 (not_in_intersection_inr o1 o2))))).
+set (post_b2 := ((sub_i1interi2_NI' ⊗ (bigraph_id s2 (not_in_intersection_inr i1 i2))))).
+set (new_b2 := pre_b2 <<o>> b2 <<o>> post_b2).
+
+set (b1xb2 := new_b1 ⊗ new_b2).
   
    (* <<o>> sub_i1interi2_NI)). 
     ⊗

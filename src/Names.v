@@ -1319,36 +1319,133 @@ Theorem merge_not_inl_and_inl (i1 i2 : NoDupList) :
   permutation 
     i1
     (app_merge' (intersectionNDL i1 i2) (not_in_intersection_inl i1 i2)).
-  unfold permutation.
-  intros.
-  split;intros; simpl in *.
-  - destruct i1 as [i1 ndi1]. simpl in *.
-    apply in_app_iff.
-    destruct (inb name (myintersection i1 i2)) eqn:E.
-    + left. induction (myintersection i1 i2) as [|inter qinter Hinter].
-    discriminate E. simpl. simpl in E.
-    destruct (EqDecN name inter). subst name. left. reflexivity. 
-    right. apply Hinter. apply E.
-    + right.
-    apply filter_In.
-    split. 
-    * apply in_left_list. apply H.
-    * apply Bool.andb_true_iff. split.
-    apply Bool.negb_true_iff. apply E.
-    apply in_eq_inb in H. apply H.
-  - apply in_app_iff in H.
-    destruct H.
-    + apply from_intersection_left in H. apply H.
-    + apply filter_In in H.
-    destruct H. 
-    apply Bool.andb_true_iff in H0.
-    destruct H0.
-    set (inb_eq_in name i1).
-    rewrite H1 in y. apply y.
+  Proof.
+    unfold permutation.
+    intros.
+    split;intros; simpl in *.
+    - destruct i1 as [i1 ndi1]. simpl in *.
+      apply in_app_iff.
+      destruct (inb name (myintersection i1 i2)) eqn:E.
+      + left. induction (myintersection i1 i2) as [|inter qinter Hinter].
+      discriminate E. simpl. simpl in E.
+      destruct (EqDecN name inter). subst name. left. reflexivity. 
+      right. apply Hinter. apply E.
+      + right.
+      apply filter_In.
+      split. 
+      * apply in_left_list. apply H.
+      * apply Bool.andb_true_iff. split.
+      apply Bool.negb_true_iff. apply E.
+      apply in_eq_inb in H. apply H.
+    - apply in_app_iff in H.
+      destruct H.
+      + apply from_intersection_left in H. apply H.
+      + apply filter_In in H.
+      destruct H. 
+      apply Bool.andb_true_iff in H0.
+      destruct H0.
+      set (inb_eq_in name i1).
+      rewrite H1 in y. apply y.
+  Qed.
+
+(* permutation (i1 ∩ i2 ∪ not_in_intersection_inl i1 i2) i1 *)
+
+Theorem disjoint_not_in_inter_inter (i1 i2 : NoDupList) : forall n : Name, In n (intersectionNDL i1 i2) -> In n (not_in_intersection_inl i1 i2) -> False.
+  unfold intersectionNDL. simpl.
+  intros n H H'.
+  apply filter_In in H'.
+  destruct H'.
+  apply Bool.andb_true_iff in H1.
+  destruct H1.
+  apply Bool.negb_true_iff in H1.
+  apply in_eq_inb in H. rewrite H in H1. discriminate H1.
   Qed.
 
 
-  Theorem disjoint_not_in_inter_inter (i1 i2 : NoDupList) : forall n : Name, In n (intersectionNDL i1 i2) -> In n (not_in_intersection_inl i1 i2) -> False.
+Definition not_in_intersection_inr (i1 i2 : NoDupList) : NoDupList.
+  Proof.
+  exists 
+  (filter
+    (fun i => negb (inb i (intersectionNDL i1 i2)) && inb i i2)
+    (i1 ∪ i2)).
+  apply NoDup_filter.
+  apply NoDup_app_merge; 
+  destruct i1; destruct i2; auto.
+  Defined.
+
+Theorem not_in_intersection_inr_ini2 (i1 i2 : NoDupList) : 
+  forall n, 
+  In n (not_in_intersection_inr i1 i2) -> In n i2.
+  intros.
+  destruct i1 as [i1 ndi1]. simpl in *.
+  apply filter_In in H.
+  destruct H.
+  apply Bool.andb_true_iff in H0.
+  destruct H0.
+  apply in_eq_inb. apply H1.
+  Qed. 
+
+Theorem not_in_intersection_inr_notini1 (i1 i2 : NoDupList) : 
+  forall n, 
+  In n (not_in_intersection_inr i1 i2) -> ~ In n i1.
+  intros.
+  destruct i1 as [i1 ndi1]. simpl in *.
+  apply filter_In in H.
+  destruct H.
+  apply Bool.andb_true_iff in H0.
+  destruct H0.
+  unfold not. intros.
+  apply in_eq_inb in H1.
+  apply Bool.negb_true_iff in H0.
+  apply in_eq_inb_neg in H0.
+  apply H0. apply in_both_in_intersection; auto.
+  Qed. 
+
+Theorem not_in_intersection_inr_OK (i1 i2 : NoDupList) : 
+  forall n, 
+  In n (not_in_intersection_inr i1 i2) -> In n i2 /\ ~ In n i1.
+  intros. split.
+  apply (not_in_intersection_inr_ini2 i1 i2); assumption.
+  apply (not_in_intersection_inr_notini1 i1 i2); assumption.
+  Qed.
+
+
+Theorem merge_not_inr_and_inr (i1 i2 : NoDupList) : 
+  permutation 
+    i2
+    (app_merge' (intersectionNDL i1 i2) (not_in_intersection_inr i1 i2)).
+  Proof.
+    unfold permutation.
+    intros.
+    split;intros; simpl in *.
+    - destruct i1 as [i1 ndi1]. simpl in *.
+      apply in_app_iff.
+      destruct (inb name (myintersection i1 i2)) eqn:E.
+      + left. induction (myintersection i1 i2) as [|inter qinter Hinter].
+      discriminate E. simpl. simpl in E.
+      destruct (EqDecN name inter). subst name. left. reflexivity. 
+      right. apply Hinter. apply E.
+      + right.
+      apply filter_In.
+      split. 
+      * apply in_right_list. apply H.
+      * apply Bool.andb_true_iff. split.
+      apply Bool.negb_true_iff. apply E.
+      apply in_eq_inb in H. apply H.
+    - apply in_app_iff in H.
+      destruct H.
+      + apply from_intersection_right in H. apply H.
+      + apply filter_In in H.
+      destruct H. 
+      apply Bool.andb_true_iff in H0.
+      destruct H0.
+      apply in_eq_inb.
+      apply H1.
+  Qed.
+
+(* permutation (i1 ∩ i2 ∪ not_in_intersection_inl i1 i2) i1 *)
+
+Theorem disjoint_not_in_inter_inter_inr (i1 i2 : NoDupList) : forall n : Name, In n (intersectionNDL i1 i2) -> In n (not_in_intersection_inr i1 i2) -> False.
   unfold intersectionNDL. simpl.
   intros n H H'.
   apply filter_In in H'.
@@ -1447,6 +1544,36 @@ Defined.
   Proof.
   constructor. apply (merge_not_inl_and_inl o1 o2).
   Qed.
+
+Lemma permutation_commute {i1 i2} : 
+  permutation i1 i2 -> permutation i2 i1.
+  unfold permutation. intros.
+  split; destruct (H name); assumption.
+  Qed.
+
+#[export] Instance permutation_not_in_inter_i {i1 i2} :
+  PermutationNames
+    (i1 ∩ i2 ∪ not_in_intersection_inl i1 i2)
+    i1.
+  Proof.
+  constructor. 
+  apply (permutation_commute (merge_not_inl_and_inl i1 i2)).
+  Qed.
+
+#[export] Instance permutation_not_in_inter_inr {o1 o2} : 
+  PermutationNames o2 (o1 ∩ o2 ∪ not_in_intersection_inr o1 o2).
+  Proof.
+  constructor. apply (merge_not_inr_and_inr o1 o2).
+  Qed.
+
+#[export] Instance permutation_not_in_inter_i_inr {i1 i2} :
+  PermutationNames
+    (i1 ∩ i2 ∪ not_in_intersection_inr i1 i2) i2.
+  Proof.
+  constructor. 
+  apply (permutation_commute (merge_not_inr_and_inr i1 i2)).
+  Qed.
+
 
 End Names.
 
