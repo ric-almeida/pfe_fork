@@ -404,6 +404,17 @@ Proof.
     - left. apply not_in_left in H; assumption.
 Defined.
 
+Lemma not_in_merge_iff {a} {l1 l2}:
+(~ In a l1 /\ ~ In a l2) <->
+~ In a (app_merge' l1 l2).
+Proof. 
+  split.
+  - intros [H1 H2].
+  apply not_in_merge; assumption.
+  - intros. unfold not. split; intros. apply H. apply in_left_list. assumption.
+  apply H. apply in_right_list. assumption. 
+Qed.
+
 Lemma in_app_or_m_nod_dup : forall (l m:list Name) (a:Name), 
 NoDup l -> NoDup m -> In a (app_merge' l m) -> In a l + In a m.
 Proof.
@@ -1308,10 +1319,24 @@ Theorem not_in_intersection_inl_notini2 (i1 i2 : NoDupList) :
 
 Theorem not_in_intersection_inl_OK (i1 i2 : NoDupList) : 
   forall n, 
-  In n (not_in_intersection_inl i1 i2) -> In n i1 /\ ~ In n i2.
-  intros. split.
+  In n (not_in_intersection_inl i1 i2) <-> In n i1 /\ ~ In n i2.
+  split. 
+  -  intros. split.
   apply (not_in_intersection_inl_ini1 i1 i2); assumption.
   apply (not_in_intersection_inl_notini2 i1 i2); assumption.
+  - intros [H1 nH2].
+  unfold not_in_intersection_inl.
+  simpl.
+  apply filter_In.
+  split.
+  apply in_left_list. apply H1.
+  apply Bool.andb_true_iff.
+  split.
+  apply Bool.negb_true_iff.
+  apply in_eq_inb_neg.
+  unfold not. intros. apply nH2.
+  apply from_intersection_right in H. auto.
+  apply in_eq_inb. auto.
   Qed.
 
 
@@ -1403,10 +1428,24 @@ Theorem not_in_intersection_inr_notini1 (i1 i2 : NoDupList) :
 
 Theorem not_in_intersection_inr_OK (i1 i2 : NoDupList) : 
   forall n, 
-  In n (not_in_intersection_inr i1 i2) -> In n i2 /\ ~ In n i1.
-  intros. split.
+  In n (not_in_intersection_inr i1 i2) <-> In n i2 /\ ~ In n i1.
+  split.
+  - intros. split.
   apply (not_in_intersection_inr_ini2 i1 i2); assumption.
   apply (not_in_intersection_inr_notini1 i1 i2); assumption.
+  - intros [H2 nH1].
+  unfold not_in_intersection_inr.
+  simpl.
+  apply filter_In.
+  split.
+  apply in_right_list. apply H2.
+  apply Bool.andb_true_iff.
+  split.
+  apply Bool.negb_true_iff.
+  apply in_eq_inb_neg.
+  unfold not. intros. apply nH1.
+  apply from_intersection_left in H. auto.
+  apply in_eq_inb. auto.
   Qed.
 
 

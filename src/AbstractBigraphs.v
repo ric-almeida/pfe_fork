@@ -20,6 +20,7 @@ Require Import Coq.Lists.List.
 Require Import Coq.Arith.PeanoNat.
 Require Import ProofIrrelevance.
 Require Import Lia.
+Require Import Coq.Arith.Compare_dec.
 
 Require Import mathcomp.ssreflect.fintype. 
 Require Import ssrfun.
@@ -114,6 +115,13 @@ Theorem parent_proof_irrelevant {s i r o} (b:bigraph s i r o):
   get_parent b (inr (exist _ n Hn)) = get_parent b (inr (exist _ n Hn')).
   Proof. 
   intros. apply f_equal. apply f_equal. apply subset_eq_compat. reflexivity.
+  Qed.
+
+Theorem parent_proof_irrelevant' {s i r o} (b:bigraph s i r o): 
+  forall n n': nat, forall Hn Hn', n = n' ->
+  get_parent b (inr (exist _ n Hn)) = get_parent b (inr (exist _ n' Hn')).
+  Proof. 
+  intros. apply f_equal. apply f_equal. apply subset_eq_compat. apply H.
   Qed.
 
 Theorem innername_proof_irrelevant {s i r o} (b:bigraph s i r o): 
@@ -272,6 +280,30 @@ Definition merge {n:nat} : bigraph n EmptyNDL 1 EmptyNDL. (* merge n+1 = join <<
   Defined.
 
 Definition big_1 := @merge 0.
+
+
+Definition symmetry_big (m:nat) (X:NoDupList) (n:nat) (Y:NoDupList) :
+ bigraph (m+n) (X ∪ Y) (m+n) (X ∪ Y). (* merge n+1 = join <<o>> (id 1 [] ⊗ merge n ) with merge 0 = 1 (1 root that's all)*)
+  Proof. 
+  eapply (Big (m+n) (X ∪ Y) (m+n) (X ∪ Y)
+    voidfd (*node : ∅*)
+    voidfd (*edge : ∅*)
+    (@void_univ_embedding _) (*control : ∅ ->_Kappa*)
+    _ _ _
+  ).
+  Unshelve.
+  - intros [v|s]. (*parent*)
+    + destruct v.
+    + right. destruct s as [s Hs].
+    destruct (lt_dec s m).
+    * exists (s+n). lia.
+    * exists (s-m). lia.
+  - intros [inner | port]. (*link : ∅*)
+    + left. apply inner.
+    + destruct port. destruct x.
+  - intro n'. (*acyclic parent*)
+  destruct n'.
+  Defined.
 
 
 Definition linking (i : NoDupList) (o : NoDupList) := bigraph 0 i 0 o. (*manque la notion de node-free*)

@@ -275,6 +275,45 @@ apply functional_extensionality.
 destruct x. 
 Defined.
 
+Theorem bij_void_sum_void : forall {A : Type}, bijection (void + void) void.
+Proof.
+intros.
+apply (mkBijection (void + void) void 
+(fun vv => match vv with | inl v => match v with end | inr v => match v with end end)
+void_univ_embedding). 
+apply functional_extensionality.
+destruct x.
+apply functional_extensionality.
+destruct x. destruct v. destruct v.  
+Defined. 
+
+Theorem bij_void_A_B : forall {A B: Type}, bijection (void + (A+B)) (B+A+void).
+Proof.
+intros.
+apply (mkBijection (void + (A+B)) (B+A+void)
+(fun vab => match vab with 
+  | inl v => match v with end
+  | inr ab => match ab with 
+    | inl a => inl (inr a) 
+    | inr b => inl (inl b) 
+    end 
+  end)
+(fun bav => match bav with 
+  | inl (inl b) => inr (inr b)
+  | inl (inr a) => inr (inl a)
+  | inr v => match v with end  
+  end)). 
+apply functional_extensionality.
+destruct x as [[b|a]|v].
+reflexivity.
+reflexivity.
+elim v.
+apply functional_extensionality.
+destruct x as [v|[a|b]]. 
+elim v.
+reflexivity.
+reflexivity.
+Defined. 
 
 Theorem bij_void_prod_absorbing : forall {A : Type}, bijection (void*A) void.
 Proof.
