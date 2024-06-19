@@ -287,6 +287,24 @@ apply functional_extensionality.
 destruct x. destruct v. destruct v.  
 Defined. 
 
+
+Theorem bij_void4: bijection void (void + void + (void + void)).
+Proof.
+intros.
+apply (mkBijection void (void + void + (void + void))
+void_univ_embedding
+(fun vvvv => match vvvv with 
+  | inl (inl v) => match v with end
+  | inl (inr v) => match v with end
+  | inr (inl v) => match v with end
+  | inr (inr v) => match v with end
+  end)). 
+apply functional_extensionality.
+destruct x as [[v|v]|[v|v]]; destruct v.
+apply functional_extensionality.
+destruct x.
+Defined. 
+
 Theorem bij_void_A_B : forall {A B: Type}, bijection (void + (A+B)) (B+A+void).
 Proof.
 intros.

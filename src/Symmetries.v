@@ -345,6 +345,198 @@ Theorem symmetry_distributive {si0 ri1 sj0 rj1:nat} {ii0 oi1 ij0 oj1:NoDupList}
       * destruct v.
   Qed.
 
+Search (permutation (app_merge' _ _)).
 
+Lemma MyPN {mI mJ mK:nat} {XI XJ XK:NoDupList}
+  {disIJ : XI # XJ} {disKJ : XK # XJ} {disIK : XI # XK}:
+  permutation 
+    (XI ∪ XK ∪ XJ)
+    (ndlist (i ((bigraph_id mI XI) ⊗ (symmetry_big mJ XJ mK XK)))).
+    simpl.
+    intros; split; intros; apply in_app_iff in H; destruct H.
+    - apply in_app_iff in H; destruct H.
+    apply in_app_iff; auto.
+    apply in_app_iff; auto.
+    right.
+    apply in_app_iff; auto.
+    apply in_app_iff; auto.
+    right.
+    apply in_app_iff; auto.
+    apply in_app_iff; auto.
+    left.
+    apply in_app_iff; auto.
+    - apply in_app_iff in H; destruct H.
+    apply in_app_iff; auto.
+    apply in_app_iff; auto.
+    left.
+    apply in_app_iff; auto.
+  Qed.
+
+Definition myEqNatproof {mI mJ mK:nat} : MyEqNat (mI + mK + mJ) (mI + (mJ + mK)).
+constructor.
+auto.
+lia.
+Qed.
+
+Theorem easynat : forall mI mJ mK, mI + mJ + mK = mI + mK + mJ.
+lia. Qed.
+
+Theorem easyperm : forall XI XJ XK, 
+permutation (XI ∪ XJ ∪ XK) (XI ∪ XK ∪ XJ).
+intros; split; intros; apply in_app_iff in H; destruct H.
+    - apply in_app_iff in H; destruct H.
+    apply in_app_iff; auto.
+    apply in_app_iff; auto.
+    apply in_app_iff; auto.
+    left.
+    apply in_app_iff; auto.
+    apply in_app_iff; auto.
+    apply in_app_iff; auto.
+    left.
+    apply in_app_iff; auto.
+    - apply in_app_iff in H; destruct H.
+    apply in_app_iff; auto.
+    left.
+    apply in_app_iff; auto.
+    apply in_app_iff; auto.
+    apply in_app_iff; auto. 
+    left.
+    apply in_app_iff; auto.
+  Qed.
+
+
+Theorem symmetry_distributive_s4 {mI mJ mK:nat} {XI XJ XK:NoDupList}
+  {disIJ : XI # XJ} {disKJ : XK # XJ} {disIK : XI # XK}:
+  bigraph_equality
+    (symmetry_big (mI+mJ) (XI ∪ XJ) mK XK)
+    (bigraph_composition (p := P_NP (permutation_commute (MyPN (mI:=mI) (mJ:=mJ) (mK:=mK)))) (eqsr:= myEqNatproof)
+      ((symmetry_big mI XI mK XK) ⊗ (bigraph_id mJ XJ))
+      ((bigraph_id mI XI) ⊗ (symmetry_big mJ XJ mK XK))).
+  Proof.
+  refine (
+    BigEq _ _ _ _ _ _ _ _
+      (symmetry_big (mI+mJ) (XI ∪ XJ) mK XK)
+      (bigraph_composition (p := P_NP (permutation_commute (MyPN (mI:=mI) (mJ:=mJ) (mK:=mK)))) (eqsr:= myEqNatproof)
+        ((symmetry_big mI XI mK XK) ⊗ (bigraph_id mJ XJ))
+        ((bigraph_id mI XI) ⊗ (symmetry_big mJ XJ mK XK)))
+      (Arith_base.plus_assoc_reverse_stt mI mJ mK) (*s*)
+      (@tr_permutation XI XJ XK) (*i*)
+      (easynat mI mJ mK) (*r*)
+      (easyperm XI XJ XK) (*o*)
+      bij_void4 (*n*)
+      bij_void4 (*e*)
+      (fun n => bij_rew (P := fin) (void_univ_embedding n)) (*p*)
+      _ _ _
+    ).
+  + apply functional_extensionality.
+    intros [[v|v]|[v|v]]; destruct v.
+  + simpl. apply functional_extensionality.
+    destruct x as [[[v|v]|[v|v]] | s1]; try destruct v; simpl.
+    unfold funcomp, parallel. simpl. f_equal.
+    unfold bij_rew_forward,id,rearrange,sum_shuffle,extract1,inj_fin_add,surj_fin_add.
+    destruct s1; simpl.
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + (mJ + mK)) (mI + mJ + mK) _ x _).
+    simpl. destruct (Compare_dec.lt_dec x (mI + mJ)); destruct (PeanoNat.Nat.ltb_spec0 x mI).
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + (mJ + mK)) (mI + mK + mJ) _ x _).
+    destruct (PeanoNat.Nat.ltb_spec0 x (mI + mK)).
+    destruct (Compare_dec.lt_dec x mI).
+    f_equal. 
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x+mK) _).
+    apply subset_eq_compat.
+    reflexivity.
+    f_equal. 
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x+mK) _).
+    apply subset_eq_compat.
+    lia.
+    f_equal. 
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x+mK) _).
+    apply subset_eq_compat.
+    lia.
+    destruct (Compare_dec.lt_dec (x - mI) mJ).
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + (mJ + mK)) (mI + mK + mJ) _ (mI + (x - mI + mK)) _).
+    destruct (PeanoNat.Nat.ltb_spec0 (mI + (x - mI + mK)) (mI + mK)); destruct (Compare_dec.lt_dec (mI + (x - mI + mK)) mI).
+    lia.
+    f_equal. 
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x+mK) _).
+    apply subset_eq_compat.
+    lia.
+    f_equal. 
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x+mK) _).
+    apply subset_eq_compat.
+    lia.
+    f_equal. 
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x+mK) _).
+    apply subset_eq_compat.
+    lia.
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x+mK) _).
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + (mJ + mK)) (mI + mK + mJ) _ (mI + (x - mI - mJ)) _).
+    destruct (PeanoNat.Nat.ltb_spec0 (mI + (x - mI - mJ)) (mI + mK)); destruct (Compare_dec.lt_dec (mI + (x - mI - mJ)) mI); try lia.
+    f_equal. 
+    apply subset_eq_compat.
+    lia.
+    f_equal.
+    apply subset_eq_compat.
+    lia.
+    f_equal.
+    apply subset_eq_compat.
+    lia.
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + (mJ + mK)) (mI + mK + mJ) _ x _).
+    destruct (PeanoNat.Nat.ltb_spec0 x (mI + mK)); destruct (Compare_dec.lt_dec x mI); try lia.
+    f_equal.
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x - (mI + mJ)) _).
+    apply subset_eq_compat.
+    lia.
+    f_equal.
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x - (mI + mJ)) _).
+    apply subset_eq_compat.
+    lia.
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x - (mI + mJ)) _).
+    f_equal. apply subset_eq_compat.
+    lia.
+    f_equal. 
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x - (mI + mJ)) _).
+    apply subset_eq_compat.
+    lia.
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x - (mI + mJ)) _).
+    f_equal. 
+    destruct (Compare_dec.lt_dec (x - mI) mJ).
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + (mJ + mK)) (mI + mK + mJ) _ (mI + (x - mI + mK)) _).
+    destruct (PeanoNat.Nat.ltb_spec0 (mI + (x - mI + mK)) (mI + mK)).
+    destruct (Compare_dec.lt_dec (mI + (x - mI + mK)) mI).
+    f_equal. 
+    apply subset_eq_compat.
+    lia.
+    f_equal. 
+    apply subset_eq_compat.
+    lia.
+    f_equal. 
+    apply subset_eq_compat.
+    lia.
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + (mJ + mK)) (mI + mK + mJ) _ (mI + (x - mI - mJ)) _).
+    destruct (PeanoNat.Nat.ltb_spec0 (mI + (x - mI - mJ)) (mI + mK)).
+    destruct (Compare_dec.lt_dec (mI + (x - mI - mJ)) mI).
+    f_equal. 
+    apply subset_eq_compat.    
+    lia.
+    f_equal. 
+    apply subset_eq_compat.
+    lia.
+    f_equal. 
+    apply subset_eq_compat.
+    lia.
+  + apply functional_extensionality.
+    destruct x as [[name] | (v, tmp)]; simpl.
+    - unfold funcomp,rearrange,switch_link,parallel,sequence.
+      simpl.
+      unfold funcomp,rearrange,switch_link,parallel,sequence,sum_shuffle,extract1,bij_list_backward',permut_list_forward,bij_list_forward.
+      destruct (in_dec EqDecN name XI).
+      * destruct (in_dec EqDecN name (XI ∪ XK)).
+      ** f_equal. apply subset_eq_compat. reflexivity.
+      ** f_equal. apply subset_eq_compat. reflexivity.
+      * destruct (in_dec EqDecN name (XI ∪ XK)).
+      ** f_equal. apply subset_eq_compat. reflexivity.
+      ** f_equal. apply subset_eq_compat. reflexivity.
+    - destruct v; simpl in t; destruct t. destruct v. destruct v. destruct v. destruct v.
+  Qed.
 
 End Symmetries.
