@@ -603,7 +603,7 @@ Theorem reflexive_permutation: Reflexive permutation.
 Proof.
   constructor; unfold permutation in *; auto. 
 Qed.
-
+  
 Definition tr_permutation {i1 i2 i3} : 
   permutation
     (app_merge' (app_merge' i1 i2) i3)
