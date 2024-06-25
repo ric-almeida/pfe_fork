@@ -345,28 +345,6 @@ Definition closure (name:Name) : bigraph 0 (mkNoDupList [name] (noDupSingle name
 
 Definition join_big := @merge 2. 
 
-(* Definition symmetry_big {s i r o} : bigraph s i r o.
-apply (Big s i r o 
-voidfd (*node : ∅*)
-voidfd (*edge : ∅*)
-(@void_univ_embedding _) (*control : ∅_Kappa*)
-(fun n => n + r). 
-(*parent : id*)
-) *)
-
-
-
-Lemma partial_monoidal_category : forall A B C:FinDecType, 
-  (* findec_sum A B <-> findec_sum B A /\ *)
-  exists b:bijection (type (findec_sum A (findec_sum B C))) (type (findec_sum (findec_sum A B) C)), True /\
-  findec_sum voidfd A = A /\
-  findec_sum A voidfd = A /\ 
-  findec_sum A voidfd = findec_sum voidfd A.
-  intros. split.
-  - unfold findec_sum. simpl. (* exists (bij_sum_assoc (type A + type B + type C)%type).  *) admit.
-  - split. 
-    + unfold findec_sum. simpl. admit.
-    Admitted. 
 
 End Bigraphs.
 

@@ -176,6 +176,36 @@ reflexivity.
 
 Defined.
 
+Definition bij_nesting_assoc {a b c} :
+  bijection 
+	  (void + (void + a + b) + c) 
+	  (void + a + (void + b + c)).
+eapply (mkBijection 
+  (void + (void + a + b) + c) 
+	(void + a + (void + b + c))
+  _
+  _).
+Unshelve.
+3:{ intros [[v|[[v|a']|b']] | c']; try elim v.
+- left. right. apply a'.
+- right. left. right. apply b'.
+- right. right. apply c'. }
+3:{ intros [[v|a']|[[v|b']|c']]; try elim v.
+- left. right. left. right. apply a'.
+- left. right. right. apply b'.
+- right. apply c'. }
+apply functional_extensionality.
+intros [[v|a']|[[v|b']|c']]; try elim v.
+reflexivity.
+reflexivity.
+reflexivity.
+apply functional_extensionality.
+intros [[v|[[v|a']|b']] | c']; try elim v.
+reflexivity.
+reflexivity.
+reflexivity.
+Defined.
+
 Theorem bij_sum_comm : forall {A B}, bijection (A+B) (B+A).
 Proof.
 intros A B.

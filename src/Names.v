@@ -1590,6 +1590,14 @@ Lemma permutation_commute {i1 i2} :
   split; destruct (H name); assumption.
   Qed.
 
+  
+Definition permutationtr' {o1 o2 o3}:
+  permutation (o3 ∪ (o2 ∪ o1)) (o3 ∪ o2 ∪ o1).
+Proof. simpl. 
+apply (permutation_commute tr_permutation). 
+Defined.
+
+
 #[export] Instance permutation_not_in_inter_i {i1 i2} :
   PermutationNames
     (i1 ∩ i2 ∪ not_in_intersection_inl i1 i2)
