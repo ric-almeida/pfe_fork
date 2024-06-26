@@ -225,6 +225,25 @@ Definition bijection_nest_right_neutral {n} :
   intros [[v|n']|v]; try elim v; reflexivity.
   Defined.
 
+Definition bijection_nest_left_neutral {n} :
+  bijection (void + void + n) n.
+  apply (mkBijection (void + void + n) n
+        (fun vvn => 
+        match vvn with 
+          | inl vv => 
+            match vv with 
+            | inl v => match v with end
+            | inr v => match v with end
+            end 
+          | inr n => n
+        end)
+        (fun n' => inr n')).
+  apply functional_extensionality.
+  intros. reflexivity.
+  apply functional_extensionality.
+  intros [[v|v]|n']; try elim v; reflexivity.
+  Defined.
+
 Theorem bij_sum_comm : forall {A B}, bijection (A+B) (B+A).
 Proof.
 intros A B.
