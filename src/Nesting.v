@@ -435,8 +435,8 @@ Lemma nest_left_neutral {s1 r1 : nat} {o1 : NoDupList}
       destruct get_parent; try reflexivity.
       unfold extract1,bij_rew_forward,inj_fin_add. 
       rewrite <- eq_rect_eq.
-      destruct f. destruct (PeanoNat.Nat.ltb_spec0 x 0).
-      f_equal. apply subset_eq_compat. reflexivity.
+      destruct f. destruct (PeanoNat.Nat.ltb_spec0 x 0). unfold id.
+      f_equal. apply subset_eq_compat. reflexivity. unfold id.
       f_equal. apply subset_eq_compat. lia.
   + apply functional_extensionality.      
     destruct x as [[name] | (v1, (k1, Hvk1))]; simpl.

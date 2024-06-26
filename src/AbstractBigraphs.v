@@ -22,9 +22,6 @@ Require Import ProofIrrelevance.
 Require Import Lia.
 Require Import Coq.Arith.Compare_dec.
 
-Require Import mathcomp.ssreflect.fintype. 
-Require Import ssrfun.
-
 
 Import ListNotations.
 
@@ -54,21 +51,7 @@ Record bigraph  (site: nat)
     ap : FiniteParent parent ;
   }.
   
-Record bigraph'  (site': nat) 
-                (innername': NoDupList) 
-                (root': nat) 
-                (outername': NoDupList) : Type := 
-  Big'  
-  { 
-    node' : finType ;
-    edge' : finType ;
-    control' : node' -> Kappa ;
-    parent' : node' + fin site' -> 
-                node' + (fin root') ; 
-    link' : NameSub innername' + Port control' -> 
-                (NameSub outername') + edge'; 
-    ap' : FiniteParent parent' ;
-  }.
+
 End IntroBigraphs.
 
 (** * Getters
@@ -86,8 +69,7 @@ Definition get_link {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : {inne
   @link s i r o bg.
 End GettersBigraphs.
 
-Class MyEqNat (x y : nat) := { eqxy : x = y }.
-Definition howomg {a b} (m: MyEqNat a b) : a = b := eqxy. 
+Class MyEqNat (x y : nat) := { eqxy : x = y }. 
 #[export] Instance MyEqNat_refl (x:nat) : MyEqNat x x.
   Proof. 
   constructor. reflexivity. 
@@ -147,42 +129,24 @@ Definition bigraph_empty : bigraph 0 EmptyNDL 0 EmptyNDL.
   + destruct p. right. apply x.
   Defined. (*TODO unsure of the definition of link def 2.7*)
 
-Definition bigraph_empty' : bigraph' 0 EmptyNDL 0 EmptyNDL.
-  Proof. 
-  eapply (Big' 0 EmptyNDL 0 EmptyNDL
-            void void 
-            (of_void Kappa)
-            (of_void _ ||| (void_univ_embedding <o> bij_fin_zero))
-            _ 
-            ).
-  - intro n.
-  destruct n.
-  Unshelve.
-  intros. destruct X.
-  + left. apply n.
-  + destruct p. right. apply x.
-  Defined. (*TODO unsure of the definition of link def 2.7*)
-
 
 Global Notation "∅" := bigraph_empty.
 
-Definition bigraph_identity {s i i'} {p:PermutationNames (ndlist i) (ndlist i')}: bigraph s i s i'. (*actually s i s (permutation i) *)
+Definition bigraph_id (s: nat) (i : NoDupList) : bigraph s i s i. (*actually s i s (permutation i) *)
   Proof.
-  apply (Big s i s i'
+  apply (Big s i s i
           voidfd (*node : ∅*)
           voidfd (*edge : ∅*)
           (@void_univ_embedding _) (*control : ∅_Kappa*)
           id (*parent : id*)
         ).
   - intros [inner | port]. (*link_|{names} : id*)
-    + left. destruct inner. exists x. destruct p as[p]. unfold permutation in p. apply p in i0. apply i0.
+    + left. apply inner. 
     + destruct port. destruct x.
   - intro n. (*acyclic parent*)
     destruct n.
   Defined.
   
-Definition bigraph_id (s: nat) (i : NoDupList) := bigraph_identity (s := s) (i := i) (i' := i).
-
 Example zero1 : type (findec_fin 1). exists 0. auto. Defined.
 
 Definition discrete_atom {A} 

@@ -261,7 +261,7 @@ Definition tp_substitution_list (i:NoDupList) (o:NoDupList)
     + rewrite H0. assert ({| ndlist := o; nd := ndo |} = EmptyNDL).
     * inversion H. symmetry in H2. apply length_zero_iff_nil in H2. unfold EmptyNDL.
       apply nodupproofirrelevant.  simpl. apply H2.  
-      rewrite H1.  exact bigraph_empty.
+    * rewrite H1.  exact bigraph_empty.
   - induction o as [|to qo Ho].
     +  exfalso. simpl in H. apply PeanoNat.Nat.neq_succ_0 in H. apply H.
     +  set (s := substitution (OneelNDL ti) to).
@@ -273,7 +273,7 @@ Definition tp_substitution_list (i:NoDupList) (o:NoDupList)
     * assert (dis_o' : (o s)#(o slp)). 
     ** constructor. simpl. intros n [Hon|] Hon'. 
     subst n. inversion ndo. contradiction. apply H0.
-    assert (i s ∪ i slp = {| ndlist := ti :: qi; nd := ndi |}).
+    ** assert (i s ∪ i slp = {| ndlist := ti :: qi; nd := ndi |}).
     { simpl. unfold app_merge_NoDupList.
     apply nodupproofirrelevant. 
     simpl.
@@ -315,7 +315,7 @@ Lemma exists_head {l:list Name} {len:nat} :
   intros.
   induction l.
   - discriminate H.
-  exists a. exists l. reflexivity. Defined.
+  - exists a. exists l. reflexivity. Defined.
 
 Lemma exists_head' {l:list Name} {len:nat} 
   (H : S (len) = length l) : match l with 
@@ -2064,11 +2064,11 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o
 
 Lemma id_union : forall X Y:NoDupList, 
   bigraph_equality
-  (@bigraph_id 0 (X ∪ Y))
-  ((@bigraph_id 0 X) || (@bigraph_id 0 Y)).
+  (bigraph_id 0 (X ∪ Y))
+  ((bigraph_id 0 X) || (bigraph_id 0 Y)).
   Proof.
     intros X Y.
-    unfold bigraph_id. unfold bigraph_identity.
+    unfold bigraph_id.
     unfold bigraph_parallel_product.
     simpl.
     unfold link_juxt, parallel, funcomp.

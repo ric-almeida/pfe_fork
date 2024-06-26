@@ -77,9 +77,9 @@ Theorem symmetry_eq_id : forall m:nat, forall X:NoDupList,
         rewrite (@eq_rect_exist nat nat (fun n x => x < n) m (m + 0) _ x _).
         simpl. destruct (Compare_dec.lt_dec x m). 
         rewrite (@eq_rect_exist nat nat (fun n x => x < n) (m+0) m _ (x+0) _).
+        unfold id. f_equal.
         apply subset_eq_compat. apply PeanoNat.Nat.add_0_r.
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (m+0) m _ (x-m) _).
-        apply subset_eq_compat. lia.
+        contradiction. 
     + apply functional_extensionality.
       destruct x as [[name] | (v, tmp)]; simpl.
       - unfold funcomp.
@@ -151,11 +151,10 @@ Theorem symmetry_eq_tp_id : forall m n:nat, forall X Y:NoDupList,
         rewrite (@eq_rect_exist nat nat (fun n x => x < n) (m+n) (n + m) _ x _).
         simpl. destruct (Compare_dec.lt_dec x n).
         rewrite (@eq_rect_exist nat nat (fun n x => x < n) (n+m) (m+n) _ (x+m) _).
-        destruct (Compare_dec.lt_dec (x + m) m).
-        apply subset_eq_compat. exfalso. lia.
-        apply subset_eq_compat. lia.
+        destruct (Compare_dec.lt_dec (x + m) m). lia.
+        f_equal. apply subset_eq_compat. lia.
         rewrite (@eq_rect_exist nat nat (fun n x => x < n) (n+m) (m+n) _ (x-n) _).
-        destruct (Compare_dec.lt_dec (x-n) m).
+        destruct (Compare_dec.lt_dec (x-n) m); f_equal.
         apply subset_eq_compat. lia.
         apply subset_eq_compat. lia. 
     + apply functional_extensionality.
@@ -360,14 +359,13 @@ Lemma MyPN {mI mJ mK:nat} {XI XJ XK:NoDupList}
     apply in_app_iff; auto.
     right.
     apply in_app_iff; auto.
-    apply in_app_iff; auto.
+    - apply in_app_iff; auto.
     right.
     apply in_app_iff; auto.
-    apply in_app_iff; auto.
+    - apply in_app_iff; auto.
     left.
     apply in_app_iff; auto.
-    - apply in_app_iff in H; destruct H.
-    apply in_app_iff; auto.
+    -  apply in_app_iff in H; destruct H;
     apply in_app_iff; auto.
     left.
     apply in_app_iff; auto.
@@ -390,7 +388,7 @@ Theorem easyperm : forall XI XJ XK,
     left.
     apply in_app_iff; auto.
     apply in_app_iff; auto.
-    apply in_app_iff; auto.
+    - apply in_app_iff; auto.
     left.
     apply in_app_iff; auto.
     - apply in_app_iff in H; destruct H.
@@ -398,7 +396,7 @@ Theorem easyperm : forall XI XJ XK,
     left.
     apply in_app_iff; auto.
     apply in_app_iff; auto.
-    apply in_app_iff; auto. 
+    - apply in_app_iff; auto. 
     left.
     apply in_app_iff; auto.
   Qed.

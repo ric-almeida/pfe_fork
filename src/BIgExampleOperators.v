@@ -99,7 +99,7 @@ Example simplBig :
     1 bNDL 1 aNDL
     (findec_fin 2)
     findec_unit
-    (fun n => match n with | exist n _  => n+1 end) (*control*)
+    (fun n => match n with | exist _ n _ => n+1 end) (*control*)
     _
     (*(fun ns => match ns with 
       | inl n => inr zero1
@@ -228,8 +228,8 @@ Proof.
       destruct i0. discriminate.
       destruct i0. discriminate.
       destruct i0. discriminate.
-      discriminate. 
-      destruct i0; simpl.
+      discriminate.
+    **  destruct i0; simpl.
       ++ destruct j; simpl.
       reflexivity.
       intros. destruct j. discriminate.
@@ -262,7 +262,7 @@ Proof.
       destruct j; simpl.
       discriminate.
       discriminate.
-      ++ destruct i0; simpl.
+      destruct i0; simpl.
       destruct j; simpl.
       intros. discriminate.
       destruct j; simpl. 
@@ -278,7 +278,7 @@ Proof.
       destruct j; simpl.
       discriminate.
       discriminate.
-      ++ destruct i0; simpl.
+      destruct i0; simpl.
       destruct j; simpl.
       intros. discriminate.
       destruct j; simpl. 
@@ -294,7 +294,7 @@ Proof.
       destruct j; simpl.
       discriminate.
       discriminate.
-      ++ destruct i0; simpl.
+      destruct i0; simpl.
       destruct j; simpl.
       intros. discriminate.
       destruct j; simpl. 
@@ -310,7 +310,7 @@ Proof.
       destruct j; simpl.
       discriminate.
       discriminate.
-      ++ destruct i0; simpl.
+      destruct i0; simpl.
       destruct j; simpl.
       intros. discriminate.
       destruct j; simpl. 
@@ -326,7 +326,7 @@ Proof.
       destruct j; simpl. 
       discriminate.
       discriminate.
-      ++ destruct i0; simpl.
+      destruct i0; simpl.
       destruct j; simpl.
       intros. discriminate.
       destruct j; simpl. 
@@ -342,7 +342,7 @@ Proof.
       destruct j; simpl. 
       reflexivity.    
       simpl in Hi; lia.
-      ++ destruct i0; simpl.
+      destruct i0; simpl.
       simpl in Hi; lia.
       simpl in Hi; lia.
   - unfold FinFun.EqDec. 
@@ -371,7 +371,7 @@ Definition parentComponent (ns : type MyNodesFDT + fin 2) :
   | inl Persistent => inl NodeType
   | inl Init => inl Process
   | inl On => inl Init
-  | inr (exist s' _) => 
+  | inr (exist _ s' _) => 
     match s' with 
     | 0 => inl Component 
     | _ => inr zero1
@@ -466,9 +466,10 @@ exists (e::aNDL). constructor; auto.
 Defined. 
 
 
-Compute (freshNames eNDL 1).
-Compute (freshNames eNDL 2).
-Compute (freshNames EmptyNDL 3).
+Compute (ndlist (freshNames eNDL 1)).
+Compute (ndlist (freshNames eNDL 2)).
+Compute (ndlist (freshNames EmptyNDL 3)).
+Compute (ndlist (freshNames EmptyNDL 0)).
 
 Definition myPN : PermutationNames
      (app_merge_NoDupList

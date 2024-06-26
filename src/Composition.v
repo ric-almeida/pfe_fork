@@ -74,35 +74,32 @@ Definition bigraph_composition {s1 r1 s2 r2 : nat} {i1o2 o2i1 o1 i2 : NoDupList}
   
 Global Notation "b1 '<<o>>' b2" := (bigraph_composition b1 b2) (at level 50, left associativity).
 
-Lemma arity_comp_left_neutral : forall {s i r o o' o''} 
-  {p : PermutationNames (ndlist o) (ndlist o')} 
-  {p' : PermutationNames (ndlist o') (ndlist o'')}
+Lemma arity_comp_left_neutral : forall {s i r o} 
   (b : bigraph s i r o) n, 
-  Arity (get_control (bigraph_identity <<o>> b) n) =
+  Arity (get_control (bigraph_id r o <<o>> b) n) =
   Arity (get_control b (bij_void_sum_neutral n)).
   (* b : s i r o, -> b_id : r (p o) r (p (p o)) *)
   Proof.
-  intros s i r o o' o'' p p' b n.
+  intros s i r o b n.
   destruct n as [ v | n].
     + destruct v.
   + reflexivity.
   Qed.
 
-Theorem bigraph_comp_left_neutral : forall {s i r o o' o''} 
-  {p : PermutationNames (ndlist o) (ndlist o')} 
-  {p' : PermutationNames (ndlist o') (ndlist o'')} (b : bigraph s i r o), 
-  bigraph_equality (bigraph_identity <<o>> b) b.
+Theorem bigraph_comp_left_neutral : forall {s i r o} 
+  (b : bigraph s i r o), 
+  bigraph_equality (bigraph_id r o <<o>> b) b.
   Proof.
-  intros s i r o o' o'' p p' b.
+  intros s i r o b.
   refine (
-    BigEq s r s r i o'' i o (bigraph_identity <<o>> b) b
+    BigEq s r s r i o i o (bigraph_id r o <<o>> b) b
       eq_refl (*s*)
       (fun (name : Name) => reflexivity (In name i)) (*i*)
       eq_refl (*r*)
-      (fun (name : Name) => transitivity (symmetry (PN_P p') name) (symmetry (PN_P p) name)) (*o*)
+      (left_empty o) (*o*)
       bij_void_sum_neutral (*n*)
       bij_void_sum_neutral (*e*)
-      (fun n => bij_rew (P := fin) (@arity_comp_left_neutral s i r o o' o'' p p' b n)) (*p*)
+      (fun n => bij_rew (P := fin) (arity_comp_left_neutral b n)) (*p*)
       _ _ _
     ).
   + apply functional_extensionality.
@@ -148,33 +145,28 @@ Theorem bigraph_comp_left_neutral : forall {s i r o o' o''}
       rewrite <- eq_rect_eq.
       destruct get_link; try reflexivity.
       * apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-  Unshelve. apply symmetric_permutation. apply symmetric_permutation.
   Qed.
 
-Lemma arity_comp_right_neutral : forall {s i r o i' i''} 
-  {p : PermutationNames (ndlist i'') (ndlist i)} 
-  {p' : PermutationNames (ndlist i') (ndlist i'')}
+Lemma arity_comp_right_neutral : forall {s i r o}
   (b : bigraph s i r o) n, 
-  Arity (get_control (b <<o>> bigraph_identity) n) =
+  Arity (get_control (b <<o>> bigraph_id s i) n) =
   Arity (get_control b (bij_void_sum_neutral_r n)).
   Proof.
-  intros s i r o i' i'' p p' b n.
+  intros s i r o b n.
   destruct n as [n | v].
   + reflexivity.
   + destruct v.
   Qed.
 
-Theorem bigraph_comp_right_neutral : forall {s i r o i' i''} 
-  {p : PermutationNames (ndlist i'') (ndlist i)} 
-  {p' : PermutationNames (ndlist i') (ndlist i'')}
+Theorem bigraph_comp_right_neutral : forall {s i r o}
   (b : bigraph s i r o), 
-  bigraph_equality (b <<o>> bigraph_identity) b.
+  bigraph_equality (b <<o>> bigraph_id s i) b.
   Proof.
-  intros s i r o i' i'' p p' b.
+  intros s i r o b.
   apply 
-    (BigEq _ _ _ _ _ _ _ _ (b <<o>> bigraph_identity) b
+    (BigEq _ _ _ _ _ _ _ _ (b <<o>> bigraph_id s i) b
       eq_refl
-      (fun (name : Name) => transitivity (PN_P p' name) (PN_P p name))
+      (fun (name : Name) => reflexivity (In name i))
       eq_refl
       (fun (name : Name) => reflexivity (In name o))
       bij_void_sum_neutral_r
