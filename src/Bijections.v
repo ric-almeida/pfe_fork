@@ -206,6 +206,25 @@ reflexivity.
 reflexivity.
 Defined.
 
+Definition bijection_nest_right_neutral {n} :
+  bijection (void + n + void) n.
+  apply (mkBijection (void + n + void) n
+        (fun vnv => 
+        match vnv with 
+          | inl vn => 
+            match vn with 
+            | inl v => match v with end
+            | inr n => n
+            end 
+          | inr v => match v with end
+        end)
+        (fun n => inl (inr n))).
+  apply functional_extensionality.
+  intros. reflexivity.
+  apply functional_extensionality.
+  intros [[v|n']|v]; try elim v; reflexivity.
+  Defined.
+
 Theorem bij_sum_comm : forall {A B}, bijection (A+B) (B+A).
 Proof.
 intros A B.

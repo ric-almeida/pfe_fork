@@ -325,45 +325,71 @@ Theorem nest_associative : forall {s1 r1 o1 s2 r2 o2 s3 i3 r3 o3}
   Qed.
 
 
-Lemma arity_nest_right_neutral {n Y} (G : bigraph 1 EmptyNDL n Y) :
+Lemma arity_nest_right_neutral {s1 r1 : nat} {o1 : NoDupList} 
+  (b1 : bigraph s1 EmptyNDL r1 o1) :
   forall n, 
-  Arity (get_control (G <.> bigraph_identity) n) =
-  Arity (get_control G (bij_void_sum_neutral n)).
+  Arity (get_control (b1 <.> bigraph_id s1 EmptyNDL) n) =
+  Arity (get_control b1 (bijection_nest_right_neutral n)).
   Proof.
-  intros s i r o i' i'' p p' b n.
-  destruct n as [n | v].
-  + reflexivity.
-  + destruct v.
-  Qed. *)
+  intros.
+  destruct n as [[v| n] | v]; try elim v; reflexivity.
+  Qed. 
 
-
-
- 
-(* Theorem nest_neutral_elt {n Y} (G : bigraph 1 EmptyNDL n Y) : 
-  bigraph_equality (G <.> bigraph_identity) G.
+Lemma nest_right_neutral {s1 r1 : nat} {o1 : NoDupList} 
+  (b : bigraph s1 EmptyNDL r1 o1) :
+  bigraph_equality 
+    (b <.> bigraph_id s1 EmptyNDL)
+    b.
   Proof.
-    unfold nest. simpl. 
-  apply 
-    (BigEq _ _ _ _ _ _ _ _ (G <.> bigraph_identity) G
+  eapply 
+    (BigEq s1 r1 s1 r1 _ _ _ _ (b <.> bigraph_id s1 EmptyNDL) b
       eq_refl
-      (fun (name : Name) => transitivity (P_NP (permutation_id Y)) (P_NP (permutation_id Y)))
+      (left_empty EmptyNDL)
       eq_refl
-      (fun (name : Name) => reflexivity (In name Y))
-      bij_void_sum_neutral_r
-      bij_void_sum_neutral_r 
-      (fun n => bij_rew (P := fin) (arity_comp_right_neutral b n)) 
+      (left_empty o1)
+      bijection_nest_right_neutral
+      bijection_nest_right_neutral
+      (fun n => bij_rew (P := fin) (arity_nest_right_neutral b n))
     ).
-  +  *)
+  + apply functional_extensionality.
+    intro x.
+    reflexivity. 
+  + apply functional_extensionality.
+    destruct x as [n1 | s1']; simpl.
+    - unfold funcomp,parallel,sum_shuffle,extract1.
+      simpl. unfold extract1.
+      destruct get_parent; try reflexivity.
+      unfold id, surj_fin_add. f_equal. destruct f. apply subset_eq_compat. reflexivity.
+    - unfold funcomp,parallel,sum_shuffle,extract1.
+      simpl. unfold extract1.
+      unfold bij_rew_forward,inj_fin_add. 
+      rewrite <- eq_rect_eq.
+      destruct s1'.
+      destruct (PeanoNat.Nat.ltb_spec0 x 0). lia.
+      rewrite <- (parent_proof_irrelevant' b x (x - 0) l).   
+      destruct get_parent; try reflexivity.
+      unfold id, surj_fin_add. f_equal. destruct f. apply subset_eq_compat. reflexivity.
+      lia.
+  + apply functional_extensionality.      
+    destruct x as [[name] | (v1, (k1, Hvk1))]; simpl.
+    - destruct i0. 
+    - unfold parallel, sum_shuffle, choice, funcomp, id.
+      simpl.
+      unfold bij_join_port_backward, bij_dep_sum_2_forward, bijection_inv, bij_dep_sum_1_forward.
+      simpl.
+      unfold bij_rew_forward, eq_rect_r, funcomp.
+      simpl.
+      unfold rearrange, switch_link, extract1, bij_subset_forward.
+      simpl.
+    (*
+        erewrite eq_rect_pi.
+        erewrite (eq_rect_pi (x := v1)).
+    *)
+      rewrite <- eq_rect_eq.
+      rewrite <- eq_rect_eq.
+      destruct get_link; try reflexivity. 
+      * f_equal. destruct s0. apply subset_eq_compat. reflexivity.
+  Qed.
 
-
-
-
-Example b1 {s1 r1 o1}: bigraph s1 EmptyNDL r1 o1. Admitted.
-Example b2 {s1 i2 i1}: bigraph 0 i2 s1 i1. Admitted.
-
-(* Theorem atom_is_empty_ion : 
-  bigraph_equality.
-  (discrete_ion <o> ∅)
-  discrete_atom. *)
 
 End NestingBig.
