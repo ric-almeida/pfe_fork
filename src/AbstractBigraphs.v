@@ -71,6 +71,8 @@ Definition get_link {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : {inne
   @link s i r o bg.
 End GettersBigraphs.
 
+(** Tools for proof irrelevance *)
+
 Theorem parent_proof_irrelevant {s i r o} (b:bigraph s i r o): 
   forall n n': nat, forall Hn Hn', n = n' ->
   get_parent b (inr (exist _ n Hn)) = get_parent b (inr (exist _ n Hn')).
@@ -92,6 +94,8 @@ Theorem innername_proof_irrelevant {s i r o} (b:bigraph s i r o):
   intros. apply f_equal. apply f_equal. apply subset_eq_compat. reflexivity.
   Qed.
 
+(** Section defining some elementary bigraphs *)
+Section ElementaryBigraphs. 
 Definition bigraph_id (s: nat) (i : NoDupList) : bigraph s i s i. (*actually s i s (permutation i) *)
   Proof.
   apply (Big s i s i
@@ -108,8 +112,6 @@ Definition bigraph_id (s: nat) (i : NoDupList) : bigraph s i s i. (*actually s i
   Defined.
 
 Definition bigraph_empty : bigraph 0 EmptyNDL 0 EmptyNDL := bigraph_id 0 EmptyNDL.
-Global Notation "∅" := bigraph_empty.
-
 Example zero1 : type (findec_fin 1). exists 0. auto. Defined.
 
 Definition discrete_atom {A} 
@@ -255,7 +257,9 @@ Definition closure (name:Name) : bigraph 0 (OneelNDL name) 0 EmptyNDL.
   Defined.
 
 Definition join_big := @merge 2. 
+End ElementaryBigraphs.
 
+Global Notation "∅" := bigraph_empty.
 
 End Bigraphs.
 

@@ -1004,6 +1004,23 @@ Class DisjointNames (l1 l2 : NoDupList) := { disj : forall n, In n l1 -> In n l2
   * apply (disj1 n); try assumption.
   Qed.
 
+Definition DN_D {l1 l2} : DisjointNames l1 l2 -> Disjoint l1 l2.
+  Proof. 
+  intros.
+  unfold Disjoint.
+  destruct H as [H].
+  unfold not.
+  apply H.
+  Qed.
+
+Definition D_ND {l1 l2} : Disjoint l1 l2 -> DisjointNames l1 l2.
+  Proof. 
+  intros.
+  unfold Disjoint in H.
+  unfold not in H.
+  constructor.
+  apply H.
+  Qed.
 
 End NameSubsets.
 

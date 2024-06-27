@@ -2,7 +2,8 @@ Require Import MyBasics.
 Require Import Bijections.
 Require Import FunctionalExtensionality.
 
-(** This module implements a signature *)
+(** * This module implements a signature
+  It contains a Module Type with Kappa and Arity, and Ports built from the Signature *)
 Module Type SignatureParameter.
 
 Parameter Kappa:Type.

@@ -51,27 +51,49 @@ Definition InfName : forall l : list string, exists n : string, ~ In n l.
   - exists "a". auto.
   - Admitted.
 Definition DefaultName := "default".
-Definition freshName : list Name -> Name. 
-Proof. 
-intros l. induction l as [|name l' H].
-- exact DefaultName.
-- exact (H ++ "g").
-Defined. 
+Fixpoint freshName (l : list Name) : Name := 
+match l with 
+| [] => DefaultName
+| t::q =>  t ++ freshName q
+end.  
+Lemma append_neutral_element : forall str str' : string,
+  str = str ++ str' <-> str' = "".
+  Proof.
+  intros.
+  split;intros H. 
+  - induction str.
+  simpl in H.
+  symmetry.
+  apply H.
+  apply IHstr.
+  injection H.
+  intros. apply H0.
+  - Admitted.
+  (* Qed. *)
+
+Lemma freshNameNotEmptyString : forall l, freshName l <> "".
+induction l.
+simpl.
+unfold DefaultName.
+unfold not. intros H.
+inversion H.
+simpl.
+unfold not. intros H.
+Admitted.
+
 Lemma notInfreshName : forall l:list Name, ~ In (freshName l) l. 
 Proof. 
 intros.
-unfold not. intros H. 
-induction l as [|name l Hl].
-- elim H.
-- destruct H.
-+ apply Hl. unfold freshName in *.  
-unfold list_rec in *. unfold list_rect in *.
-induction l.
-constructor.
-elim Hl.
-simpl in *. admit.
-+ 
-
+induction l as [|name l' Hl] eqn:E.
+- auto.
+- simpl.
+unfold not. intros H.
+destruct H.
+apply append_neutral_element in H.
+induction l'.
+simpl in H.
+inversion H.
+simpl in H.
 Admitted.
 
 End MyNamesP.
