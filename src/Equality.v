@@ -4,7 +4,6 @@ Require Import AbstractBigraphs.
 Require Import Bijections.
 Require Import Names.
 Require Import SignatureBig.
-Require Import Fintypes.
 Require Import FinDecTypes.
 Require Import MyBasics.
 

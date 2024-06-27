@@ -6,7 +6,6 @@ Require Import SignatureBig.
 Require Import Equality.
 Require Import Bijections.
 Require Import MyBasics.
-Require Import Fintypes.
 Require Import FinDecTypes.
 Require Import TensorProduct.
 
