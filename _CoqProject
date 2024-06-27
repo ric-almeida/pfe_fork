@@ -6,11 +6,13 @@ src/FinDecTypes.v
 src/Fintypes.v
 src/SignatureBig.v
 src/Names.v
+src/MyEqNat.v
 src/AbstractBigraphs.v
 src/Equality.v
 src/Composition.v
 src/TensorProduct.v
 src/Symmetries.v
+src/UnionPossible.v
 src/ParallelProduct.v
 src/Nesting.v
 src/MergeProduct.v

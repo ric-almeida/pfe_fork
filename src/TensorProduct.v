@@ -31,45 +31,6 @@ Include c.
 Set Typeclasses Unique Instances.
 Set Typeclasses Iterative Deepening.
 
-Class DisjointNames (l1 l2 : NoDupList) := { disj : forall n, In n l1 -> In n l2 -> False }.
-
-#[export] Instance disj_left_neutral (l : NoDupList) : DisjointNames EmptyNDL l.
-  Proof.
-  constructor.
-  intros n Hn.
-  elim (Hn).
-  Qed.
-
-#[export] Instance disj_right_neutral (l : NoDupList) : DisjointNames l EmptyNDL.
-  Proof.
-  constructor.
-  intros n _ Hn.
-  elim (Hn).
-  Qed.
-
-#[export] Instance disj_app_right (l1 l2 l3 : NoDupList) (Disj12 : DisjointNames l1 l2) (Disj13 : DisjointNames l1 l3) : DisjointNames l1 (l2 ∪ l3).
-  Proof.
-  constructor.
-  intros n H1 H23.
-  destruct Disj12. destruct Disj13.
-  apply app_merge_or in H23.
-  destruct H23. 
-  * apply (disj0 n); try assumption.
-  * apply (disj1 n); try assumption.
-  Qed.
-
-#[export] Instance disj_app_left (l1 l2 l3 : NoDupList) (Disj13 : DisjointNames l1 l3) (Disj23 : DisjointNames l2 l3) : DisjointNames (l1 ∪ l2) l3.
-  Proof.
-  constructor.
-  intros n H12 H3.
-  destruct Disj13. destruct Disj23.
-  apply app_merge_or in H12.
-  destruct H12. 
-  * apply (disj0 n); try assumption.
-  * apply (disj1 n); try assumption.
-  Qed.
-
-Global Notation "l1 # l2" := (DisjointNames l1 l2) (at level 50, left associativity). 
 
 Definition tmptest
 {s1 r1 s2 r2 : nat}

@@ -53,7 +53,7 @@ Definition InfName : forall l : list string, exists n : string, ~ In n l.
 Definition DefaultName := "default".
 Definition freshName : list Name -> Name. 
 Proof. 
-intros l. induction l as [|name l H].
+intros l. induction l as [|name l' H].
 - exact DefaultName.
 - exact (H ++ "g").
 Defined. 
@@ -64,9 +64,12 @@ unfold not. intros H.
 induction l as [|name l Hl].
 - elim H.
 - destruct H.
-+ unfold freshName in H. 
++ apply Hl. unfold freshName in *.  
 unfold list_rec in *. unfold list_rect in *.
-simpl in H. admit.
+induction l.
+constructor.
+elim Hl.
+simpl in *. admit.
 + 
 
 Admitted.
@@ -462,21 +465,19 @@ Arity 0 = Datatypes.length EmptyNDL *)
 Example eaNDL : NoDupList.
 exists (e::aNDL). constructor; auto.
 - simpl. unfold not. intros. destruct H. ** discriminate H. ** elim H.
-- exact (noDupSingle a). 
+- exact (nd (OneelNDL a)). 
 Defined. 
 
 
-Compute (ndlist (freshNames eNDL 1)).
-Compute (ndlist (freshNames eNDL 2)).
-Compute (ndlist (freshNames EmptyNDL 3)).
-Compute (ndlist (freshNames EmptyNDL 0)).
+Compute ((freshName eNDL)).
+Compute ((freshName EmptyNDL)).
 
 Definition myPN : PermutationNames
      (app_merge_NoDupList
         (app_merge_NoDupList EmptyNDL
-           (app_merge_NoDupList {| ndlist := [e]; nd := noDupSingle e |}
-              eaNDL)) {| ndlist := [e]; nd := noDupSingle e |})
-     (app_merge_NoDupList {| ndlist := [e]; nd := noDupSingle e |} aNDL).
+           (app_merge_NoDupList (OneelNDL e)
+              eaNDL)) (OneelNDL e))
+     (app_merge_NoDupList (OneelNDL e) aNDL).
 simpl. unfold app_merge_NoDupList. 
 simpl. constructor. simpl. 
 unfold permutation. intros. split; intros. 
@@ -496,15 +497,15 @@ Definition myPN' :
 PermutationNames
      (app_merge_NoDupList EmptyNDL
         (app_merge_NoDupList
-           (app_merge_NoDupList {| ndlist := [e]; nd := noDupSingle e |} eNDL)
+           (app_merge_NoDupList (OneelNDL e) eNDL)
            eaNDL))
-     (app_merge_NoDupList {| ndlist := [e]; nd := noDupSingle e |} aNDL).
+     (app_merge_NoDupList (OneelNDL e) aNDL).
 simpl. constructor. simpl. 
 exact (permutation_id [e;a]).
 Defined.
 
 
-Definition mydisi : {| ndlist := [e]; nd := noDupSingle e |} # aNDL.
+Definition mydisi : (OneelNDL e) # aNDL.
 constructor.
 intros. simpl in *. 
 destruct H; destruct H0.
@@ -520,7 +521,7 @@ Defined.
 Example simplBigboolOp := 
   (bigraph_composition (p:=myPN)
   (bigraph_tensor_product (dis_i := mydisi) (closure e) (bigraph_id 1 aNDL)) 
-  ((discrete_ion (A := findec_bool) false (mkNoDupList [e] (noDupSingle e)) (k := 1)) 
+  ((discrete_ion (A := findec_bool) false (OneelNDL e) (k := 1)) 
   <|> 
   (discrete_atom (A := findec_bool) true eaNDL (k := 2))
   ||
@@ -535,7 +536,7 @@ Theorem eqmesbig :
 (* Example simplBigboolOp := 
   ((closure e) ⊗ (bigraph_id 1 aNDL)) 
   <<o>> 
-  ((discrete_ion (A := findec_bool) false (mkNoDupList [e] (noDupSingle e)) (k := 1)) 
+  ((discrete_ion (A := findec_bool) false (OneelNDL e) (k := 1)) 
   <|> 
   (discrete_atom (A := findec_bool) true eaNDL (k := 2))
   ||

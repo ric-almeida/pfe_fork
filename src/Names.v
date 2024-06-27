@@ -38,6 +38,9 @@ mkNoDupList
   }.
 Definition EmptyNDL : NoDupList := {| ndlist := []; nd := NoDup_nil Name |}.
 
+(* Lemma noDupSingle (n:Name) :  NoDup [n].
+  Proof. constructor; auto. constructor. Qed. *)
+
 Definition OneelNDL (n : Name): NoDupList.
 eapply (mkNoDupList [n]).
 constructor; auto; constructor. 
@@ -963,8 +966,48 @@ Definition bij_list_names' (i1:NoDupList) (i2:NoDupList) {dis_i:Disjoint i1 i2} 
   Abort.
 
 
+Class DisjointNames (l1 l2 : NoDupList) := { disj : forall n, In n l1 -> In n l2 -> False }.
+
+#[export] Instance disj_left_neutral (l : NoDupList) : DisjointNames EmptyNDL l.
+  Proof.
+  constructor.
+  intros n Hn.
+  elim (Hn).
+  Qed.
+
+#[export] Instance disj_right_neutral (l : NoDupList) : DisjointNames l EmptyNDL.
+  Proof.
+  constructor.
+  intros n _ Hn.
+  elim (Hn).
+  Qed.
+
+#[export] Instance disj_app_right (l1 l2 l3 : NoDupList) (Disj12 : DisjointNames l1 l2) (Disj13 : DisjointNames l1 l3) : DisjointNames l1 (l2 ∪ l3).
+  Proof.
+  constructor.
+  intros n H1 H23.
+  destruct Disj12. destruct Disj13.
+  apply app_merge_or in H23.
+  destruct H23. 
+  * apply (disj0 n); try assumption.
+  * apply (disj1 n); try assumption.
+  Qed.
+
+#[export] Instance disj_app_left (l1 l2 l3 : NoDupList) (Disj13 : DisjointNames l1 l3) (Disj23 : DisjointNames l2 l3) : DisjointNames (l1 ∪ l2) l3.
+  Proof.
+  constructor.
+  intros n H12 H3.
+  destruct Disj13. destruct Disj23.
+  apply app_merge_or in H12.
+  destruct H12. 
+  * apply (disj0 n); try assumption.
+  * apply (disj1 n); try assumption.
+  Qed.
+
 
 End NameSubsets.
+
+Global Notation "l1 # l2" := (DisjointNames l1 l2) (at level 50, left associativity). 
 
 
 Section IntersectionNDL.
@@ -1160,10 +1203,11 @@ Theorem intersection_disjoint_empty_NDL {i1 i2 : NoDupList} :
   induction i1.
   - reflexivity.
   - destruct (in_dec EqDecN a i2).
-  + exfalso. unfold not in H. apply (H a); simpl; try auto; try assumption.
-  + apply IHi1.
-  * apply nodup_tl in nd1. apply nd1.
-  * intros. apply (H name). simpl. right. apply H0.
+  + exfalso. destruct H as [H]. unfold not in H. apply (H a); simpl; try auto; try assumption.
+  + apply (IHi1 (nodup_tl a i1 nd1)). 
+  constructor. intros. destruct H as [H]. 
+  apply (H n0). simpl. right. apply H0.
+  apply H1. 
   Qed.
 
 
