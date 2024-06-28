@@ -577,19 +577,6 @@ Definition permutation_id' (l: list Name) (l': list Name) : l = l' -> permutatio
 Proof. intros. destruct H. exact (permutation_id l).
 Defined. 
 
-Theorem TODO : forall l1 l2, permutation l1 l2 <-> Permutation l1 l2.
-Proof.
-intros.
-split; intros.
-- unfold permutation in H. 
-induction l1.
-+ induction l2.
-* constructor.
-* edestruct H. admit.
-+ admit.
-- unfold permutation. intros name. destruct H.
-+ tauto.
-+ Admitted.
 
 
 Theorem symmetric_permutation: Symmetric permutation.

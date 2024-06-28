@@ -401,7 +401,7 @@ Theorem bigraph_tp_assoc :
         rewrite <- eq_rect_eq.
         simpl.
         destruct get_link; try reflexivity.
-        ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity. (*TODO best example of tactic use*)
+        ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
   Qed.
 End M1.
 

@@ -880,10 +880,6 @@ apply bij_eq.
   reflexivity.
 Qed.
 
-Fail Theorem bij_subset_compose_id' : forall {A : Type} {P : A -> Prop} {Q : A -> Prop}
-  (EqPQ : forall a, P a <-> Q (bij_id a)),
-  <{bij_id | EqPQ}> = bij_id.
-  (* TODO: FIX *)
 
 Theorem bij_subset_compose_id'' : forall {A : Type} {P : A -> Prop} {Q : A -> Prop}
   (EqPQ : forall a, P a <-> Q (bij_id a)),
