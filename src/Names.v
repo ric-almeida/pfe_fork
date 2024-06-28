@@ -1,3 +1,4 @@
+Set Warnings "-notation-overridden, -notation-overriden, -masking-absolute-name".
 
 Require Import Coq.Lists.List.
 Require Import Coq.Program.Equality.
@@ -27,270 +28,114 @@ End NamesParameter.
 Module Names (NP: NamesParameter).
 Include NP.
 
-
-
-
-Record NoDupList : Type :=
-mkNoDupList
-  {
-    ndlist :> list Name ;
-    nd : NoDup ndlist ;
-  }.
-Definition EmptyNDL : NoDupList := {| ndlist := []; nd := NoDup_nil Name |}.
-
-(* Lemma noDupSingle (n:Name) :  NoDup [n].
-  Proof. constructor; auto. constructor. Qed. *)
-
-Definition OneelNDL (n : Name): NoDupList.
-eapply (mkNoDupList [n]).
-constructor; auto; constructor. 
-Defined.
-
-Definition list_to_NDL (l:list Name) : NoDupList.
-apply (
-    mkNoDupList 
-    (nodup EqDecN l)
-).
-apply NoDup_nodup.
-Defined.
-
-Lemma in_elt' (l1: list Name) : forall (x:Name) l2, In x (l1 ++ x :: l2).
-Proof. intros.
-    apply in_or_app.
-    right; left; reflexivity.
-Qed.
-
-Fixpoint app_merge' (l1 : list Name) (l2 : list Name) {struct l1} : list Name :=  
+Section MergeList.
+Fixpoint app_merge (l1 : list Name) (l2 : list Name) {struct l1} : list Name :=  
     match l1 with
     | nil => l2
     | a :: l1' =>  
-      if in_dec EqDecN a l2 then app_merge' l1' l2
-        else a :: app_merge' l1' l2
+      if in_dec EqDecN a l2 then app_merge l1' l2
+        else a :: app_merge l1' l2
   end.
 
+Lemma merge_head {l1' l2' : list Name} {a : Name}:
+  app_merge (a::l1') (a::l2') = app_merge l1' (a::l2').
+  Proof.
+      simpl.
+      destruct (EqDecN a a).
+      - reflexivity.
+      - exfalso. apply n. reflexivity.
+  Qed.
 
-Lemma merge'_head {l1' l2' : list Name} {a : Name}:
-app_merge' (a::l1') (a::l2') = app_merge' l1' (a::l2').
-Proof.
-    simpl.
-    destruct (EqDecN a a).
-    - reflexivity.
-    - exfalso. apply n. reflexivity.
-Qed.
+Lemma app_merge_empty_right (l1 : list Name) :
+  app_merge l1 [] = l1.
+  Proof.
+      induction l1.
+      simpl. reflexivity.
+      simpl. rewrite IHl1. reflexivity. 
+  Qed.
 
-Lemma app_merge'_empty_right (l1 : list Name) :
-app_merge' l1 [] = l1.
-Proof.
-    induction l1.
-    simpl. reflexivity.
-    simpl. rewrite IHl1. reflexivity. 
-Qed.
+Lemma app_merge_empty_left (l1 : list Name) :
+  app_merge [] l1 = l1.
+  Proof.
+      induction l1.
+      simpl. reflexivity.
+      simpl. reflexivity. 
+  Qed.
+End MergeList.
 
-Lemma app_merge'_empty_left (l1 : list Name) :
-app_merge' [] l1 = l1.
-Proof.
-    induction l1.
-    simpl. reflexivity.
-    simpl. reflexivity. 
-Qed.
-
-(* Theorem app_merge'_assoc {l1 l2 l3 : list Name} :
-app_merge' (app_merge' l1 l2) l3 = 
-    app_merge' l1 (app_merge' l2 l3).
-Proof. Abort. *)
-
-
+Section InList.
 Lemma in_eq_m {a:Name} {l}: 
-In a (app_merge' [a] l).
-Proof.
-    intros. simpl. destruct (in_dec EqDecN a l).
-    apply i.
-    constructor. reflexivity. 
-Qed.
+  In a (app_merge [a] l).
+  Proof.
+      intros. simpl. destruct (in_dec EqDecN a l).
+      apply i.
+      constructor. reflexivity. 
+  Qed.
 
 Lemma in_cons_m : forall (a b:Name) (l:list Name), 
-In b l -> In b (app_merge' [a] l).
-Proof. 
-    intros. simpl. destruct (in_dec EqDecN a l).
-    - apply H. 
-    - apply in_cons. apply H.
-Qed.
+  In b l -> In b (app_merge [a] l).
+  Proof. 
+      intros. simpl. destruct (in_dec EqDecN a l).
+      - apply H. 
+      - apply in_cons. apply H.
+  Qed.
 
 Lemma in_head_right_list {a:Name} {l1 l2}:
-In a (app_merge' l1 (a::l2)).
-Proof.
-    induction l1 as [|a1 l1' IHl1].
-    - simpl. left. reflexivity.
-    - simpl. destruct (EqDecN a a1).
-    + apply IHl1.
-    + destruct (in_dec EqDecN a1 l2).
-    * apply IHl1.
-    * apply in_cons. apply IHl1.
-Qed.
+  In a (app_merge l1 (a::l2)).
+  Proof.
+      induction l1 as [|a1 l1' IHl1].
+      - simpl. left. reflexivity.
+      - simpl. destruct (EqDecN a a1).
+      + apply IHl1.
+      + destruct (in_dec EqDecN a1 l2).
+      * apply IHl1.
+      * apply in_cons. apply IHl1.
+  Qed.
 
 Theorem in_right_list : forall (b:Name) (l1:list Name) (l2:list Name), 
-In b l2 -> In b (app_merge' l1 l2).
-Proof. 
-    intros.
-    induction l1.
-    - simpl. apply H.
-    - simpl. destruct (in_dec EqDecN a l2).
-    + apply IHl1.
-    + simpl. right. apply IHl1. 
-Qed. 
+  In b l2 -> In b (app_merge l1 l2).
+  Proof. 
+      intros.
+      induction l1.
+      - simpl. apply H.
+      - simpl. destruct (in_dec EqDecN a l2).
+      + apply IHl1.
+      + simpl. right. apply IHl1. 
+  Qed. 
 
 Lemma in_head_left_list {a:Name} {l1 l2}:
-In a (app_merge' (a :: l1) l2).
-Proof.
-    induction l1 as [|a1 l1' IHl1].
-    - apply in_eq_m.
-    - simpl. destruct (in_dec EqDecN a l2).
-    + destruct (in_dec EqDecN a1 l2).
-    * apply in_right_list. apply i.
-    * apply in_cons. apply in_right_list. apply i.
-    + constructor. reflexivity.
-Qed.
-
-Lemma NoDup_in_or_exclusive {a h:Name} {t:list Name} :
-In a (h::t) -> NoDup (h::t) -> 
-(a = h /\ ~ In a t) \/ (a <> h /\ In a t).
-Proof.
-    intros H nd.
-    destruct (EqDecN a h).
-    - left. destruct e. split.
-    + reflexivity.
-    + apply NoDup_cons_iff in nd. 
-    destruct nd. apply H0.
-    - right. split.
-    + apply n.
-    + simpl in H. destruct H.
-    * exfalso. apply n; symmetry; apply H.
-    * apply H. 
-Qed.
-
-Lemma NoDup_in_or_exclusive' {a h:Name} {t:list Name} :
-In a (h::t) -> NoDup (h::t) -> 
-(a = h /\ ~ In a t) + (a <> h /\ In a t).
-Proof.
-    intros H nd.
-    destruct (EqDecN a h).
-    - left. destruct e. split.
-    + reflexivity.
-    + apply NoDup_cons_iff in nd. 
-    destruct nd. apply H0.
-    - right. split.
-    + apply n.
-    + simpl in H. destruct H.
-    * exfalso. apply n; symmetry; apply H.
-    * apply H. 
-Qed.
-
-Lemma eq_means_cons_eq {a1 a2:Name} {l1 l2} :
-a1 = a2 /\ l1 = l2 -> a1::l1 = a2::l2.
-Proof. 
-    intros.
-    destruct H. rewrite H. rewrite H0. reflexivity. 
-Qed.
-
-Lemma NoDupFalse {a:Name} {l1 l2} :
-~ NoDup (a :: l1 ++ a :: l2). 
-Proof.
-    unfold not. 
-    intros nd.
-    apply NoDup_cons_iff in nd. 
-    destruct nd. apply H. apply in_or_app. right. constructor. reflexivity.
-Qed.
-
-Lemma NoDup_id {a : Name} {l1 l2} :
-NoDup (l1 ++ a :: l2) -> l1 ++ a :: l2 = app_merge' l1 (a :: l2).
-Proof. 
-    intros nd.
-    induction l1.
-    - simpl. reflexivity.
-    - simpl. destruct (EqDecN a a0).
-    + exfalso. rewrite e in nd. apply NoDupFalse in nd. apply nd. 
-    + destruct (in_dec EqDecN a0 l2).
-    * exfalso. simpl in nd. apply NoDup_cons_iff in nd. 
-    destruct nd. apply H. apply in_or_app. right. apply in_cons. apply i.
-    * apply eq_means_cons_eq. split.
-    ** reflexivity.
-    ** apply IHl1. simpl in nd. apply NoDup_cons_iff in nd. 
-    destruct nd. apply H0. 
-Qed.
-
-Theorem NoDup_id_app {l1 l2} :
-NoDup (l1 ++ l2) -> l1 ++ l2 = app_merge' l1 l2.
-Proof. 
-    intros nd.
-    induction l1.
-    - simpl. reflexivity.
-    - simpl. destruct (in_dec EqDecN a l2).
-    + exfalso. simpl in nd. apply NoDup_cons_iff in nd. destruct nd.
-    apply H. apply in_or_app. right; assumption.
-    + apply eq_means_cons_eq. split. {reflexivity. }
-    apply IHl1. simpl in nd. apply NoDup_cons_iff in nd. destruct nd.
-    apply H0.
-Qed.
-
-Lemma in_split_m_dup (a:Name) (l:list Name) :
-NoDup l -> In a l -> exists l1 l2, l = app_merge' l1 (a :: l2).
-Proof.
-  intros nd H.
-  generalize dependent a.
-  induction l as [| h t IH].
-  - (* l = []*)
-    intros. inversion H.    
-  - (* l = h:: t*)
-    intros.      
-    apply NoDup_in_or_exclusive in H. 
-    * destruct H.
-    + (* l = a::t *)
-      exists [].
-      exists t.
-      simpl. destruct H. rewrite H. 
-      reflexivity.
-    + (* l = h :: l1 ++ a :: t*)
-      destruct H as [H H'].
-      apply in_split in H'.
-      destruct H' as [l1 [l2 H']].
-      exists (h::l1).
-      exists (l2).
-      simpl.
-      destruct (EqDecN a h). {exfalso; apply H; apply e. }
-      destruct (in_dec EqDecN h l2). 
-      {exfalso. rewrite H' in nd. apply NoDup_cons_iff in nd. 
-      destruct nd. apply H0. apply in_or_app. right. apply in_cons. apply i. }
-       simpl. rewrite H'. apply eq_means_cons_eq.
-       split. {reflexivity. }
-       rewrite NoDup_id. {reflexivity. }
-       rewrite <- H'. 
-       apply NoDup_cons_iff in nd. 
-      destruct nd. apply H1.
-    * apply nd.
-Qed.
-
+  In a (app_merge (a :: l1) l2).
+  Proof.
+      induction l1 as [|a1 l1' IHl1].
+      - apply in_eq_m.
+      - simpl. destruct (in_dec EqDecN a l2).
+      + destruct (in_dec EqDecN a1 l2).
+      * apply in_right_list. apply i.
+      * apply in_cons. apply in_right_list. apply i.
+      + constructor. reflexivity.
+  Qed.
 Theorem not_inr_not_interesting (a: Name) (b:Name) (l1:list Name) (l2:list Name) : 
-~ In b l2 -> a <> b -> In b (app_merge' l1 l2) -> In b (app_merge' (a :: l1) l2).
-Proof.
-    intros. simpl. 
-    destruct (in_dec EqDecN a l2).
-    - apply H1.
-    - apply in_cons. apply H1.
-Qed.
+  ~ In b l2 -> a <> b -> In b (app_merge l1 l2) -> In b (app_merge (a :: l1) l2).
+  Proof.
+      intros. simpl. 
+      destruct (in_dec EqDecN a l2).
+      - apply H1.
+      - apply in_cons. apply H1.
+  Qed.
 
 Theorem inl_useless (a:Name) (l1:list Name) (l2:list Name) : 
-In a l2 -> app_merge' (a :: l1) l2 = app_merge' l1 l2.
-Proof.
-    intros.
-    simpl.
-    destruct (in_dec EqDecN a l2).
-    - reflexivity.
-    - exfalso. apply n. apply H.
-Qed. 
+  In a l2 -> app_merge (a :: l1) l2 = app_merge l1 l2.
+  Proof.
+      intros.
+      simpl.
+      destruct (in_dec EqDecN a l2).
+      - reflexivity.
+      - exfalso. apply n. apply H.
+  Qed. 
 
 Theorem not_right (b:Name) (l1:list Name) (l2:list Name) : 
-~ In b l2 -> In b l1 -> In b (app_merge' l1 l2).
-Proof. 
+  ~ In b l2 -> In b l1 -> In b (app_merge l1 l2).
+  Proof. 
     intros H H'.
     induction l1.
     - exfalso. apply H'.
@@ -309,213 +154,362 @@ Proof.
     apply in_inv in H'.
     destruct H'. { exfalso. apply n. apply H0. }
     apply H0.
-Qed.
+  Qed.
 
 Theorem in_left_list : forall (b:Name) (l1:list Name) (l2:list Name), 
-In b l1 -> In b (app_merge' l1 l2).
-Proof.
-    intros b l1 l2 H. 
-    destruct (in_dec EqDecN b l2).
-    - apply in_right_list. apply i.
-    - apply in_split in H.
-    destruct H as [l1_1 [l1_2]].
-    rewrite H.
-    induction l1_1 as [| a l1_1' IHl1_1]. 
-    + apply in_head_left_list.
-    + apply not_right. {apply n. }
-    apply in_or_app. right. constructor. reflexivity. 
-Qed.
+  In b l1 -> In b (app_merge l1 l2).
+  Proof.
+      intros b l1 l2 H. 
+      destruct (in_dec EqDecN b l2).
+      - apply in_right_list. apply i.
+      - apply in_split in H.
+      destruct H as [l1_1 [l1_2]].
+      rewrite H.
+      induction l1_1 as [| a l1_1' IHl1_1]. 
+      + apply in_head_left_list.
+      + apply not_right. {apply n. }
+      apply in_or_app. right. constructor. reflexivity. 
+  Qed.
     
 Lemma in_split_m (a:Name) (l:list Name) :
-In a l -> exists l1 l2, l = app_merge' l1 (a :: l2).
-Proof. (* FALSE !! If l has dup, then app_merge will remove them *)
+  In a l -> exists l1 l2, l = app_merge l1 (a :: l2).
+  Proof. (* FALSE !! If l has dup, then app_merge will remove them *)
 Abort.
 
 Lemma in_or_app_m : forall (l m:list Name) (a:Name), 
-In a l \/ In a m -> In a (app_merge' l m).
-Proof. 
-    intros.
-    destruct H.
-    - apply in_left_list. apply H.
-    - apply in_right_list. apply H.
-Qed.
+  In a l \/ In a m -> In a (app_merge l m).
+  Proof. 
+      intros.
+      destruct H.
+      - apply in_left_list. apply H.
+      - apply in_right_list. apply H.
+  Qed.
 
 Theorem not_in_cons_m (x a : Name) (l : list Name):
-~ In x (app_merge' [a] l) <-> x <> a /\ ~ In x l.
-Proof. split.
-    - split.
-    + unfold not. intros. apply H. rewrite H0. simpl.
-    destruct (in_dec EqDecN a l).
-    apply i.
-    constructor. reflexivity.
-    + unfold not. intros. apply H.
-    apply in_right_list. apply H0.
-    - intros. unfold not. intros. destruct H.
-    simpl in H0. destruct (in_dec EqDecN a l).
-    apply H1. apply H0.
-    apply H1. apply in_inv in H0. destruct H0.
-    + exfalso. apply H. symmetry. apply H0.
-    + apply H0.
-Qed. 
+  ~ In x (app_merge [a] l) <-> x <> a /\ ~ In x l.
+  Proof. split.
+      - split.
+      + unfold not. intros. apply H. rewrite H0. simpl.
+      destruct (in_dec EqDecN a l).
+      apply i.
+      constructor. reflexivity.
+      + unfold not. intros. apply H.
+      apply in_right_list. apply H0.
+      - intros. unfold not. intros. destruct H.
+      simpl in H0. destruct (in_dec EqDecN a l).
+      apply H1. apply H0.
+      apply H1. apply in_inv in H0. destruct H0.
+      + exfalso. apply H. symmetry. apply H0.
+      + apply H0.
+  Qed. 
 
 Lemma not_in_merge {a} {l1 l2}:
-~ In a l1 -> ~ In a l2 ->
-~ In a (app_merge' l1 l2).
-Proof. 
-    intros H1 H2.
-    induction l1 as [|a1 l1' IHl1].
-    + apply H2.
-    + simpl. destruct (in_dec EqDecN a1 l2).
-    ++ apply IHl1.
-    unfold not in *. intros. apply H1. 
-    apply in_cons.
-    apply H.
-    ++ unfold not. intros. 
-    apply in_inv in H.
-    destruct H as [H | H'].
-    * apply H1. rewrite H. constructor. reflexivity.
-    * apply IHl1.
-    ** unfold not. intros. apply H1. apply in_cons. apply H.
-    ** apply H'. 
-Qed.
+  ~ In a l1 -> ~ In a l2 ->
+  ~ In a (app_merge l1 l2).
+  Proof. 
+      intros H1 H2.
+      induction l1 as [|a1 l1' IHl1].
+      + apply H2.
+      + simpl. destruct (in_dec EqDecN a1 l2).
+      ++ apply IHl1.
+      unfold not in *. intros. apply H1. 
+      apply in_cons.
+      apply H.
+      ++ unfold not. intros. 
+      apply in_inv in H.
+      destruct H as [H | H'].
+      * apply H1. rewrite H. constructor. reflexivity.
+      * apply IHl1.
+      ** unfold not. intros. apply H1. apply in_cons. apply H.
+      ** apply H'. 
+  Qed.
 
 Theorem not_in_left {a:Name} {l m} : 
-In a (app_merge' l m) -> ~ In a m -> In a l.
-Proof.
-    intros H H'.
-    destruct (in_dec EqDecN a l).
-    - apply i.
-    - exfalso. apply (not_in_merge n H'). (*need comu?*)
-    apply H.
-Qed. 
+  In a (app_merge l m) -> ~ In a m -> In a l.
+  Proof.
+      intros H H'.
+      destruct (in_dec EqDecN a l).
+      - apply i.
+      - exfalso. apply (not_in_merge n H'). (*need comu?*)
+      apply H.
+  Qed. 
 
 Theorem not_in_right {a:Name} {l m} : 
-In a (app_merge' l m) -> ~ In a l -> In a m.
-Proof.
-    intros H H'.
-    destruct (in_dec EqDecN a m).
-    - apply i.
-    - exfalso. apply (not_in_merge H' n). apply H.
-Qed.
+  In a (app_merge l m) -> ~ In a l -> In a m.
+  Proof.
+      intros H H'.
+      destruct (in_dec EqDecN a m).
+      - apply i.
+      - exfalso. apply (not_in_merge H' n). apply H.
+  Qed.
 
 Lemma in_app_or_m : forall (l m:list Name) (a:Name), 
-In a (app_merge' l m) -> In a l \/ In a m.
-Proof.
-    intros.
-    destruct (in_dec EqDecN a m).
-    - right. apply i. 
-    - left. apply not_in_left in H; assumption.
-Defined.
+  In a (app_merge l m) -> In a l \/ In a m.
+  Proof.
+      intros.
+      destruct (in_dec EqDecN a m).
+      - right. apply i. 
+      - left. apply not_in_left in H; assumption.
+  Defined.
 
 Lemma not_in_merge_iff {a} {l1 l2}:
-(~ In a l1 /\ ~ In a l2) <->
-~ In a (app_merge' l1 l2).
-Proof. 
-  split.
-  - intros [H1 H2].
-  apply not_in_merge; assumption.
-  - intros. unfold not. split; intros. apply H. apply in_left_list. assumption.
-  apply H. apply in_right_list. assumption. 
-Qed.
+  (~ In a l1 /\ ~ In a l2) <->
+  ~ In a (app_merge l1 l2).
+  Proof. 
+    split.
+    - intros [H1 H2].
+    apply not_in_merge; assumption.
+    - intros. unfold not. split; intros. apply H. apply in_left_list. assumption.
+    apply H. apply in_right_list. assumption. 
+  Qed.
 
 Lemma in_app_or_m_nod_dup : forall (l m:list Name) (a:Name), 
-NoDup l -> NoDup m -> In a (app_merge' l m) -> In a l + In a m.
-Proof.
-    intros l m a ndl ndm H.
-    destruct (in_dec EqDecN a m).
-    - right. apply i. 
-    - left. apply not_in_left in H; assumption.
-Defined.
+  NoDup l -> NoDup m -> In a (app_merge l m) -> In a l + In a m.
+  Proof.
+      intros l m a ndl ndm H.
+      destruct (in_dec EqDecN a m).
+      - right. apply i. 
+      - left. apply not_in_left in H; assumption.
+  Defined.
 
 Lemma in_app_or_m_nod_dup' : forall (l m:list Name), 
-NoDup l -> NoDup m -> {a:Name | In a (app_merge' l m)} -> {a | In a l} + {a | In a m}.
-Proof.
-    intros l m ndl ndm H.
-    destruct H.
-    destruct (in_dec EqDecN x m).
-    - right. exists x. apply i0. 
-    - left. exists x. apply not_in_left in i; assumption.
-Qed.
+  NoDup l -> NoDup m -> {a:Name | In a (app_merge l m)} -> {a | In a l} + {a | In a m}.
+  Proof.
+      intros l m ndl ndm H.
+      destruct H.
+      destruct (in_dec EqDecN x m).
+      - right. exists x. apply i0. 
+      - left. exists x. apply not_in_left in i; assumption.
+  Qed.
 
 Lemma in_app_iff {b:Name} {l1 l2} :
-In b (app_merge' l1 l2) <-> In b l1 \/ In b l2.
-Proof. 
-    intros. split. 
-    - apply in_app_or_m.
-    - apply in_or_app_m.
-Qed.
+  In b (app_merge l1 l2) <-> In b l1 \/ In b l2.
+  Proof. 
+      intros. split. 
+      - apply in_app_or_m.
+      - apply in_or_app_m.
+  Qed.
 
-Theorem in_app_merge'_com {l1 l2 : list Name} : forall a,
-In a (app_merge' l1 l2) -> In a (app_merge' l2 l1).
-Proof.
-    intros.
-    apply in_app_or_m in H.
-    destruct H.
-    - apply in_right_list; assumption.
-    - apply in_left_list; assumption.
-Qed.
+Theorem in_app_merge_com {l1 l2 : list Name} : forall a,
+  In a (app_merge l1 l2) -> In a (app_merge l2 l1).
+  Proof.
+      intros.
+      apply in_app_or_m in H.
+      destruct H.
+      - apply in_right_list; assumption.
+      - apply in_left_list; assumption.
+  Qed.
 
-Theorem in_app_merge'_comu {l1 l2 : list Name} : forall a,
-In a (app_merge' l1 l2) <-> In a (app_merge' l2 l1).
-Proof.
-    intros. split; apply in_app_merge'_com.
-Qed.
+Theorem in_app_merge_comu {l1 l2 : list Name} : forall a,
+  In a (app_merge l1 l2) <-> In a (app_merge l2 l1).
+  Proof.
+      intros. split; apply in_app_merge_com.
+  Qed.
 
-Theorem in_app_merge'_trans {l1 l2 l3 : list Name} : forall a,
-In a (app_merge' l1 (app_merge' l2 l3)) -> In a (app_merge' (app_merge' l1 l2) l3).
-Proof.
-    intros. 
-    apply in_app_or_m in H.
-    destruct H.
-    - apply in_left_list. apply in_left_list. assumption.
-    - apply in_app_or_m in H.
-    destruct H. 
-    + apply in_left_list. apply in_right_list. assumption.
-    + apply in_right_list. assumption.
-Defined.
+Theorem in_app_merge_trans {l1 l2 l3 : list Name} : forall a,
+  In a (app_merge l1 (app_merge l2 l3)) -> In a (app_merge (app_merge l1 l2) l3).
+  Proof.
+      intros. 
+      apply in_app_or_m in H.
+      destruct H.
+      - apply in_left_list. apply in_left_list. assumption.
+      - apply in_app_or_m in H.
+      destruct H. 
+      + apply in_left_list. apply in_right_list. assumption.
+      + apply in_right_list. assumption.
+  Defined.
 
-Theorem in_app_merge'_transi {l1 l2 l3 : list Name} : forall a,
-In a (app_merge' (app_merge' l1 l2) l3) <-> In a (app_merge' l1 (app_merge' l2 l3)).
-Proof.
-    intros. split.
-    - intros. 
-    apply in_app_or_m in H.
-    destruct H.
-    + apply in_app_or_m in H.
-    destruct H. 
-    ++ apply in_left_list. assumption.
-    ++ apply in_right_list. apply in_left_list. assumption.
-    + apply in_right_list. apply in_right_list. assumption.
-    - apply in_app_merge'_trans.
-Defined.
+Theorem in_app_merge_transi {l1 l2 l3 : list Name} : forall a,
+  In a (app_merge (app_merge l1 l2) l3) <-> In a (app_merge l1 (app_merge l2 l3)).
+  Proof.
+      intros. split.
+      - intros. 
+      apply in_app_or_m in H.
+      destruct H.
+      + apply in_app_or_m in H.
+      destruct H. 
+      ++ apply in_left_list. assumption.
+      ++ apply in_right_list. apply in_left_list. assumption.
+      + apply in_right_list. apply in_right_list. assumption.
+      - apply in_app_merge_trans.
+  Defined.
+
+Definition reflnames {r} : forall name : Name,
+  In name r <-> In name r.
+  reflexivity. Defined.
+End InList.
+
+
+Section MyNoDupList.
+Record NoDupList : Type :=
+  mkNoDupList
+  {
+    ndlist :> list Name ;
+    nd : NoDup ndlist ;
+  }.
+Remark nodupproofirrelevant : forall l1 l2, 
+    ndlist l1 = ndlist l2 -> l1 = l2.
+    Proof. 
+    intros.  
+    destruct l1 as [ndlist1  nd1]. 
+    destruct l2 as [ndlist2  nd2].
+    simpl in * |- *.
+    subst.
+    rewrite (proof_irrelevance _ nd1 nd2).
+    reflexivity.
+    Qed.
+Definition EmptyNDL : NoDupList := {| ndlist := []; nd := NoDup_nil Name |}.
+Definition OneelNDL (n : Name): NoDupList.
+  Proof. 
+  eapply (mkNoDupList [n]).
+  constructor; auto; constructor. 
+  Defined.
+
+Lemma NoDup_in_or_exclusive {a h:Name} {t:list Name} :
+  In a (h::t) -> NoDup (h::t) -> 
+  (a = h /\ ~ In a t) \/ (a <> h /\ In a t).
+  Proof.
+      intros H nd.
+      destruct (EqDecN a h).
+      - left. destruct e. split.
+      + reflexivity.
+      + apply NoDup_cons_iff in nd. 
+      destruct nd. apply H0.
+      - right. split.
+      + apply n.
+      + simpl in H. destruct H.
+      * exfalso. apply n; symmetry; apply H.
+      * apply H. 
+  Qed.
+
+Lemma NoDup_in_or_exclusive' {a h:Name} {t:list Name} :
+  In a (h::t) -> NoDup (h::t) -> 
+  (a = h /\ ~ In a t) + (a <> h /\ In a t).
+  Proof.
+      intros H nd.
+      destruct (EqDecN a h).
+      - left. destruct e. split.
+      + reflexivity.
+      + apply NoDup_cons_iff in nd. 
+      destruct nd. apply H0.
+      - right. split.
+      + apply n.
+      + simpl in H. destruct H.
+      * exfalso. apply n; symmetry; apply H.
+      * apply H. 
+  Qed.
+
+Lemma eq_means_cons_eq {a1 a2:Name} {l1 l2} :
+  a1 = a2 /\ l1 = l2 -> a1::l1 = a2::l2.
+  Proof. 
+      intros.
+      destruct H. rewrite H. rewrite H0. reflexivity. 
+  Qed.
+
+Lemma NoDupFalse {a:Name} {l1 l2} :
+  ~ NoDup (a :: l1 ++ a :: l2). 
+  Proof.
+      unfold not. 
+      intros nd.
+      apply NoDup_cons_iff in nd. 
+      destruct nd. apply H. apply in_or_app. right. constructor. reflexivity.
+  Qed.
+
+Lemma NoDup_id {a : Name} {l1 l2} :
+  NoDup (l1 ++ a :: l2) -> l1 ++ a :: l2 = app_merge l1 (a :: l2).
+  Proof. 
+      intros nd.
+      induction l1.
+      - simpl. reflexivity.
+      - simpl. destruct (EqDecN a a0).
+      + exfalso. rewrite e in nd. apply NoDupFalse in nd. apply nd. 
+      + destruct (in_dec EqDecN a0 l2).
+      * exfalso. simpl in nd. apply NoDup_cons_iff in nd. 
+      destruct nd. apply H. apply in_or_app. right. apply in_cons. apply i.
+      * apply eq_means_cons_eq. split.
+      ** reflexivity.
+      ** apply IHl1. simpl in nd. apply NoDup_cons_iff in nd. 
+      destruct nd. apply H0. 
+  Qed.
+
+Theorem NoDup_id_app {l1 l2} :
+  NoDup (l1 ++ l2) -> l1 ++ l2 = app_merge l1 l2.
+  Proof. 
+      intros nd.
+      induction l1.
+      - simpl. reflexivity.
+      - simpl. destruct (in_dec EqDecN a l2).
+      + exfalso. simpl in nd. apply NoDup_cons_iff in nd. destruct nd.
+      apply H. apply in_or_app. right; assumption.
+      + apply eq_means_cons_eq. split. {reflexivity. }
+      apply IHl1. simpl in nd. apply NoDup_cons_iff in nd. destruct nd.
+      apply H0.
+  Qed.
+
+Lemma in_split_m_dup (a:Name) (l:list Name) :
+  NoDup l -> In a l -> exists l1 l2, l = app_merge l1 (a :: l2).
+  Proof.
+    intros nd H.
+    generalize dependent a.
+    induction l as [| h t IH].
+    - (* l = []*)
+      intros. inversion H.    
+    - (* l = h:: t*)
+      intros.      
+      apply NoDup_in_or_exclusive in H. 
+      * destruct H.
+      + (* l = a::t *)
+        exists [].
+        exists t.
+        simpl. destruct H. rewrite H. 
+        reflexivity.
+      + (* l = h :: l1 ++ a :: t*)
+        destruct H as [H H'].
+        apply in_split in H'.
+        destruct H' as [l1 [l2 H']].
+        exists (h::l1).
+        exists (l2).
+        simpl.
+        destruct (EqDecN a h). {exfalso; apply H; apply e. }
+        destruct (in_dec EqDecN h l2). 
+        {exfalso. rewrite H' in nd. apply NoDup_cons_iff in nd. 
+        destruct nd. apply H0. apply in_or_app. right. apply in_cons. apply i. }
+        simpl. rewrite H'. apply eq_means_cons_eq.
+        split. {reflexivity. }
+        rewrite NoDup_id. {reflexivity. }
+        rewrite <- H'. 
+        apply NoDup_cons_iff in nd. 
+        destruct nd. apply H1.
+      * apply nd.
+  Qed.
 
 Lemma rm_headNoDUP {a:Name} {l}: 
-~ In a l -> (NoDup (a::l) <-> NoDup l).
-Proof.
-    intros.
-    split.
-    - intros. apply NoDup_cons_iff in H0.
-    destruct H0 as [H0 H']. apply H'.
-    - intros. constructor; assumption.
-Qed.
+  ~ In a l -> (NoDup (a::l) <-> NoDup l).
+  Proof.
+      intros.
+      split.
+      - intros. apply NoDup_cons_iff in H0.
+      destruct H0 as [H0 H']. apply H'.
+      - intros. constructor; assumption.
+  Qed.
 
 Theorem NoDup_app_merge (l1 : list Name) (l2 : list Name) :
-NoDup l1 -> NoDup l2 -> NoDup (app_merge' l1 l2).
-Proof.
-    intros nd1 nd2.
-    induction l1 as [|a1 l1' IHl1]. 
-    - simpl. apply nd2.
-    - simpl. destruct (in_dec EqDecN a1 l2).
-    + apply IHl1.
-    apply NoDup_cons_iff in nd1. 
-    destruct nd1 as [nd1' nd1''].
-    apply nd1''.
-    + apply NoDup_cons_iff in nd1.
-    destruct nd1 as [nd1' nd1''].
-    constructor.
-    * apply not_in_merge; assumption.
-    * apply IHl1. apply nd1''. 
-Qed.
+  NoDup l1 -> NoDup l2 -> NoDup (app_merge l1 l2).
+  Proof.
+      intros nd1 nd2.
+      induction l1 as [|a1 l1' IHl1]. 
+      - simpl. apply nd2.
+      - simpl. destruct (in_dec EqDecN a1 l2).
+      + apply IHl1.
+      apply NoDup_cons_iff in nd1. 
+      destruct nd1 as [nd1' nd1''].
+      apply nd1''.
+      + apply NoDup_cons_iff in nd1.
+      destruct nd1 as [nd1' nd1''].
+      constructor.
+      * apply not_in_merge; assumption.
+      * apply IHl1. apply nd1''. 
+  Qed.
 
 Lemma rearrangenodup {a a':Name} {l}: 
 NoDup (a::a'::l) <-> NoDup (a'::a::l).
@@ -557,18 +551,20 @@ Qed.
 
 
 
-Lemma app_merge'_id {i1 i2}: 
-NoDup i1 -> NoDup i2 -> (forall name, In name i1 -> ~ In name i2) -> app_merge' i1 i2 = i1 ++ i2.
-Proof.
-intros.
-induction i1.
-simpl. reflexivity.
-simpl. destruct (in_dec EqDecN a i2).
-- exfalso. specialize (H1 a). apply H1; auto. constructor. reflexivity.
-- rewrite IHi1; auto. apply nodup_tl in H. assumption.
-intros. apply H1. right. assumption. 
-Qed.
+Lemma app_merge_id {i1 i2}: 
+  NoDup i1 -> NoDup i2 -> (forall name, In name i1 -> ~ In name i2) -> app_merge i1 i2 = i1 ++ i2.
+  Proof.
+  intros.
+  induction i1.
+  simpl. reflexivity.
+  simpl. destruct (in_dec EqDecN a i2).
+  - exfalso. specialize (H1 a). apply H1; auto. constructor. reflexivity.
+  - rewrite IHi1; auto. apply nodup_tl in H. assumption.
+  intros. apply H1. right. assumption. 
+  Qed.
+End MyNoDupList.
 
+Section MyPermutations.
 Definition permutation (l1: list Name) (l2: list Name) := forall name, In name l1 <-> In name l2.
 Definition permutation_id (l: list Name) : permutation l l.
 Proof. unfold permutation. intros. tauto. Defined.
@@ -577,19 +573,6 @@ Definition permutation_id' (l: list Name) (l': list Name) : l = l' -> permutatio
 Proof. intros. destruct H. exact (permutation_id l).
 Defined. 
 
-Theorem TODO : forall l1 l2, permutation l1 l2 <-> Permutation l1 l2.
-Proof.
-intros.
-split; intros.
-- unfold permutation in H. 
-induction l1.
-+ induction l2.
-* constructor.
-* edestruct H. admit.
-+ admit.
-- unfold permutation. intros name. destruct H.
-+ tauto.
-+ Admitted.
 
 
 Theorem symmetric_permutation: Symmetric permutation.
@@ -609,8 +592,8 @@ Qed.
   
 Definition tr_permutation {i1 i2 i3} : 
   permutation
-    (app_merge' (app_merge' i1 i2) i3)
-    (app_merge' i1 (app_merge' i2 i3)).
+    (app_merge (app_merge i1 i2) i3)
+    (app_merge i1 (app_merge i2 i3)).
   Proof.
     unfold permutation. intros. split; intros.
     - apply in_app_or_m in H.
@@ -629,51 +612,50 @@ Definition tr_permutation {i1 i2 i3} :
     ++ apply in_right_list. assumption.
   Defined.
 
-Lemma app_merge'_cong {i1 i2 i3 i4}:  
-permutation i1 i2 -> permutation i3 i4 -> 
-permutation (app_merge' i1 i3) (app_merge' i2 i4).
-Proof.
-intros H12 H34.
-split; intros H.
-- apply in_app_iff in H. destruct H.
-+ apply H12 in H. apply in_left_list. apply H.
-+ apply H34 in H. apply in_right_list. apply H.
-- apply in_app_iff in H. destruct H.
-+ apply H12 in H. apply in_left_list. apply H.
-+ apply H34 in H. apply in_right_list. apply H.
-Qed.
+Lemma app_merge_cong {i1 i2 i3 i4}:  
+  permutation i1 i2 -> permutation i3 i4 -> 
+  permutation (app_merge i1 i3) (app_merge i2 i4).
+  Proof.
+  intros H12 H34.
+  split; intros H.
+  - apply in_app_iff in H. destruct H.
+  + apply H12 in H. apply in_left_list. apply H.
+  + apply H34 in H. apply in_right_list. apply H.
+  - apply in_app_iff in H. destruct H.
+  + apply H12 in H. apply in_left_list. apply H.
+  + apply H34 in H. apply in_right_list. apply H.
+  Qed.
+End MyPermutations.
 
-
-(* INTERESTING PART ABOUT NODUPLISTS *)
 
 Definition app_merge_NoDupList (l1 : NoDupList) (l2 : NoDupList) : NoDupList :=
 {|
-ndlist := app_merge' l1 l2 ;
+ndlist := app_merge l1 l2 ;
 nd := NoDup_app_merge l1 l2 (nd l1) (nd l2)
 |}.
 
 Notation "l1 ∪ l2" := (app_merge_NoDupList l1 l2) (at level 50, left associativity).
 
-
+Section MyNDLTools.
 Lemma app_merge_or {l1 l2 n} :
  In n (app_merge_NoDupList l1 l2) -> In n l1 \/ In n l2.
  Proof. apply in_app_iff. Qed.
 
 Theorem left_empty (i:NoDupList) :
-forall name : Name,
-  In name (app_merge_NoDupList EmptyNDL i) <->
-  In name i.
-Proof. intros.
-    split; intros; simpl in *; apply H.
-Qed.
+  forall name : Name,
+    In name (app_merge_NoDupList EmptyNDL i) <->
+    In name i.
+  Proof. intros.
+      split; intros; simpl in *; apply H.
+  Qed.
 
 Theorem right_empty (i:NoDupList) :
-forall name : Name,
-  In name (app_merge_NoDupList i EmptyNDL) <->
-  In name i.
-Proof. intros.
-    split; intros; simpl in *. rewrite app_merge'_empty_right in H. apply H. rewrite app_merge'_empty_right. apply H.
-Qed.
+  forall name : Name,
+    In name (app_merge_NoDupList i EmptyNDL) <->
+    In name i.
+  Proof. intros.
+      split; intros; simpl in *. rewrite app_merge_empty_right in H. apply H. rewrite app_merge_empty_right. apply H.
+  Qed.
 
 Theorem eq_NDL (l1:list Name) (l2:list Name) 
   {nd1 : NoDup l1} {nd2 : NoDup l2} : 
@@ -691,8 +673,8 @@ Theorem merge_right_neutral : forall (l:NoDupList),
   Proof. intros l. unfold EmptyNDL.
   unfold app_merge_NoDupList. 
   destruct l. simpl.
-  apply (eq_NDL (app_merge' ndlist0 []) ndlist0).
-  simpl. apply app_merge'_empty_right.
+  apply (eq_NDL (app_merge ndlist0 []) ndlist0).
+  simpl. apply app_merge_empty_right.
   Qed.
 
 Theorem merge_left_neutral : forall (l:NoDupList),
@@ -700,8 +682,8 @@ Theorem merge_left_neutral : forall (l:NoDupList),
   Proof. intros l. unfold EmptyNDL.
   unfold app_merge_NoDupList. 
   destruct l. simpl.
-  apply (eq_NDL (app_merge' [] ndlist0) ndlist0).
-  simpl. apply app_merge'_empty_left.
+  apply (eq_NDL (app_merge [] ndlist0) ndlist0).
+  simpl. apply app_merge_empty_left.
   Qed.
 
 Theorem merge_right_neutral' : forall (l:NoDupList),
@@ -710,48 +692,34 @@ Theorem merge_right_neutral' : forall (l:NoDupList),
   symmetry.
   destruct l.
   simpl.
-  apply  app_merge'_empty_right.
+  apply  app_merge_empty_right.
   Qed.
 
 Theorem permutation_distributive {o3i1 o4i2 i1o3 i2o4}
-(p13 : permutation (ndlist o3i1) (ndlist i1o3))
-(p24 : permutation (ndlist o4i2) (ndlist i2o4)) : 
-permutation
-   (app_merge_NoDupList o3i1 o4i2)
-   (app_merge_NoDupList i1o3 i2o4).
-Proof.
-unfold permutation in *.
-intros; split; intros; specialize (p13 name); specialize (p24 name); destruct p13; destruct p24; apply in_app_or_m in H; destruct H.
-- apply in_left_list. apply H0. apply H.
-- apply in_right_list. apply H2. apply H.
-- apply in_left_list. apply H1. apply H.
-- apply in_right_list. apply H3. apply H.  
-Defined.
+  (p13 : permutation (ndlist o3i1) (ndlist i1o3))
+  (p24 : permutation (ndlist o4i2) (ndlist i2o4)) : 
+  permutation
+    (app_merge_NoDupList o3i1 o4i2)
+    (app_merge_NoDupList i1o3 i2o4).
+  Proof.
+  unfold permutation in *.
+  intros; split; intros; specialize (p13 name); specialize (p24 name); destruct p13; destruct p24; apply in_app_or_m in H; destruct H.
+  - apply in_left_list. apply H0. apply H.
+  - apply in_right_list. apply H2. apply H.
+  - apply in_left_list. apply H1. apply H.
+  - apply in_right_list. apply H3. apply H.  
+  Defined.
 
-(* Theorem woopsie : forall l1 l2, app_merge' (ndlist l1) (ndlist l2) = nodup EqDecN ((ndlist l1)++(ndlist l2)).
-Proof.
-intros [l1 nd1].
-intros [l2 nd2].
-induction l1.
-- simpl. 
-induction l2. simpl. reflexivity.
-simpl. destruct (in_dec EqDecN a l2).
-* exfalso. apply NoDup_cons_iff in nd2. destruct nd2. apply H. apply i.
-* simpl. admit.
-- simpl. destruct (in_dec EqDecN a l2); destruct (in_dec EqDecN a (l1++l2)).
-* admit.
-* exfalso. admit.
-* exfalso. admit.
-* admit.
-Admitted.  *)
+End MyNDLTools.
 
-(* PART ABOUT DISJOINT LISTS *)
+
+
 
 Definition Disjoint (l1:NoDupList) (l2:NoDupList) : Prop :=
-forall name, In name l1 -> ~ In name l2.
-
+  forall name, In name l1 -> ~ In name l2.
 Notation "l1 # l2" := (Disjoint l1 l2) (at level 50, left associativity).
 
+Section DisjointLists.
 Remark void_disjoint_all_list_left : forall l:NoDupList, EmptyNDL # l.
   Proof.
     intros. unfold Disjoint. intros. unfold EmptyNDL. auto. 
@@ -763,23 +731,19 @@ Remark void_disjoint_all_list_right : forall l:NoDupList, l # EmptyNDL.
   Qed. 
 
 Definition rev_disjoint {l1:NoDupList} {l2:NoDupList} (d: l1 # l2) : l2 # l1.
-Proof.
-unfold Disjoint in *.
-intros.
-unfold not.
-intros.
-apply d in H0.
-apply H0. apply H.
-Qed. (*Or Defined?*)
-
-Definition reflnames {r} : forall name : Name,
-  In name r <-> In name r.
-  reflexivity. Defined.
+  Proof.
+  unfold Disjoint in *.
+  intros.
+  unfold not.
+  intros.
+  apply d in H0.
+  apply H0. apply H.
+  Qed. (*Or Defined?*)
 
 
 Lemma disjoint_NoDup_app : forall (l1 l2 : list Name),
   NoDup l1 -> NoDup l2 -> (forall a : Name, In a l1 -> ~ In a l2) -> NoDup (l1 ++ l2).
-Proof.
+  Proof.
   intros l1 l2 H1 H2 H3.
   induction H1 as [| x l1' H1' H1''].
   - (* Base case: l1 is empty *)
@@ -800,45 +764,11 @@ Proof.
       intros a H_in_a_l1'.
       apply H3 with (a := a).
       right; assumption.
-Qed.
+  Qed.
 
-Theorem nodupmergedisjointlist (l1:NoDupList) (l2:NoDupList) :
-Disjoint l1 l2 -> 
-ndlist (list_to_NDL (l1 ++ l2)) = (ndlist l1) ++ (ndlist l2).
-Proof.
-unfold Disjoint.
-intros.
-simpl.
-destruct l1 as [l1 nd1].
-destruct l2 as [l2 nd2].
-simpl.
-apply nodup_fixed_point.
-apply disjoint_NoDup_app; assumption.
-Qed.
-
-
-
-Remark nodupproofirrelevant : forall l1 l2, 
-    ndlist l1 = ndlist l2 -> l1 = l2.
-    Proof. 
-    intros.  
-    destruct l1 as [ndlist1  nd1]. 
-    destruct l2 as [ndlist2  nd2].
-    simpl in * |- *.
-    subst.
-    rewrite (proof_irrelevance _ nd1 nd2).
-    reflexivity.
-    Qed.
-
-Lemma app_merge_NoDupList_id (l1 : NoDupList) (l2 : NoDupList) :
-Disjoint l1 l2 -> ndlist (app_merge_NoDupList l1 l2) = (ndlist l1) ++ (ndlist l2).
-Proof.
-intros.
-unfold app_merge_NoDupList.
-Abort.
-
-Theorem not_in_both : forall l1 l2, forall n, In n (ndlist l1) -> In n (ndlist l2) -> Disjoint l1 l2 -> False.
-intros. unfold Disjoint in H1. specialize (H1 n). apply H1; assumption. Qed.
+Theorem not_in_both : forall l1 l2, forall n, 
+  In n (ndlist l1) -> In n (ndlist l2) -> Disjoint l1 l2 -> False.
+  intros. unfold Disjoint in H1. specialize (H1 n). apply H1; assumption. Qed.
 
 Theorem dis_trans {i1 i2 i3}
   (dis_i23 : Disjoint i2 i3) 
@@ -862,18 +792,74 @@ Theorem dis_trans_r {i1 i2 i3}
   - apply (not_in_both i1 i3 name H H0 dis_i13). 
   Qed.
 
-(* End DisjointLists. *)
+Class DisjointNames (l1 l2 : NoDupList) := { disj : forall n, In n l1 -> In n l2 -> False }.
+#[export] Instance disj_left_neutral (l : NoDupList) : DisjointNames EmptyNDL l.
+  Proof.
+  constructor.
+  intros n Hn.
+  elim (Hn).
+  Qed.
+
+#[export] Instance disj_right_neutral (l : NoDupList) : DisjointNames l EmptyNDL.
+  Proof.
+  constructor.
+  intros n _ Hn.
+  elim (Hn).
+  Qed.
+
+#[export] Instance disj_app_right (l1 l2 l3 : NoDupList) (Disj12 : DisjointNames l1 l2) (Disj13 : DisjointNames l1 l3) : DisjointNames l1 (l2 ∪ l3).
+  Proof.
+  constructor.
+  intros n H1 H23.
+  destruct Disj12. destruct Disj13.
+  apply app_merge_or in H23.
+  destruct H23. 
+  * apply (disj0 n); try assumption.
+  * apply (disj1 n); try assumption.
+  Qed.
+
+#[export] Instance disj_app_left (l1 l2 l3 : NoDupList) (Disj13 : DisjointNames l1 l3) (Disj23 : DisjointNames l2 l3) : DisjointNames (l1 ∪ l2) l3.
+  Proof.
+  constructor.
+  intros n H12 H3.
+  destruct Disj13. destruct Disj23.
+  apply app_merge_or in H12.
+  destruct H12. 
+  * apply (disj0 n); try assumption.
+  * apply (disj1 n); try assumption.
+  Qed.
+
+Definition DN_D {l1 l2} : DisjointNames l1 l2 -> Disjoint l1 l2.
+  Proof. 
+  intros.
+  unfold Disjoint.
+  destruct H as [H].
+  unfold not.
+  apply H.
+  Qed.
+
+Definition D_ND {l1 l2} : Disjoint l1 l2 -> DisjointNames l1 l2.
+  Proof. 
+  intros.
+  unfold Disjoint in H.
+  unfold not in H.
+  constructor.
+  apply H.
+  Qed.
+
+
+End DisjointLists.
+
+
+Global Notation "l1 # l2" := (DisjointNames l1 l2) (at level 50, left associativity). 
 
 
 Section NameSubsets.
-
 Definition NameSub (nl : NoDupList) : Type :=
   {name:Name | In name nl}.
-
 Remark nodupproofirrelevantns : forall l1 l2, 
     ndlist l1 = ndlist l2 -> NameSub l1 = NameSub l2.
     Proof. intros. unfold NameSub. rewrite H. reflexivity. Qed. 
-
 
 Definition bij_list_forward (i1:NoDupList) (i2:NoDupList) : 
   (NameSub i1) + (NameSub i2) ->  NameSub (app_merge_NoDupList i1 i2).
@@ -946,85 +932,9 @@ Definition bij_list_names (i1:NoDupList) (i2:NoDupList) {dis_i:Disjoint i1 i2} :
   * exfalso. 
   unfold Disjoint in dis_i. apply dis_i in i. apply i. apply Hini2.
   * apply f_equal. apply subset_eq_compat. reflexivity.
-Defined.
-
-
-Definition bij_list_names' (i1:NoDupList) (i2:NoDupList) {dis_i:Disjoint i1 i2} : 
-  bijection ((NameSub i1) + (NameSub i2)) (NameSub (app_merge_NoDupList i1 i2)).
-  Proof.
-  apply 
-  (mkBijection _ _ 
-  (bij_list_forward i1 i2) 
-  (bij_list_backward i1 i2)).
-  - apply functional_extensionality.
-  intros. unfold id, funcomp, bij_list_forward, bij_list_backward.
-  simpl.
-  destruct i1.
-  destruct i2.
-  destruct (in_app_or_m_nod_dup' ndlist0 ndlist1 nd0 nd1 x); destruct s;
-  destruct x; apply subset_eq_compat. (*Lost information somewhere*)
-  Abort.
-
-
-Class DisjointNames (l1 l2 : NoDupList) := { disj : forall n, In n l1 -> In n l2 -> False }.
-
-#[export] Instance disj_left_neutral (l : NoDupList) : DisjointNames EmptyNDL l.
-  Proof.
-  constructor.
-  intros n Hn.
-  elim (Hn).
-  Qed.
-
-#[export] Instance disj_right_neutral (l : NoDupList) : DisjointNames l EmptyNDL.
-  Proof.
-  constructor.
-  intros n _ Hn.
-  elim (Hn).
-  Qed.
-
-#[export] Instance disj_app_right (l1 l2 l3 : NoDupList) (Disj12 : DisjointNames l1 l2) (Disj13 : DisjointNames l1 l3) : DisjointNames l1 (l2 ∪ l3).
-  Proof.
-  constructor.
-  intros n H1 H23.
-  destruct Disj12. destruct Disj13.
-  apply app_merge_or in H23.
-  destruct H23. 
-  * apply (disj0 n); try assumption.
-  * apply (disj1 n); try assumption.
-  Qed.
-
-#[export] Instance disj_app_left (l1 l2 l3 : NoDupList) (Disj13 : DisjointNames l1 l3) (Disj23 : DisjointNames l2 l3) : DisjointNames (l1 ∪ l2) l3.
-  Proof.
-  constructor.
-  intros n H12 H3.
-  destruct Disj13. destruct Disj23.
-  apply app_merge_or in H12.
-  destruct H12. 
-  * apply (disj0 n); try assumption.
-  * apply (disj1 n); try assumption.
-  Qed.
-
-Definition DN_D {l1 l2} : DisjointNames l1 l2 -> Disjoint l1 l2.
-  Proof. 
-  intros.
-  unfold Disjoint.
-  destruct H as [H].
-  unfold not.
-  apply H.
-  Qed.
-
-Definition D_ND {l1 l2} : Disjoint l1 l2 -> DisjointNames l1 l2.
-  Proof. 
-  intros.
-  unfold Disjoint in H.
-  unfold not in H.
-  constructor.
-  apply H.
-  Qed.
-
+  Defined.
 End NameSubsets.
 
-Global Notation "l1 # l2" := (DisjointNames l1 l2) (at level 50, left associativity). 
 
 
 Section IntersectionNDL.
@@ -1186,16 +1096,16 @@ Definition to_right {i1 i2 : NoDupList} (i : NameSub(intersectionNDL i1 i2))
   Defined.
 
 Definition to_intersection {i1 i2 : NoDupList}
-(name:Name) (ini1 : In name i1) (ini2 : In name i2) : 
-  NameSub (intersectionNDL i1 i2).
-  Proof. 
-  unfold NameSub.
-  exists name.
-  unfold intersectionNDL.
-  simpl.
-  unfold myintersection.
-  apply in_both_in_intersection; assumption.
-  Defined.
+  (name:Name) (ini1 : In name i1) (ini2 : In name i2) : 
+    NameSub (intersectionNDL i1 i2).
+    Proof. 
+    unfold NameSub.
+    exists name.
+    unfold intersectionNDL.
+    simpl.
+    unfold myintersection.
+    apply in_both_in_intersection; assumption.
+    Defined.
 
 Definition to_commute {i1 i2 : NoDupList}
   (name:NameSub (intersectionNDL i1 i2)) : 
@@ -1338,7 +1248,6 @@ Definition not_in_intersection (i1 i2 : NoDupList) : NoDupList.
   Defined.
 
 Open Scope bool_scope.
-
 Definition not_in_intersection_inl (i1 i2 : NoDupList) : NoDupList.
   Proof.
   exists 
@@ -1404,7 +1313,7 @@ Theorem not_in_intersection_inl_OK (i1 i2 : NoDupList) :
 Theorem merge_not_inl_and_inl (i1 i2 : NoDupList) : 
   permutation 
     i1
-    (app_merge' (intersectionNDL i1 i2) (not_in_intersection_inl i1 i2)).
+    (app_merge (intersectionNDL i1 i2) (not_in_intersection_inl i1 i2)).
   Proof.
     unfold permutation.
     intros.
@@ -1434,7 +1343,6 @@ Theorem merge_not_inl_and_inl (i1 i2 : NoDupList) :
       rewrite H1 in y. apply y.
   Qed.
 
-(* permutation (i1 ∩ i2 ∪ not_in_intersection_inl i1 i2) i1 *)
 
 Theorem disjoint_not_in_inter_inter (i1 i2 : NoDupList) : forall n : Name, In n (intersectionNDL i1 i2) -> In n (not_in_intersection_inl i1 i2) -> False.
   unfold intersectionNDL. simpl.
@@ -1513,7 +1421,7 @@ Theorem not_in_intersection_inr_OK (i1 i2 : NoDupList) :
 Theorem merge_not_inr_and_inr (i1 i2 : NoDupList) : 
   permutation 
     i2
-    (app_merge' (intersectionNDL i1 i2) (not_in_intersection_inr i1 i2)).
+    (app_merge (intersectionNDL i1 i2) (not_in_intersection_inr i1 i2)).
   Proof.
     unfold permutation.
     intros.
@@ -1543,7 +1451,6 @@ Theorem merge_not_inr_and_inr (i1 i2 : NoDupList) :
       apply H1.
   Qed.
 
-(* permutation (i1 ∩ i2 ∪ not_in_intersection_inl i1 i2) i1 *)
 
 Theorem disjoint_not_in_inter_inter_inr (i1 i2 : NoDupList) : forall n : Name, In n (intersectionNDL i1 i2) -> In n (not_in_intersection_inr i1 i2) -> False.
   unfold intersectionNDL. simpl.
@@ -1560,8 +1467,8 @@ End IntersectionNDL.
 
 Global Notation "l1 ∩ l2" := (intersectionNDL l1 l2) (at level 50, left associativity).
 
+Section permutationsNDL.
 Class PermutationNames (l1 l2 : NoDupList) := { pn : permutation l1 l2 }.
-
 Definition PN_P {l1 l2 : NoDupList} (pn : PermutationNames l1 l2) : permutation l1 l2.
   Proof. destruct pn. apply pn0. Qed.
 
@@ -1606,38 +1513,38 @@ Definition bij_permut_list (l1 l2 : list Name) (p : permutation l1 l2) :
   Defined.
 
 #[export] Instance permutation_id_PN (l:NoDupList) : PermutationNames l l.
-constructor. exact (permutation_id (ndlist l)).
-Defined.
+  constructor. exact (permutation_id (ndlist l)).
+  Defined.
 
 #[export] Instance permutation_id_am_PN (X:NoDupList) : PermutationNames X (app_merge_NoDupList X EmptyNDL).
-constructor. rewrite <- merge_right_neutral'. exact (permutation_id (ndlist X)). 
-Defined.
+  constructor. rewrite <- merge_right_neutral'. exact (permutation_id (ndlist X)). 
+  Defined.
 
 #[export] Instance permutation_id_am_l_PN (X:NoDupList) : PermutationNames X (app_merge_NoDupList EmptyNDL X).
-constructor. rewrite merge_left_neutral. exact (permutation_id (ndlist X)).
-Defined.
+  constructor. rewrite merge_left_neutral. exact (permutation_id (ndlist X)).
+  Defined.
 
 Lemma permutationtr {o1 o2 o3}:
-permutation
-    (app_merge_NoDupList EmptyNDL
-       (app_merge_NoDupList (app_merge_NoDupList EmptyNDL (app_merge_NoDupList o1 o2)) o3))
-    (app_merge_NoDupList EmptyNDL
-       (app_merge_NoDupList o1 (app_merge_NoDupList EmptyNDL (app_merge_NoDupList o2 o3)))).
-Proof. simpl. 
-apply tr_permutation. 
-Defined.
+  permutation
+      (app_merge_NoDupList EmptyNDL
+        (app_merge_NoDupList (app_merge_NoDupList EmptyNDL (app_merge_NoDupList o1 o2)) o3))
+      (app_merge_NoDupList EmptyNDL
+        (app_merge_NoDupList o1 (app_merge_NoDupList EmptyNDL (app_merge_NoDupList o2 o3)))).
+  Proof. simpl. 
+  apply tr_permutation. 
+  Defined.
 
 #[export] Instance permutation_id_am_l_PN_empty : PermutationNames
-                                  (app_merge_NoDupList EmptyNDL EmptyNDL)
-                                  EmptyNDL.
-constructor. rewrite merge_left_neutral. exact (permutation_id []).
-Defined.
+  (app_merge_NoDupList EmptyNDL EmptyNDL)
+  EmptyNDL.
+  constructor. rewrite merge_left_neutral. exact (permutation_id []).
+  Defined.
 
 #[export] Instance permutation_id_am_l_PN_empty_r : PermutationNames
-                                  EmptyNDL
-                                  (app_merge_NoDupList EmptyNDL EmptyNDL).
-constructor. rewrite merge_left_neutral. exact (permutation_id []).
-Defined.
+  EmptyNDL
+  (app_merge_NoDupList EmptyNDL EmptyNDL).
+  constructor. rewrite merge_left_neutral. exact (permutation_id []).
+  Defined.
 
 #[export] Instance permutation_not_in_inter {o1 o2} : 
   PermutationNames o1 ((o1 ∩ o2) ∪ (not_in_intersection_inl o1 o2)).
@@ -1654,10 +1561,9 @@ Lemma permutation_commute {i1 i2} :
   
 Definition permutationtr' {o1 o2 o3}:
   permutation (o3 ∪ (o2 ∪ o1)) (o3 ∪ o2 ∪ o1).
-Proof. simpl. 
-apply (permutation_commute tr_permutation). 
-Defined.
-
+  Proof. simpl. 
+  apply (permutation_commute tr_permutation). 
+  Defined.
 
 #[export] Instance permutation_not_in_inter_i {i1 i2} :
   PermutationNames
@@ -1681,7 +1587,7 @@ Defined.
   constructor. 
   apply (permutation_commute (merge_not_inr_and_inr i1 i2)).
   Qed.
-
+End permutationsNDL.
 
 End Names.
 
