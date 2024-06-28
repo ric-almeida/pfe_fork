@@ -55,7 +55,7 @@ Definition bigraph_tensor_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
     := 
     (Big 
     (s1 + s2)
-    (i1 ∪ i2) (*app_merge'_id says it's eq to i1 ++ i2*)
+    (i1 ∪ i2) (*app_merge_id says it's eq to i1 ++ i2*)
     (r1 + r2)
     (o1 ∪ o2)
     (findec_sum (get_node b1) (get_node b2))
@@ -257,9 +257,9 @@ Theorem bigraph_tp_assoc :
   intros.
   apply (BigEq _ _ _ _ _ _ _ _ ((b1 ⊗ b2) ⊗ b3) (b1 ⊗ (b2 ⊗ b3))
     (eq_sym (PeanoNat.Nat.add_assoc _ _ _))
-    in_app_merge'_transi
+    in_app_merge_transi
     (eq_sym (PeanoNat.Nat.add_assoc _ _ _))
-    in_app_merge'_transi
+    in_app_merge_transi
     bij_sum_assoc
     bij_sum_assoc
     (fun n12_3 => bij_rew (P := fin) (arity_tp_assoc b1 b2 b3 n12_3))
@@ -338,7 +338,7 @@ Theorem bigraph_tp_assoc :
       unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
       simpl.
       unfold id. simpl. 
-      destruct (in_dec EqDecN i123 (app_merge' i1 i2)).
+      destruct (in_dec EqDecN i123 (app_merge i1 i2)).
       * destruct (in_dec EqDecN i123 i1).
       destruct get_link; try reflexivity.
       ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
@@ -353,17 +353,17 @@ Theorem bigraph_tp_assoc :
       *** exfalso. apply n. apply in_right_list. apply i4.
       *** 
       set (Hn' := match
-        in_app_or_m_nod_dup (app_merge' i1 i2) i3 i123 (NoDup_app_merge i1 i2 (nd i1) (nd i2))
+        in_app_or_m_nod_dup (app_merge i1 i2) i3 i123 (NoDup_app_merge i1 i2 (nd i1) (nd i2))
           (match
             i3 as n2
-            return ((In i123 (app_merge' i1 i2) -> ~ In i123 n2) -> In i123 (app_merge' (app_merge' i1 i2) n2) -> NoDup n2)
+            return ((In i123 (app_merge i1 i2) -> ~ In i123 n2) -> In i123 (app_merge (app_merge i1 i2) n2) -> NoDup n2)
           with
           | {| ndlist := ndlist0; nd := nd0 |} =>
-              fun (_ : In i123 (app_merge' i1 i2) -> ~ In i123 ndlist0) (_ : In i123 (app_merge' (app_merge' i1 i2) ndlist0))
+              fun (_ : In i123 (app_merge i1 i2) -> ~ In i123 ndlist0) (_ : In i123 (app_merge (app_merge i1 i2) ndlist0))
               => nd0
           end (DN_D (disj_app_left i1 i2 i3 dis_i13 dis_i23) i123)
-            (in_app_merge'_trans i123 (eq_ind_r (fun b : Name => In b (app_merge' i1 (app_merge' i2 i3))) i0 eq_refl)))
-          (in_app_merge'_trans i123 (eq_ind_r (fun b : Name => In b (app_merge' i1 (app_merge' i2 i3))) i0 eq_refl))
+            (in_app_merge_trans i123 (eq_ind_r (fun b : Name => In b (app_merge i1 (app_merge i2 i3))) i0 eq_refl)))
+          (in_app_merge_trans i123 (eq_ind_r (fun b : Name => In b (app_merge i1 (app_merge i2 i3))) i0 eq_refl))
         with
         | inl i4 => False_ind (In i123 i3) (n i4)
         | inr i4 => i4
@@ -479,9 +479,9 @@ Theorem bigraph_tp_congruence :
   destruct Heqb3b4 as (bij_s34, bij_i34, bij_r34, bij_o34, bij_n34, bij_e34, bij_p34, big_control_eq34, big_parent_eq34, big_link_eq34).
   apply (BigEq _ _ _ _ _ _ _ _ (b1 ⊗ b3) (b2 ⊗ b4)
     (f_equal2_plus _ _ _ _ bij_s12 bij_s34)
-    (app_merge'_cong bij_i12 bij_i34)
+    (app_merge_cong bij_i12 bij_i34)
     (f_equal2_plus _ _ _ _ bij_r12 bij_r34)
-    (app_merge'_cong bij_o12 bij_o34)
+    (app_merge_cong bij_o12 bij_o34)
     (bij_n12 <+> bij_n34)
     (bij_e12 <+> bij_e34)
     (arity_tp_congruence b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34) 
@@ -573,22 +573,22 @@ Theorem bigraph_tp_congruence :
       **  
       set (Hn' := match
           in_app_or_m_nod_dup i1 i3 i24
-            (match i1 as n1 return ((In i24 n1 -> ~ In i24 i3) -> In i24 (app_merge' n1 i3) -> ~ In i24 n1 -> NoDup n1) with
+            (match i1 as n1 return ((In i24 n1 -> ~ In i24 i3) -> In i24 (app_merge n1 i3) -> ~ In i24 n1 -> NoDup n1) with
             | {| ndlist := ndlist0; nd := nd0 |} =>
-                fun (_ : In i24 ndlist0 -> ~ In i24 i3) (_ : In i24 (app_merge' ndlist0 i3)) (_ : ~ In i24 ndlist0) => nd0
+                fun (_ : In i24 ndlist0 -> ~ In i24 i3) (_ : In i24 (app_merge ndlist0 i3)) (_ : ~ In i24 ndlist0) => nd0
             end (DN_D dis_i13 i24)
-              (match app_merge'_cong bij_i12 bij_i34 i24 with
+              (match app_merge_cong bij_i12 bij_i34 i24 with
                 | conj _ H => H
-                end (eq_ind_r (fun b : Name => In b (app_merge' i2 i4)) i0 eq_refl)) n)
-            (match i3 as n1 return ((In i24 i1 -> ~ In i24 n1) -> In i24 (app_merge' i1 n1) -> NoDup n1) with
-            | {| ndlist := ndlist0; nd := nd0 |} => fun (_ : In i24 i1 -> ~ In i24 ndlist0) (_ : In i24 (app_merge' i1 ndlist0)) => nd0
+                end (eq_ind_r (fun b : Name => In b (app_merge i2 i4)) i0 eq_refl)) n)
+            (match i3 as n1 return ((In i24 i1 -> ~ In i24 n1) -> In i24 (app_merge i1 n1) -> NoDup n1) with
+            | {| ndlist := ndlist0; nd := nd0 |} => fun (_ : In i24 i1 -> ~ In i24 ndlist0) (_ : In i24 (app_merge i1 ndlist0)) => nd0
             end (DN_D dis_i13 i24)
-              (match app_merge'_cong bij_i12 bij_i34 i24 with
+              (match app_merge_cong bij_i12 bij_i34 i24 with
                 | conj _ H => H
-                end (eq_ind_r (fun b : Name => In b (app_merge' i2 i4)) i0 eq_refl)))
-            (match app_merge'_cong bij_i12 bij_i34 i24 with
+                end (eq_ind_r (fun b : Name => In b (app_merge i2 i4)) i0 eq_refl)))
+            (match app_merge_cong bij_i12 bij_i34 i24 with
             | conj _ H => H
-            end (eq_ind_r (fun b : Name => In b (app_merge' i2 i4)) i0 eq_refl))
+            end (eq_ind_r (fun b : Name => In b (app_merge i2 i4)) i0 eq_refl))
         with
         | inl i5 => False_ind (In i24 i3) (n i5)
         | inr i5 => i5
@@ -773,15 +773,15 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r3 r4 r2 o2 s3 i3 o
         match
           in_app_or_m_nod_dup i3 i4 i'
             (match
-              i3 as n0 return ((In i' n0 -> ~ In i' i4) -> In i' (app_merge' n0 i4) -> ~ In i' n0 -> NoDup n0)
+              i3 as n0 return ((In i' n0 -> ~ In i' i4) -> In i' (app_merge n0 i4) -> ~ In i' n0 -> NoDup n0)
             with
             | {| ndlist := ndlist0; nd := nd0 |} =>
-                fun (_ : In i' ndlist0 -> ~ In i' i4) (_ : In i' (app_merge' ndlist0 i4)) (_ : ~ In i' ndlist0) =>
+                fun (_ : In i' ndlist0 -> ~ In i' i4) (_ : In i' (app_merge ndlist0 i4)) (_ : ~ In i' ndlist0) =>
                 nd0
             end (DN_D dis_i34 i') i0 n)
-            (match i4 as n0 return ((In i' i3 -> ~ In i' n0) -> In i' (app_merge' i3 n0) -> NoDup n0) with
+            (match i4 as n0 return ((In i' i3 -> ~ In i' n0) -> In i' (app_merge i3 n0) -> NoDup n0) with
             | {| ndlist := ndlist0; nd := nd0 |} =>
-                fun (_ : In i' i3 -> ~ In i' ndlist0) (_ : In i' (app_merge' i3 ndlist0)) => nd0
+                fun (_ : In i' i3 -> ~ In i' ndlist0) (_ : In i' (app_merge i3 ndlist0)) => nd0
             end (DN_D dis_i34 i') i0) i0
         with
         | inl i1 => False_ind (In i' i4) (n i1)

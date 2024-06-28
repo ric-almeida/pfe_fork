@@ -50,21 +50,21 @@ Lemma eq_sigT_intro : forall {A} {P : A -> Type} {x y : A} {Px : P x} (Hxy : x =
 
 Lemma eq_rect_exist : forall {A B} {Q : A -> B -> Prop} {a a' : A} (Haa' : a = a') (b : B) (Hb : Q a b),
   @eq_rect A a (fun a => { b : B | Q a b}) (exist (Q a) b Hb) a' Haa' = exist (Q a') b (@eq_rect A a (fun a => Q a b) Hb a' Haa').
-Proof.
-intros A B Q a a' Haa' b Hb.
-destruct Haa'.
-simpl.
-reflexivity.
-Qed.
+  Proof.
+  intros A B Q a a' Haa' b Hb.
+  destruct Haa'.
+  simpl.
+  reflexivity.
+  Qed.
 
 Lemma eq_rect_existT : forall {A B} {Q : A -> B -> Type} {a a' : A} (Haa' : a = a') (b : B) (Hb : Q a b),
-                        @eq_rect A a (fun a => { b : B & Q a b}) (existT (Q a) b Hb) a' Haa' = existT (Q a') b (@eq_rect A a (fun a => Q a b) Hb a' Haa').
-Proof.
-intros A B Q a a' Haa' b Hb.
-destruct Haa'.
-simpl.
-reflexivity.
-Qed.
+  @eq_rect A a (fun a => { b : B & Q a b}) (existT (Q a) b Hb) a' Haa' = existT (Q a') b (@eq_rect A a (fun a => Q a b) Hb a' Haa').
+  Proof.
+  intros A B Q a a' Haa' b Hb.
+  destruct Haa'.
+  simpl.
+  reflexivity.
+  Qed.
 
 Lemma eq_rect_pi : forall {A} {P : A -> Type} {x y : A} {Px : P x} {H H' : x = y},
   eq_rect x P Px y H = eq_rect x P Px y H'.
@@ -323,7 +323,7 @@ Definition void_univ_embedding {A : Type} : void -> A.
 Definition fin (n : nat) := { p | p < n }.
 
 Theorem le_S_n' : forall n m : nat, S n <= S m -> n <= m.
-Proof. {apply Nat.succ_le_mono. } Qed.
+  Proof. {apply Nat.succ_le_mono. } Qed.
 
 Theorem le_lt_or_eq_dec : forall {n m : nat}, n <= m -> { n = m } + { n < m }.
   Proof.
@@ -418,22 +418,15 @@ Theorem comp_right_simpl : forall {A B C : Type} (f : A -> B) (g h : B -> C), g 
   reflexivity.
   Qed.
 
-(** parallel is used to define the parent and link function of two juxtapositionned bigraphs *)
 Definition parallel {A B C D : Type} (p : A -> B) (q : C -> D) (ac : A+C) : B+D :=
  match ac with
  | inl a => inl (p a)
  | inr c => inr (q c)
  end.
 
-Definition parallel_bis {A B C D : Type} (p : A -> B) (q : C -> D) (ac : A+C) : B+D :=
-  match ac with
-  | inl a => inl (p a)
-  | inr c => inr (q c)
-  end.
-
-
-
 Notation "f ||| g" := (parallel f g) (at level 67).
+
+
 Theorem parallel_id : forall {A B : Type}, parallel id id = (id : A+B -> A+B).
   Proof.
   intros.
@@ -484,22 +477,6 @@ Definition inject {P Q I M O : Type} : (P+Q)+I -> (P+I) + (Q+M) :=
  end.
 
 
-(* Definition extract {A B C : Type} : (A+C) -> (B+A)+C :=
- fun ac =>
- match ac with
- | inl a => inl (inr a)
- | inr c => inr c
- end.
-
-Definition sequence {P Q I M O : Type} (pp : P+I -> P+M) (pq : Q+M -> Q+O) : (P+Q)+I -> (P+Q)+O :=
- fun pqi =>
-  match parallel pp pq (@inject P Q I M O pqi) with
-  | inl (inl p) => inl (inl p)
-  | inl (inr m) => extract (pq (inr m))
-  | inr qo      => extract qo
-  end. *)
-
-
 Definition extract1 {E1 E2 O1 : Type} (eo : E1+O1) : (E1+E2)+O1 :=
  match eo with
  | inl e => inl (inl e)
@@ -512,8 +489,6 @@ Definition rearrange {P1 E1 E2 O1 I1: Type} (sl1 : P1+I1 -> E1+O1) (e_oi : E2+I1
   | inr oi => extract1 (sl1 (inr oi))
   end.
 
-(* R2 = S1 *)
-(* O2 = I1 *)
 Definition sequence {P1 P2 E1 E2 O1 I1 I2 : Type} 
   (sl2 : P2+I2 -> E2+I1) (sl1 : P1+I1 -> E1+O1) 
     (p1p2i2 : (P1+P2)+I2) : (E1+E2)+O1 :=
@@ -537,76 +512,10 @@ Definition switch_link {I P O E} (l: I + P -> O + E) (pi: P + I) : E + O :=
     end
   end.
 
-  
-(* Definition extract2 {O1 O2 E1 E2 : Type} (oe : O1+E1) : O1 + (E1+E2) :=
-  match oe with
-  | inl n => inl (inl n)
-  | inr r => inr r
-  end.
-
-Definition rearrange2 {N1 S1 R1 N2 S2 : Type} (p1 : N1+S1 -> N1+R1) (n_rs : N2+S1) : (N1+N2)+R1 :=
-  match n_rs with 
-  | inl n => inl (inr n)
-  | inr rs => extract1 (p1 (inr rs))
-  end.
-
-(* R2 = S1 *)
-Definition sequence2 {N1 S1 R1 N2 S2 : Type} 
-  (p2 : N2+S2 -> N2+S1) (p1 : N1+S1 -> N1+R1) 
-    (n1n2s2 : (N1+N2)+S2) : (N1+N2)+R1 :=
-  match n1n2s2 with 
-  | inl (inl n1) => extract1 (p1 (inl n1))
-  | inl (inr n2) => @rearrange N1 S1 R1 N2 S2 p1 (p2 (inl n2))
-  | inr s2 =>       @rearrange N1 S1 R1 N2 S2 p1 (p2 (inr s2))
-  end.  *)
-
 
 Notation "f >> g" := (sequence f g) (at level 70).
 
 Definition sequence_id {I : Type} : (void+I) -> (void+I) := fun x => x.
-
-(* Theorem sequence_closure_left : forall {P Q I M O : Type} (pp : P+I ->P+M) (pq : Q+M -> Q+O) (p p' : P),
-  closure (pp >> pq) (inl (inr p)) (inl (inr p')) -> closure pp (inl p) (inl p').
-  Proof.
-  intros P Q I M O pp pq p p'.  Admitted. 
-  remember (inl (inl p')) as llp'.
-  intro H.
-  revert p' Heqllp'.
-  induction H; intros.
-  unfold sequence in Heqllp'.
-  unfold parallel in Heqllp'.
-  unfold inject in Heqllp'.
-  case_eq (pp (inl p)); intros.
-  rewrite H in Heqllp'.
-  injection Heqllp'; intro; subst.
-  rewrite <- H.
-  apply One.
-  rewrite H in Heqllp'.
-  destruct (pq (inr m)).
-  discriminate.
-  discriminate.
-  destruct n' as [p'' | q'].
-  unfold sequence in Heqllp'.
-  unfold parallel in Heqllp'.
-  unfold inject in Heqllp'.
-  case_eq (pp (inl p'')); intros.
-  rewrite H0 in Heqllp'.
-  injection Heqllp'; intro; subst.
-  rewrite <- H0.
-  apply Add.
-  apply IHclosure.
-  reflexivity.
-  rewrite H0 in Heqllp'.
-  destruct (pq (inr m)).
-  discriminate.
-  discriminate.
-  unfold sequence in Heqllp'.
-  unfold parallel in Heqllp'.
-  unfold inject in Heqllp'.
-  destruct (pq (inl q')).
-  discriminate.
-  discriminate.
-  Qed. *)
 
 Theorem sequence_closure_left_inv : forall {P Q I M O : Type} (pp : P+I ->P+M) (pq : Q+M -> Q+O) (p p' : P),
   closure pp (inl p) (inl p') -> closure (pp >> pq) (inl (inr p)) (inl (inr p')).
@@ -643,90 +552,6 @@ Theorem sequence_right : forall {P Q I M O : Type} (pp : P+I ->P+M) (pq : Q+M ->
   reflexivity.
   Qed.
 
-(* Theorem sequence_closure_right_impossible : forall {P Q I M O : Type} (pp : P+I ->P+M) (pq : Q+M -> Q+O) (q : Q) (p : P),
-  ~closure (pp >> pq) (inl (inl q)) (inl (inr p)).
-  Proof.
-  intros.
-  intro H.
-  remember (inl (inr p)) as p'.
-  revert p Heqp'.
-  induction H; intros.
-  unfold sequence in Heqp'.
-  unfold parallel in Heqp'.
-  unfold inject in Heqp'.
-  unfold extract1 in Heqp'.
-  destruct (pq (inl q)).
-  discriminate.
-  discriminate.
-  destruct n' as [p' | q']. Admitted.
-  apply (IHclosure p').
-  reflexivity.
-  unfold sequence in Heqp'.
-  unfold parallel in Heqp'.
-  unfold inject in Heqp'.
-  unfold extract in Heqp'.
-  destruct (pq (inl q')).
-  discriminate.
-  discriminate.
-  Qed. *)
-
-(* Theorem sequence_closure_right : forall {P Q I M O : Type} (pp : P+I ->P+M) (pq : Q+M -> Q+O) (q q' : Q),
-  closure (pp >> pq) (inl (inl q)) (inl (inl q')) -> closure pq (inl q) (inl q').
-  Proof.
-  intros P Q I M O pp pq q q'.
-  remember (inl (inl q')) as lrq'.
-  intro H.
-  revert q' Heqlrq'.
-  induction H; intros.
-  unfold sequence in Heqlrq'.
-  unfold parallel in Heqlrq'.
-  unfold inject in Heqlrq'.
-  unfold extract1 in Heqlrq'.
-  case_eq (pq (inl q)); intros.
-  rewrite H in Heqlrq'.
-  injection Heqlrq'.
-  clear Heqlrq'; intro; subst.
-  rewrite <- H.
-  apply One.
-  rewrite H in Heqlrq'.
-  discriminate.
-  destruct n' as [p' | q'']. Admitted.
-  elim (sequence_closure_right_impossible pp pq _ _ H). 
-  rewrite sequence_right in Heqlrq'.
-  unfold extract in Heqlrq'.
-  revert Heqlrq'.
-  case_eq (pq (inl q'')); intros.
-  injection Heqlrq'.
-  clear Heqlrq'; intro; subst.
-  rewrite <- H0.
-  eapply Add.
-  apply IHclosure.
-  reflexivity.
-  discriminate.
-  Qed. *)
-
-(* Theorem sequence_closure_right_inv : forall {P Q I M O : Type} (pp : P+I ->P+M) (pq : Q+M -> Q+O) (q q' : Q),
-  closure pq (inl q) (inl q') -> closure (pp >> pq) (inl (inl q)) (inl (inl q')).
-  Proof.
-  intros P Q I M O pp pq q q'.
-  remember (inl q') as lq'.
-  intro H.
-  revert q' Heqlq'.
-  induction H; intros.
-  generalize (sequence_right pp pq q); intro H.
-  rewrite Heqlq' in H.
-  simpl in H.
-  rewrite <- H. Admitted.
-  apply One.
-  generalize (sequence_right pp pq n'); intro H'.
-  rewrite Heqlq' in H'.
-  simpl in H'.
-  rewrite <- H'.
-  apply Add.
-  apply IHclosure.
-  reflexivity.
-  Qed. *)
-
 Definition pair {A B C} (p : A -> B) (q : A -> C) : A -> B*C :=
  fun a => (p a, q a).
 
@@ -739,18 +564,6 @@ Definition choice {A B C} (p : A -> C) (q : B -> C) : A+B -> C :=
 Definition collapse {A} : A + A -> A := fun a => match a with inl a => a | inr a => a end.
 
 Definition duplicate {A} : A -> A*A := fun a => (a, a).
-
-(* Lemma pair_alt : forall {A B C} (p : A -> B) (q : A -> C), pair p q = (product p q) <o> duplicate.
-  Proof.
-  reflexivity.
-  Qed.
-
-Lemma choice_alt : forall {A B C} (p : A -> C) (q : B -> C), choice p q = collapse <o> (parallel p q).
-  Proof.
-  intros.
-  apply functional_extensionality.
-  destruct x;reflexivity.
-  Qed. *)
 
 Definition tensor {P Q I O J L : Type} (pp : P+I -> P+O) (pq : Q+J -> Q+L) : (P+Q)+(I+J) -> (P+Q)+(O+L) :=
  fun pq_ij =>
@@ -852,37 +665,6 @@ Theorem antisymmetric_acyclic : forall {N I O : Type} (pp : N+I -> N+O) n,
   intro.
   apply (H n H0 H0).
   Qed.
-
-(* Théorèmes faux 
-  Theorem finite_parent_child : forall { N I O : Type} (pp : N+I -> N+O),
-    FiniteParent pp -> FiniteChild pp.
-  Proof.
-  intros until pp.
-  intro HC.
-  intro n.
-  induction (HC n) as (x,Hterm,Hind).
-  case_eq (pp (inl x)).
-  + intros p_x Hp_x.
-    generalize (Hind p_x Hp_x).
-    clear Hind; intro Hind_p_x.
-    inversion Hind_p_x.
-    exact (H x Hp_x).
-  + intros o Ho.
-
-  Qed.
-
-  Theorem finite_child_parent : forall { N I O : Type} (pp : N+I -> N+O),
-    FiniteChild pp -> FiniteParent pp.
-  Proof.
-  intros until pp.
-  intro HC.
-  intro n.
-  induction (HC n) as (x,_,Hind).
-  apply Acc_intro.
-
-  Admitted.
-  Qed.
-*)
 
 Theorem finite_child_acyclic : forall {N I O : Type} (pp : N+I -> N+O),
   FiniteChild pp -> forall n, ~closure pp (inl n) (inl n).
@@ -1020,87 +802,19 @@ Theorem finite_parent_tensor : forall {N1 I1 O1 N2 I2 O2 : Type} (p1 : N1+I1 -> 
 
 Theorem finite_parent_inout : forall { N I O I' O' } (p : N+I -> N+O) (fi : I' -> I) (fo : O -> O'),
   FiniteParent p -> FiniteParent ((id ||| fo) <o> p <o> (id ||| fi)).
-Proof.
-intros N I O I' O' p fi fo H n.
-induction (H n) as (n', _, Hind).
-apply Acc_intro.
-intros n'' Hn''.
-unfold parallel, id, funcomp in Hn''.
-generalize (Hind n''); clear Hind; intro Hind.
-destruct (p (inl n')).
-+ apply Hind.
-  injection Hn''.
-  congruence.
-+ discriminate.
-Qed.
-
-(* Theorem acyclic_sequence : forall {P Q I M O : Type} (pp : P+I -> P+M) (pq : Q+M -> Q+O),
-  (forall p, ~closure pp (inl p) (inl p)) -> (forall q, ~closure pq (inl q) (inl q)) -> forall p_q, ~closure (pp >> pq) (inl p_q) (inl p_q).
   Proof.
-  intros P Q I M O pp pq Hpp Hpq p_q Hp_q.
-  destruct p_q as [p | q].
-  elim (Hpq p). Admitted.
-  (* eapply sequence_closure_left.
-  eassumption.
-  elim (Hpq q).
-  eapply sequence_closure_right.
-  eassumption.
-  Qed. *)
-
-Theorem finite_child_sequence_left : forall {N1 I1 M N2 O2 : Type} (p1 : N1+I1 -> N1+M) (p2 : N2+M -> N2+O2) n1,
-  Acc (fun n n' => p1 (inl n) = inl n') n1 -> Acc (fun n n' => (sequence p1 p2) (inl n) = inl n') (inr n1).
-  Proof.
-  intros until p2.
-  intros n1 Hp1n1.
-  induction Hp1n1 as (n1, _, Hindn1').
+  intros N I O I' O' p fi fo H n.
+  induction (H n) as (n', _, Hind).
   apply Acc_intro.
-  destruct y as [n1' | n2'].
-  + intro Hn1'. Admitted.
-    (* apply Hindn1'.
-    unfold sequence in Hn1'.
-    simpl in Hn1'.
-    destruct (p1 (inl n1')).
-    - congruence.
-    - unfold extract in Hn1'.
-      destruct (p2 (inr m)); congruence.
-  + intro Hn2'.
-    unfold sequence in Hn2'.
-    simpl in Hn2'.
-    unfold extract in Hn2'.
-    destruct (p2 (inl n2')); congruence.
-  Qed. *)
-
-Theorem finite_child_sequence_right : forall {N1 I1 M N2 O2 : Type} (p1 : N1+I1 -> N1+M) (p2 : N2+M -> N2+O2) n2,
-  FiniteChild p1 -> Acc (fun n n' => p2 (inl n) = inl n') n2 -> Acc (fun n n' => (sequence p1 p2) (inl n) = inl n') (inl n2).
-  Proof.
-  intros until p2.
-  intros n2 Hp1 Hp2n2.
-  induction Hp2n2 as (n2, _, Hindn2').
-  apply Acc_intro.
-  destruct y as [n1' | n2'].
-  + intro Hn1'. Admitted.
-    (* apply finite_child_sequence_left.
-    apply Hp1.
-  + intro Hn2'.
-    apply Hindn2'.
-    unfold sequence in Hn2'.
-    simpl in Hn2'.
-    unfold extract in Hn2'.
-    destruct (p2 (inl n2')); congruence.
-  Qed. *)
-
-Theorem finite_child_sequence : forall {P Q I M O : Type} (pp : P+I -> P+M) (pq : Q+M -> Q+O),
-  FiniteChild pp -> FiniteChild pq -> FiniteChild (sequence pp pq).
-  Proof.
-  intros until pq.
-  intros Hpp Hpq n.
-  destruct n as [np | nq].
-  + apply finite_child_sequence_right.
-    apply Hpp.
-    apply Hpq.
-  + apply finite_child_sequence_left.
-    apply Hpp.
-  Qed. *)
+  intros n'' Hn''.
+  unfold parallel, id, funcomp in Hn''.
+  generalize (Hind n''); clear Hind; intro Hind.
+  destruct (p (inl n')).
+  + apply Hind.
+    injection Hn''.
+    congruence.
+  + discriminate.
+  Qed.
 
 Theorem finite_parent_sequence_right : forall {N1 N2 S1 S2 R1 : Type} (p1 : N1+S1 -> N1+R1) (p2 : N2+S2 -> N2+S1) (n1:N1),
   Acc (fun n' n => p1 (inl n) = inl n') n1 -> Acc (fun n' n => (sequence p2 p1) (inl n) = inl n') (inl n1).
