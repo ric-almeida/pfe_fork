@@ -12,4 +12,7 @@ src/*.vo*
 CoqMakefile
 *.tex
 *.html
+*.tex
+*.sty
+*.css
 .lia.cache
