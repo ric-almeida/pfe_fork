@@ -510,7 +510,7 @@ Theorem bigraph_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
       simpl.
       unfold id, rearrange, switch_link. simpl. 
       unfold in_app_or_m_nod_dup, extract1.
-      destruct (in_dec EqDecN i123 (app_merge' i2 i3)).
+      destruct (in_dec EqDecN i123 (app_merge i2 i3)).
       * destruct (in_dec EqDecN i123 i3).
       ** destruct get_link; try reflexivity.
       *** unfold permut_list_forward. 

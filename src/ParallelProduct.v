@@ -109,9 +109,9 @@ Theorem tp_eq_pp {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
   Proof.
   refine (BigEq _ _ _ _ _ _ _ _ (b1 ⊗ b2) (b1 || b2)
     eq_refl
-    (permutation_id (app_merge' i1 i2))
+    (permutation_id (app_merge i1 i2))
     eq_refl
-    (permutation_id (app_merge' o1 o2))
+    (permutation_id (app_merge o1 o2))
     bij_id
     bij_id
     _  _ _ _
@@ -393,9 +393,9 @@ Theorem bigraph_pp_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r
   intros.
   refine (BigEq _ _ _ _ _ _ _ _ (b1 || b2) (b2 || b1)
     (@eq_sym _ _ _ _)
-    in_app_merge'_comu
+    in_app_merge_comu
     (@eq_sym _ _ _ _)
-    in_app_merge'_comu
+    in_app_merge_comu
     bij_sum_comm
     bij_sum_comm
     (fun n12 => bij_rew (P := fin) (arity_pp_comm b1 b2 n12))
@@ -591,7 +591,7 @@ Theorem bigraph_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
       simpl.
       unfold id. simpl. 
       unfold in_app_or_m_nod_dup.
-      destruct (in_dec EqDecN i123 (app_merge' i2 i3)).
+      destruct (in_dec EqDecN i123 (app_merge i2 i3)).
       * destruct (in_dec EqDecN i123 i3).
       ** destruct get_link; try reflexivity.
       *** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
@@ -718,9 +718,9 @@ Theorem bigraph_pp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i
   destruct Heqb3b4 as (bij_s34, bij_i34, bij_r34, bij_o34, bij_n34, bij_e34, bij_p34, big_control_eq34, big_parent_eq34, big_link_eq34).
   apply (BigEq _ _ _ _ _ _ _ _ (b1 || b3) (b2 || b4)
     (f_equal2_plus _ _ _ _ bij_s12 bij_s34)
-    (app_merge'_cong bij_i12 bij_i34)
+    (app_merge_cong bij_i12 bij_i34)
     (f_equal2_plus _ _ _ _ bij_r12 bij_r34)
-    (app_merge'_cong bij_o12 bij_o34)
+    (app_merge_cong bij_o12 bij_o34)
     (bij_n12 <+> bij_n34)
     (bij_e12 <+> bij_e34)
     (arity_pp_congruence b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34) 
@@ -1102,9 +1102,9 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o
                           return
                             (forall
                                _ : @In Name x
-                                     (app_merge' (ndlist o3i1) (ndlist o4i2)),
+                                     (app_merge (ndlist o3i1) (ndlist o4i2)),
                              @In Name x
-                               (app_merge' (ndlist i1o3) (ndlist i2o4)))
+                               (app_merge (ndlist i1o3) (ndlist i2o4)))
                         with
                         | conj H _ => H
                         end (in_left_list x (ndlist o3i1) (ndlist o4i2) i0)) n)))
