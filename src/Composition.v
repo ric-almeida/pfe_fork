@@ -6,7 +6,6 @@ Require Import SignatureBig.
 Require Import Equality.
 Require Import Bijections.
 Require Import MyBasics.
-Require Import Fintypes.
 Require Import FinDecTypes.
 
 Require Import Coq.Lists.List.
@@ -20,7 +19,7 @@ Import ListNotations.
 (** * Composition
   This section deals with the operation of composition. This is the act
   of putting a bigraph inside another one. To do b1 <<o>> b2, the outerface 
-  of b2 needs to be the innerface of b1. TODO/note: or just a bijection? 
+  of b2 needs to be the innerface of b1. 
   We prove left and right neutral for identity bigraph and associativity *)
 Module CompositionBigraphs (s : SignatureParameter) (n : NamesParameter).
 Module eb := EquivalenceBigraphs s n.
@@ -74,35 +73,34 @@ Definition bigraph_composition {s1 r1 s2 r2 : nat} {i1o2 o2i1 o1 i2 : NoDupList}
   
 Global Notation "b1 '<<o>>' b2" := (bigraph_composition b1 b2) (at level 50, left associativity).
 
-Lemma arity_comp_left_neutral : forall {s i r o o' o''} 
-  {p : PermutationNames (ndlist o) (ndlist o')} 
-  {p' : PermutationNames (ndlist o') (ndlist o'')}
+(** Section about neutral element for composition *)
+Section C3.
+Lemma arity_comp_left_neutral : forall {s i r o} 
   (b : bigraph s i r o) n, 
-  Arity (get_control (bigraph_identity <<o>> b) n) =
+  Arity (get_control (bigraph_id r o <<o>> b) n) =
   Arity (get_control b (bij_void_sum_neutral n)).
   (* b : s i r o, -> b_id : r (p o) r (p (p o)) *)
   Proof.
-  intros s i r o o' o'' p p' b n.
+  intros s i r o b n.
   destruct n as [ v | n].
     + destruct v.
   + reflexivity.
   Qed.
 
-Theorem bigraph_comp_left_neutral : forall {s i r o o' o''} 
-  {p : PermutationNames (ndlist o) (ndlist o')} 
-  {p' : PermutationNames (ndlist o') (ndlist o'')} (b : bigraph s i r o), 
-  bigraph_equality (bigraph_identity <<o>> b) b.
+Theorem bigraph_comp_left_neutral : forall {s i r o} 
+  (b : bigraph s i r o), 
+  bigraph_equality (bigraph_id r o <<o>> b) b.
   Proof.
-  intros s i r o o' o'' p p' b.
+  intros s i r o b.
   refine (
-    BigEq s r s r i o'' i o (bigraph_identity <<o>> b) b
+    BigEq s r s r i o i o (bigraph_id r o <<o>> b) b
       eq_refl (*s*)
       (fun (name : Name) => reflexivity (In name i)) (*i*)
       eq_refl (*r*)
-      (fun (name : Name) => transitivity (symmetry (PN_P p') name) (symmetry (PN_P p) name)) (*o*)
+      (left_empty o) (*o*)
       bij_void_sum_neutral (*n*)
       bij_void_sum_neutral (*e*)
-      (fun n => bij_rew (P := fin) (@arity_comp_left_neutral s i r o o' o'' p p' b n)) (*p*)
+      (fun n => bij_rew (P := fin) (arity_comp_left_neutral b n)) (*p*)
       _ _ _
     ).
   + apply functional_extensionality.
@@ -148,33 +146,28 @@ Theorem bigraph_comp_left_neutral : forall {s i r o o' o''}
       rewrite <- eq_rect_eq.
       destruct get_link; try reflexivity.
       * apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
-  Unshelve. apply symmetric_permutation. apply symmetric_permutation.
   Qed.
 
-Lemma arity_comp_right_neutral : forall {s i r o i' i''} 
-  {p : PermutationNames (ndlist i'') (ndlist i)} 
-  {p' : PermutationNames (ndlist i') (ndlist i'')}
+Lemma arity_comp_right_neutral : forall {s i r o}
   (b : bigraph s i r o) n, 
-  Arity (get_control (b <<o>> bigraph_identity) n) =
+  Arity (get_control (b <<o>> bigraph_id s i) n) =
   Arity (get_control b (bij_void_sum_neutral_r n)).
   Proof.
-  intros s i r o i' i'' p p' b n.
+  intros s i r o b n.
   destruct n as [n | v].
   + reflexivity.
   + destruct v.
   Qed.
 
-Theorem bigraph_comp_right_neutral : forall {s i r o i' i''} 
-  {p : PermutationNames (ndlist i'') (ndlist i)} 
-  {p' : PermutationNames (ndlist i') (ndlist i'')}
+Theorem bigraph_comp_right_neutral : forall {s i r o}
   (b : bigraph s i r o), 
-  bigraph_equality (b <<o>> bigraph_identity) b.
+  bigraph_equality (b <<o>> bigraph_id s i) b.
   Proof.
-  intros s i r o i' i'' p p' b.
+  intros s i r o b.
   apply 
-    (BigEq _ _ _ _ _ _ _ _ (b <<o>> bigraph_identity) b
+    (BigEq _ _ _ _ _ _ _ _ (b <<o>> bigraph_id s i) b
       eq_refl
-      (fun (name : Name) => transitivity (PN_P p' name) (PN_P p name))
+      (fun (name : Name) => reflexivity (In name i))
       eq_refl
       (fun (name : Name) => reflexivity (In name o))
       bij_void_sum_neutral_r
@@ -221,8 +214,10 @@ Theorem bigraph_comp_right_neutral : forall {s i r o i' i''}
       destruct get_link; try reflexivity. 
       * apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
   Qed.
+End C3.
 
-
+(** Section about associativty of composition *)
+Section C2.
 Lemma arity_comp_assoc : 
   forall {s1 i1o2 r1 o1 s2 r2 r3 i2o3 o2i1 s3 i3 o3i2} 
   {pi1o2 : PermutationNames (ndlist o2i1) (ndlist i1o2)}
@@ -322,7 +317,9 @@ Theorem bigraph_comp_assoc : forall {s1 i1o2 r1 o1 s2 r2 r3 i2o3 o2i1 s3 i3 o3i2
         destruct get_link; try reflexivity. 
         apply f_equal. destruct s5. apply subset_eq_compat. reflexivity.
   Qed.
+End C2.
 
+(** Congruence of composition *)
 Definition arity_comp_congruence_forward 
   {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 r3 r4 i3 o3i1 s4 i4 o4i2} 
   {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
@@ -522,58 +519,5 @@ Theorem bigraph_comp_congruence : forall
   Qed. 
   (*Missing a hypothesis that says bij_s12 = bij_r34_s12 in the equalities *)
 
-Definition bigraph_packed_composition {s1 i1o2 r1 o1 s2 i2 o2i1 r2} {p: PermutationNames o2i1 i1o2} {myeq: MyEqNat s1 r2}
-  (b1 : bigraph s1 i1o2 r1 o1) (b2 : bigraph s2 i2 r2 o2i1) : bigraph_packed :=
-  packing (b1 <<o>> b2).
 
-(* Definition bigraph_packed_composition' (*{s1 i1 r1 o1 s2 i2 : FinDecType} *)
-  (b1 : bigraph_packed) (b2 : bigraph_packed) : bigraph_packed. Admitted.
-
-Theorem bigraph_packed_comp_left_neutral : forall {s i r o o' o''} 
-  {p : permutation (ndlist o) (ndlist o')} 
-  {p' : permutation (ndlist o') (ndlist o'')}
-  (b : bigraph s i r o), 
-  bigraph_packed_equality (bigraph_packed_composition (p:=p) (bigraph_identity (p := p')) b) b.
-  Proof.
-  unfold bigraph_packed_equality, bigraph_packed_composition.
-  intros.
-  apply bigraph_comp_left_neutral.
-  Qed. 
-
-Theorem bigraph_packed_comp_assoc : forall {s1 i1o2 r1 o1 s2 i2o3 o2i1 s3 i3 o3i2} 
-  {pi1o2 : permutation (ndlist o2i1) (ndlist i1o2)}
-  {pi2o3 : permutation (ndlist o3i2) (ndlist i2o3)}
-  (b1 : bigraph s1 i1o2 r1 o1) 
-  (b2 : bigraph s2 i2o3 s1 o2i1) 
-  (b3 : bigraph s3 i3 s2 o3i2),
-  bigraph_packed_equality 
-    (bigraph_packed_composition (p:=pi2o3) (bigraph_composition (p:=pi1o2) b1 b2) b3) 
-    (bigraph_packed_composition (p:=pi1o2) b1 (bigraph_composition (p:=pi2o3) b2 b3)).
-  Proof.
-  unfold bigraph_packed_equality.
-  intros.
-  apply bigraph_comp_assoc.
-  Qed.
-
-Lemma bigraph_packed_comp_right_neutral : forall {s i r o i' i''} 
-  {p : permutation (ndlist i'') (ndlist i)} 
-  {p' : permutation (ndlist i') (ndlist i'')}
-  (b : bigraph s i r o), 
-    bigraph_packed_equality (bigraph_composition (p := p) b (bigraph_identity (p:=p'))) b.
-  Proof.
-  unfold bigraph_packed_equality, bigraph_packed_composition.
-  intros.
-  apply bigraph_comp_right_neutral.
-  Qed. 
-
-Fail Add Parametric Morphism : bigraph_packed_composition with
-  signature bigraph_packed_equality ==> 
-  bigraph_packed_equality ==> 
-  bigraph_packed_equality as composition_morphism.
-   (* Proof.
-   unfold bigraph_packed_equality, bigraph_packed_composition.
-   destruct x; destruct y; simpl; destruct x0; destruct y0; simpl.
-   apply bigraph_comp_congruence.
-   assumption.
-   Qed. *) *)
 End CompositionBigraphs.

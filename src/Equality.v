@@ -4,7 +4,6 @@ Require Import AbstractBigraphs.
 Require Import Bijections.
 Require Import Names.
 Require Import SignatureBig.
-Require Import Fintypes.
 Require Import FinDecTypes.
 Require Import MyBasics.
 
@@ -42,7 +41,6 @@ Record bigraph_equality {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
     bij_n : bijection (type (get_node b1)) (type (get_node b2)) ;
     bij_e : bijection (type (get_edge b1)) (type (get_edge b2)) ;
     bij_p : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n n1)))) ;
-    (* TODO Could simply be Arity (get_control b1 n1) = Arity (get_control b2 (bij_n n1))*)
     big_control_eq : (bij_n -->> (@bij_id Kappa)) (get_control b1) = get_control b2 ;
     big_parent_eq  : ((bij_n <+> (bij_rew (P := fin) bij_s)) -->> (bij_n <+> ((bij_rew (P := fin) bij_r)))) (get_parent b1) = get_parent b2 ;
     big_link_eq    : ((<{bij_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{bij_id| bij_o}> <+> bij_e)) (get_link b1) = get_link b2
@@ -171,13 +169,6 @@ Lemma bigraph_equality_trans
     reflexivity.
   Qed.
 
-Lemma bigraph_equality_dec {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}  
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
-  {bigraph_equality b1 b2} + {~ bigraph_equality b1 b2}.
-  Proof. 
-    (* Need to have access to a more transparent definition of bigraph_equality *)
-  Abort.
-
 (** ** On the packed type 
   The issue with the previous relation is that a parametric relation asks for two 
   objects of the exact same Type and our equality is heterogeneous. The solution we 
@@ -223,21 +214,6 @@ Lemma bigraph_packed_equality_trans (bp1 bp2 bp3 : bigraph_packed) : bigraph_pac
   Proof.
   apply bigraph_equality_trans.
   Qed. 
-
-(* Record support_equivalent {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
-  SupEq
-  {
-    s_bij_s : bijection (type s1) (type s2) ;
-    s_bij_i : forall name, In name i1 <-> In name i2 ; (* Permutation i1 i2 *)
-    s_bij_r : bijection (type r1) (type r2) ;
-    s_bij_o : forall name, In name o1 <-> In name o2 ;
-  }. *)
-(* TODO on support translation : Would need to prove 
-i) ρ preserves controls, i.e. ctrl G ◦ ρV = ctrl F . 
-It follows that ρ induces a bijection ρP : PF → PG on ports, defined by ρP ((v, i)) def =(ρV (v),i).
-ii) ρ commutes with the structural maps as follows: prnt G ◦ (Idm U ρV )= I (dn U ρV ) ◦ prnt F link G ◦ (IdX U ρP )= I (dY U ρE) ◦ link F*)
-
 
 Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
   reflexivity proved by (bigraph_packed_equality_refl)
