@@ -3,10 +3,8 @@
 src/MyBasics.v
 src/Bijections.v
 src/FinDecTypes.v
-src/Fintypes.v
 src/SignatureBig.v
 src/Names.v
-src/Ports.v
 src/AbstractBigraphs.v
 src/Equality.v
 src/Composition.v
@@ -15,4 +13,4 @@ src/Symmetries.v
 src/ParallelProduct.v
 src/Nesting.v
 src/MergeProduct.v
-src/BIgExampleOperators.v
+src/BigInstantiation.v
