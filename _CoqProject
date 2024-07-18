@@ -5,6 +5,7 @@ src/Bijections.v
 src/FinDecTypes.v
 src/SignatureBig.v
 src/Names.v
+src/MyEqNat.v
 src/AbstractBigraphs.v
 src/Equality.v
 src/Composition.v
