@@ -6,9 +6,9 @@ Require Import SignatureBig.
 Require Import Equality.
 Require Import Bijections.
 Require Import MyBasics.
-Require Import Fintypes.
 Require Import FinDecTypes.
 Require Import TensorProduct.
+Require Import UnionPossible.
 
 Require Import Coq.Lists.List.
 Require Import Coq.Setoids.Setoid.
@@ -28,27 +28,11 @@ Require Import List.
   of putting two bigraphs with disjoint interfaces "next" to one another. 
   After the definition, we prove associativity and commutativity of dis_juxtaposition *)
 Module ParallelProduct (s : SignatureParameter) (n : NamesParameter).
-Module tp := TensorProduct s n.
-Include tp.
+Module mup := UnionPossible s n.
+Include mup.
 
 Set Typeclasses Unique Instances.
 Set Typeclasses Iterative Deepening.
-
-Definition union_possible {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :=
-  forall (i : NameSub (i1 ∩ i2)),
-  match (get_link b1 (inl (to_left i))) with
-  | inr e => False
-  | inl o1' => 
-    match get_link b2 (inl (to_right i)) with
-    | inr e => False
-    | inl o2' => proj1_sig o1' = proj1_sig o2' 
-    end
-  end.
-
-Class UnionPossible {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
-  := { UP : union_possible b1 b2 }.
 
 Definition link_juxt {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
@@ -114,729 +98,7 @@ Definition bigraph_parallel_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList
   + exact (ap _ _ _ _ b2).
   Defined. 
 
-Theorem freshName_merge_list : forall l l', ~ In (freshName (app_merge' l l')) l.
-  Proof.
-  intros.
-  set (notInfreshName (app_merge' l l')).
-  unfold not in *. intros. apply n. apply in_left_list. apply H.
-  Qed.
-
-Theorem freshName_merge_list_opp : forall l l', 
-  ~ In (freshName (app_merge' l' l)) l.
-  Proof.
-  intros.
-  set (notInfreshName (app_merge' l' l)).
-  unfold not in *. intros. apply n. apply in_right_list. apply H.
-  Qed.
-
-(*function that makes a list of n elements that are not in o where o is o1 ∪ o2 *)
-Definition freshNames (o:NoDupList) (n:nat): NoDupList.
-  Proof.
-  induction n.
-  - exact EmptyNDL.
-  - exists (freshName (IHn ∪ o) ::IHn).
-  constructor. apply freshName_merge_list.
-  apply (nd IHn).
-  Defined.
-
-Lemma freshnamesOK (o:NoDupList) (len:nat) :
-  forall n, In n (freshNames o len) -> 
-    ~ In n o.
-  intro n.  
-  induction len as [|len' IHlen].
-  - intros. elim H.
-  - unfold freshNames. simpl. intros.
-  destruct H.
-  + subst n.
-  unfold not.
-  intros.
-  set (tmp := nat_rect (fun _ : nat => NoDupList) EmptyNDL (fun (_ : nat) (IHn : NoDupList) => {| ndlist := freshName (app_merge' IHn o) :: IHn; nd := NoDup_cons (freshName (app_merge' IHn o)) (freshName_merge_list IHn o) (nd IHn) |}) len').
-  fold tmp in H.
-  apply (freshName_merge_list_opp o tmp); assumption.
-  + unfold not. intros.
-  apply IHlen; auto.
-  Qed. 
-
-Theorem freshnames_correct_length (o:NoDupList) (len:nat) :
-  length (freshNames o len) = len.
-  Proof.
-  induction len.
-  - auto.
-  - simpl. rewrite IHlen. reflexivity.
-  Qed. 
-
-Theorem freshNamesdisjoint (o1:NoDupList) (o2:NoDupList) (len:nat) : 
-  forall n : Name, In n (freshNames (o1 ∪ o2) len) -> In n (not_in_intersection_inl o1 o2) -> False.
-  intros.
-  apply not_in_intersection_inl_OK in H0.
-  destruct H0 as [Ho1 Hno2].
-  apply freshnamesOK in H.
-  destruct H.
-  simpl.
-  apply in_left_list. apply Ho1.
-  Qed.
-
-#[export] Instance disj_freshNames (l1 l2 : NoDupList) (len:nat): 
-  DisjointNames (freshNames (l1 ∪ l2) len) (not_in_intersection_inl l1 l2).
-  Proof.
-  constructor.
-  apply freshNamesdisjoint.
-  Qed.
-
-Theorem freshNamesdisjointInr (o1:NoDupList) (o2:NoDupList) (NO:NoDupList) (len:nat) : 
-  forall n : Name, In n (freshNames (o1 ∪ o2 ∪ NO) len) -> In n (not_in_intersection_inr o1 o2) -> False.
-  intros.
-  apply not_in_intersection_inr_OK in H0.
-  destruct H0 as [Ho2 Hno1].
-  apply freshnamesOK in H.
-  destruct H.
-  simpl.
-  apply in_left_list.
-  apply in_right_list. apply Ho2.
-  Qed.
-
-#[export] Instance disj_freshNames_inr (l1 l2 : NoDupList) (NO : NoDupList) (len:nat): 
-  DisjointNames (freshNames (l1 ∪ l2 ∪ NO) len) (not_in_intersection_inr l1 l2).
-  Proof.
-  constructor.
-  apply freshNamesdisjointInr.
-  Qed.
-
-Theorem freshNamesdisjointInr_inner (i1:NoDupList) (i2:NoDupList) (len:nat) : 
-  forall n : Name, In n (freshNames (i1 ∪ i2) len ∪ not_in_intersection_inl i1 i2) -> In n (freshNames (i1 ∪ i2 ∪ freshNames (i1 ∪ i2) len) len ∪ not_in_intersection_inr i1 i2) -> False.
-  Proof.
-    intros.
-    apply in_app_iff in H.
-    apply in_app_iff in H0.
-    destruct H. 
-    - destruct H0. 
-    + apply freshnamesOK in H0.
-    apply H0.
-    apply in_right_list.
-    apply H.
-    + apply (freshNamesdisjointInr i1 i2 EmptyNDL len n); try assumption.
-    rewrite merge_right_neutral. assumption.
-    - destruct H0. 
-    + apply not_in_intersection_inl_ini1 in H.
-    apply freshnamesOK in H0.
-    apply H0.
-    apply in_left_list.
-    apply in_left_list.
-    apply H.
-    + apply not_in_intersection_inl_OK in H.
-    apply not_in_intersection_inr_OK in H0.
-    destruct H.
-    destruct H0.
-    auto.
-  Qed.
-
-Theorem freshNamesdisjointInr_outer (o1:NoDupList) (o2:NoDupList) (len:nat) : 
-  forall n : Name, In n (freshNames (o1 ∪ o2) len) -> In n (freshNames (o1 ∪ o2 ∪ freshNames (o1 ∪ o2) len) len) -> False.
-  Proof.
-    intros.
-    apply freshnamesOK in H0.
-    apply H0.
-    apply in_right_list.
-    apply H.
-  Qed.
-
-#[export] Instance disj_fresh_innernames (i1 i2 : NoDupList) (len:nat): 
-  DisjointNames 
-    (freshNames (i1 ∪ i2) len ∪ not_in_intersection_inl i1 i2) 
-    (freshNames (i1 ∪ i2 ∪ freshNames (i1 ∪ i2) len) len ∪ not_in_intersection_inr i1 i2).
-  Proof.
-  constructor.
-  apply freshNamesdisjointInr_inner.
-  Qed.
-
-(*function that computes the tensor product of a list of substitutions 
-(need ndi ndo to prove disjointness of the names and do the tensor product)*)
-Definition tp_substitution_list (i:NoDupList) (o:NoDupList) 
-  (H:length i = length o) : bigraph 0 i 0 o. 
-  Proof.
-  destruct i as [i ndi]. 
-  revert o H ; induction i as [|ti qi Hi] ; intros [o ndo] H.
-  - assert ({| ndlist := []; nd := ndi |} = EmptyNDL).
-    + apply nodupproofirrelevant. reflexivity.
-    + rewrite H0. assert ({| ndlist := o; nd := ndo |} = EmptyNDL).
-    * inversion H. symmetry in H2. apply length_zero_iff_nil in H2. unfold EmptyNDL.
-      apply nodupproofirrelevant.  simpl. apply H2.  
-      rewrite H1.  exact bigraph_empty.
-  - induction o as [|to qo Ho].
-    +  exfalso. simpl in H. apply PeanoNat.Nat.neq_succ_0 in H. apply H.
-    +  set (s := substitution (OneelNDL ti) to).
-    assert (Hl : length qi = length qo). { simpl in H. inversion H. reflexivity. }
-    set (slp := (Hi (nodup_tl ti qi ndi) (mkNoDupList qo (nodup_tl to qo ndo)) Hl)).
-    assert (dis_i' : (i s)#(i slp)). 
-    * constructor. simpl. intros n [Hin|] Hin'. 
-    subst n. inversion ndi. contradiction. apply H0. 
-    * assert (dis_o' : (o s)#(o slp)). 
-    ** constructor. simpl. intros n [Hon|] Hon'. 
-    subst n. inversion ndo. contradiction. apply H0.
-    assert (i s ∪ i slp = {| ndlist := ti :: qi; nd := ndi |}).
-    { simpl. unfold app_merge_NoDupList.
-    apply nodupproofirrelevant. 
-    simpl.
-    destruct (in_dec EqDecN ti qi). 
-    inversion ndi. contradiction. reflexivity. }
-    assert (o s ∪ o slp = {| ndlist := to :: qo; nd := ndo |}).
-    { simpl. unfold app_merge_NoDupList.
-    apply nodupproofirrelevant. 
-    simpl.
-    destruct (in_dec EqDecN to qo). 
-    inversion ndo. contradiction. reflexivity. }
-    rewrite <- H0.
-    rewrite <- H1.
-  eapply ( 
-    bigraph_tensor_product 
-      (dis_i := dis_i') 
-      (dis_o := dis_o') s slp
-  ).
-  Defined. 
-
-
-#[export] Instance disj_inter_not_in_inter (l1 l2 : NoDupList) : 
-  DisjointNames (l1 ∩ l2) (not_in_intersection_inl l1 l2).
-  Proof.
-  constructor.
-  apply disjoint_not_in_inter_inter.
-  Qed.
-
-#[export] Instance disj_inter_not_in_inter_inr (l1 l2 : NoDupList) : 
-  DisjointNames (l1 ∩ l2) (not_in_intersection_inr l1 l2).
-  Proof.
-  constructor.
-  apply disjoint_not_in_inter_inter_inr.
-  Qed.
-
-Lemma exists_head {l:list Name} {len:nat} : 
-  S (len) = length l -> exists t q, l = t::q.
-  Proof.
-  intros.
-  induction l.
-  - discriminate H.
-  exists a. exists l. reflexivity. Defined.
-
-Lemma exists_head' {l:list Name} {len:nat} 
-  (H : S (len) = length l) : match l with 
-  | [] => False 
-  | t::q => True
-  end.
-  Proof.
-  intros.
-  induction l.
-  - discriminate H.
-  - auto.
-  Qed.
-
-
-Definition switch_innernames {s i i' r o} (b:bigraph s i r o) (p : PermutationNames i i') : bigraph s i' r o.
-  Proof.
-  destruct b. 
-  assert (link':NameSub i' + Port control0 -> NameSub o + type edge0).
-  intros [inner|port].
-  assert (NameSub i).
-  destruct inner as [inner Hinner].
-  exists inner. apply p. apply Hinner.
-  apply (link0 (inl X)).
-  apply (link0 (inr port)).
-  apply (Big s i' r o node0 edge0 control0 parent0 link' ap0).
-  Defined.
-
-
-Theorem switch_innernames_OK {s i i' r o} (b:bigraph s i r o) (p : PermutationNames i i'): 
-  bigraph_equality 
-    b
-    (switch_innernames b p).
-  Proof.
-    eapply (BigEq _ _ _ _ _ _ _ _ b
-      (switch_innernames b p)
-      eq_refl
-      _
-      eq_refl
-      (permutation_id o)
-      _
-      _
-      _
-      _
-      _
-      _
-    ).
-    Unshelve.
-    destruct p as [p]. apply p.
-    unfold switch_innernames. destruct b. simpl.
-    apply bij_id.
-    unfold switch_innernames. destruct b. simpl.
-    apply bij_id.
-    intros. simpl in *.
-    unfold switch_innernames. destruct b. simpl.
-    apply bij_id.
-    unfold switch_innernames. destruct b. simpl.
-    reflexivity.
-    unfold switch_innernames. destruct b. simpl.
-    unfold funcomp, id, parallel. simpl.
-    apply functional_extensionality.
-    intros [x|x].
-    destruct parent0.
-    reflexivity.
-    reflexivity.
-    destruct parent0.
-    reflexivity.
-    reflexivity.
-    unfold switch_innernames. destruct b. simpl.
-    apply functional_extensionality.
-    destruct x as [i1 | (v1, (k1, Hvk1))]; simpl.
-    - unfold funcomp, parallel, link_juxt.
-      unfold bij_subset_backward, bij_subset_forward, id.
-      destruct i1.
-      simpl.
-      unfold id.
-      destruct p as [p].
-      set (HP := match @pn i i' (Build_PermutationNames i i' p) x return (forall _ : @In Name x (ndlist i'), @In Name x (ndlist i)) with
-      | @conj _ _ _ H => H
-      end i0).
-      rewrite (proof_irrelevance _ _ HP).
-      destruct link0.
-      destruct n. f_equal. apply subset_eq_compat. reflexivity.
-      reflexivity.
-    - unfold parallel, sum_shuffle, choice, funcomp, id, link_juxt.
-    simpl.
-    unfold bij_subset_forward, id.
-    simpl.
-    unfold bij_rew_forward, eq_rect_r, funcomp.
-    simpl.
-    destruct link0.
-    f_equal. destruct n. apply subset_eq_compat. reflexivity.
-    reflexivity.
-  Qed.
-
-#[export] Instance freshNamesdisjointInr_outer_disj (o1 o2 : NoDupList) (len:nat): 
-  freshNames (o1 ∪ o2) len # freshNames (o1 ∪ o2 ∪ freshNames (o1 ∪ o2) len) len.
-  constructor.
-  apply freshNamesdisjointInr_outer.
-  Qed.
-
-Theorem freshNamesdisjointInr_outer' (o1:NoDupList) (o2:NoDupList) (len:nat) : 
-  forall n : Name, In n (freshNames (o1 ∪ o2) len ∪ freshNames (o1 ∪ o2 ∪ freshNames (o1 ∪ o2) len) len) -> In n (not_in_intersection_inl o1 o2 ∪ not_in_intersection_inr o1 o2) -> False.
-  Proof.
-    intros.
-    apply in_app_iff in H.
-    apply in_app_iff in H0.
-    destruct H; destruct H0.
-    apply not_in_intersection_inl_OK in H0.
-    apply freshnamesOK in H.
-    destruct H0.
-    apply H. apply in_left_list. auto.
-    apply not_in_intersection_inr_OK in H0.
-    apply freshnamesOK in H.
-    destruct H0.
-    apply H. apply in_right_list. auto.
-    apply not_in_intersection_inl_OK in H0.
-    apply freshnamesOK in H.
-    destruct H0.
-    apply H. apply in_left_list. apply in_left_list. auto.
-    apply freshnamesOK in H.
-    apply H.
-    apply not_in_intersection_inr_OK in H0.
-    destruct H0.
-    apply in_left_list.
-    apply in_right_list. apply H0.
-  Qed.
-
-#[export] Instance freshNamesdisjointInr_outer_disj2 (o1 o2 : NoDupList) (len:nat): 
-freshNames (o1 ∪ o2) len ∪ freshNames (o1 ∪ o2 ∪ freshNames (o1 ∪ o2) len) len # (not_in_intersection_inl o1 o2 ∪ not_in_intersection_inr o1 o2).
-constructor.
-apply freshNamesdisjointInr_outer'.
-Qed.
-
-#[export] Instance PemutationsPreCompo (o1 o2 : NoDupList) (len:nat): 
-  PermutationNames 
-    (freshNames (o1 ∪ o2) len 
-      ∪ not_in_intersection_inl o1 o2 
-      ∪ (freshNames (o1 ∪ o2 ∪ freshNames (o1 ∪ o2) len) len 
-      ∪ not_in_intersection_inr o1 o2)) 
-    (freshNames (o1 ∪ o2) len 
-      ∪ freshNames (o1 ∪ o2 ∪ freshNames (o1 ∪ o2) len) len 
-      ∪ (not_in_intersection_inl o1 o2 
-      ∪ not_in_intersection_inr o1 o2)).
-  Proof.
-    constructor.
-    unfold permutation.
-    intros; split; intros.
-    - apply in_app_iff in H; destruct H; apply in_app_iff in H; destruct H.
-    * apply in_left_list.
-    apply in_left_list.
-    apply H.
-    * apply not_in_intersection_inl_OK in H.
-    destruct H.
-    apply in_right_list.
-    apply in_left_list.
-    apply not_in_intersection_inl_OK.
-    auto.
-    * apply in_left_list.
-    apply in_right_list.
-    apply H.
-    * apply in_right_list.
-    apply in_right_list.
-    apply H.
-    - apply in_app_iff in H; destruct H; apply in_app_iff in H; destruct H.
-    * apply in_left_list. apply in_left_list.
-    auto.
-    * apply in_right_list.
-    apply in_left_list. apply H.
-    * apply in_left_list.
-    apply in_right_list.
-    apply H.
-    * apply in_right_list.
-    apply in_right_list.
-    apply H.
-  Qed.
-
-#[export] Instance PemutationsPostCompo (i1 i2 : NoDupList) (len:nat): 
-  PermutationNames 
-    (freshNames (i1 ∪ i2 ∪ freshNames (i1 ∪ i2) len) len 
-    ∪ (not_in_intersection_inl i1 i2 
-    ∪ not_in_intersection_inr i1 i2)) 
-    (freshNames (i1 ∪ i2) len 
-    ∪ not_in_intersection_inl i1 i2 
-    ∪ (freshNames (i1 ∪ i2 ∪ freshNames (i1 ∪ i2) len) len 
-    ∪ not_in_intersection_inr i1 i2)).
-    constructor.
-    unfold permutation.
-    intros; split; intros.
-    - apply in_app_iff in H; destruct H.
-    * apply in_right_list.
-    apply in_left_list. apply H.
-    * apply in_app_iff in H; destruct H.
-    ** apply in_left_list.
-    apply in_right_list.
-    apply H.
-    ** apply not_in_intersection_inr_OK in H.
-    apply in_right_list.
-    apply in_right_list.
-    apply not_in_intersection_inr_OK. auto.
-    - apply in_app_iff in H; destruct H; apply in_app_iff in H; destruct H.
-    * apply in_left_list. (*apply in_right_list.
-    auto.
-    * apply in_right_list.
-    apply in_left_list. apply H.
-    * apply in_left_list.
-    apply in_right_list.
-    apply H.
-    * apply in_right_list.
-    apply in_right_list.
-    apply H. *)
-Abort.
-
-#[export] Instance PemutationsPostCompo (i1 i2 : NoDupList) (len:nat): 
-PermutationNames (freshNames (i1 ∪ i2) len ∪ (not_in_intersection_inl i1 i2 ∪ not_in_intersection_inr i1 i2)) (freshNames (i1 ∪ i2) len ∪ not_in_intersection_inl i1 i2 ∪ (freshNames (i1 ∪ i2 ∪ freshNames (i1 ∪ i2) len) len ∪ not_in_intersection_inr i1 i2)).
-constructor.
-  unfold permutation.
-  intros; split; intros.
-  - apply in_app_iff in H; destruct H.
-  * apply in_left_list. apply in_left_list. apply H.
-  * apply in_app_iff in H; destruct H.
-  ** apply in_left_list.
-  apply in_right_list.
-  apply H.
-  ** apply in_right_list.
-  apply in_right_list.
-  apply H.
-  - apply in_app_iff in H; destruct H; apply in_app_iff in H; destruct H.
-  * apply in_left_list. apply H.
-  * apply in_right_list. apply in_left_list. apply H.
-  * apply freshnamesOK in H.
-  Abort.
-
-
-#[export] Instance freshNamesdisjointPost (i1:NoDupList) (i2:NoDupList) (len:nat) : 
-  i1 ∩ i2 # freshNames (i1 ∪ i2) len.
-  constructor.
-  intros.
-  apply freshnamesOK in H0.
-  apply H0.
-  apply from_intersection_left in H.
-  apply in_left_list. 
-  auto.
-  Qed.
-  
-#[export] Instance freshNamesdisjointPost2 (i1:NoDupList) (i2:NoDupList) (len:nat) : 
-  i1 ∩ i2 ∪ freshNames (i1 ∪ i2) len # (not_in_intersection_inl i1 i2 ∪ not_in_intersection_inr i1 i2).
-  constructor. intros.
-  apply in_app_iff in H.
-  apply in_app_iff in H0.
-  destruct H; destruct H0.
-  apply not_in_intersection_inl_notini2 in H0.
-  apply H0.
-  apply from_intersection_right in H; auto.
-  apply not_in_intersection_inr_notini1 in H0.
-  apply from_intersection_left in H; auto.
-  apply not_in_intersection_inl_ini1 in H0.
-  apply freshnamesOK in H. apply H. apply in_left_list. auto.
-  apply not_in_intersection_inr_ini2 in H0.
-  apply freshnamesOK in H. apply H. apply in_right_list. auto.
-  Qed.
-
-#[export] Instance freshNamesdisjointPost3 (i1:NoDupList) (i2:NoDupList) (len:nat) : 
-  freshNames (i1 ∪ i2 ∪ freshNames (i1 ∪ i2) len) len # (not_in_intersection_inl i1 i2 ∪ not_in_intersection_inr i1 i2).
-  constructor. intros.
-  apply in_app_iff in H0.
-  destruct H0.
-  apply not_in_intersection_inl_ini1 in H0.
-  apply freshnamesOK in H. apply H. apply in_left_list. apply in_left_list. auto.
-  apply not_in_intersection_inr_ini2 in H0.
-  apply freshnamesOK in H. apply H. apply in_left_list. apply in_right_list. auto.
-  Qed.
-
-#[export] Instance freshNamesdisjointinlinr (i1:NoDupList) (i2:NoDupList) (len:nat) : 
-  freshNames (i1 ∪ i2) len # (not_in_intersection_inl i1 i2 ∪ not_in_intersection_inr i1 i2).
-  constructor. intros.
-  apply in_app_iff in H0.
-  destruct H0.
-  apply not_in_intersection_inl_ini1 in H0.
-  apply freshnamesOK in H. apply H. apply in_left_list. auto.
-  apply not_in_intersection_inr_ini2 in H0.
-  apply freshnamesOK in H. apply H. apply in_right_list. auto.
-  Qed.
-
-Definition tp_substitution_two_list (no:NoDupList) (no':NoDupList) (o:NoDupList) 
-  (H:length no = length o) 
-  (H':length no' = length o)
-  (Hnd:no # no') : bigraph 0 (no ∪ no') 0 o. 
-  Proof.
-  destruct no as [no ndno]. 
-  revert no' o H H' Hnd; induction no as [|tno qno Hno] ; intros [no' ndno'] [o ndo] H H' Hnd; simpl in *.
-  - assert ({| ndlist := []; nd := ndno |} = EmptyNDL).
-      {apply nodupproofirrelevant. reflexivity. }
-    rewrite H0.
-    clear H0.
-    rewrite merge_left_neutral. 
-    assert ({| ndlist := no'; nd := ndno' |} = EmptyNDL).
-      {rewrite <- H in H'. apply length_zero_iff_nil in H'. unfold EmptyNDL.
-      apply nodupproofirrelevant. simpl. apply H'. }   
-    rewrite H0. clear H0. 
-    assert ({| ndlist := o; nd := ndo |} = EmptyNDL).
-      {symmetry in H. apply length_zero_iff_nil in H. unfold EmptyNDL.
-      apply nodupproofirrelevant. simpl. apply H. }  
-    rewrite H0. exact bigraph_empty.
-  - simpl in *. rewrite <- H in H'. symmetry in H'. 
-    set (H'' := H'). apply exists_head' in H''.
-    destruct no' as [|tno' qno'] eqn:E. elim H''.
-    induction o as [|to qo Ho].
-    + exfalso. simpl in H. apply PeanoNat.Nat.neq_succ_0 in H. apply H.
-    + set (tnotno' := [tno;tno']).
-    assert (ndtnotno' : NoDup tnotno'). { constructor.
-    simpl. unfold not. intros Hnd'.
-    destruct Hnd' as [Hnd'|Hnd'] ; try discriminate Hnd.
-    destruct Hnd as [hnd].
-    apply (hnd tno'). constructor. symmetry. apply Hnd'. 
-    constructor; reflexivity. apply Hnd'. constructor. simpl. auto. constructor. }
-    set (s := substitution (mkNoDupList tnotno' ndtnotno') to).
-    assert (Hl : length qno = length {| ndlist := qo; nd := nodup_tl to qo ndo |}). 
-      { simpl in *. inversion H. reflexivity. } 
-    assert (Hl' : length {| ndlist := qno'; nd := nodup_tl tno' qno' ndno' |} = length {| ndlist := qo; nd := nodup_tl to qo ndo |}). 
-      { simpl in *. rewrite H' in H. inversion H. reflexivity. } 
-    assert (Hdis : {| ndlist := qno; nd := nodup_tl tno qno ndno |} # {| ndlist := qno'; nd := nodup_tl tno' qno' ndno' |}). 
-      { simpl in *. inversion Hnd. constructor. intros.
-      apply (disj0 n). simpl in *. right. apply H0.
-      simpl in *. right. apply H1. } 
-    set (slp := (Hno 
-      (nodup_tl tno qno ndno) 
-      (mkNoDupList qno' (nodup_tl tno' qno' ndno'))
-      (mkNoDupList qo (nodup_tl to qo ndo))
-      Hl Hl' Hdis)).
-    assert (dis_i' : (i s)#(i slp)). 
-      {constructor. simpl. intros n [Hin|] Hin'. 
-      subst n. apply in_app_iff in Hin'. destruct Hin' as [Hinqno|Hinqno']. inversion ndno. contradiction. simpl in *.
-      inversion Hnd. apply (disj0 tno). simpl in *. left. reflexivity.
-      simpl in *. right. apply Hinqno'.
-      destruct H0. subst n. apply in_app_iff in Hin'. 
-      destruct Hin' as [Hinqno|Hinqno']. 
-      inversion Hnd. apply (disj0 tno'). simpl in *.  right. apply Hinqno.
-      simpl in *. left. reflexivity. 
-      inversion ndno'. contradiction. apply H0. }
-    assert (dis_o' : (o s)#(o slp)). 
-      {constructor. simpl in *. 
-      intros n [Hon|] Hon'. 
-      subst n. inversion ndo. contradiction. apply H0. }
-    (* assert (i s ∪ i slp = ({| ndlist := tno :: qno; nd := ndno |} ∪ {| ndlist := tno' :: qno'; nd := ndno' |})).
-      { simpl. unfold app_merge_NoDupList.
-      apply nodupproofirrelevant. 
-      simpl. 
-      destruct (in_dec EqDecN tno (app_merge' qno qno')).
-        {exfalso. 
-        apply in_app_iff in i0.
-        destruct i0.
-        inversion ndno; contradiction.
-        inversion Hnd. apply (disj0 tno). simpl in *. left. reflexivity.
-        simpl in *. right. apply H0. }
-      destruct (in_dec EqDecN tno' (app_merge' qno qno')).
-        {exfalso. 
-        apply in_app_iff in i0.
-        destruct i0.
-        inversion Hnd. apply (disj0 tno'). simpl in *. right. apply H0.
-        left. reflexivity.
-        inversion ndno'; contradiction. }
-      destruct (EqDecN tno' tno).
-        {exfalso.
-        destruct Hnd as [hnd].
-        destruct (hnd tno'). constructor. symmetry. apply e.
-        constructor. reflexivity. }
-      destruct (in_dec EqDecN tno qno').  
-        {exfalso. inversion Hnd. apply (disj0 tno). simpl in *. left. reflexivity.
-        simpl in *. right. apply i0. }
-      
-      admit. } *)
-    assert (o s ∪ o slp = {| ndlist := to :: qo; nd := ndo |}).
-    { simpl. unfold app_merge_NoDupList.
-    apply nodupproofirrelevant. 
-    simpl.
-    destruct (in_dec EqDecN to qo). 
-    inversion ndo. contradiction. reflexivity. }
-    assert (perm:permutation (i s ∪ i slp) ({| ndlist := tno :: qno; nd := ndno |} ∪ {| ndlist := tno' :: qno'; nd := ndno' |})).
-      {simpl. unfold permutation. intros. 
-      destruct (in_dec EqDecN tno (app_merge' qno qno')).
-        {exfalso. 
-        apply in_app_iff in i0.
-        destruct i0.
-        inversion ndno; contradiction.
-        inversion Hnd. apply (disj0 tno). simpl in *. left. reflexivity.
-        simpl in *. right. apply H1. }
-      destruct (in_dec EqDecN tno' (app_merge' qno qno')).
-        {exfalso. 
-        apply in_app_iff in i0.
-        destruct i0.
-        inversion Hnd. apply (disj0 tno'). simpl in *. right. apply H1.
-        left. reflexivity.
-        inversion ndno'; contradiction. }
-      destruct (EqDecN tno' tno).
-        {exfalso.
-        destruct Hnd as [hnd].
-        destruct (hnd tno'). constructor. symmetry. apply e.
-        constructor. reflexivity. }
-      destruct (in_dec EqDecN tno qno').  
-        {exfalso. inversion Hnd. apply (disj0 tno). simpl in *. left. reflexivity.
-        simpl in *. right. apply i0. }
-      split; intros Hterm.
-      destruct Hterm.
-      subst tno.
-      constructor. reflexivity.
-      right.
-      apply in_app_iff.
-      destruct H1.
-      subst tno'.
-      right. constructor. reflexivity.
-      apply in_app_iff in H1.
-      destruct H1.
-      left. apply H1.
-      right. right. apply H1.
-      destruct Hterm.
-      subst tno.
-      constructor. reflexivity.
-      right.
-      apply in_app_iff in H1.
-      destruct H1.
-      right. apply in_app_iff. left. apply H1.
-      destruct H1. subst tno'.
-      constructor. reflexivity.
-      right.
-      apply in_app_iff.
-      auto. }
-    rewrite <- H0. 
-  set ( bigtmp :=
-    bigraph_tensor_product 
-      (dis_i := dis_i') 
-      (dis_o := dis_o') s slp
-  ).
-  apply (switch_innernames bigtmp (P_NP perm)).
-  Defined. 
-
-
-(*A definition of bigraph_parallel_product that derives from tensor product and composition*)
-Definition bigraph_parallel_product' {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
-  {up : UnionPossible b1 b2}
-    : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) (r1 + r2) (app_merge_NoDupList o1 o2).
-Proof.
-set (lenInterOuternames := length (o1 ∩ o2)).
-set (NO := freshNames (o1 ∪ o2) lenInterOuternames).
-set (NO' := freshNames ((o1 ∪ o2) ∪ NO) lenInterOuternames). (*++ could be ∪ if i can prove freshNames gives NDL*)
-set (lenInterInnernames := length (i1 ∩ i2)).
-set (NI := freshNames (i1 ∪ i2) lenInterInnernames).
-set (NI' := freshNames ((i1 ∪ i2) ∪ NI) lenInterInnernames).
-assert (Hl : length (o1 ∩ o2) = length NO). 
-  {subst NO. rewrite freshnames_correct_length. auto. }
-set (sub_NO_o1intero2 := tp_substitution_list (o1 ∩ o2) NO Hl). 
-assert (Hl' : length (o1 ∩ o2) = length NO').
-  {subst NO'. rewrite freshnames_correct_length. auto. }
-set (sub_NO'_o1intero2 := tp_substitution_list (o1 ∩ o2) NO' Hl'). 
-assert (Hl'' : length NI = length (i1 ∩ i2)). 
-  {subst NI. rewrite freshnames_correct_length. auto. }
-set (sub_i1interi2_NI := tp_substitution_list NI (i1 ∩ i2) Hl''). 
-assert (Hl''' : length NI' = length (i1 ∩ i2)).
-  {subst NI'. rewrite freshnames_correct_length. auto. }
-set (sub_i1interi2_NI' := tp_substitution_list NI' (i1 ∩ i2) Hl''').
-
-(*renaming innernames and outernames that are in b1 and b2 in b1*)
-set (pre_b1 := ((sub_NO_o1intero2 ⊗ (bigraph_id r1 (not_in_intersection_inl o1 o2))))).
-set (post_b1 := ((sub_i1interi2_NI ⊗ (bigraph_id s1 (not_in_intersection_inl i1 i2))))).
-set (new_b1 := pre_b1 <<o>> b1 <<o>> post_b1).
-
-(*renaming innernames and outernames that are in b1 and b2 in b2*)
-set (pre_b2 := ((sub_NO'_o1intero2 ⊗ (bigraph_id r2 (not_in_intersection_inr o1 o2))))).
-set (post_b2 := ((sub_i1interi2_NI' ⊗ (bigraph_id s2 (not_in_intersection_inr i1 i2))))).
-set (new_b2 := pre_b2 <<o>> b2 <<o>> post_b2).
-
-set (b1xb2 := new_b1 ⊗ new_b2).
-
-(*renaming outernames of b1 x b2*)
-set (sub_o1intero2_NOunionNO' := tp_substitution_two_list NO NO' (o1 ∩ o2) (symmetry Hl) (symmetry Hl') _).
-
-set (pre_b1xb2 := sub_o1intero2_NOunionNO' ⊗ 
-  bigraph_id (r1+r2) (not_in_intersection_inl o1 o2 ∪ not_in_intersection_inr o1 o2)).
-
-(*renaming innernames of b1 x b2, just one out of the two though, the other will close*)
-eset (sub_NIunionNI'_i1interi2 := tp_substitution_list (i1 ∩ i2) NI (symmetry Hl'')).
-(* eset (sub_NIunionNI'_i1interi2 := tp_substitution_two_list (i1 ∩ i2) NI NI' (symmetry Hl''') _ _).
-Unshelve. 2:{ rewrite Hl'''. rewrite Hl''. reflexivity. } *)
-set (post_b1xb2 := sub_NIunionNI'_i1interi2 ⊗ 
-  bigraph_id (s1+s2) (not_in_intersection_inl i1 i2 ∪ not_in_intersection_inr i1 i2 )).
-
-
-eset (xb1xb2 := pre_b1xb2 <<o>> b1xb2 <<o>> post_b1xb2).
-Unshelve. 2:{subst NI NI'. 
-
-(*Marche paaaaas Pourquoi? pcq faut utiliser UnionPossible! 
-link(inner dans i1 inter i2 c'est outer)*)
-
-(* set (sub_NIunionNI'_i1interi2 := tp_substitution_two_list NI NI' (i1 ∩ i2)). *)
-
-  Admitted.
-
-
-Theorem eq_bigraph_parallel_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
-  {up : UnionPossible b1 b2}: 
-  bigraph_equality (bigraph_parallel_product b1 b2) (bigraph_parallel_product' b1 b2).
-  Admitted.
-
 Global Notation "b1 || b2" := (bigraph_parallel_product b1 b2) (at level 50, left associativity).
-
-#[export] Instance disjoint_innernames_implies_union_possible {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
-  {b1 : bigraph s1 i1 r1 o1} {b2 : bigraph s2 i2 r2 o2} :
-  i1 # i2 -> UnionPossible b1 b2.
-  Proof.
-  intros.
-  constructor.
-  unfold union_possible.
-  intros.
-  destruct i0. exfalso.
-  unfold intersectionNDL in i0.
-  simpl in i0.
-  set (H' := DN_D H).
-  rewrite (intersection_disjoint_empty_NDL H') in i0.
-  apply i0.
-  Qed. 
 
 Theorem tp_eq_pp {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
@@ -847,9 +109,9 @@ Theorem tp_eq_pp {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
   Proof.
   refine (BigEq _ _ _ _ _ _ _ _ (b1 ⊗ b2) (b1 || b2)
     eq_refl
-    (permutation_id (app_merge' i1 i2))
+    (permutation_id (app_merge i1 i2))
     eq_refl
-    (permutation_id (app_merge' o1 o2))
+    (permutation_id (app_merge o1 o2))
     bij_id
     bij_id
     _  _ _ _
@@ -1115,8 +377,9 @@ Theorem bigraph_pp_right_neutral : forall {s i r o} (b : bigraph s i r o),
       f_equal. destruct s0. apply subset_eq_compat. reflexivity.
   Qed.
 
-(* Lemma arity_pp_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) n12,
-  Arity (get_control (b1 || b2) n12) = Arity (get_control (b2 || b1) (bij_sum_comm n12)).
+Lemma arity_pp_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) {up : UnionPossible b1 b2} n12,
+  Arity (get_control (b1 || b2) n12) = 
+  Arity (get_control (bigraph_parallel_product (up:=union_possible_commutes up) b2 b1) (bij_sum_comm n12)).
   Proof.
   intros until n12.
   destruct n12.
@@ -1124,83 +387,29 @@ Theorem bigraph_pp_right_neutral : forall {s i r o} (b : bigraph s i r o),
   + reflexivity.
   Qed.
 
-Theorem bigraph_pp_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2),
-  bigraph_equality (b1 ||b2) (b2 || b1).
+Theorem bigraph_pp_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) {up : UnionPossible b1 b2},
+  bigraph_equality (b1 ||b2) (bigraph_parallel_product (up:=union_possible_commutes up) b2 b1).
   Proof.
   intros.
   refine (BigEq _ _ _ _ _ _ _ _ (b1 || b2) (b2 || b1)
     (@eq_sym _ _ _ _)
-    in_app_merge'_comu
+    in_app_merge_comu
     (@eq_sym _ _ _ _)
-    in_app_merge'_comu
+    in_app_merge_comu
     bij_sum_comm
     bij_sum_comm
-    (fun n12 => bij_rew (P := fin) (arity_tp_comm b1 b2 n12))
+    (fun n12 => bij_rew (P := fin) (arity_pp_comm b1 b2 n12))
     _ _ _
   ).
   + apply functional_extensionality.
     destruct x as [k2 | k1]; reflexivity.
   + apply functional_extensionality.
-    (* destruct x as [[n2 | n1] | s21']; simpl; unfold funcomp; simpl. destruct get_parent . ; reflexivity.
-  + apply functional_extensionality.
-    destruct x as [i21 | (v1, (k1, Hvk1))]; simpl; unfold funcomp; simpl.
-    - (*TODO destruct i*) Admitted.  *)
-    (* destruct get_link; reflexivity.
-    - destruct get_link; reflexivity.
-    - destruct p12 as ([v2 | v1], (i21, Hvi21)); simpl.
-      * unfold bij_rew_forward.
-        unfold eq_rect_r.
-        (*
-          erewrite eq_rect_pi.
-          erewrite (eq_rect_pi (x := inl v2)).
-        *)
-        rewrite <- eq_rect_eq.
-        rewrite <- eq_rect_eq.
-        simpl.
-        destruct get_link; reflexivity.
-      * unfold bij_rew_forward.
-        unfold eq_rect_r.
-        (*
-          erewrite eq_rect_pi.
-          erewrite (eq_rect_pi (x := inl v2)).
-        *)
-        rewrite <- eq_rect_eq.
-        rewrite <- eq_rect_eq.
-        simpl.
-        destruct get_link; reflexivity.
-  Qed. *)
-Abort. We no longer have commutativity *)
-
-Lemma union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
-  {b1 : bigraph s1 i1 r1 o1} 
-  {b2 : bigraph s2 i2 r2 o2} 
-  (up12 : UnionPossible b1 b2):
-  UnionPossible b2 b1.
-  Proof.
-    destruct up12 as [up12]. constructor.
-    unfold union_possible in *.
-    unfold NameSub in *.
-    intros i.
-    specialize (up12 (to_commute i)).
-    unfold to_commute in up12.
-    destruct i as [i H21].
-    unfold to_left,to_right in *.
-    destruct get_link eqn:E.
-    - rewrite <- (innername_proof_irrelevant b2 i (from_intersection_left H21)) in up12. 
-    destruct (get_link b2 (inl (exist (fun name : Name => In name i2) i (from_intersection_left H21)))). 
-    + rewrite <- (innername_proof_irrelevant b1 i (from_intersection_left (intersection_commutes H21))).
-    rewrite E.
-    destruct s0. destruct s3.
-    simpl in *. symmetry. apply up12.
-    + apply up12.
-    - destruct (get_link b2
-    (inl
-      (exist (fun name : Name => In name i2) i
-          (from_intersection_left H21)))) eqn:E'.
-    + rewrite <- (innername_proof_irrelevant b1 i (from_intersection_left (intersection_commutes H21))).
-    rewrite E. apply up12.
-    + apply up12.
-  Qed.
+    destruct x as [[n2 | n1] | s21']; simpl; unfold funcomp,parallel,bij_rew_forward, surj_fin_add,id ; simpl.
+    -  destruct get_parent ; try reflexivity.
+    f_equal. destruct f.
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1 + r2) (r2 + r1) _ (r1 + x) _).
+    apply subset_eq_compat. try lia.
+    Abort. (* We don't have commutativity *)
 
 #[export] Instance union_possible_assoc_pp {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   {b1 : bigraph s1 i1 r1 o1} 
@@ -1382,7 +591,7 @@ Theorem bigraph_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
       simpl.
       unfold id. simpl. 
       unfold in_app_or_m_nod_dup.
-      destruct (in_dec EqDecN i123 (app_merge' i2 i3)).
+      destruct (in_dec EqDecN i123 (app_merge i2 i3)).
       * destruct (in_dec EqDecN i123 i3).
       ** destruct get_link; try reflexivity.
       *** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
@@ -1509,9 +718,9 @@ Theorem bigraph_pp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i
   destruct Heqb3b4 as (bij_s34, bij_i34, bij_r34, bij_o34, bij_n34, bij_e34, bij_p34, big_control_eq34, big_parent_eq34, big_link_eq34).
   apply (BigEq _ _ _ _ _ _ _ _ (b1 || b3) (b2 || b4)
     (f_equal2_plus _ _ _ _ bij_s12 bij_s34)
-    (app_merge'_cong bij_i12 bij_i34)
+    (app_merge_cong bij_i12 bij_i34)
     (f_equal2_plus _ _ _ _ bij_r12 bij_r34)
-    (app_merge'_cong bij_o12 bij_o34)
+    (app_merge_cong bij_o12 bij_o34)
     (bij_n12 <+> bij_n34)
     (bij_e12 <+> bij_e34)
     (arity_pp_congruence b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34) 
@@ -1637,117 +846,8 @@ Theorem bigraph_pp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i
       apply subset_eq_compat. reflexivity.
   Qed.
 
-(* Fail Definition bigraph_packed_pp (b1 b2 : bigraph_packed) := 
-  packing ((big b1) || (big b2)).
-
-Fail Add Parametric Morphism :
-  bigraph_packed_pp with
-  signature bigraph_packed_equality ==> 
-  bigraph_packed_equality ==> 
-  bigraph_packed_equality as juxtaposition_morphism. *)
-    (* Proof.
-    unfold bigraph_packed_equality, bigraph_packed_pp.
-    destruct x; destruct y; simpl; destruct x0; destruct y0; simpl.
-    apply bigraph_pp_congruence.
-    assumption.
-    Qed. *)
-
-(* Theorem bigraph_packed_pp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
-  bigraph_packed_equality (bigraph_packed_pp ∅ b) b.
-  Proof.
-  unfold bigraph_packed_equality, bigraph_packed_pp.
-  intros.
-  apply bigraph_pp_left_neutral.
-  Qed.
-
-Theorem bigraph_packed_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3),
-  bigraph_packed_equality (bigraph_packed_pp (bigraph_packed_pp b1 b2) b3) (bigraph_packed_pp b1 (bigraph_packed_pp b2 b3)).
-  Proof.
-  unfold bigraph_packed_equality, bigraph_packed_pp.
-  intros.
-  apply bigraph_pp_assoc.
-  Qed.
-
-Lemma bigraph_packed_pp_right_neutral : forall {s i r o} (b : bigraph s i r o), 
-  bigraph_packed_equality (bigraph_packed_pp b ∅) b.
-  Proof.
-  unfold bigraph_packed_equality, bigraph_packed_pp.
-  intros.
-  apply bigraph_pp_right_neutral.
-  Qed. *)
 
 (* Bifunctorial property *)
-
-#[export] Instance union_possible_dist {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 r3 r4 i3 o3i1 s4 i4 o4i2} 
-  {b1 : bigraph s1 i1o3 r1 o1} 
-  {b2 : bigraph s2 i2o4 r2 o2} 
-  {b3 : bigraph s3 i3 r3 o3i1} 
-  {b4 : bigraph s4 i4 r4 o4i2}
-  {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
-  {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)}
-  {eqs2r4 : MyEqNat s2 r4} {eqs1r3 : MyEqNat s1 r3} 
-  (up12 : UnionPossible b1 b2) (up34 : UnionPossible b3 b4) :
-  UnionPossible 
-    (b1 <<o>> b3) 
-    (b2 <<o>> b4).
-  Proof.
-    destruct up12 as [up12].
-    destruct up34 as [up34].
-    constructor.
-    unfold union_possible, NameSub in *.
-    unfold bigraph_composition.
-    simpl. 
-    intros.
-    unfold funcomp, parallel, id, sequence, switch_link, permut_list_forward, bij_join_port_backward.
-    unfold rearrange, extract1.
-    simpl.
-    specialize (up34 i0).
-    destruct get_link eqn:E.
-    - destruct s0 as [o' Ho'].
-      destruct (in_dec EqDecN o' i2o4).
-      + pose Ho' as Ho''.
-        destruct p13 as [p13].
-        apply (p13 o') in Ho''.
-        specialize (up12 (to_intersection o' Ho'' i1)).
-        unfold to_left, to_right, to_intersection in *. 
-        rewrite <- (innername_proof_irrelevant b1 o' (from_intersection_left (in_both_in_intersection Ho'' i1))).
-        destruct get_link eqn:E'.
-        ++ destruct i0.
-          destruct (get_link b4 (inl (exist (fun name : Name => In name i4) x (from_intersection_right i0)))) eqn:E''.
-          * destruct s5.
-            simpl in up34. destruct up34.
-            rewrite <- (innername_proof_irrelevant b2 o' (from_intersection_right
-            (in_both_in_intersection Ho'' i1))).
-            set (Tmp := from_intersection_right
-            (in_both_in_intersection Ho'' i1)).
-            fold Tmp in up12.
-            assert (@from_intersection_right 
-            (ndlist i1o3) (ndlist i2o4) o'
-            (@in_both_in_intersection
-               (ndlist
-                  (@reverse_coercion NoDupList
-                     (list Name) i1o3 
-                     (ndlist i1o3))) 
-               (ndlist i2o4) o' Ho'' i1) = Tmp).
-               auto.
-               rewrite H in up12.
-            destruct (get_link b2 (inl (exist (fun x : Name => In x i2o4) o' Tmp))) eqn:EI.
-            ** apply up12.
-            ** apply up12.
-          * apply up34.
-        ++ apply up12.
-      + destruct i0.
-      unfold to_left, to_right in *.
-      destruct get_link; destruct get_link.
-      * destruct s0. destruct s5. simpl in *. destruct up34.
-      exfalso. apply n. destruct p24 as [p24]. apply (p24 o'). apply i2.
-      * exfalso. apply up34.
-      * destruct s0. simpl in *. destruct up34.
-      exfalso. apply n. destruct p24 as [p24]. apply (p24 o'). apply i1.
-      * exfalso. apply up34.
-    - apply up34.
-  Qed.
-
 Theorem arity_comp_pp_dist : forall {s1r3 i1o3 r1 o1 s2r4 i2o4 r2 o2 r3s1 r4s2 s3 i3 o3i1 s4 i4 o4i2} 
   (b1 : bigraph s1r3 i1o3 r1 o1) 
   (b2 : bigraph s2r4 i2o4 r2 o2) 
@@ -2002,9 +1102,9 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o
                           return
                             (forall
                                _ : @In Name x
-                                     (app_merge' (ndlist o3i1) (ndlist o4i2)),
+                                     (app_merge (ndlist o3i1) (ndlist o4i2)),
                              @In Name x
-                               (app_merge' (ndlist i1o3) (ndlist i2o4)))
+                               (app_merge (ndlist i1o3) (ndlist i2o4)))
                         with
                         | conj H _ => H
                         end (in_left_list x (ndlist o3i1) (ndlist o4i2) i0)) n)))
@@ -2054,21 +1154,15 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o
   Qed. 
 
 
-#[export] Instance union_possible_id {X Y: NoDupList} :
-  UnionPossible (@bigraph_id 0 X) (@bigraph_id 0 Y).
-  constructor.
-  unfold union_possible.
-  intros [iXY Hi].
-  simpl. reflexivity.
-  Qed.
 
+(*Lemmas about decomposition bigraph_id*)
 Lemma id_union : forall X Y:NoDupList, 
   bigraph_equality
-  (@bigraph_id 0 (X ∪ Y))
-  ((@bigraph_id 0 X) || (@bigraph_id 0 Y)).
+  (bigraph_id 0 (X ∪ Y))
+  ((bigraph_id 0 X) || (bigraph_id 0 Y)).
   Proof.
     intros X Y.
-    unfold bigraph_id. unfold bigraph_identity.
+    unfold bigraph_id.
     unfold bigraph_parallel_product.
     simpl.
     unfold link_juxt, parallel, funcomp.
@@ -2099,124 +1193,7 @@ Lemma id_union : forall X Y:NoDupList,
     * destruct x. destruct x as [x | x]; destruct x.
   Qed.
 
-(* Lemma id_union' : forall X Y:NoDupList, 
-  bigraph_equality
-  (bigraph_identity (s := 0) (i := X ∪ Y))
-  ((bigraph_identity (i := X)) || (bigraph_identity (i := Y))).
-  Proof.
-    intros X Y.
-    unfold bigraph_id. unfold bigraph_identity.
-    unfold bigraph_parallel_product.
-    simpl.
-    unfold link_juxt, parallel, funcomp.
-    simpl.
-    unfold findec_sum. simpl.
-    unfold join.
-    unfold sum_shuffle.
-    refine 
-      (BigEq 0 0 0 0 _ _ _ _
-        (bigraph_identity (s := 0) (i := X ∪ Y))
-        ((bigraph_identity (i := X)) || (bigraph_identity (i := Y)))
-        eq_refl
-        (permutation_id (X ∪ Y))
-        eq_refl
-        (permutation_id (X ∪ Y))
-        (bijection_inv bij_void_sum_neutral)
-        (bijection_inv bij_void_sum_neutral)
-        (fun n => void_univ_embedding n) _ _ _
-      ).
-    + apply functional_extensionality.
-      intros [ x | x ]; destruct x. 
-    + apply functional_extensionality.
-      intros [[x | x] | p]; try (destruct x).
-      unfold fin in p. destruct p. exfalso. apply PeanoNat.Nat.nlt_0_r in l. apply l.
-    + rewrite bij_subset_compose_id. simpl.
-    apply functional_extensionality.
-    intros [[i H]|x].
-    * unfold id, parallel, funcomp. simpl. unfold in_app_or_m_nod_dup.
-    destruct (in_dec EqDecN i Y); f_equal; apply subset_eq_compat; reflexivity.
-    * destruct x. destruct x as [x | x]; destruct x.
-  Qed. *)
-
-Lemma id_union_packed : forall X Y:NoDupList, 
-  bigraph_packed_equality
-  ((bigraph_id 0 (X ∪ Y)))
-  ((bigraph_parallel_product (up := union_possible_id) (bigraph_id 0 X) (bigraph_id 0 Y))).
-  Proof.
-  apply id_union.
-  Qed.
-
-Class UnionPossiblePacked (b1 b2 : bigraph_packed) :=
-  { upp :: UnionPossible (big b1) (big b2)}.
-  
-#[export] Instance unionpossible_packed (b1 b2 : bigraph_packed) (upp : UnionPossible (big b1) (big b2)) : 
-  UnionPossiblePacked b1 b2.
-  Proof.
-  constructor. exact upp.
-  Qed.
-
-(* #[export] Instance unionpossible_packed_nesting 
-  {s r o X} (G : bigraph s EmptyNDL r o):
-  UnionPossiblePacked (bigraph_identity (s := 0) (i := X)) G. 
-  constructor. apply disjoint_innernames_implies_union_possible. 
-  constructor. intros. simpl. simpl in H0. apply H0.
-  Qed. *)
-
-Record bigraph_packed_up_pair :=
-  { 
-    fst_ppair_pp  : bigraph_packed;
-    snd_ppair_pp  : bigraph_packed;
-    up_ppair_pp :: UnionPossiblePacked fst_ppair_pp snd_ppair_pp
-  }.
-
-Arguments Build_bigraph_packed_up_pair _ _ {up_ppair_pp}.
-  
-Record bigraph_packed_up_pair_equality (pp1 pp2 : bigraph_packed_up_pair) : Prop :=
-  { 
-    fst_ppair_pp_equ : bigraph_packed_equality (fst_ppair_pp pp1) (fst_ppair_pp pp2);
-    snd_ppair_pp_equ : bigraph_packed_equality (snd_ppair_pp pp1) (snd_ppair_pp pp2)
-  }.
-  
-Lemma bigraph_packed_up_pair_equality_refl (pp : bigraph_packed_up_pair) :
-  bigraph_packed_up_pair_equality pp pp.
-  Proof.
-  constructor.
-  + apply bigraph_equality_refl.
-  + apply bigraph_equality_refl.
-  Qed.
-
-Lemma bigraph_packed_up_pair_equality_sym (pp1 pp2 : bigraph_packed_up_pair):
-  bigraph_packed_up_pair_equality pp1 pp2 -> bigraph_packed_up_pair_equality pp2 pp1.
-  Proof.
-  intros H12.
-  constructor.
-  + symmetry.
-    apply (fst_ppair_pp_equ _ _ H12).
-  + symmetry.
-    apply (snd_ppair_pp_equ _ _ H12).
-  Qed.
-  
-Lemma bigraph_packed_up_pair_equality_trans (pp1 pp2 pp3 : bigraph_packed_up_pair):
-  bigraph_packed_up_pair_equality pp1 pp2 -> bigraph_packed_up_pair_equality pp2 pp3 ->
-    bigraph_packed_up_pair_equality pp1 pp3.
-  Proof.
-  intros H12 H23.
-  constructor.
-  + etransitivity.
-    - apply (fst_ppair_pp_equ _ _ H12).
-    - apply (fst_ppair_pp_equ _ _ H23).
-  + etransitivity.
-    - apply (snd_ppair_pp_equ _ _ H12).
-    - apply (snd_ppair_pp_equ _ _ H23).
-  Qed.
-  
-Add Parametric Relation : 
-  bigraph_packed_up_pair bigraph_packed_up_pair_equality
-  reflexivity proved by (bigraph_packed_up_pair_equality_refl)
-  symmetry proved by (bigraph_packed_up_pair_equality_sym)
-  transitivity proved by (bigraph_packed_up_pair_equality_trans)
-    as bigraph_packed_up_pair_equality_rel.
-
+(* Packed parallel Product*)
 Definition bigraph_packed_pp (b1 b2 : bigraph_packed)
   {HUP : UnionPossiblePacked b1 b2} := 
   packing ((big b1) || (big b2)).
@@ -2269,48 +1246,6 @@ Theorem bigraph_packed_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   simpl.
   apply (@bigraph_pp_assoc s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 b1 b2 b3 upp1 upp2 upp0).
   Qed. 
-
-(* Lemma id_union'' : forall X Y:NoDupList, 
-  bigraph_equality
-  (bigraph_identity (s := 0) 
-    (p := permutation_id_PN (@reverse_coercion NoDupList (list Name) 
-			(app_merge_NoDupList X Y) 
-			(ndlist (app_merge_NoDupList X Y)))))
-  ((bigraph_identity (p := P_NP (permutation_id X))) [||] (bigraph_identity (p := P_NP (permutation_id Y)))).
-  Proof.
-  intros X Y.
-    unfold bigraph_id. unfold bigraph_identity.
-    unfold bigraph_parallel_product.
-    simpl.
-    unfold link_juxt, parallel, funcomp.
-    simpl.
-    unfold findec_sum. simpl.
-    unfold join.
-    unfold sum_shuffle.
-    refine 
-      (BigEq 0 0 0 0 _ _ _ _
-        (bigraph_identity (s := 0) (p := permutation_id_PN (@reverse_coercion NoDupList (list Name)  (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y)))))  
-        (bigraph_id 0 X || (bigraph_id 0 Y))
-        eq_refl
-        (permutation_id (app_merge_NoDupList X Y))
-        eq_refl
-        (permutation_id (app_merge_NoDupList X Y))
-        (bijection_inv bij_void_sum_neutral)
-        (bijection_inv bij_void_sum_neutral)
-        (fun n => void_univ_embedding n) _ _ _
-      ).
-  + apply functional_extensionality.
-      intros [ x | x ]; destruct x. 
-    + apply functional_extensionality.
-      intros [[x | x] | p]; try (destruct x).
-      unfold fin in p. destruct p. exfalso. apply PeanoNat.Nat.nlt_0_r in l. apply l.
-    + rewrite bij_subset_compose_id. simpl.
-    apply functional_extensionality.
-    intros [[i H]|x].
-    * unfold id, parallel, funcomp. simpl. unfold in_app_or_m_nod_dup.
-    destruct (in_dec EqDecN i Y); f_equal; apply subset_eq_compat; reflexivity.
-    * destruct x. destruct x as [x | x]; destruct x.
-  Qed. *)
 
 End ParallelProduct.
 
