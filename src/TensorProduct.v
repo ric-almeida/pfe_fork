@@ -6,7 +6,6 @@ Require Import SignatureBig.
 Require Import Equality.
 Require Import Bijections.
 Require Import MyBasics.
-Require Import Fintypes.
 Require Import FinDecTypes.
 Require Import Composition.
 
@@ -31,84 +30,21 @@ Include c.
 Set Typeclasses Unique Instances.
 Set Typeclasses Iterative Deepening.
 
-Class DisjointNames (l1 l2 : NoDupList) := { disj : forall n, In n l1 -> In n l2 -> False }.
 
-#[export] Instance disj_left_neutral (l : NoDupList) : DisjointNames EmptyNDL l.
+Definition FiniteParent_tensorproduct
+  {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
+  {dis_i : i1 # i2} {dis_o : o1 # o2}
+  {b1 : bigraph s1 i1 r1 o1} {b2 : bigraph s2 i2 r2 o2} : 
+  FiniteParent 
+    (((bij_id <+> bijection_inv bij_fin_sum) <o> 
+    ((bij_sum_shuffle <o> (get_parent b1 ||| get_parent b2)) <o> 
+    bijection_inv bij_sum_shuffle)) <o> (bij_id <+> bij_fin_sum)).
   Proof.
-  constructor.
-  intros n Hn.
-  elim (Hn).
-  Qed.
-
-#[export] Instance disj_right_neutral (l : NoDupList) : DisjointNames l EmptyNDL.
-  Proof.
-  constructor.
-  intros n _ Hn.
-  elim (Hn).
-  Qed.
-
-#[export] Instance disj_app_right (l1 l2 l3 : NoDupList) (Disj12 : DisjointNames l1 l2) (Disj13 : DisjointNames l1 l3) : DisjointNames l1 (l2 ∪ l3).
-  Proof.
-  constructor.
-  intros n H1 H23.
-  destruct Disj12. destruct Disj13.
-  apply app_merge_or in H23.
-  destruct H23. 
-  * apply (disj0 n); try assumption.
-  * apply (disj1 n); try assumption.
-  Qed.
-
-#[export] Instance disj_app_left (l1 l2 l3 : NoDupList) (Disj13 : DisjointNames l1 l3) (Disj23 : DisjointNames l2 l3) : DisjointNames (l1 ∪ l2) l3.
-  Proof.
-  constructor.
-  intros n H12 H3.
-  destruct Disj13. destruct Disj23.
-  apply app_merge_or in H12.
-  destruct H12. 
-  * apply (disj0 n); try assumption.
-  * apply (disj1 n); try assumption.
-  Qed.
-
-Global Notation "l1 # l2" := (DisjointNames l1 l2) (at level 50, left associativity). 
-
-Definition tmptest
-{s1 r1 s2 r2 : nat}
-
-{i1 o1 i2 o2 : NoDupList}
-
-{dis_i : i1 # i2}
-
-{dis_o : o1 # o2}
-
-{b1 : bigraph s1 i1 r1 o1}
-
-{b2 : bigraph s2 i2 r2 o2}
-
-: FiniteParent (((bij_id <+> bijection_inv bij_fin_sum) <o> ((bij_sum_shuffle <o> (get_parent b1 ||| get_parent b2)) <o> bijection_inv bij_sum_shuffle)) <o> (bij_id <+> bij_fin_sum)).
-rewrite <- tensor_alt.
-  apply finite_parent_inout.
-  apply finite_parent_tensor.
-  + exact (ap _ _ _ _ b1).
-  + exact (ap _ _ _ _ b2).
-  Qed.
-
-
-Definition DN_D {l1 l2} : l1 # l2 -> Disjoint l1 l2.
-  Proof. 
-  intros.
-  unfold Disjoint.
-  destruct H.
-  unfold not.
-  apply disj0.
-  Qed.
-
-Definition D_ND {l1 l2} : Disjoint l1 l2 -> l1 # l2.
-  Proof. 
-  intros.
-  unfold Disjoint in H.
-  unfold not in H.
-  constructor.
-  apply H.
+    rewrite <- tensor_alt.
+    apply finite_parent_inout.
+    apply finite_parent_tensor.
+    + exact (ap _ _ _ _ b1).
+    + exact (ap _ _ _ _ b2).
   Qed.
 
 Definition bigraph_tensor_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
@@ -117,10 +53,9 @@ Definition bigraph_tensor_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
     : bigraph (s1 + s2) (i1 ∪ i2) (r1 + r2) (o1 ∪ o2)
     := 
-    
     (Big 
     (s1 + s2)
-    (i1 ∪ i2) (*app_merge'_id says it's eq to i1 ++ i2*)
+    (i1 ∪ i2) (*app_merge_id says it's eq to i1 ++ i2*)
     (r1 + r2)
     (o1 ∪ o2)
     (findec_sum (get_node b1) (get_node b2))
@@ -132,7 +67,7 @@ Definition bigraph_tensor_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
     (((@bij_list_names o1 o2 (DN_D dis_o)) <+> bij_id) <o>
       bij_sum_shuffle <o> (parallel (get_link b1) (get_link b2)) <o> (bijection_inv bij_sum_shuffle) <o> 
       (bijection_inv ((@bij_list_names i1 i2 (DN_D dis_i)) <+> (bij_join_port (get_control b1) (get_control b2)))))
-      tmptest
+      FiniteParent_tensorproduct
     ).
 
   (* 
@@ -140,7 +75,8 @@ Definition bigraph_tensor_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
 
 Global Notation "b1 ⊗ b2" := (bigraph_tensor_product b1 b2) (at level 50, left associativity).
 
-
+(** Section on neutal element for tensor product*)
+Section M2.
 Lemma arity_tp_left_neutral : forall {s i r o} (b : bigraph s i r o) n, 
   Arity (get_control (∅ ⊗ b) (bijection_inv bij_void_sum_neutral n)) =  Arity (get_control b n).
   Proof.
@@ -218,10 +154,10 @@ Lemma arity_tp_right_neutral : forall {s i r o} (b : bigraph s i r o) n,
   Arity (get_control (b ⊗ ∅) n) = 
   Arity (get_control b (bij_void_sum_neutral_r n)).
   Proof.
-  intros s i r o b n.
-  destruct n as [ n | v].
-  + reflexivity.
-  + destruct v.
+    intros s i r o b n.
+    destruct n as [ n | v].
+    + reflexivity.
+    + destruct v.
   Qed.
   
 Theorem bigraph_tp_right_neutral : forall {s i r o} (b : bigraph s i r o), 
@@ -289,28 +225,10 @@ Theorem bigraph_tp_right_neutral : forall {s i r o} (b : bigraph s i r o),
       apply f_equal. destruct s0. apply subset_eq_compat.
       reflexivity.
   Qed.
+End M2.
 
-(* Lemma arity_tp_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} 
- {dis_i : i1 # i2} {dis_o : o1 # o2} 
- (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) n12,
-  Arity (get_control (bigraph_tensor_product (dis_i:= dis_i) (dis_o := dis_o) b1 b2) n12) = Arity (get_control (b2 ⊗ b1) (bij_sum_comm n12)).
-  Proof.
-  intros until n12.
-  destruct n12.
-  + reflexivity.
-  + reflexivity.
-  Qed.
-
-Theorem bigraph_tp_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} 
-  {dis_i : i1 # i2} {dis_o : o1 # o2}   
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2),
-  bigraph_equality 
-    (bigraph_tensor_product (dis_i:= dis_i) (dis_o := dis_o) b1 b2) 
-    (bigraph_tensor_product (dis_i:= rev_disjoint dis_i) (dis_o := rev_disjoint dis_o) b2 b1).
-  Proof.
-  intros.
-Abort.  *)
-
+(** Section on associativity of tensor product*)
+Section M1.
 Lemma arity_tp_assoc : 
   forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} 
   {dis_i12 : i1 # i2} {dis_i23 : i2 # i3} {dis_i13 : i1 # i3}
@@ -339,9 +257,9 @@ Theorem bigraph_tp_assoc :
   intros.
   apply (BigEq _ _ _ _ _ _ _ _ ((b1 ⊗ b2) ⊗ b3) (b1 ⊗ (b2 ⊗ b3))
     (eq_sym (PeanoNat.Nat.add_assoc _ _ _))
-    in_app_merge'_transi
+    in_app_merge_transi
     (eq_sym (PeanoNat.Nat.add_assoc _ _ _))
-    in_app_merge'_transi
+    in_app_merge_transi
     bij_sum_assoc
     bij_sum_assoc
     (fun n12_3 => bij_rew (P := fin) (arity_tp_assoc b1 b2 b3 n12_3))
@@ -420,7 +338,7 @@ Theorem bigraph_tp_assoc :
       unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
       simpl.
       unfold id. simpl. 
-      destruct (in_dec EqDecN i123 (app_merge' i1 i2)).
+      destruct (in_dec EqDecN i123 (app_merge i1 i2)).
       * destruct (in_dec EqDecN i123 i1).
       destruct get_link; try reflexivity.
       ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
@@ -435,17 +353,17 @@ Theorem bigraph_tp_assoc :
       *** exfalso. apply n. apply in_right_list. apply i4.
       *** 
       set (Hn' := match
-        in_app_or_m_nod_dup (app_merge' i1 i2) i3 i123 (NoDup_app_merge i1 i2 (nd i1) (nd i2))
+        in_app_or_m_nod_dup (app_merge i1 i2) i3 i123 (NoDup_app_merge i1 i2 (nd i1) (nd i2))
           (match
             i3 as n2
-            return ((In i123 (app_merge' i1 i2) -> ~ In i123 n2) -> In i123 (app_merge' (app_merge' i1 i2) n2) -> NoDup n2)
+            return ((In i123 (app_merge i1 i2) -> ~ In i123 n2) -> In i123 (app_merge (app_merge i1 i2) n2) -> NoDup n2)
           with
           | {| ndlist := ndlist0; nd := nd0 |} =>
-              fun (_ : In i123 (app_merge' i1 i2) -> ~ In i123 ndlist0) (_ : In i123 (app_merge' (app_merge' i1 i2) ndlist0))
+              fun (_ : In i123 (app_merge i1 i2) -> ~ In i123 ndlist0) (_ : In i123 (app_merge (app_merge i1 i2) ndlist0))
               => nd0
           end (DN_D (disj_app_left i1 i2 i3 dis_i13 dis_i23) i123)
-            (in_app_merge'_trans i123 (eq_ind_r (fun b : Name => In b (app_merge' i1 (app_merge' i2 i3))) i0 eq_refl)))
-          (in_app_merge'_trans i123 (eq_ind_r (fun b : Name => In b (app_merge' i1 (app_merge' i2 i3))) i0 eq_refl))
+            (in_app_merge_trans i123 (eq_ind_r (fun b : Name => In b (app_merge i1 (app_merge i2 i3))) i0 eq_refl)))
+          (in_app_merge_trans i123 (eq_ind_r (fun b : Name => In b (app_merge i1 (app_merge i2 i3))) i0 eq_refl))
         with
         | inl i4 => False_ind (In i123 i3) (n i4)
         | inr i4 => i4
@@ -483,9 +401,11 @@ Theorem bigraph_tp_assoc :
         rewrite <- eq_rect_eq.
         simpl.
         destruct get_link; try reflexivity.
-        ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity. (*TODO best example of tactic use*)
+        ** apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
   Qed.
+End M1.
 
+(** Congruence of TP*)
 Definition arity_tp_congruence_forward 
   {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4} 
   {dis_i13 : i1 # i3} {dis_o13 : o1 # o3}
@@ -559,9 +479,9 @@ Theorem bigraph_tp_congruence :
   destruct Heqb3b4 as (bij_s34, bij_i34, bij_r34, bij_o34, bij_n34, bij_e34, bij_p34, big_control_eq34, big_parent_eq34, big_link_eq34).
   apply (BigEq _ _ _ _ _ _ _ _ (b1 ⊗ b3) (b2 ⊗ b4)
     (f_equal2_plus _ _ _ _ bij_s12 bij_s34)
-    (app_merge'_cong bij_i12 bij_i34)
+    (app_merge_cong bij_i12 bij_i34)
     (f_equal2_plus _ _ _ _ bij_r12 bij_r34)
-    (app_merge'_cong bij_o12 bij_o34)
+    (app_merge_cong bij_o12 bij_o34)
     (bij_n12 <+> bij_n34)
     (bij_e12 <+> bij_e34)
     (arity_tp_congruence b1 b2 b3 b4 bij_n12 bij_n34 bij_p12 bij_p34) 
@@ -653,22 +573,22 @@ Theorem bigraph_tp_congruence :
       **  
       set (Hn' := match
           in_app_or_m_nod_dup i1 i3 i24
-            (match i1 as n1 return ((In i24 n1 -> ~ In i24 i3) -> In i24 (app_merge' n1 i3) -> ~ In i24 n1 -> NoDup n1) with
+            (match i1 as n1 return ((In i24 n1 -> ~ In i24 i3) -> In i24 (app_merge n1 i3) -> ~ In i24 n1 -> NoDup n1) with
             | {| ndlist := ndlist0; nd := nd0 |} =>
-                fun (_ : In i24 ndlist0 -> ~ In i24 i3) (_ : In i24 (app_merge' ndlist0 i3)) (_ : ~ In i24 ndlist0) => nd0
+                fun (_ : In i24 ndlist0 -> ~ In i24 i3) (_ : In i24 (app_merge ndlist0 i3)) (_ : ~ In i24 ndlist0) => nd0
             end (DN_D dis_i13 i24)
-              (match app_merge'_cong bij_i12 bij_i34 i24 with
+              (match app_merge_cong bij_i12 bij_i34 i24 with
                 | conj _ H => H
-                end (eq_ind_r (fun b : Name => In b (app_merge' i2 i4)) i0 eq_refl)) n)
-            (match i3 as n1 return ((In i24 i1 -> ~ In i24 n1) -> In i24 (app_merge' i1 n1) -> NoDup n1) with
-            | {| ndlist := ndlist0; nd := nd0 |} => fun (_ : In i24 i1 -> ~ In i24 ndlist0) (_ : In i24 (app_merge' i1 ndlist0)) => nd0
+                end (eq_ind_r (fun b : Name => In b (app_merge i2 i4)) i0 eq_refl)) n)
+            (match i3 as n1 return ((In i24 i1 -> ~ In i24 n1) -> In i24 (app_merge i1 n1) -> NoDup n1) with
+            | {| ndlist := ndlist0; nd := nd0 |} => fun (_ : In i24 i1 -> ~ In i24 ndlist0) (_ : In i24 (app_merge i1 ndlist0)) => nd0
             end (DN_D dis_i13 i24)
-              (match app_merge'_cong bij_i12 bij_i34 i24 with
+              (match app_merge_cong bij_i12 bij_i34 i24 with
                 | conj _ H => H
-                end (eq_ind_r (fun b : Name => In b (app_merge' i2 i4)) i0 eq_refl)))
-            (match app_merge'_cong bij_i12 bij_i34 i24 with
+                end (eq_ind_r (fun b : Name => In b (app_merge i2 i4)) i0 eq_refl)))
+            (match app_merge_cong bij_i12 bij_i34 i24 with
             | conj _ H => H
-            end (eq_ind_r (fun b : Name => In b (app_merge' i2 i4)) i0 eq_refl))
+            end (eq_ind_r (fun b : Name => In b (app_merge i2 i4)) i0 eq_refl))
         with
         | inl i5 => False_ind (In i24 i3) (n i5)
         | inr i5 => i5
@@ -716,141 +636,8 @@ Theorem bigraph_tp_congruence :
   Qed.
 
 
-Definition bigraph_packed_tp_old (b1 b2 : bigraph_packed) 
- (dis_i : (i b1) # (i b2)) (dis_o : (o b1) # (o b2)) := 
-  packing ((big b1) ⊗ (big b2)).
-
-
-(*Section for Tensor Product*)
-
-
-Class DisjointNamesPacked (b1 b2 : bigraph_packed) :=
-  { disj_inner :: DisjointNames (i b1) (i b2);
-    disj_outer :: DisjointNames (o b1) (o b2)
-  }.
-  
-#[export] Instance disj_packed (b1 b2 : bigraph_packed) (Disji12 : DisjointNames (i b1) (i b2)) (Disjo12 : DisjointNames (o b1) (o b2)) : 
-  DisjointNamesPacked b1 b2.
-  Proof.
-  constructor.
-  + exact Disji12.
-  + exact Disjo12.
-  Qed.
-  
-Record bigraph_packed_disjoint_pair :=
-  { 
-    fst_ppair_tp  : bigraph_packed;
-    snd_ppair_tp  : bigraph_packed;
-    disj_ppair_tp :: DisjointNamesPacked fst_ppair_tp snd_ppair_tp
-  }.
-Arguments Build_bigraph_packed_disjoint_pair _ _ {disj_ppair_tp}. (*What does this do?*)
-  
-Record bigraph_packed_disjoint_pair_equality (pp1 pp2 : bigraph_packed_disjoint_pair) : Prop :=
-  { 
-    fst_ppair_tp_equ : bigraph_packed_equality (fst_ppair_tp pp1) (fst_ppair_tp pp2);
-    snd_ppair_tp_equ : bigraph_packed_equality (snd_ppair_tp pp1) (snd_ppair_tp pp2)
-  }. (*Why 4 bigraphs?*)
-  
-Lemma bigraph_packed_disjoint_pair_equality_refl (pp : bigraph_packed_disjoint_pair) :
-  bigraph_packed_disjoint_pair_equality pp pp.
-  Proof.
-  constructor.
-  + apply bigraph_equality_refl.
-  + apply bigraph_equality_refl.
-  Qed.
-  
-Lemma bigraph_packed_disjoint_pair_equality_sym (pp1 pp2 : bigraph_packed_disjoint_pair):
-  bigraph_packed_disjoint_pair_equality pp1 pp2 -> bigraph_packed_disjoint_pair_equality pp2 pp1.
-  Proof.
-  intros H12.
-  constructor.
-  + symmetry.
-    apply (fst_ppair_tp_equ _ _ H12).
-  + symmetry.
-    apply (snd_ppair_tp_equ _ _ H12).
-  Qed.
-  
-Lemma bigraph_packed_disjoint_pair_equality_trans (pp1 pp2 pp3 : bigraph_packed_disjoint_pair):
-  bigraph_packed_disjoint_pair_equality pp1 pp2 -> bigraph_packed_disjoint_pair_equality pp2 pp3 ->
-    bigraph_packed_disjoint_pair_equality pp1 pp3.
-  Proof.
-  intros H12 H23.
-  constructor.
-  + etransitivity.
-    - apply (fst_ppair_tp_equ _ _ H12).
-    - apply (fst_ppair_tp_equ _ _ H23).
-  + etransitivity.
-    - apply (snd_ppair_tp_equ _ _ H12).
-    - apply (snd_ppair_tp_equ _ _ H23).
-  Qed.
-  
-Add Parametric Relation : 
-  bigraph_packed_disjoint_pair bigraph_packed_disjoint_pair_equality
-  reflexivity proved by (bigraph_packed_disjoint_pair_equality_refl)
-  symmetry proved by (bigraph_packed_disjoint_pair_equality_sym)
-  transitivity proved by (bigraph_packed_disjoint_pair_equality_trans)
-    as bigraph_packed_disjoint_pair_equality_rel.
-    
-Definition bigraph_packed_tp (b1 b2 : bigraph_packed)
-  {Hdisj12 : DisjointNamesPacked b1 b2} := 
-  packing ((big b1) ⊗ (big b2)).
-
-Definition bigraph_packed_disjoint_pair_tp (pp : bigraph_packed_disjoint_pair) := 
-@bigraph_packed_tp (fst_ppair_tp pp) (snd_ppair_tp pp) (disj_ppair_tp pp).
-
-
-(*Set Typeclasses Debug.*)
-
-Add Parametric Morphism : bigraph_packed_disjoint_pair_tp with
-signature bigraph_packed_disjoint_pair_equality ==> 
-bigraph_packed_equality as tp_morphism.
-Proof.
-unfold bigraph_packed_equality, bigraph_packed_disjoint_pair_tp, bigraph_packed_tp.
-destruct x; destruct y; simpl.
-destruct 1.
-simpl in * |- *.
-apply bigraph_tp_congruence.
-+ assumption.
-+ assumption.
-Qed.
-
-(* Notation "b1 [] b2" := (bigraph_packed_disjoint_pair_tp (Build_bigraph_packed_disjoint_pair b1 b2)) (at level 50, left associativity). *)
-
-(* Theorem bigraph_packed_tp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
-bigraph_packed_equality (bigraph_packed_tp bigraph_empty b) b.
-Proof.
-unfold bigraph_packed_equality, bigraph_packed_tp.
-intros. simpl. Set Printing All.  
-Print bigraph_tp_left_neutral. 
-Check bigraph_tp_left_neutral.  
-
-apply bigraph_tp_left_neutral.
-Qed. *)
-
-(* Theorem bigraph_packed_tp_right_neutral : forall {s i r o} (b : bigraph s i r o), 
-bigraph_packed_equality (bigraph_packed_tp b bigraph_empty) b.
-Proof.
-unfold bigraph_packed_equality, bigraph_packed_tp.
-intros.
-apply bigraph_tp_right_neutral.
-Qed.
-
-Theorem bigraph_packed_tp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
-  {Hdisj12 : DisjointNamesPacked b1 b2} 
-  {Hdisj13 : DisjointNamesPacked b1 b3} 
-  {Hdisj23 : DisjointNamesPacked b2 b3},
-  bigraph_packed_equality 
-    (bigraph_packed_tp (bigraph_packed_tp b1 b2) b3)
-    (bigraph_packed_tp b1 (bigraph_packed_tp b2 b3)).
-Proof.
-unfold bigraph_packed_equality, bigraph_packed_tp.
-intros.
-apply bigraph_tp_assoc.
-Qed. *)
-
-
-(* Bifunctorial property*)
+(** Bifunctorial property*)
+Section M3.
 Theorem arity_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o3i1 s4 i4 o4i2} 
   (b1 : bigraph s1 i1o3 r1 o1) 
   (b2 : bigraph s2 i2o4 r2 o2) 
@@ -986,15 +773,15 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r3 r4 r2 o2 s3 i3 o
         match
           in_app_or_m_nod_dup i3 i4 i'
             (match
-              i3 as n0 return ((In i' n0 -> ~ In i' i4) -> In i' (app_merge' n0 i4) -> ~ In i' n0 -> NoDup n0)
+              i3 as n0 return ((In i' n0 -> ~ In i' i4) -> In i' (app_merge n0 i4) -> ~ In i' n0 -> NoDup n0)
             with
             | {| ndlist := ndlist0; nd := nd0 |} =>
-                fun (_ : In i' ndlist0 -> ~ In i' i4) (_ : In i' (app_merge' ndlist0 i4)) (_ : ~ In i' ndlist0) =>
+                fun (_ : In i' ndlist0 -> ~ In i' i4) (_ : In i' (app_merge ndlist0 i4)) (_ : ~ In i' ndlist0) =>
                 nd0
             end (DN_D dis_i34 i') i0 n)
-            (match i4 as n0 return ((In i' i3 -> ~ In i' n0) -> In i' (app_merge' i3 n0) -> NoDup n0) with
+            (match i4 as n0 return ((In i' i3 -> ~ In i' n0) -> In i' (app_merge i3 n0) -> NoDup n0) with
             | {| ndlist := ndlist0; nd := nd0 |} =>
-                fun (_ : In i' i3 -> ~ In i' ndlist0) (_ : In i' (app_merge' i3 ndlist0)) => nd0
+                fun (_ : In i' i3 -> ~ In i' ndlist0) (_ : In i' (app_merge i3 ndlist0)) => nd0
             end (DN_D dis_i34 i') i0) i0
         with
         | inl i1 => False_ind (In i' i4) (n i1)
@@ -1062,36 +849,129 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r3 r4 r2 o2 s3 i3 o
       apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
       ** reflexivity.
   Qed.
+End M3.
 
+(** Small lemma about the merge bigraph*)
 Theorem merge_well_defined : forall n, 
   bigraph_equality
     (@merge (n+1))
     (join_big <<o>> (@bigraph_id 1 EmptyNDL ⊗ @merge n)).
   Proof. 
-  intros. simpl. 
-  refine (BigEq _ _ _ _ _ _ _ _ 
-    (@merge (n+1))
-    (join_big <<o>> (@bigraph_id 1 EmptyNDL ⊗ @merge n))
-    (PeanoNat.Nat.add_comm n 1)
-    (PN_P permutation_id_am_l_PN_empty_r)
-    eq_refl
-    (PN_P permutation_id_am_l_PN_empty)
-    bij_void_sum_sum
-    bij_void_sum_sum
-    _ _ _ _ 
-  ). 
-  - simpl. apply functional_extensionality. destruct x as [v|[v|v]]; destruct v. 
-  - simpl. apply functional_extensionality. destruct x as [[v|[v|v]]|s]; try destruct v.
-  simpl. unfold parallel, funcomp, rearrange, sum_shuffle, extract1, id, bij_rew_forward. destruct s. 
-  destruct zero1. unfold inj_fin_add. destruct (PeanoNat.Nat.ltb_spec0 x 1). 
-  + f_equal. 
-  + f_equal. 
-  - simpl. apply functional_extensionality. destruct x as [v|s]; try destruct v.
-  + elim f. 
-  + destruct s. destruct x as [v|[v|v]]; destruct v. 
-  Unshelve. 
-  * exact nat. * exact nat. 
-  *intros. simpl in n1. destruct n1. 
+    intros. simpl. 
+    refine (BigEq _ _ _ _ _ _ _ _ 
+      (@merge (n+1))
+      (join_big <<o>> (@bigraph_id 1 EmptyNDL ⊗ @merge n))
+      (PeanoNat.Nat.add_comm n 1)
+      (PN_P permutation_id_am_l_PN_empty_r)
+      eq_refl
+      (PN_P permutation_id_am_l_PN_empty)
+      bij_void_sum_sum
+      bij_void_sum_sum
+      _ _ _ _ 
+    ). 
+    - simpl. apply functional_extensionality. destruct x as [v|[v|v]]; destruct v. 
+    - simpl. apply functional_extensionality. destruct x as [[v|[v|v]]|s]; try destruct v.
+    simpl. unfold parallel, funcomp, rearrange, sum_shuffle, extract1, id, bij_rew_forward. destruct s. 
+    destruct zero1. unfold inj_fin_add. destruct (PeanoNat.Nat.ltb_spec0 x 1). 
+    + f_equal. 
+    + f_equal. 
+    - simpl. apply functional_extensionality. destruct x as [v|s]; try destruct v.
+    + elim f. 
+    + destruct s. destruct x as [v|[v|v]]; destruct v. 
+    Unshelve. 
+    * exact nat. * exact nat. 
+    *intros. simpl in n1. destruct n1. 
   Qed.
   
+
+
+(*Section for Packed Tensor Product*)
+Section PTP.
+Class DisjointNamesPacked (b1 b2 : bigraph_packed) :=
+  { disj_inner :: DisjointNames (i b1) (i b2);
+    disj_outer :: DisjointNames (o b1) (o b2)
+  }.
+  
+#[export] Instance disj_packed (b1 b2 : bigraph_packed) (Disji12 : DisjointNames (i b1) (i b2)) (Disjo12 : DisjointNames (o b1) (o b2)) : 
+  DisjointNamesPacked b1 b2.
+  Proof.
+  constructor.
+  + exact Disji12.
+  + exact Disjo12.
+  Qed.
+  
+Record bigraph_packed_disjoint_pair :=
+  { 
+    fst_ppair_tp  : bigraph_packed;
+    snd_ppair_tp  : bigraph_packed;
+    disj_ppair_tp :: DisjointNamesPacked fst_ppair_tp snd_ppair_tp
+  }.
+Arguments Build_bigraph_packed_disjoint_pair _ _ {disj_ppair_tp}. (*What does this do?*)
+  
+Record bigraph_packed_disjoint_pair_equality (pp1 pp2 : bigraph_packed_disjoint_pair) : Prop :=
+  { 
+    fst_ppair_tp_equ : bigraph_packed_equality (fst_ppair_tp pp1) (fst_ppair_tp pp2);
+    snd_ppair_tp_equ : bigraph_packed_equality (snd_ppair_tp pp1) (snd_ppair_tp pp2)
+  }. (*Why 4 bigraphs?*)
+  
+Lemma bigraph_packed_disjoint_pair_equality_refl (pp : bigraph_packed_disjoint_pair) :
+  bigraph_packed_disjoint_pair_equality pp pp.
+  Proof.
+  constructor.
+  + apply bigraph_equality_refl.
+  + apply bigraph_equality_refl.
+  Qed.
+  
+Lemma bigraph_packed_disjoint_pair_equality_sym (pp1 pp2 : bigraph_packed_disjoint_pair):
+  bigraph_packed_disjoint_pair_equality pp1 pp2 -> bigraph_packed_disjoint_pair_equality pp2 pp1.
+  Proof.
+  intros H12.
+  constructor.
+  + symmetry.
+    apply (fst_ppair_tp_equ _ _ H12).
+  + symmetry.
+    apply (snd_ppair_tp_equ _ _ H12).
+  Qed.
+  
+Lemma bigraph_packed_disjoint_pair_equality_trans (pp1 pp2 pp3 : bigraph_packed_disjoint_pair):
+  bigraph_packed_disjoint_pair_equality pp1 pp2 -> bigraph_packed_disjoint_pair_equality pp2 pp3 ->
+    bigraph_packed_disjoint_pair_equality pp1 pp3.
+  Proof.
+  intros H12 H23.
+  constructor.
+  + etransitivity.
+    - apply (fst_ppair_tp_equ _ _ H12).
+    - apply (fst_ppair_tp_equ _ _ H23).
+  + etransitivity.
+    - apply (snd_ppair_tp_equ _ _ H12).
+    - apply (snd_ppair_tp_equ _ _ H23).
+  Qed.
+  
+Add Parametric Relation : 
+  bigraph_packed_disjoint_pair bigraph_packed_disjoint_pair_equality
+  reflexivity proved by (bigraph_packed_disjoint_pair_equality_refl)
+  symmetry proved by (bigraph_packed_disjoint_pair_equality_sym)
+  transitivity proved by (bigraph_packed_disjoint_pair_equality_trans)
+    as bigraph_packed_disjoint_pair_equality_rel.
+    
+Definition bigraph_packed_tp (b1 b2 : bigraph_packed)
+  {Hdisj12 : DisjointNamesPacked b1 b2} := 
+  packing ((big b1) ⊗ (big b2)).
+
+Definition bigraph_packed_disjoint_pair_tp (pp : bigraph_packed_disjoint_pair) := 
+  @bigraph_packed_tp (fst_ppair_tp pp) (snd_ppair_tp pp) (disj_ppair_tp pp).
+
+Add Parametric Morphism : bigraph_packed_disjoint_pair_tp with
+  signature bigraph_packed_disjoint_pair_equality ==> 
+  bigraph_packed_equality as tp_morphism.
+  Proof.
+  unfold bigraph_packed_equality, bigraph_packed_disjoint_pair_tp, bigraph_packed_tp.
+  destruct x; destruct y; simpl.
+  destruct 1.
+  simpl in * |- *.
+  apply bigraph_tp_congruence.
+  + assumption.
+  + assumption.
+  Qed.
+End PTP.
 End TensorProduct.

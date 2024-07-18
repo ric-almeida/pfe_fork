@@ -6,7 +6,6 @@ Require Import SignatureBig.
 Require Import Equality.
 Require Import Bijections.
 Require Import MyBasics.
-Require Import Fintypes.
 Require Import FinDecTypes.
 Require Import TensorProduct.
 
@@ -23,10 +22,9 @@ Require Import List.
 
 
 
-(** * Juxtaposition / Parallel product
-  This section deals with the operation of disjoint juxtaposition. This is the act
-  of putting two bigraphs with disjoint interfaces "next" to one another. 
-  After the definition, we prove associativity and commutativity of dis_juxtaposition *)
+(** * Symmetries
+  This section deals with the symmetries. 
+  Symmetries are bigraphs that should obey properties specified in (S1),(S2),(S3) and (S4). *)
 Module Symmetries (s : SignatureParameter) (n : NamesParameter).
 Module tp := TensorProduct s n.
 Include tp.
@@ -35,7 +33,7 @@ Set Typeclasses Unique Instances.
 Set Typeclasses Iterative Deepening.
 
 
-
+Section S1.
 Lemma arity_symmetry_eq : forall m:nat, forall X:NoDupList, 
   forall n,
   Arity (get_control (symmetry_big m X 0 EmptyNDL) n) =
@@ -45,7 +43,6 @@ Lemma arity_symmetry_eq : forall m:nat, forall X:NoDupList,
     destruct n.
   Qed.
 
-  
 Theorem symmetry_eq_id : forall m:nat, forall X:NoDupList, 
   bigraph_equality 
     (symmetry_big m X 0 EmptyNDL)
@@ -77,9 +74,9 @@ Theorem symmetry_eq_id : forall m:nat, forall X:NoDupList,
         rewrite (@eq_rect_exist nat nat (fun n x => x < n) m (m + 0) _ x _).
         simpl. destruct (Compare_dec.lt_dec x m). 
         rewrite (@eq_rect_exist nat nat (fun n x => x < n) (m+0) m _ (x+0) _).
+        unfold id. f_equal.
         apply subset_eq_compat. apply PeanoNat.Nat.add_0_r.
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (m+0) m _ (x-m) _).
-        apply subset_eq_compat. lia.
+        contradiction. 
     + apply functional_extensionality.
       destruct x as [[name] | (v, tmp)]; simpl.
       - unfold funcomp.
@@ -88,7 +85,10 @@ Theorem symmetry_eq_id : forall m:nat, forall X:NoDupList,
       - destruct v.
   Qed.
 
+End S1.
 
+
+Section S2.
 Definition permutation_union_commute : forall X Y:NoDupList,
   permutation (X ∪ Y) (Y ∪ X).
   Proof.
@@ -151,11 +151,10 @@ Theorem symmetry_eq_tp_id : forall m n:nat, forall X Y:NoDupList,
         rewrite (@eq_rect_exist nat nat (fun n x => x < n) (m+n) (n + m) _ x _).
         simpl. destruct (Compare_dec.lt_dec x n).
         rewrite (@eq_rect_exist nat nat (fun n x => x < n) (n+m) (m+n) _ (x+m) _).
-        destruct (Compare_dec.lt_dec (x + m) m).
-        apply subset_eq_compat. exfalso. lia.
-        apply subset_eq_compat. lia.
+        destruct (Compare_dec.lt_dec (x + m) m). lia.
+        f_equal. apply subset_eq_compat. lia.
         rewrite (@eq_rect_exist nat nat (fun n x => x < n) (n+m) (m+n) _ (x-n) _).
-        destruct (Compare_dec.lt_dec (x-n) m).
+        destruct (Compare_dec.lt_dec (x-n) m); f_equal.
         apply subset_eq_compat. lia.
         apply subset_eq_compat. lia. 
     + apply functional_extensionality.
@@ -169,7 +168,9 @@ Theorem symmetry_eq_tp_id : forall m n:nat, forall X Y:NoDupList,
     exact nat.
     intros [v|v]; destruct v.
   Qed.
+End S2.
 
+Section S3.
 Theorem symmetry_distributive_arity {si0 ri1 sj0 rj1:nat} {ii0 oi1 ij0 oj1:NoDupList}
   {disi: ii0#ij0} {diso: oi1#oj1}: 
   forall f:bigraph si0 ii0 ri1 oi1, 
@@ -345,8 +346,9 @@ Theorem symmetry_distributive {si0 ri1 sj0 rj1:nat} {ii0 oi1 ij0 oj1:NoDupList}
         ** f_equal. destruct s0. apply subset_eq_compat. reflexivity.
         * destruct v.
   Qed.
+End S3.
 
-
+Section S4.
 Lemma MyPN {mI mJ mK:nat} {XI XJ XK:NoDupList}
   {disIJ : XI # XJ} {disKJ : XK # XJ} {disIK : XI # XK}:
   permutation 
@@ -360,14 +362,13 @@ Lemma MyPN {mI mJ mK:nat} {XI XJ XK:NoDupList}
     apply in_app_iff; auto.
     right.
     apply in_app_iff; auto.
-    apply in_app_iff; auto.
+    - apply in_app_iff; auto.
     right.
     apply in_app_iff; auto.
-    apply in_app_iff; auto.
+    - apply in_app_iff; auto.
     left.
     apply in_app_iff; auto.
-    - apply in_app_iff in H; destruct H.
-    apply in_app_iff; auto.
+    -  apply in_app_iff in H; destruct H;
     apply in_app_iff; auto.
     left.
     apply in_app_iff; auto.
@@ -390,7 +391,7 @@ Theorem easyperm : forall XI XJ XK,
     left.
     apply in_app_iff; auto.
     apply in_app_iff; auto.
-    apply in_app_iff; auto.
+    - apply in_app_iff; auto.
     left.
     apply in_app_iff; auto.
     - apply in_app_iff in H; destruct H.
@@ -398,7 +399,7 @@ Theorem easyperm : forall XI XJ XK,
     left.
     apply in_app_iff; auto.
     apply in_app_iff; auto.
-    apply in_app_iff; auto. 
+    - apply in_app_iff; auto. 
     left.
     apply in_app_iff; auto.
   Qed.
@@ -537,5 +538,7 @@ Theorem symmetry_distributive_s4 {mI mJ mK:nat} {XI XJ XK:NoDupList}
       ** f_equal. apply subset_eq_compat. reflexivity.
     - destruct v; simpl in t; destruct t. destruct v. destruct v. destruct v. destruct v.
   Qed.
+
+End S4.
 
 End Symmetries.
