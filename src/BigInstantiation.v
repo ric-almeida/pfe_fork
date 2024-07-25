@@ -6,7 +6,6 @@ Require Import SignatureBig.
 Require Import Equality.
 Require Import Bijections.
 Require Import MyBasics.
-Require Import Fintypes.
 Require Import FinDecTypes.
 Require Import ParallelProduct.
 Require Import MergeProduct.
@@ -55,20 +54,41 @@ Definition freshName : list Name -> Name.
 Proof. 
 intros l. induction l as [|name l H].
 - exact DefaultName.
-- exact (H ++ "g").
+- exact (name ++ "_" ++ H).
 Defined. 
+
+(* Compute (freshName []).
+Compute (freshName [""]).
+Compute (freshName ["a"]).
+Compute (freshName ["a";"b"]). *)
+
+Lemma string_not_eq_app : forall name foo,
+  if name =? name ++ "_" ++ foo then False else True.
+  intros.
+  destruct (name =? name ++ "_" ++ foo) eqn:H.
+  simpl in H.
+  unfold eqb in H.
+  induction name.
+  simpl in H.
+  apply Bool.diff_false_true in H. apply H.
+  destruct (String a name ++ String (Ascii.Ascii true true true true true false true false) foo).
+  apply Bool.diff_false_true in H. apply H.
+  destruct H.
+  Admitted.
+
+
 Lemma notInfreshName : forall l:list Name, ~ In (freshName l) l. 
 Proof. 
 intros.
 unfold not. intros H. 
-induction l as [|name l Hl].
+induction l as [|name l' Hl].
 - elim H.
 - destruct H.
 + unfold freshName in H. 
 unfold list_rec in *. unfold list_rect in *.
-simpl in H. admit.
-+ 
-
+(* apply string_not_eq_app in H. elim H.
++ rewrite freshname_function in H.
+admit. *)
 Admitted.
 
 End MyNamesP.
@@ -99,7 +119,7 @@ Example simplBig :
     1 bNDL 1 aNDL
     (findec_fin 2)
     findec_unit
-    (fun n => match n with | exist n _  => n+1 end) (*control*)
+    (fun n => match n with | exist _ n _  => n+1 end) (*control*)
     _
     (*(fun ns => match ns with 
       | inl n => inr zero1
@@ -220,7 +240,7 @@ Proof.
     simpl in H. discriminate.
     simpl in H. discriminate.
   * destruct j; simpl.
-    ** destruct i0; simpl.
+    destruct i0; simpl.
       discriminate.
       destruct i0. discriminate.
       destruct i0. discriminate.
@@ -262,7 +282,7 @@ Proof.
       destruct j; simpl.
       discriminate.
       discriminate.
-      ++ destruct i0; simpl.
+      destruct i0; simpl.
       destruct j; simpl.
       intros. discriminate.
       destruct j; simpl. 
@@ -278,7 +298,7 @@ Proof.
       destruct j; simpl.
       discriminate.
       discriminate.
-      ++ destruct i0; simpl.
+      destruct i0; simpl.
       destruct j; simpl.
       intros. discriminate.
       destruct j; simpl. 
@@ -294,7 +314,7 @@ Proof.
       destruct j; simpl.
       discriminate.
       discriminate.
-      ++ destruct i0; simpl.
+      destruct i0; simpl.
       destruct j; simpl.
       intros. discriminate.
       destruct j; simpl. 
@@ -310,7 +330,7 @@ Proof.
       destruct j; simpl.
       discriminate.
       discriminate.
-      ++ destruct i0; simpl.
+      destruct i0; simpl.
       destruct j; simpl.
       intros. discriminate.
       destruct j; simpl. 
@@ -326,7 +346,7 @@ Proof.
       destruct j; simpl. 
       discriminate.
       discriminate.
-      ++ destruct i0; simpl.
+      destruct i0; simpl.
       destruct j; simpl.
       intros. discriminate.
       destruct j; simpl. 
@@ -342,7 +362,7 @@ Proof.
       destruct j; simpl. 
       reflexivity.    
       simpl in Hi; lia.
-      ++ destruct i0; simpl.
+      destruct i0; simpl.
       simpl in Hi; lia.
       simpl in Hi; lia.
   - unfold FinFun.EqDec. 
@@ -371,7 +391,7 @@ Definition parentComponent (ns : type MyNodesFDT + fin 2) :
   | inl Persistent => inl NodeType
   | inl Init => inl Process
   | inl On => inl Init
-  | inr (exist s' _) => 
+  | inr (exist _ s' _) => 
     match s' with 
     | 0 => inl Component 
     | _ => inr zero1
@@ -462,20 +482,16 @@ Arity 0 = Datatypes.length EmptyNDL *)
 Example eaNDL : NoDupList.
 exists (e::aNDL). constructor; auto.
 - simpl. unfold not. intros. destruct H. ** discriminate H. ** elim H.
-- exact (noDupSingle a). 
+- exact (nd (OneelNDL a)). 
 Defined. 
 
-
-Compute (freshNames eNDL 1).
-Compute (freshNames eNDL 2).
-Compute (freshNames EmptyNDL 3).
 
 Definition myPN : PermutationNames
      (app_merge_NoDupList
         (app_merge_NoDupList EmptyNDL
-           (app_merge_NoDupList {| ndlist := [e]; nd := noDupSingle e |}
-              eaNDL)) {| ndlist := [e]; nd := noDupSingle e |})
-     (app_merge_NoDupList {| ndlist := [e]; nd := noDupSingle e |} aNDL).
+           (app_merge_NoDupList (OneelNDL e)
+              eaNDL)) (OneelNDL e))
+     (app_merge_NoDupList (OneelNDL e) aNDL).
 simpl. unfold app_merge_NoDupList. 
 simpl. constructor. simpl. 
 unfold permutation. intros. split; intros. 
@@ -495,15 +511,15 @@ Definition myPN' :
 PermutationNames
      (app_merge_NoDupList EmptyNDL
         (app_merge_NoDupList
-           (app_merge_NoDupList {| ndlist := [e]; nd := noDupSingle e |} eNDL)
+           (app_merge_NoDupList (OneelNDL e) eNDL)
            eaNDL))
-     (app_merge_NoDupList {| ndlist := [e]; nd := noDupSingle e |} aNDL).
+     (app_merge_NoDupList (OneelNDL e) aNDL).
 simpl. constructor. simpl. 
 exact (permutation_id [e;a]).
 Defined.
 
 
-Definition mydisi : {| ndlist := [e]; nd := noDupSingle e |} # aNDL.
+Definition mydisi : (OneelNDL e) # aNDL.
 constructor.
 intros. simpl in *. 
 destruct H; destruct H0.
@@ -519,7 +535,7 @@ Defined.
 Example simplBigboolOp := 
   (bigraph_composition (p:=myPN)
   (bigraph_tensor_product (dis_i := mydisi) (closure e) (bigraph_id 1 aNDL)) 
-  ((discrete_ion (A := findec_bool) false (mkNoDupList [e] (noDupSingle e)) (k := 1)) 
+  ((discrete_ion (A := findec_bool) false (OneelNDL e) (k := 1)) 
   <|> 
   (discrete_atom (A := findec_bool) true eaNDL (k := 2))
   ||
