@@ -1,7 +1,6 @@
 
 Require Import Lia.
 
-
 Class MyEqNat (x y : nat) := { eqxy : x = y }. 
 #[export] Instance MyEqNat_refl (x:nat) : MyEqNat x x.
   Proof. 
@@ -21,5 +20,12 @@ Class MyEqNat (x y : nat) := { eqxy : x = y }.
   Proof. 
   constructor. destruct eqs2r4 as [eqs2r4].
   destruct eqs1r3 as [eqs1r3].
+  lia.
+  Qed.
+
+#[export] Instance MyEqNat_r_neutral {a} : 
+  MyEqNat (a+0) a.
+  Proof. 
+  constructor. 
   lia.
   Qed.

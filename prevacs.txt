@@ -1,0 +1,16 @@
+Article properties:
+
+en cours d'écriture, on vise d'expliquer la pipeline 
+model checking sur nos programmes, Lucas nous envoie son code 
+
+
+
+coq : 
+Finir BigInstantiation le module sur les Names 
+
+passer au pattern matching 
+
+
+
+
+

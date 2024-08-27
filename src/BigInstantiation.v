@@ -17,6 +17,7 @@ Require Import ProofIrrelevance.
 Require Import Lia.
 
 Require Import Coq.Arith.PeanoNat.
+Require Import Coq.Arith.Peano_dec.
 Require Import Coq.Lists.List.
 Require Import Coq.Program.Equality.
 Require Import Coq.Sorting.Permutation.
@@ -41,40 +42,32 @@ End MySigP.
 
 
 Module MyNamesP <: Names.NamesParameter.
-Definition Name := string.
-Definition EqDecN : forall x y : Name, {x = y} + {x <> y} := string_dec.
-Local Open Scope string_scope.
-Definition InfName : forall l : list string, exists n : string, ~ In n l. 
-  intros.
-  induction l as [|x l IHl].
-  - exists "a". auto.
-  - Admitted.
-Definition DefaultName := "default".
-Definition freshName : list Name -> Name. 
-Proof. 
-intros l. induction l as [|name l H].
-- exact DefaultName.
-- exact (name ++ "_" ++ H).
-Defined. 
+Definition Name := nat.
+Definition EqDecN : forall x y : Name, {x = y} + {x <> y}.
+decide equality. Qed.
 
-(* Compute (freshName []).
-Compute (freshName [""]).
-Compute (freshName ["a"]).
-Compute (freshName ["a";"b"]). *)
+Definition InfName : forall l : list nat, exists n : nat, ~ In n l. 
+Proof.
+  intros l.
+  exists (S (fold_right max 0 l)). 
+  unfold not. intro H. 
+  induction l as [| t q IH]. 
+  - elim H. 
+  - simpl in H. destruct H as [H | H].
+    + lia. 
+    + destruct (Init.Nat.max t (fold_right Init.Nat.max 0 q)) eqn:E.
+    Admitted.
+   
 
-Lemma string_not_eq_app : forall name foo,
-  if name =? name ++ "_" ++ foo then False else True.
-  intros.
-  destruct (name =? name ++ "_" ++ foo) eqn:H.
-  simpl in H.
-  unfold eqb in H.
-  induction name.
-  simpl in H.
-  apply Bool.diff_false_true in H. apply H.
-  destruct (String a name ++ String (Ascii.Ascii true true true true true false true false) foo).
-  apply Bool.diff_false_true in H. apply H.
-  destruct H.
-  Admitted.
+Definition DefaultName := 0.
+Definition freshName : list Name -> Name := 
+  fun l => S (fold_right max 0 l). 
+
+Compute (freshName []).
+Compute (freshName [1]).
+Compute (freshName [3]).
+Compute (freshName [2;3]). 
+
 
 
 Lemma notInfreshName : forall l:list Name, ~ In (freshName l) l. 
@@ -84,11 +77,15 @@ unfold not. intros H.
 induction l as [|name l' Hl].
 - elim H.
 - destruct H.
-+ unfold freshName in H. 
-unfold list_rec in *. unfold list_rect in *.
-(* apply string_not_eq_app in H. elim H.
-+ rewrite freshname_function in H.
-admit. *)
++ unfold freshName in *.
+simpl in *. 
+set (x := fold_right Init.Nat.max 0 l').
+fold x in H.
+fold x in Hl.
+inversion H.
+Search (Init.Nat.max).
+simpl in H.
+unfold fold_right in *. 
 Admitted.
 
 End MyNamesP.
@@ -98,6 +95,8 @@ End MyNamesP.
 Module MB := MergeBig MySigP MyNamesP.
 Include MB.
 
+
+(*FROM NOW IT BUGS BC I CHANGED NAME FROM STRING TO NAT*)
 Example b : string := "b".
 Example bNDL : NoDupList.
 exists [b]. constructor; auto. constructor. Defined.

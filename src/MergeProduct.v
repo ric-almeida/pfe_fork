@@ -22,19 +22,12 @@ Module MergeBig (s : SignatureParameter) (n : NamesParameter).
 Module pp := ParallelProduct s n.
 Include pp.
 
-#[export] Instance MyEqNat_r_neutral {a} : 
-  MyEqNat (a+0) a.
-  Proof. 
-  constructor. 
-  lia.
-  Qed.
-
 Definition bigraph_merge_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
   {up : UnionPossible b1 b2}
     (* : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) 1 (app_merge_NoDupList o1 o2)  *)
     := 
-  ((@merge (r1 + r2) ⊗ (@bigraph_id 0 (app_merge_NoDupList o1 o2)))) <<o>> (b1 || b2).
+  (@merge (r1 + r2) ⊗ (@bigraph_id 0 (app_merge_NoDupList o1 o2))) <<o>> (b1 || b2).
 
 Global Notation "b1 <|> b2" := (bigraph_merge_product b1 b2) (at level 50, left associativity).
 
@@ -68,19 +61,17 @@ Theorem mp_right_neutral {s i o} (b : bigraph s i 1 o):
     reflexivity. 
   + apply functional_extensionality.
     destruct x as [n1 | s1]; simpl.
-    - unfold funcomp, parallel.
-      simpl. 
-      unfold bij_rew_forward, sum_shuffle, rearrange, extract1. 
-      destruct get_parent; try reflexivity. 
+    - unfold funcomp, parallel, sequence, sum_shuffle, rearrange, extract1, id, bij_rew_forward. 
+      destruct get_parent; try reflexivity.
       rewrite <- eq_rect_eq.
-      destruct f as (s1', Hs1').
       unfold inj_fin_add, surj_fin_add, id.
       simpl.
+      destruct f as (s1', Hs1').
       destruct (PeanoNat.Nat.ltb_spec0 s1' 2).
       * f_equal. rewrite <- eq_rect_eq. 
       destruct zero1.
       apply subset_eq_compat. lia. 
-      * exfalso. apply n. lia. 
+      * exfalso. lia. 
     - unfold funcomp, parallel, sum_shuffle.
       unfold bij_rew_forward.
       unfold inj_fin_add, sequence. unfold rearrange.
