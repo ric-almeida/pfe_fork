@@ -557,4 +557,72 @@ Theorem bigraph_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
         ** destruct s0. apply f_equal. apply subset_eq_compat. reflexivity.
   Qed. 
 
+Lemma arity_mp_commu : forall {s1 i1 r1 o1 s2 i2 r2 o2}
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
+  {up12 : UnionPossible b1 b2} n12,
+  Arity (get_control (b1 <|> b2) n12) 
+  = 
+  Arity (get_control (bigraph_merge_product (up := union_possible_commutes up12) b2 b1) (bijection_nesting_comu n12)). 
+  Proof.
+  intros until n12.
+  destruct n12 as [[v|v]|[n2'|n1']]; try destruct v; try reflexivity.
+  Qed.
+
+Theorem bigraph_mp_comu : forall {s1 i1 r1 o1 s2 i2 r2 o2}
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
+  {up12 : UnionPossible b1 b2},
+  bigraph_equality 
+    (b1 <|> b2)
+    (bigraph_merge_product (up := union_possible_commutes up12) b2 b1).
+  Proof.
+  intros.
+  eapply (BigEq _ _ _ _ _ _ _ _ (b1 <|> b2) (b2 <|> b1)
+    (PeanoNat.Nat.add_comm s1 s2)
+    permutation_union_commutes
+    (eq_refl)
+    permutation_empty_union_commutes
+    bijection_nesting_comu 
+    bijection_nesting_comu
+    (fun n12 => bij_rew (P := fin) (arity_mp_commu b1 b2 n12))    
+  ).
+  + apply functional_extensionality.
+    destruct x as [[v|v]|[n2'|n1']]; try reflexivity; try (elim v).
+  + apply functional_extensionality. rewrite bij_rew_id. 
+    intros [[[v|v]|[n2'|n1']] | s1_23']; simpl; unfold funcomp; simpl; try (elim v).
+    - simpl. 
+    unfold parallel, rearrange, extract1, sum_shuffle.
+    destruct get_parent; try reflexivity. 
+    destruct f.
+    unfold inj_fin_add, bij_rew_forward, surj_fin_add.
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+r2) (r1 + r2 + 0) _ (r1 + x) _).
+    destruct (PeanoNat.Nat.ltb_spec0 (r1 + x) (r1 + r2)).
+    destruct zero1. unfold id.
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r2+r1) (r2 + r1 + 0) _ x _).
+    destruct (PeanoNat.Nat.ltb_spec0 x (r2 + r1)).
+    f_equal. exfalso. apply n. lia.
+    exfalso. apply n. lia.
+    - simpl. 
+    unfold parallel, rearrange, extract1, sum_shuffle.
+    destruct get_parent; try reflexivity. 
+    destruct f.
+    unfold inj_fin_add, bij_rew_forward, surj_fin_add.
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+r2) (r1 + r2 + 0) _ x _).
+    destruct (PeanoNat.Nat.ltb_spec0 x (r1 + r2)).
+    destruct zero1. unfold id.
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r2+r1) (r2 + r1 + 0) _ (r2 + x) _).
+    destruct (PeanoNat.Nat.ltb_spec0 (r2 + x) (r2 + r1)).
+    f_equal. exfalso. apply n. lia.
+    exfalso. apply n. lia.
+    - simpl. 
+    unfold parallel, rearrange, extract1, sum_shuffle.
+    unfold inj_fin_add, bij_rew_forward, surj_fin_add.
+    destruct s1_23'.
+    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (s2+s1) (s1+s2) _ x _).
+    destruct (PeanoNat.Nat.ltb_spec0 x s1).
+    destruct (PeanoNat.Nat.ltb_spec0 x s2).
+    destruct get_parent.
+    destruct get_parent. 
+    unfold id. f_equal. f_equal. f_equal.  Abort.
+      
+      
 End MergeBig.

@@ -625,6 +625,7 @@ Lemma app_merge_cong {i1 i2 i3 i4}:
   + apply H12 in H. apply in_left_list. apply H.
   + apply H34 in H. apply in_right_list. apply H.
   Qed.
+
 End MyPermutations.
 
 
@@ -710,6 +711,25 @@ Theorem permutation_distributive {o3i1 o4i2 i1o3 i2o4}
   - apply in_right_list. apply H3. apply H.  
   Defined.
 
+Lemma permutation_union_commutes {i1 i2} : permutation (i1 ∪ i2) (i2 ∪ i1).
+  Proof.
+  unfold permutation.
+  intros; split; intros; apply in_app_or_m in H; destruct H.
+  - apply in_right_list. apply H.
+  - apply in_left_list. apply H.
+  - apply in_right_list. apply H.
+  - apply in_left_list. apply H.
+  Qed.
+
+Lemma permutation_empty_union_commutes {o1 o2} : permutation (EmptyNDL ∪ (o1 ∪ o2)) (EmptyNDL ∪ (o2 ∪ o1)).
+  Proof.
+  unfold permutation.
+  intros; split; intros; apply in_app_or_m in H; destruct H; try destruct H; apply in_app_or_m in H; destruct H.
+  - apply in_right_list. apply in_right_list. apply H.
+  - apply in_right_list. apply in_left_list. apply H.
+  - apply in_right_list. apply in_right_list. apply H.
+  - apply in_right_list. apply in_left_list. apply H.
+  Qed.
 End MyNDLTools.
 
 

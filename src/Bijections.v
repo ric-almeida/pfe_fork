@@ -225,6 +225,26 @@ Definition bijection_nest_right_neutral {n} :
   intros [[v|n']|v]; try elim v; reflexivity.
   Defined.
 
+Definition bijection_nesting_comu {n1 n2} :
+  bijection (void + void + (n1 + n2)) (void + void + (n2 + n1)).
+  eapply (mkBijection (void + void + (n1 + n2)) (void + void + (n2 + n1))
+  (fun vvnm => 
+  match vvnm with 
+  |inl vv => match vv with | inl v => match v with end | inr v => match v with end end
+  |inr nm => match nm with | inl n => inr (inr n) |inr m => inr (inl m) end 
+  end)
+  (fun vvmn => 
+  match vvmn with 
+  |inl vv => match vv with | inl v => match v with end | inr v => match v with end end
+  |inr mn => match mn with | inr n => inr (inl n) |inl m => inr (inr m) end 
+  end)
+  ).
+  apply functional_extensionality.
+  intros [[v|v]|[n2'|n1']]; try elim v; reflexivity.
+  apply functional_extensionality.
+  intros [[v|v]|[n1'|n2']]; try elim v; reflexivity.
+  Defined.
+
 Definition bijection_nest_left_neutral {n} :
   bijection (void + void + n) n.
   apply (mkBijection (void + void + n) n
