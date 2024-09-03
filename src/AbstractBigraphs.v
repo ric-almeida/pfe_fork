@@ -2,10 +2,10 @@ Set Warnings "-notation-overridden, -parsing".
 Set Warnings "-notation-overridden, -notation-overriden".
 
 
-Require Import Coq.Logic.Decidable.
-Require Import Coq.Setoids.Setoid.
+(* Require Import Coq.Logic.Decidable.
+Require Import Coq.Setoids.Setoid. *)
 (* Require Import ToolsForBigraphs. *)
-Require Import FinFun.
+(* Require Import FinFun. *)
 Require Import MyBasics.
 Require Import MyEqNat.
 Require Import Basics.
@@ -17,11 +17,18 @@ Require Import ProofIrrelevance.
 Require Import PropExtensionality.
 Require Import SignatureBig.
 Require Import Names.
+
+
 Require Import Coq.Lists.List.
 Require Import Coq.Arith.PeanoNat.
 Require Import ProofIrrelevance.
 Require Import Lia.
 Require Import Coq.Arith.Compare_dec.
+
+
+(* From mathcomp Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq fintype finfun.  *)
+
+
 
 Include MyEqNat. 
 

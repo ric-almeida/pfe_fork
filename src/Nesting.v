@@ -22,7 +22,7 @@ Module NestingBig (s : SignatureParameter) (n : NamesParameter).
 Module pp := ParallelProduct s n.
 Include pp.
 
-Definition nest  {s1 r1 s2 r2 : nat} {o1 i2 o2 : NoDupList} 
+Definition nest {s1 r1 s2 r2 : nat} {o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 EmptyNDL r1 o1) (b2 : bigraph s2 i2 r2 o2) 
   {eqs1r2 : MyEqNat s1 r2}
   (* {p : PermutationNames i1 EmptyNDL} *)
