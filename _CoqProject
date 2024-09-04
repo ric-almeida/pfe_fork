@@ -1,6 +1,7 @@
 -R src MyProofs
 -I src/  
 src/MyBasics.v
+src/MathCompAddings.v
 src/Bijections.v
 src/FinDecTypes.v
 src/SignatureBig.v

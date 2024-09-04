@@ -26,8 +26,7 @@ Require Import Lia.
 Require Import Coq.Arith.Compare_dec.
 
 
-(* From mathcomp Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq fintype finfun.  *)
-
+From mathcomp Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq fintype finfun. 
 
 
 Include MyEqNat. 
@@ -50,13 +49,12 @@ Record bigraph  (site: nat)
                 (outername: NoDupList) : Type := 
   Big  
   { 
-    node : FinDecType ;
-    edge : FinDecType ;
-    control : type node -> Kappa ;
-    parent : type node + fin site -> 
-                (type node) + (fin root) ; 
+    node : finType ;
+    edge : finType ;
+    control : node -> Kappa ;
+    parent : node + ordinal site ->  node + ordinal root ; 
     link : NameSub innername + Port control -> 
-                (NameSub outername) + (type edge); 
+                (NameSub outername) + edge; 
     ap : FiniteParent parent ;
   }.
   
@@ -66,32 +64,25 @@ End IntroBigraphs.
 (** * Getters
   This section is just getters to lightenn some notations *)
 Section GettersBigraphs.
-Definition get_node {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : FinDecType := 
+Definition get_node {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : finType := 
   node s i r o bg.
-Definition get_edge {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : FinDecType := 
+Definition get_edge {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : finType := 
   edge s i r o bg.
-Definition get_control {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : type (get_node bg) -> Kappa :=
+Definition get_control {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : get_node bg -> Kappa :=
   @control s i r o bg.
-Definition get_parent {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : (type (get_node bg)) + (fin s) -> (type (get_node bg)) + (fin r) :=
+Definition get_parent {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : (get_node bg) + (ordinal s) -> (get_node bg) + (ordinal r) :=
   @parent s i r o bg.
-Definition get_link {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : {inner:Name | In inner i} + Port (get_control bg) -> {outer:Name | In outer o} + type (get_edge bg) :=
+Definition get_link {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : {inner:Name | In inner i} + Port (get_control bg) -> {outer:Name | In outer o} + (get_edge bg) :=
   @link s i r o bg.
 End GettersBigraphs.
 
 (** Tools for proof irrelevance *)
 
 Theorem parent_proof_irrelevant {s i r o} (b:bigraph s i r o): 
-  forall n n': nat, forall Hn Hn', n = n' ->
-  get_parent b (inr (exist _ n Hn)) = get_parent b (inr (exist _ n Hn')).
+  forall n n': 'I_s, n = n' ->
+  get_parent b (inr n) = get_parent b (inr n').
   Proof. 
-  intros. apply f_equal. apply f_equal. apply subset_eq_compat. reflexivity.
-  Qed.
-
-Theorem parent_proof_irrelevant' {s i r o} (b:bigraph s i r o): 
-  forall n n': nat, forall Hn Hn', n = n' ->
-  get_parent b (inr (exist _ n Hn)) = get_parent b (inr (exist _ n' Hn')).
-  Proof. 
-  intros. apply f_equal. apply f_equal. apply subset_eq_compat. apply H.
+  intros. f_equal. f_equal. apply H.
   Qed.
 
 Theorem innername_proof_irrelevant {s i r o} (b:bigraph s i r o): 
@@ -104,10 +95,10 @@ Theorem innername_proof_irrelevant {s i r o} (b:bigraph s i r o):
 (** Section defining some elementary bigraphs *)
 Section ElementaryBigraphs. 
 Definition bigraph_id (s: nat) (i : NoDupList) : bigraph s i s i. (*actually s i s (permutation i) *)
-  Proof.
+  Proof. Print void_univ_embedding. Check void. Locate void_univ_embedding. 
   apply (Big s i s i
-          voidfd (*node : ∅*)
-          voidfd (*edge : ∅*)
+          void (*node : ∅*)
+          void (*edge : ∅*)
           (@void_univ_embedding _) (*control : ∅_Kappa*)
           id (*parent : id*)
         ).

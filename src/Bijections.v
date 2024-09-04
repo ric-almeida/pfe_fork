@@ -2,15 +2,25 @@
   Bijections between void, unit, sum, product, function and finite types
 *)
 
+
+Set Warnings "-notation-overridden, -parsing".
+Set Warnings "-notation-overridden, -notation-overriden".
+ 
+
+
 Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.
 Require Import PropExtensionality.
 Require Import MyBasics.
+Require Import MathCompAddings.
 Require Import PeanoNat.
 Require Import Lia.
 Require Import List.
 Require Import Coq.Numbers.Natural.Abstract.NDiv0.
 Require Import Arith.
+Require Import Arith.PeanoNat.
+
+From mathcomp Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq fintype finfun.
 
 Set Warnings "-notation-overridden".
 
@@ -31,9 +41,8 @@ Theorem bij_injective : forall {A B} (bij : bijection A B), InjectiveXT bij.(for
   Proof.
   destruct bij.
   intros a1 a2 Hfa12.
-  simpl in Hfa12.
-  assert (a1 = id a1) as H; [reflexivity | rewrite H; clear H].
-  assert (a2 = id a2) as H; [reflexivity | rewrite H; clear H].
+  simpl in Hfa12. 
+  change (id a1 = id a2). 
   rewrite <- bof_id0.
   unfold funcomp.
   apply f_equal.
@@ -46,7 +55,7 @@ Theorem bij_surjective : forall {A B} (bij : bijection A B), SurjectiveXT bij.(b
   simpl.
   intro a.
   exists (forward0 a).
-  assert (a = id a) as H; [reflexivity | rewrite H at 1; clear H].
+  change (id a = backward0 (forward0 a)).
   rewrite <- bof_id0.
   reflexivity.
   Qed.
@@ -68,9 +77,10 @@ Definition injective_bij_backward {A B} (f : A -> B) (Hinjf : InjectiveXT f) : {
 Theorem injective_bij : forall {A B} (f : A -> B), InjectiveXT f -> bijection A { b : B & { a : A | b = f a } }.
   Proof.
   intros A B f Hinjf.
-  apply (mkBijection _ _ (injective_bij_forward f Hinjf) (injective_bij_backward f Hinjf)); unfold injective_bij_forward, injective_bij_backward, funcomp, id; apply functional_extensionality.
-  + destruct x as (b, (a, Hab)).
-    rewrite Hab.
+  apply (
+    mkBijection _ _ 
+    (injective_bij_forward f Hinjf) (injective_bij_backward f Hinjf)); unfold injective_bij_forward, injective_bij_backward, funcomp; apply functional_extensionality.
+  + destruct x as (b, (a, Hab)). subst b.
     reflexivity.
   + reflexivity.
   Qed.
@@ -79,8 +89,9 @@ Section UsualBijections.
 Definition bijection_inv {A B} (bij : bijection A B) : bijection B A :=
  (mkBijection B A bij.(backward) bij.(forward) (bij.(bof_id A B)) (bij.(fob_id A B))).
 
+
 Definition bij_id {A} : bijection A A :=
- (mkBijection A A id id eq_refl eq_refl).
+ (mkBijection A A id id Logic.eq_refl Logic.eq_refl).
 
 Theorem bij_inv_id : forall {A}, bijection_inv (@bij_id A) = @bij_id A.
   Proof.
@@ -99,7 +110,7 @@ Theorem bij_void_sum_neutral : forall {A}, bijection (void+A) A.
   reflexivity.
   apply functional_extensionality.
   destruct x.
-  elim v.
+  elim e.
   reflexivity.
   Defined.
 
@@ -115,7 +126,7 @@ Theorem bij_void_sum_neutral_r : forall {A}, bijection (A + void) A.
   apply functional_extensionality.
   destruct x.
   reflexivity.
-  elim v.
+  elim e.
   Defined.
 
 Definition bij_void_void {A} : bijection ((void + void) + (A + void)) A.
@@ -140,11 +151,11 @@ Definition bij_void_void {A} : bijection ((void + void) + (A + void)) A.
   apply functional_extensionality.
   destruct x.
   destruct s.
-  elim v.
-  elim v.
+  elim e.
+  elim e.
   destruct s.
   reflexivity.
-  elim v. 
+  elim e. 
   Defined.
 
 Definition bij_void_void_r {A} : bijection ((void + void) + (void + A)) A.
@@ -169,10 +180,10 @@ Definition bij_void_void_r {A} : bijection ((void + void) + (void + A)) A.
   apply functional_extensionality.
   destruct x.
   destruct s.
-  elim v.
-  elim v.
+  elim e.
+  elim e.
   destruct s.
-  elim v.
+  elim e.
   reflexivity.
   Defined.
 
@@ -352,13 +363,14 @@ Theorem bij_sum_assoc_mp : forall {A B C}, bijection ((void+void)+(((void+void)+
   reflexivity.
   Defined.
 
+
 Theorem bij_void_sum_sum : forall {A : Type}, bijection void (void + (void + void)).
   Proof.
   intros.
   apply (mkBijection void (void + (void + void)) void_univ_embedding 
   (fun vvv => match vvv with | inl v => match v with end | inr (inl v) => match v with end | inr (inr v) => match v with end end )).
   apply functional_extensionality.
-  destruct x. destruct v. destruct s. destruct v. destruct v.  
+  destruct x. destruct e. destruct s. destruct e. destruct e.  
   apply functional_extensionality.
   destruct x. 
   Defined.
@@ -372,7 +384,7 @@ Theorem bij_void_sum_void : forall {A : Type}, bijection (void + void) void.
   apply functional_extensionality.
   destruct x.
   apply functional_extensionality.
-  destruct x. destruct v. destruct v.  
+  destruct x. destruct e. destruct e.  
   Defined. 
 
 
@@ -814,9 +826,15 @@ Theorem bij_fun_hcompose : forall {A B C D E F : Type} (bij_AB : bijection A B) 
   Proof.
   intros A B C D E F bij_AB bij_CD bij_EF ac ce.
   simpl.
-  repeat rewrite comp_assoc.
-  repeat apply comp_left_simpl.
-  repeat rewrite <- comp_assoc.
+  rewrite comp_assoc.
+  rewrite comp_assoc.
+  rewrite comp_assoc.
+  rewrite comp_assoc.
+  rewrite comp_assoc.
+  apply comp_left_simpl.
+  apply comp_left_simpl.
+  rewrite <- comp_assoc.
+  rewrite <- comp_assoc.
   erewrite comp_right_simpl.
   + instantiate (1 := ac).
     reflexivity.
@@ -835,12 +853,13 @@ Definition bij_subset_forward {A B : Type} {P : A -> Prop} {Q : B -> Prop}
   {nameA:A | P nameA} -> {nameB:B | Q nameB}.
   Proof.
   apply 
-  (fun aPa => match aPa with (exist _ namea Pnamea) => exist Q ((forward bij_AB) namea) (proj1 ((HEqPQ namea)) Pnamea) end).
+  (fun aPa => match aPa with 
+  (exist namea Pnamea) => exist Q ((forward bij_AB) namea) (proj1 ((HEqPQ namea)) Pnamea) end).
   Defined.
 
 Definition bij_subset_backward {A B : Type} {P : A -> Prop} {Q : B -> Prop} (bij_AB : bijection A B) (HEqPQ : forall a, P a <-> Q (forward bij_AB a)) : (@sig B Q) -> (@sig A P).
   Proof.
-  refine (fun bQb => match bQb with (exist _ b Qb) => exist P (bij_AB.(backward) b) _ end).
+  refine (fun bQb => match bQb with (exist b Qb) => exist P (bij_AB.(backward) b) _ end).
   apply HEqPQ.
   generalize (equal_f (fob_id _ _ bij_AB) b).
   unfold funcomp.
@@ -873,11 +892,9 @@ Lemma adjunction_equiv {A B : Type} {P : A -> Prop} {Q : B -> Prop} (bij_AB : bi
   Proof.
   intros EqPQ b.
   apply iff_sym.
-  assert (b = id b) as Hb.
-  + reflexivity.
-  + rewrite Hb at 2.
-    rewrite <- (equal_f (fob_id _ _ bij_AB) b).
-    exact (EqPQ (backward bij_AB b)).
+  change (P ((bij_AB ⁻¹) b) <-> Q (id b)).
+  rewrite <- (fob_id _ _ bij_AB). 
+  exact (EqPQ (backward bij_AB b)).
   Qed.
 
 Theorem bij_inv_subset :forall {A B : Type} {P : A -> Prop} {Q : B -> Prop} (bij_AB : bijection A B) (EqPQ : forall a, P a <-> Q (bij_AB a)),
@@ -916,18 +933,18 @@ Theorem bij_subset_compose_id : forall {A : Type} {P : A -> Prop}
 Theorem bij_subset_compose_id'' : forall {A : Type} {P : A -> Prop} {Q : A -> Prop}
   (EqPQ : forall a, P a <-> Q (bij_id a)),
   forall a:{x : A | P x}, Q (proj1_sig a).
-  Proof. intros. simpl in EqPQ. unfold id in EqPQ. apply EqPQ.
+  Proof. intros. simpl in EqPQ. apply EqPQ.
   destruct a. simpl. apply p. Qed.
 
 Theorem bij_subset_compose_id''' : forall {A : Type} {P : A -> Prop} {Q : A -> Prop}
   (EqPQ : forall a, P a <-> Q (bij_id a)),
   forall a:A, P a <-> Q a.
-  Proof. intros. simpl in EqPQ. unfold id in EqPQ. apply EqPQ. Qed.
+  Proof. intros. simpl in EqPQ. apply EqPQ. Qed.
 
 Theorem bij_subset_compose_id'''' : forall {A : Type} {P : A -> Prop} {Q : A -> Prop}
   (EqPQ : forall a, P a <-> Q (bij_id a)),
   forall a:{x : A | P x}, P (proj1_sig a) <-> Q (proj1_sig a).
-  Proof. intros. simpl in EqPQ. unfold id in EqPQ. apply EqPQ. Qed.
+  Proof. intros. simpl in EqPQ. apply EqPQ. Qed.
 
 Theorem bij_subset_compose_compose : forall {A B C} {P : A -> Prop} {Q : B -> Prop} {R : C -> Prop}
   (bij_AB : bijection A B) (bij_BC : bijection B C)
@@ -971,18 +988,18 @@ Definition bij_rew_forward {A} {P : A -> Type} {a b : A} (Hab : a = b) : (P a) -
 Lemma bij_rew : forall {A} {P : A -> Type} {a b : A}, a = b -> bijection (P a) (P b).
   Proof.
   intros A P a b Hab.
-  apply (mkBijection _ _ (bij_rew_forward Hab) (bij_rew_forward (eq_sym Hab))).
+  apply (mkBijection _ _ (bij_rew_forward Hab) (bij_rew_forward (Logic.eq_sym Hab))).
   + apply functional_extensionality.
     intro Pb.
-    unfold bij_rew_forward, funcomp, id.
+    unfold bij_rew_forward, funcomp.
     erewrite eq_rect_compose.
-    instantiate (1 := eq_refl).
+    instantiate (1 := Logic.eq_refl).
     reflexivity.
   + apply functional_extensionality.
     intro Pa.
-    unfold bij_rew_forward, funcomp, id.
+    unfold bij_rew_forward, funcomp.
     erewrite eq_rect_compose.
-    instantiate (1 := eq_refl).
+    instantiate (1 := Logic.eq_refl).
     reflexivity.
   Defined.
 
@@ -992,15 +1009,16 @@ Lemma bij_rew_id : forall {A} {P : A -> Type} {a : A} (Haa : a = a), (@bij_rew A
   apply bij_eq; simpl.
   + apply functional_extensionality.
     intro Pa.
-    rewrite (proof_irrelevance (a = a) Haa eq_refl).
+    rewrite (proof_irrelevance (a = a) Haa Logic.eq_refl).
     reflexivity.
   + apply functional_extensionality.
     intro Pa.
-    rewrite (proof_irrelevance (a = a) Haa eq_refl).
+    rewrite (proof_irrelevance (a = a) Haa Logic.eq_refl).
     reflexivity.
   Qed.
 
-Lemma bij_inv_rew : forall {A} {P : A -> Type} {a b : A} (Hab : a = b), bijection_inv (@bij_rew A P a b Hab) = @bij_rew A P b a (eq_sym Hab).
+Lemma bij_inv_rew : forall {A} {P : A -> Type} {a b : A} (Hab : a = b), 
+  bijection_inv (@bij_rew A P a b Hab) = @bij_rew A P b a (Logic.eq_sym Hab).
   Proof.
   intros A P a b Hab.
   apply bij_eq; simpl.
@@ -1096,13 +1114,13 @@ Lemma bij_dep_prod_2_compose : forall {A} {P Q : A -> Type}, (forall a, bijectio
     intro HQ.
     apply functional_extensionality_dep.
     intro a.
-    unfold funcomp, id.
+    unfold funcomp.
     unfold bij_dep_prod_2_forward.
     generalize (f_equal (forward) (bij_inv_right_simpl (bij_PQ a))).
     intro H.
     unfold bij_compose, bij_id in H.
     simpl in H.
-    unfold funcomp, id in H.
+    unfold funcomp in H.
     unfold bijection_inv.
     simpl.
     rewrite (equal_f H (HQ a)).
@@ -1111,13 +1129,13 @@ Lemma bij_dep_prod_2_compose : forall {A} {P Q : A -> Type}, (forall a, bijectio
     intro HP.
     apply functional_extensionality_dep.
     intro a.
-    unfold funcomp, id.
+    unfold funcomp.
     unfold bij_dep_prod_2_forward.
     generalize (f_equal (forward) (bij_inv_left_simpl (bij_PQ a))).
     intro H.
     unfold bij_compose, bij_id in H.
     simpl in H.
-    unfold funcomp, id in H.
+    unfold funcomp in H.
     unfold bijection_inv.
     simpl.
     rewrite (equal_f H (HP a)).
@@ -1142,13 +1160,13 @@ Lemma bij_dep_prod_1_compose : forall {A B} {P : B -> Type} (bij_AB : bijection 
     intro HPb.
     apply functional_extensionality_dep.
     intro b.
-    unfold bij_dep_prod_1_forward, bij_dep_prod_1_backward, funcomp, id.
+    unfold bij_dep_prod_1_forward, bij_dep_prod_1_backward, funcomp.
     apply eq_rect_image_1.
   + apply functional_extensionality.
     intro HPa.
     apply functional_extensionality_dep.
     intro a.
-    unfold bij_dep_prod_1_forward, bij_dep_prod_1_backward, funcomp, id.
+    unfold bij_dep_prod_1_forward, bij_dep_prod_1_backward, funcomp.
     erewrite <- eq_rect_map.
     instantiate (1 := equal_f (bof_id _ _ bij_AB) a).
     rewrite eq_rect_image_1.
@@ -1175,25 +1193,25 @@ Theorem bij_inv_dep_prod : forall {A B : Type} {P : A -> Type} {Q : B -> Type} (
   apply bij_eq; simpl.
   + apply functional_extensionality.
     intro x.
-    unfold bij_dep_prod_2_forward, bij_dep_prod_1_backward, bij_dep_prod_1_forward, funcomp, id.
+    unfold bij_dep_prod_2_forward, bij_dep_prod_1_backward, bij_dep_prod_1_forward, funcomp.
     apply functional_extensionality_dep.
     intro a.
     simpl.
-    unfold funcomp, id.
+    unfold funcomp.
     unfold bij_rew_forward, eq_rect_r.
     erewrite <- eq_rect_map.
-    instantiate (1 := (eq_sym (equal_f (bof_id A B bij_AB) a))).
+    instantiate (1 := (Logic.eq_sym (equal_f (bof_id A B bij_AB) a))).
     rewrite <- (@eq_rect_image_2 _ _ _ (fun a p => backward (bij_PQ a) p) a (backward bij_AB (bij_AB a)) _ _).
     erewrite eq_rect_compose.
-    instantiate (1 := eq_refl).
+    instantiate (1 := Logic.eq_refl).
     reflexivity.
   + apply functional_extensionality.
     intro x.
-    unfold bij_dep_prod_2_forward, bij_dep_prod_1_backward, bij_dep_prod_1_forward, funcomp, id.
+    unfold bij_dep_prod_2_forward, bij_dep_prod_1_backward, bij_dep_prod_1_forward, funcomp.
     apply functional_extensionality_dep.
     intro b.
     simpl.
-    unfold funcomp, id.
+    unfold funcomp.
     unfold bij_rew_forward, eq_rect_r.
     reflexivity.
   Qed.
@@ -1205,11 +1223,10 @@ Theorem bij_dep_prod_compose_id : forall {A : Type} {P : A -> Type}, bij_dep_pro
   + simpl.
     apply functional_extensionality.
     intro x.
-    unfold bij_dep_prod_1_forward, bij_dep_prod_2_forward, funcomp, id.
+    unfold bij_dep_prod_1_forward, bij_dep_prod_2_forward, funcomp.
     simpl.
     apply functional_extensionality_dep.
     intro a.
-    unfold id.
     reflexivity.
   + simpl.
     apply functional_extensionality.
@@ -1227,10 +1244,10 @@ Theorem bij_dep_prod_compose_compose : forall {A B C} {P : A -> Type} {Q : B -> 
   apply bij_eq; simpl.
   + apply functional_extensionality.
     intro x.
-    unfold bij_dep_prod_1_forward, bij_dep_prod_2_forward, funcomp, id.
+    unfold bij_dep_prod_1_forward, bij_dep_prod_2_forward, funcomp.
     unfold bijection_inv.
     simpl.
-    unfold funcomp, id.
+    unfold funcomp.
     apply functional_extensionality_dep.
     intro c.
   (*
@@ -1252,7 +1269,7 @@ Theorem bij_dep_prod_compose_compose : forall {A B C} {P : A -> Type} {Q : B -> 
       apply proof_irrelevance.
   + apply functional_extensionality.
     intro x.
-    unfold bij_dep_prod_1_backward, bij_dep_prod_2_forward, funcomp, id.
+    unfold bij_dep_prod_1_backward, bij_dep_prod_2_forward, funcomp.
     apply functional_extensionality_dep.
     intro a.
     unfold bijection_inv.
@@ -1270,7 +1287,7 @@ Lemma bij_dep_sum_2_compose : forall {A} {P Q : A -> Type}, (forall a, bijection
   Proof.
   intros A P Q bij_PQ.
   apply (mkBijection _ _ (bij_dep_sum_2_forward bij_PQ) (bij_dep_sum_2_forward (fun a => bijection_inv (bij_PQ a)))).
-  + unfold bij_dep_sum_2_forward, funcomp, id.
+  + unfold bij_dep_sum_2_forward, funcomp.
     apply functional_extensionality.
     intros (a, Qa).
     apply f_equal.
@@ -1278,7 +1295,7 @@ Lemma bij_dep_sum_2_compose : forall {A} {P Q : A -> Type}, (forall a, bijection
     simpl.
     generalize (equal_f (fob_id _ _ (bij_PQ a)) Qa).
     auto.
-  + unfold bij_dep_sum_2_forward, funcomp, id.
+  + unfold bij_dep_sum_2_forward, funcomp.
     apply functional_extensionality.
     intros (a, Pa).
     apply f_equal.
@@ -1304,7 +1321,7 @@ Lemma bij_dep_sum_1_compose : forall {A B} {P : A -> Type} (bij_AB : bijection A
   apply (mkBijection _ _ (bij_dep_sum_1_forward bij_AB) (bij_dep_sum_1_backward bij_AB)).
   + apply functional_extensionality.
     intros (b, Pbijinvb).
-    unfold bij_dep_sum_1_forward, bij_dep_sum_1_backward, funcomp, id.
+    unfold bij_dep_sum_1_forward, bij_dep_sum_1_backward, funcomp.
     symmetry.
     assert (b = forward bij_AB (backward bij_AB b)) as Hb.
     - generalize (equal_f (fob_id _ _ bij_AB) b).
@@ -1317,7 +1334,7 @@ Lemma bij_dep_sum_1_compose : forall {A B} {P : A -> Type} (bij_AB : bijection A
       apply eq_rect_map.
   + apply functional_extensionality.
     intros (a, Pa).
-    unfold bij_dep_sum_1_forward, bij_dep_sum_1_backward, funcomp, id.
+    unfold bij_dep_sum_1_forward, bij_dep_sum_1_backward, funcomp.
     symmetry.
     assert (a = backward bij_AB (forward bij_AB a)) as Ha.
     - generalize (equal_f (bof_id _ _ bij_AB) a).
@@ -1328,7 +1345,7 @@ Lemma bij_dep_sum_1_compose : forall {A B} {P : A -> Type} (bij_AB : bijection A
       apply f_equal.
       unfold eq_rect_r.
       apply f_equal.
-      unfold eq_sym.
+      unfold Logic.eq_sym.
       apply proof_irrelevance.
   Defined.
 
@@ -1355,26 +1372,26 @@ Theorem bij_inv_sigT : forall {A B : Type} {P : A -> Type} {Q : B -> Type} (bij_
   apply bij_eq; simpl.
   + apply functional_extensionality.
     destruct x.
-    unfold bij_dep_sum_2_forward, bij_dep_sum_1_backward, bij_dep_sum_1_forward, funcomp, id.
+    unfold bij_dep_sum_2_forward, bij_dep_sum_1_backward, bij_dep_sum_1_forward, funcomp.
     apply f_equal.
     simpl.
-    unfold funcomp, id.
+    unfold funcomp.
     apply f_equal.
     unfold bij_rew_forward, eq_rect_r.
     reflexivity.
   + apply functional_extensionality.
     destruct x.
-    unfold bij_dep_sum_2_forward, bij_dep_sum_1_backward, bij_dep_sum_1_forward, funcomp, id.
+    unfold bij_dep_sum_2_forward, bij_dep_sum_1_backward, bij_dep_sum_1_forward, funcomp.
     apply f_equal.
     simpl.
-    unfold funcomp, id.
+    unfold funcomp.
     unfold bij_rew_forward, eq_rect_r.
     erewrite <- eq_rect_map.
     instantiate (1 := equal_f (bof_id _ _ bij_AB) x).
     rewrite (@eq_rect_image_2 _ _ _  (fun x p => forward (bij_PQ x) p) (backward bij_AB (forward bij_AB x)) x).
     apply f_equal.
     erewrite eq_rect_compose.
-    instantiate (1 := eq_refl).
+    instantiate (1 := Logic.eq_refl).
     reflexivity.
   Qed.
 
@@ -1389,7 +1406,7 @@ Theorem bij_sigT_compose_id : forall {A : Type} {P : A -> Type}, bij_sigT_compos
   + simpl.
     apply functional_extensionality.
     destruct x.
-    unfold bij_dep_sum_1_forward, bij_dep_sum_2_forward, funcomp, id.
+    unfold bij_dep_sum_1_forward, bij_dep_sum_2_forward, funcomp.
     simpl.
     symmetry.
     apply eq_sigT_intro.
@@ -1406,7 +1423,7 @@ Theorem bij_sigT_compose_compose :
   apply bij_eq; simpl.
   + apply functional_extensionality.
     destruct x.
-    unfold bij_dep_sum_1_backward, bij_dep_sum_2_forward, funcomp, id.
+    unfold bij_dep_sum_1_backward, bij_dep_sum_2_forward, funcomp.
     assert (backward (@bijection_inv B C bij_BC) (backward (@bijection_inv A B bij_AB) x) = backward (@bijection_inv A C (bij_BC <O> bij_AB)) x) as Hx.
     - reflexivity.
     - apply (eq_existT_curried Hx).
@@ -1414,21 +1431,21 @@ Theorem bij_sigT_compose_compose :
       unfold bijection_inv; simpl.
       unfold funcomp; simpl.
       intro Hx.
-      rewrite (proof_irrelevance _ Hx eq_refl).
+      rewrite (proof_irrelevance _ Hx Logic.eq_refl).
       reflexivity.
   + apply functional_extensionality.
     destruct x.
-    unfold bij_dep_sum_1_forward, bij_dep_sum_2_forward, funcomp, id.
+    unfold bij_dep_sum_1_forward, bij_dep_sum_2_forward, funcomp.
     unfold bijection_inv.
     simpl.
-    unfold funcomp, id.
+    unfold funcomp.
     apply f_equal.
     apply f_equal.
     unfold eq_rect_r.
     rewrite (@eq_rect_image_2 _ _ _ (fun x p => backward (bij_QR x) p) (backward bij_BC x) (bij_AB (backward bij_AB (backward bij_BC x)))).
     apply f_equal.
     erewrite (@eq_rect_map _ _ R (forward bij_BC) (backward bij_BC x)).
-    instantiate (1 := f_equal (forward bij_BC) (eq_sym (equal_f (fob_id A B bij_AB) (backward bij_BC x)))).
+    instantiate (1 := f_equal (forward bij_BC) (Logic.eq_sym (equal_f (fob_id A B bij_AB) (backward bij_BC x)))).
     erewrite eq_rect_compose.
     apply f_equal.
     reflexivity.
@@ -1436,72 +1453,82 @@ Theorem bij_sigT_compose_compose :
 End BijSigTCompose.
 
 Section BijFin.
-Theorem bij_fin_zero : bijection (fin 0) void.
-  Proof.
-  apply (mkBijection (fin 0) void fin_0_univ_embedding void_univ_embedding).
+Theorem bij_ord_zero : bijection (ordinal 0) void.
+  apply (mkBijection (ordinal 0) void ordinal_0_univ_embedding void_univ_embedding).
   apply functional_extensionality.
   intro v.
   elim v.
   apply functional_extensionality.
   intro x.
   destruct x as (p, Hp).
-  elim (Nat.nlt_0_r p Hp).
+  elim (nlt_0_it p Hp).
   Defined.
 
-Theorem lt_S_n' : forall n m : nat, S n < S m -> n < m.
-  Proof.
-  apply Nat.succ_lt_mono.
-  Qed.
 
-Theorem bij_fin_one : bijection (fin 1) unit.
+Theorem bij_ord_one : bijection (ordinal 1) unit.
   Proof.
-  apply (mkBijection (fin 1) unit (fun _ => tt) (fun _ => exist _ 0 (Nat.lt_succ_diag_r 0))).
+  apply (mkBijection 
+    (ordinal 1) 
+    unit 
+    (fun _ => tt) 
+    (fun _ => Ordinal (ltn0Sn 0))).
   apply functional_extensionality.
   destruct x.
   reflexivity.
   apply functional_extensionality.
   destruct x as (zero, Hzero).
   unfold funcomp.
-  unfold id.
-  apply subset_eq_compat.
   destruct zero.
-  reflexivity.
-  elim (Nat.nlt_0_r _ (lt_S_n' _ _ Hzero)).
+  apply val_inj. reflexivity.
+  exfalso.
+  rewrite <- (ltn_predRL zero 1) in Hzero.
+  simpl in Hzero.
+  elim (nlt_0_it zero Hzero). 
   Defined.
 
-Definition inj_fin_two (f : fin 2) : bool.
+Definition inj_ord_two (f : ordinal 2) : bool.
   destruct f as ([ | _], _).
   exact true.
   exact false.
   Defined.
 
-Definition surj_fin_two (b : bool) : fin 2.
+Definition surj_ord_two (b : bool) : ordinal 2.
   case b.
   exists 0.
-  exact Nat.lt_0_2.
+  simpl.
+  exact (ltn0Sn 1).
   exists 1.
-  exact Nat.lt_1_2.
+  rewrite <- (ltn_predRL 0 2). simpl.
+  exact (ltn0Sn 1).
   Defined.
 
-Theorem bij_fin_two : bijection (fin 2) bool.
+Theorem bij_fin_two : bijection (ordinal 2) bool.
   Proof.
-  apply (mkBijection (fin 2) bool inj_fin_two surj_fin_two).
-  unfold inj_fin_two.
-  unfold surj_fin_two.
+  apply (mkBijection (ordinal 2) bool inj_ord_two surj_ord_two).
+  unfold inj_ord_two.
+  unfold surj_ord_two.
   unfold funcomp.
-  unfold id.
   apply functional_extensionality.
   destruct x.
   reflexivity.
   reflexivity.
   apply functional_extensionality.
   destruct x as ([ | k], Hk).
-  apply subset_eq_compat.
-  reflexivity.
-  apply subset_eq_compat.
+  unfold inj_ord_two.
+  unfold surj_ord_two.
+  unfold funcomp.
+  apply val_inj. reflexivity.
+  unfold inj_ord_two.
+  unfold surj_ord_two.
+  unfold funcomp.
+  apply val_inj. simpl. 
   destruct k.
   reflexivity.
-  elim (Nat.nlt_0_r _ (lt_S_n' _ _ (lt_S_n' _ _ Hk))).
+  rewrite <- (ltn_predRL (k.+1) 2) in Hk.
+  simpl in Hk.
+  rewrite <- (ltn_predRL k 1) in Hk.
+  simpl in Hk.
+  elim (nlt_0_it k Hk). 
   Defined.
 
 Theorem bij_bool : bijection bool (unit+unit).
@@ -1517,18 +1544,18 @@ Theorem bij_bool : bijection bool (unit+unit).
   reflexivity.
   Defined.
 
-Definition inj_fin_Sn {n : nat} (f : fin (S n)) : unit + fin n.
+(* Definition inj_fin_Sn {n : nat} (f : ordinal (S n)) : unit + ordinal n.
   Proof.
   destruct f as ([ | p], Hp).
   left.
   exact tt.
   right.
   exists p.
-  apply lt_S_n'.
+  apply PeanoNat.lt_S_n.
   exact Hp.
   Defined.
 
-Definition surj_fin_Sn {n : nat} (f : unit + fin n) : fin (S n).
+Definition surj_fin_Sn {n : nat} (f : unit + ordinal n) : ordinal (S n).
   Proof.
   destruct f as [u | (p, Hp)].
   exists 0.
@@ -1538,17 +1565,17 @@ Definition surj_fin_Sn {n : nat} (f : unit + fin n) : fin (S n).
   exact Hp.
   Defined.
 
-Theorem bij_fin_Sn : forall {n : nat}, bijection (fin (S n)) (unit + fin n).
+Theorem bij_fin_Sn : forall {n : nat}, bijection (ordinal (S n)) (unit + ordinal n).
   Proof.
   intro n.
-  apply (mkBijection (fin (S n)) (unit + fin n) inj_fin_Sn surj_fin_Sn).
+  apply (mkBijection (ordinal (S n)) (unit + ordinal n) inj_fin_Sn surj_fin_Sn).
   apply functional_extensionality.
   destruct x as [() | (p, Hp)].
   reflexivity.
   unfold inj_fin_Sn.
   unfold surj_fin_Sn.
   unfold funcomp.
-  unfold id.
+  
   apply f_equal.
   apply subset_eq_compat.
   reflexivity.
@@ -1557,51 +1584,67 @@ Theorem bij_fin_Sn : forall {n : nat}, bijection (fin (S n)) (unit + fin n).
   unfold inj_fin_Sn.
   unfold surj_fin_Sn.
   unfold funcomp.
-  unfold id.
+  
   apply subset_eq_compat.
   reflexivity.
   unfold inj_fin_Sn.
   unfold surj_fin_Sn.
   unfold funcomp.
-  unfold id.
+  
   apply subset_eq_compat.
   reflexivity.
-  Defined.
+  Defined. *)
 
 End BijFin.
 
 Require Import Orders.
 
-Definition inj_fin_add {n p : nat} (f : fin (n+p)) : fin n + fin p.
+Lemma leq_gtF_iff: forall {m n : nat}, m <= n <-> (n < m) = false.
+  Proof.
+  split.
+  - apply leq_gtF.
+  - intros.
+  apply (elimF ltP) in H.
+  set (tmp := leP (m:=m) (n:=n)).
+  apply Bool.reflect_iff in tmp.
+  rewrite <- tmp.
+  lia.
+  Qed.
+
+
+Definition inj_fin_add {n p : nat} (f : ordinal (n+p)) : ordinal n + ordinal p.
   Proof.
   destruct f as (k, Hk).
-  destruct (Nat.ltb_spec0 k n).
+  destruct (leq (S k) n) eqn:E.
   left.
-  exists k.
-  assumption.
+  exists k. auto.
   right.
-  exists (k - n).
-  lia.
+  exists (k - n). 
+  rewrite ltn_subLR.
+  assumption.
+  apply (leq_gtF_iff). apply E.
   Defined.
 
-Definition surj_fin_add {n p : nat} (f : fin n + fin p) : fin (n + p).
+Definition surj_fin_add {n p : nat} (f : ordinal n + ordinal p) : ordinal (n + p).
   Proof.
   destruct f as [(k, Hk) | (k, Hk)].
   exists k.
-  lia.
+  apply (ltn_addr p Hk).
   exists (n + k).
-  lia.
+  rewrite ltn_add2l.
+  assumption.
   Defined.
 
-Theorem inj_o_surj_id : forall n p, (@inj_fin_add n p) <o> (@surj_fin_add n p) = id.
+(* Theorem inj_o_surj_id : forall n p, (@inj_fin_add n p) <o> (@surj_fin_add n p) = id.
   intros n p.
   apply functional_extensionality.
   unfold inj_fin_add.
   unfold surj_fin_add.
   unfold funcomp.
-  unfold id.
   destruct x as [(k, Hk) | (k, Hk)].
-  destruct (Nat.ltb_spec0 k n).
+  Set Printing All.
+  unfold is_true in *.
+  destruct (leq (S k) n) eqn:E.
   apply f_equal.
   apply subset_eq_compat.
   reflexivity.
@@ -1629,16 +1672,17 @@ Theorem surj_o_inj_id : forall n p, (@surj_fin_add n p) <o> (@inj_fin_add n p) =
   unfold inj_fin_add.
   unfold surj_fin_add.
   unfold funcomp.
-  unfold id.
+  
   destruct x as (k, Hk).
   destruct (Nat.ltb_spec0 k n).
   apply subset_eq_compat.
   reflexivity.
   apply subset_eq_compat.
   lia.
-  Defined.
-
-Theorem bij_fin_sum : forall {n p :nat}, bijection (fin (n+p)) ((fin n)+(fin p)).
+  Defined. *)
+Require Import Eqdep_dec.
+Require Import Coq.Program.Equality.
+Theorem bij_fin_sum : forall {n p :nat}, bijection (ordinal (n+p)) ((ordinal n)+(ordinal p)).
   Proof.
   intros n p.
   apply (mkBijection _ _ inj_fin_add surj_fin_add).
@@ -1646,10 +1690,39 @@ Theorem bij_fin_sum : forall {n p :nat}, bijection (fin (n+p)) ((fin n)+(fin p))
   unfold inj_fin_add.
   unfold surj_fin_add.
   unfold funcomp.
-  unfold id.
   destruct x as [(k, Hk) | (k, Hk)].
+  unfold is_true in *.
+  Admitted.
+  (* change (k < n) with true.
+  dependent destruction Hk.
+  change ((match k < n as b return ((k < n) = b -> 'I_n + 'I_p) with 
+  | true => fun E : (k < n) = true => 
+    inl (Ordinal (n:=n) (m:=k) 
+      E) 
+  | false => fun E : (k < n) = false => 
+    inr (Ordinal (n:=p) (m:=k - n) 
+      (eq_ind_r (eq^~ true) (ltn_addr (m:=k) (n:=n) p Hk)
+      (ltn_subLR (m:=k) (n:=n) p (match leq_gtF_iff with | conj _ H0 => H0
+      end E))))
+  end) 
+  (erefl (k < n)) = inl (Ordinal (n:=n) (m:=k) Hk)).
+  case (k<n).
+  congruence.
+  rewrite_strat Hk. 
+  symmetry.
+  etransitivity.
+  replace (k < n).
+  rewrite Hk.
+  set (b := (k < n)). fold b in Hk.
+
   destruct (Nat.ltb_spec0 k n).
-  apply f_equal.
+  admit.
+  exfalso. admit.
+  Search (_ + _ < _).
+  assert (n + k < n = false).
+  admit.
+  rewrite H.
+  f_equal.
   apply subset_eq_compat.
   reflexivity.
   destruct (Nat.ltb_spec0 (n + k) n).
@@ -1664,17 +1737,17 @@ Theorem bij_fin_sum : forall {n p :nat}, bijection (fin (n+p)) ((fin n)+(fin p))
   unfold inj_fin_add.
   unfold surj_fin_add.
   unfold funcomp.
-  unfold id.
+  
   destruct x as (k, Hk).
   destruct (Nat.ltb_spec0 k n).
   apply subset_eq_compat.
   reflexivity.
   apply subset_eq_compat.
   lia.
-  Defined.
+  Defined. *)
 
 
-Definition inj_fin_mul {n p : nat} (f : fin (n*p)) : fin n * fin p.
+(* Definition inj_fin_mul {n p : nat} (f : ordinal (n*p)) : ordinal n * ordinal p.
   Proof.
   destruct f as (k, Hk).
   split.
@@ -1691,7 +1764,7 @@ Definition inj_fin_mul {n p : nat} (f : fin (n*p)) : fin n * fin p.
   assumption.
   Defined.
 
-Definition surj_fin_mul {n p : nat} (f : fin n * fin p) : fin (n * p).
+Definition surj_fin_mul {n p : nat} (f : ordinal n * ordinal p) : ordinal (n * p).
   Proof.
   destruct f as ((d, Hd), (m, Hm)).
   exists (d * p + m).
@@ -1706,15 +1779,9 @@ Definition surj_fin_mul {n p : nat} (f : fin n * fin p) : fin (n * p).
   apply Nat.mul_le_mono_r.
   rewrite Nat.add_comm.
   exact H.
-  Defined.
+  Defined. *)
 
-Theorem le_plus_minus' : forall n m : nat, n <= m -> m = n + (m - n).
-  Proof. 
-  intros. simpl. rewrite Nat.add_comm. 
-  rewrite Nat.sub_add; auto. 
-  Qed.
-
-Theorem bij_fin_prod : forall {n p :nat}, bijection (fin (n*p)) ((fin n)*(fin p)).
+(* Theorem bij_fin_prod : forall {n p :nat}, bijection (ordinal (n*p)) ((ordinal n)*(ordinal p)).
   Proof.
   intros n p.
   apply (mkBijection _ _ inj_fin_mul surj_fin_mul).
@@ -1722,7 +1789,7 @@ Theorem bij_fin_prod : forall {n p :nat}, bijection (fin (n*p)) ((fin n)*(fin p)
   unfold inj_fin_mul.
   unfold surj_fin_mul.
   unfold funcomp.
-  unfold id.
+  
   destruct x as ((a, Ha), (b, Hb)).
   assert (forall P Q (a b : P) (c d : Q), a=b -> c=d -> (a,c)=(b,d)).
   intros; subst; reflexivity.
@@ -1745,7 +1812,7 @@ Theorem bij_fin_prod : forall {n p :nat}, bijection (fin (n*p)) ((fin n)*(fin p)
   unfold inj_fin_mul.
   unfold surj_fin_mul.
   unfold funcomp.
-  unfold id.
+  
   destruct x as (a, Ha).
   apply subset_eq_compat.
   rewrite Nat.Div0.mod_eq.
@@ -1840,7 +1907,7 @@ Theorem position_nth_error_in : forall {A} (eqA : dec_eq A) n (l : list A) (Hinj
   + destruct l.
     - simpl in Hn.
       lia.
-    - rewrite (nth_error_in_tl _ _ _ (lt_S_n' _ _ Hn) Hn).
+    - rewrite (nth_error_in_tl _ _ _ (PeanoNat.lt_S_n _ _ Hn) Hn).
       simpl.
       rewrite IHn.
       * destruct eqA.
@@ -1938,12 +2005,13 @@ Theorem bij_transform_id : forall {A I : Type} (bij_AA : bijection A A), bij_tra
   reflexivity.
   Qed.
 
-
+*)
 Section BijSubsets.
+(*
 Theorem bij_subset : forall {A} (P : A -> Prop), (forall a, P a) -> bijection A { a : A | P a }.
   Proof.
   intros A P HP.
-  apply (mkBijection _ _ (fun a => exist P a (HP a)) (fun a => proj1_sig a)); unfold funcomp, id; apply functional_extensionality.
+  apply (mkBijection _ _ (fun a => exist P a (HP a)) (fun a => proj1_sig a)); unfold funcomp; apply functional_extensionality.
   + destruct x as (a, Ha).
     apply subset_eq_compat.
     reflexivity.
@@ -1973,7 +2041,7 @@ Theorem bij_subset_subset : forall {A} (P : A -> Prop) (Q : {a | P a} -> Prop),
   bijection { b : { a | P a } | Q b } { a : A | P a /\ forall (Ha : P a), Q (exist P a Ha) }.
   Proof.
   intros A P Q.
-  apply (mkBijection _ _ (forward_subset_subset P Q) (backward_subset_subset P Q)); unfold funcomp, id; apply functional_extensionality.
+  apply (mkBijection _ _ (forward_subset_subset P Q) (backward_subset_subset P Q)); unfold funcomp; apply functional_extensionality.
   + destruct x as (a, (Pa, Qa)).
     simpl.
     apply subset_eq_compat.
@@ -1990,7 +2058,7 @@ Theorem bij_subset_equiv : forall {A} (P : A -> Prop) (Q : A -> Prop),
   intros A P Q Heq.
   assert (forall a, P a -> Q a) as HPQ; [firstorder |].
   assert (forall a, Q a -> P a) as HQP; [firstorder |].
-  apply (mkBijection _ _ (fun a => match a with exist _ a Ha => exist Q a (HPQ a Ha) end) (fun a => match a with exist _ a Ha => exist P a (HQP a Ha) end)); unfold funcomp, id; apply functional_extensionality.
+  apply (mkBijection _ _ (fun a => match a with exist _ a Ha => exist Q a (HPQ a Ha) end) (fun a => match a with exist _ a Ha => exist P a (HQP a Ha) end)); unfold funcomp; apply functional_extensionality.
   + destruct x as (a, Qa); simpl.
     apply subset_eq_compat.
     reflexivity.
@@ -2026,5 +2094,5 @@ Theorem bij_eq_comp_id {A} : @bij_id A <O> bij_id = bij_id.
   unfold bij_compose. simpl. unfold bij_id. apply bij_eq. 
   - simpl. auto.
   - simpl. auto. 
-  Qed.
+  Qed. *)
 End BijSubsets.
