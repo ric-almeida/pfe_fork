@@ -15,6 +15,7 @@ Require Import Coq.Classes.CRelationClasses.
 Import ListNotations.
 
 
+
 Module Type NamesParameter.
 Parameter Name : Type.
 Parameter EqDecN : forall x y : Name, {x = y} + {x <> y}.
@@ -885,8 +886,8 @@ Definition bij_list_forward (i1:NoDupList) (i2:NoDupList) :
   (NameSub i1) + (NameSub i2) ->  NameSub (app_merge_NoDupList i1 i2).
   Proof.
   refine (fun name => match name with
-                | inl (exist _ name' H1) => _
-                | inr (exist _ name' H2) => _
+                | inl (exist name' H1) => _
+                | inr (exist name' H2) => _
                 end).
     + exists (name'). 
       apply in_left_list; assumption. 

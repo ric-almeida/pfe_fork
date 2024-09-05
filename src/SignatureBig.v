@@ -1,7 +1,13 @@
+Set Warnings "-notation-overridden, -parsing".
+Set Warnings "-notation-overridden, -notation-overriden".
+
 Require Import MyBasics.
 Require Import Bijections.
 Require Import FunctionalExtensionality.
 
+Require Import MathCompAddings.
+
+From mathcomp Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq fintype finfun. 
 (** * This module implements a signature
   It contains a Module Type with Kappa and Arity, and Ports built from the Signature *)
 Module Type SignatureParameter.
@@ -27,8 +33,8 @@ Definition bij_join_port_forward { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa)
   Port (join c1 c2).
   Proof.
   refine (fun p => match p with
-              | inl (existT _ vi1 Hvi1) => _
-              | inr (existT _ vi2 Hvi2) => _
+              | inl (existT vi1 Hvi1) => _
+              | inr (existT vi2 Hvi2) => _
               end).
   + exists (inl vi1).
     destruct Hvi1 as (i1, Hi1).
@@ -67,19 +73,21 @@ Definition bij_join_port { n1 n2 } (c1 : n1 -> Kappa) (c2 : n2 -> Kappa)  :
     - reflexivity.
   + apply functional_extensionality.
     destruct x as [(v1, (i1, Hvi1)) | (v2, (i2, Hvi2))].
-    - unfold funcomp, id.
+    - unfold funcomp.
       simpl.
       apply f_equal.
       reflexivity.
-    - unfold funcomp, id.
+    - unfold funcomp.
       simpl.
       apply f_equal.
       reflexivity.
   Defined.
 
-Definition bij_port_void (c : void -> Kappa) : bijection (Port c) void.
-  Proof.
-  apply (mkBijection _ _ (fun vi => match vi with existT _ v _ => void_univ_embedding v end) (void_univ_embedding)).
+Definition bij_port_void (c : void -> Kappa) : bijection (Port c)  Empty_set.
+  Proof. 
+  apply (mkBijection (Port c)  Empty_set 
+    (fun vi => match vi with existT v _ => void_univ_embedding v end) 
+    (void_univ_embedding)).
   + apply functional_extensionality.
     destruct x.
   + apply functional_extensionality.

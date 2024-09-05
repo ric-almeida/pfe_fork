@@ -312,13 +312,13 @@ Lemma injective_in_map_inv : forall A B (f : A -> B) a l, InjectiveXT f -> In (f
     intuition.
   Qed.
 
-Inductive void : Type := .
 
-Definition void_univ_embedding' {A : Type} : void -> A.
+
+(* Definition void_univ_embedding' {A : Type} : void -> A.
   Proof.
   intro v.
   elim v.
-  Defined.
+  Defined. *)
 
 Definition fin (n : nat) := { p | p < n }.
 
@@ -563,7 +563,7 @@ Definition sequence2 {N1 S1 R1 N2 S2 : Type}
 
 Notation "f >> g" := (sequence f g) (at level 70).
 
-Definition sequence_id {I : Type} : (void+I) -> (void+I) := fun x => x.
+(* Definition sequence_id {I : Type} : (void+I) -> (void+I) := fun x => x. *)
 
 (* Theorem sequence_closure_left : forall {P Q I M O : Type} (pp : P+I ->P+M) (pq : Q+M -> Q+O) (p p' : P),
   closure (pp >> pq) (inl (inr p)) (inl (inr p')) -> closure pp (inl p) (inl p').

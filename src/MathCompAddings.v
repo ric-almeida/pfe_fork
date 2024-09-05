@@ -32,3 +32,24 @@ Definition ordinal_0_univ_embedding {A : Type} : ordinal 0 -> A.
   destruct f as (p, Hp).
   elim (nlt_0_it p Hp).
   Qed.
+
+
+Lemma minus_lt : forall s m n, s - m < n -> s < n + m.
+  Proof.
+  move=> s m n H.
+  assert (H2: s = (s - m) + m). rewrite <- addnBn.
+  Admitted. 
+  (* symmetry. 
+  apply subnKC.
+  - simpl. Search (_ = _ - _ + _). reflexivity. rewrite  //; apply: ltnW; apply: ltn_trans H; rewrite addnC addnK.
+  rewrite H2.
+  apply: leq_addl.
+  intros.
+  induction m.
+  Search (_ + 0 = _).
+  simpl in *. *)
+
+Lemma minus_lt_iff : forall s m n, s > m -> s < m + n -> s - m < m + n.
+  Proof.
+  move=> s m n H H'.
+  Admitted. 

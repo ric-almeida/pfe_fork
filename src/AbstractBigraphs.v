@@ -10,7 +10,6 @@ Require Import MyBasics.
 Require Import MyEqNat.
 Require Import Basics.
 Require Import Morphisms.
-Require Import FinDecTypes.
 Require Import Bijections.
 Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.
@@ -25,9 +24,12 @@ Require Import ProofIrrelevance.
 Require Import Lia.
 Require Import Coq.Arith.Compare_dec.
 
+Require Import MathCompAddings.
 
-From mathcomp Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq fintype finfun. 
-
+From mathcomp Require Import all_ssreflect.
+Set Implicit Arguments.
+Unset Strict Implicit.
+Unset Printing Implicit Defensive.
 
 Include MyEqNat. 
 
@@ -65,14 +67,14 @@ End IntroBigraphs.
   This section is just getters to lightenn some notations *)
 Section GettersBigraphs.
 Definition get_node {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : finType := 
-  node s i r o bg.
+  @node s i r o bg.
 Definition get_edge {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : finType := 
-  edge s i r o bg.
+  @edge s i r o bg.
 Definition get_control {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : get_node bg -> Kappa :=
   @control s i r o bg.
 Definition get_parent {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : (get_node bg) + (ordinal s) -> (get_node bg) + (ordinal r) :=
   @parent s i r o bg.
-Definition get_link {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : {inner:Name | In inner i} + Port (get_control bg) -> {outer:Name | In outer o} + (get_edge bg) :=
+Definition get_link {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : {inner:Name | In inner i} + Port (@get_control s r i o bg) -> {outer:Name | In outer o} + (get_edge bg) :=
   @link s i r o bg.
 End GettersBigraphs.
 
@@ -80,14 +82,14 @@ End GettersBigraphs.
 
 Theorem parent_proof_irrelevant {s i r o} (b:bigraph s i r o): 
   forall n n': 'I_s, n = n' ->
-  get_parent b (inr n) = get_parent b (inr n').
+  get_parent (bg:=b) (inr n) = get_parent (inr n').
   Proof. 
   intros. f_equal. f_equal. apply H.
   Qed.
 
 Theorem innername_proof_irrelevant {s i r o} (b:bigraph s i r o): 
   forall n:Name, forall Hn: In n i, forall Hn':In n i,
-  get_link b (inl (exist _ n Hn)) = get_link b (inl (exist _ n Hn')).
+  get_link (bg:=b) (inl (exist _ n Hn)) = get_link (bg:=b) (inl (exist _ n Hn')).
   Proof. 
   intros. apply f_equal. apply f_equal. apply subset_eq_compat. reflexivity.
   Qed.
@@ -95,8 +97,8 @@ Theorem innername_proof_irrelevant {s i r o} (b:bigraph s i r o):
 (** Section defining some elementary bigraphs *)
 Section ElementaryBigraphs. 
 Definition bigraph_id (s: nat) (i : NoDupList) : bigraph s i s i. (*actually s i s (permutation i) *)
-  Proof. Print void_univ_embedding. Check void. Locate void_univ_embedding. 
-  apply (Big s i s i
+  Proof.
+  apply (@Big s i s i
           void (*node : ∅*)
           void (*edge : ∅*)
           (@void_univ_embedding _) (*control : ∅_Kappa*)
@@ -110,18 +112,19 @@ Definition bigraph_id (s: nat) (i : NoDupList) : bigraph s i s i. (*actually s i
   Defined.
 
 Definition bigraph_empty : bigraph 0 EmptyNDL 0 EmptyNDL := bigraph_id 0 EmptyNDL.
-Example zero1 : type (findec_fin 1). exists 0. auto. Defined.
 
-Definition discrete_atom {A} 
-  (a:type A) {k:Kappa} (o:NoDupList) 
+
+Definition discrete_atom {A:finType} 
+  (a:A) {k:Kappa} (o:NoDupList) 
   {Hkappa : MyEqNat (Arity k) (length (ndlist o))}: bigraph 0 EmptyNDL 1 o.
-  eapply (Big
+  Search (is_true (0 < 1)).
+  eapply (@Big
       0 EmptyNDL 1 o
       A
-      voidfd
+      void
       (fun n => k) (*control*)
       (fun ns => match ns with 
-        | inl n => inr zero1
+        | inl n => inr (Ordinal (ltn0Sn 0))
         | inr s => _
       end) (*parent*)
       _ (*link*)
@@ -131,9 +134,9 @@ Definition discrete_atom {A}
       - destruct i as [i H]. elim H. 
       - left. unfold NameSub. destruct o as [o Ho]. 
       destruct p as [i H]. destruct H as [p Hp]. 
-      exists (nth p o DefaultName). 
+      exists (Coq.Lists.List.nth p o DefaultName). 
       apply nth_In. destruct Hkappa as [Hkappa]. rewrite <- Hkappa. assumption. } (*link*)
-    2:{ destruct s. apply Nat.nlt_0_r in l. elim l. } (*parent*)
+    2:{ destruct s. exfalso. apply (nlt_0_it m). apply i. } (*parent*)
     unfold FiniteParent. simpl. (*acyclic*)
     intros u.
     apply Acc_intro.
@@ -141,16 +144,16 @@ Definition discrete_atom {A}
     exfalso. discriminate H.
     Defined. 
 
-Definition discrete_ion {A} 
-  (a:type A) {k:Kappa} (o:NoDupList) 
+Definition discrete_ion {A:finType} 
+  (a:A) {k:Kappa} (o:NoDupList) 
   {Hkappa : MyEqNat (Arity k) (length (ndlist o))}: bigraph 1 EmptyNDL 1 o.
-  eapply (Big
+  eapply (@Big
       1 EmptyNDL 1 o
       A
-      voidfd
+      void
       (fun n => k) (*control*)
       (fun ns => match ns with 
-        | inl n => inr zero1
+        | inl n => inr (Ordinal (ltn0Sn 0))
         | inr s => inl a
       end) (*parent*)
       _ (*link*)
@@ -160,7 +163,7 @@ Definition discrete_ion {A}
       - destruct i as [i H]. elim H. 
       - left. unfold NameSub. destruct o as [o Ho]. 
       destruct p as [i H]. destruct H as [p Hp]. 
-      exists (nth p o DefaultName). 
+      exists (Coq.Lists.List.nth p o DefaultName). 
       apply nth_In. destruct Hkappa as [Hkappa]. rewrite <- Hkappa. assumption. } (*link*)
     unfold FiniteParent. simpl.
     intros u.
@@ -171,9 +174,9 @@ Definition discrete_ion {A}
 
 Definition permutationbig (n : nat) : bigraph n EmptyNDL n EmptyNDL. 
   Proof. 
-  apply (Big n EmptyNDL n EmptyNDL
-    voidfd (*node : ∅*)
-    voidfd (*edge : ∅*)
+  apply (@Big n EmptyNDL n EmptyNDL
+    void (*node : ∅*)
+    void (*edge : ∅*)
     (@void_univ_embedding _) (*control : ∅_-> Kappa*)
     (fun sn => match sn with |inr s => inr s | inl n => match n with end end) (*parent : sites -> root*)
   ).
@@ -186,11 +189,11 @@ Definition permutationbig (n : nat) : bigraph n EmptyNDL n EmptyNDL.
 
 Definition merge {n:nat} : bigraph n EmptyNDL 1 EmptyNDL.
   Proof. 
-  apply (Big n EmptyNDL 1 EmptyNDL
-    voidfd (*node : ∅*)
-    voidfd (*edge : ∅*)
+  apply (@Big n EmptyNDL 1 EmptyNDL
+    void (*node : ∅*)
+    void (*edge : ∅*)
     (@void_univ_embedding _) (*control : ∅ ->_Kappa*)
-    (fun s => inr zero1) (*parent : sites -> root*)
+    (fun s => inr (Ordinal (ltn0Sn 0))) (*parent : sites -> root*)
   ).
   - intros [inner | port]. (*link : ∅*)
   + left. apply inner.
@@ -204,9 +207,9 @@ Definition big_1 := @merge 0.
 Definition symmetry_big (m:nat) (X:NoDupList) (n:nat) (Y:NoDupList) :
   bigraph (m+n) (X ∪ Y) (m+n) (X ∪ Y).
   Proof. 
-    eapply (Big (m+n) (X ∪ Y) (m+n) (X ∪ Y)
-      voidfd (*node : ∅*)
-      voidfd (*edge : ∅*)
+    eapply (@Big (m+n) (X ∪ Y) (m+n) (X ∪ Y)
+      void (*node : ∅*)
+      void (*edge : ∅*)
       (@void_univ_embedding _) (*control : ∅ ->_Kappa*)
       _ _ _
     ).
@@ -215,8 +218,8 @@ Definition symmetry_big (m:nat) (X:NoDupList) (n:nat) (Y:NoDupList) :
       + destruct v.
       + right. destruct s as [s Hs].
       destruct (lt_dec s m).
-      * exists (s+n). lia.
-      * exists (s-m). lia.
+      * exists (s+n). rewrite ltn_add2r. now apply /ltP.
+      * exists (s). apply Hs. (*TODO Check if wrong*)
     - intros [inner | port]. (*link : ∅*)
       + left. apply inner.
       + destruct port. destruct x.
@@ -226,11 +229,11 @@ Definition symmetry_big (m:nat) (X:NoDupList) (n:nat) (Y:NoDupList) :
 
 Definition substitution (i:NoDupList) (name:Name) : bigraph 0 i 0 (OneelNDL name).
   Proof. 
-  apply (Big 0 i 0 (OneelNDL name)
-    voidfd (*node : ∅*)
-    voidfd (*edge : ∅*)
+  apply (@Big 0 i 0 (OneelNDL name)
+    void (*node : ∅*)
+    void (*edge : ∅*)
     (@void_univ_embedding _) (*control : ∅_Kappa*)
-    (void_univ_embedding ||| (void_univ_embedding <o> bij_fin_zero)) (*parent : sites -> root*)
+    (void_univ_embedding ||| (void_univ_embedding <o> bij_ord_zero)) (*parent : sites -> root*)
   ).
   - intros [inner | port]. (*link : ∅*)
   + left. exists name. simpl. left. reflexivity.
@@ -241,11 +244,11 @@ Definition substitution (i:NoDupList) (name:Name) : bigraph 0 i 0 (OneelNDL name
 
 Definition closure (name:Name) : bigraph 0 (OneelNDL name) 0 EmptyNDL.
   Proof. 
-  apply (Big 0 (OneelNDL name) 0 EmptyNDL
-    voidfd (*node : ∅*)
-    findec_unit (*edge : ∅*)
+  apply (@Big 0 (OneelNDL name) 0 EmptyNDL
+    void (*node : ∅*)
+    unit (*edge : ∅*)
     (@void_univ_embedding _) (*control : ∅_Kappa*)
-    (void_univ_embedding ||| (void_univ_embedding <o> bij_fin_zero)) (*parent : sites -> root*)
+    (void_univ_embedding ||| (void_univ_embedding <o> bij_ord_zero)) (*parent : sites -> root*)
   ).
   - intros [inner | port]. (*link : ∅*)
   + right. simpl. exact tt. 

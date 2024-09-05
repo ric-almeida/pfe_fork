@@ -3,7 +3,6 @@
 src/MyBasics.v
 src/MathCompAddings.v
 src/Bijections.v
-src/FinDecTypes.v
 src/SignatureBig.v
 src/Names.v
 src/MyEqNat.v
