@@ -22,7 +22,6 @@ Require Import Coq.Lists.List.
 Require Import Coq.Arith.PeanoNat.
 Require Import ProofIrrelevance.
 Require Import Lia.
-Require Import Coq.Arith.Compare_dec.
 
 Require Import MathCompAddings.
 
@@ -226,8 +225,8 @@ Definition symmetry_big (m:nat) (X:NoDupList) (n:nat) (Y:NoDupList) :
     - intros [v|s]. (*parent*)
       + destruct v.
       + right. destruct s as [s Hs].
-      destruct (lt_dec s m).
-      * exists (s+n). rewrite ltn_add2r. now apply /ltP.
+      destruct (s < m) eqn:E.
+      * exists (s+n). rewrite ltn_add2r. apply E.
       * exists (s-m). 
       set (tmp := leq_subr m s).
       apply (leq_ltn_trans tmp) in Hs.

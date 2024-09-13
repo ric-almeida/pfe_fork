@@ -37,22 +37,12 @@ Definition ordinal_0_univ_embedding {A : Type} : ordinal 0 -> A.
 Lemma minus_lt : forall s m n, s - m < n -> s < n + m.
   Proof.
   move=> s m n H.
-  assert (H2: s = (s - m) + m). rewrite <- addnBn.
-  Admitted. 
-  (* symmetry. 
-  apply subnKC.
-  - simpl. Search (_ = _ - _ + _). reflexivity. rewrite  //; apply: ltnW; apply: ltn_trans H; rewrite addnC addnK.
-  rewrite H2.
-  apply: leq_addl.
-  intros.
-  induction m.
-  Search (_ + 0 = _).
-  simpl in *. *)
-
-Lemma minus_lt_iff : forall s m n, s > m -> s < m + n -> s - m < m + n.
-  Proof.
-  move=> s m n H H'.
-  Admitted. 
+  destruct n.
+  - exfalso. apply (nlt_0_it (s-m) H).
+  - rewrite ltn_psubLR in H. 
+  * rewrite addnC. apply H.
+  * apply ltn0Sn. 
+  Qed.
 
 
 Definition replace_in_H : forall {r r' : nat} (Hrr' : r' = r) (m : nat) (Hrm : m < r'), m <r.
@@ -112,4 +102,9 @@ Qed.
 
 Lemma not_s_lt : forall a b, a + b < a -> False.
 Proof. 
-Admitted.
+intros.
+assert (a + b < a + 0).
+rewrite addn0. apply H.
+rewrite ltn_add2l in H0.
+apply (nlt_0_it b H0).
+Qed.

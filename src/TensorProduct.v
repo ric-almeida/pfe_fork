@@ -171,9 +171,9 @@ Theorem bigraph_tp_right_neutral : forall {s i r o} (b : bigraph s i r o),
   Proof.
   intros s i r o b.
   apply (BigEq _ _ _ _ _ _ _ _ (b ⊗ ∅) b
-    (PeanoNat.Nat.add_0_r _)
+    (addn0 _)
     (right_empty i)
-    (PeanoNat.Nat.add_0_r _)
+    (addn0 _)
     (right_empty o)
     bij_void_sum_neutral_r
     bij_void_sum_neutral_r
@@ -260,9 +260,9 @@ Theorem bigraph_tp_assoc :
   Proof.
   intros.
   apply (BigEq _ _ _ _ _ _ _ _ ((b1 ⊗ b2) ⊗ b3) (b1 ⊗ (b2 ⊗ b3))
-    (esym (PeanoNat.Nat.add_assoc _ _ _))
+    (esym (addnA _ _ _))
     in_app_merge_transi
-    (esym (PeanoNat.Nat.add_assoc _ _ _))
+    (esym (addnA _ _ _))
     in_app_merge_transi
     bij_sum_assoc
     bij_sum_assoc
@@ -920,7 +920,7 @@ Theorem merge_well_defined : forall n,
     refine (BigEq _ _ _ _ _ _ _ _ 
       (@merge (n+1))
       (join_big <<o>> (@bigraph_id 1 EmptyNDL ⊗ @merge n))
-      (PeanoNat.Nat.add_comm n 1)
+      (addnC n 1)
       (PN_P permutation_id_am_l_PN_empty_r)
       erefl
       (PN_P permutation_id_am_l_PN_empty)

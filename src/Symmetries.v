@@ -70,11 +70,11 @@ Theorem symmetry_eq_id : forall m:nat, forall X:NoDupList,
     + simpl. apply functional_extensionality.
       destruct x as [v | s1]; simpl.
       - destruct v.
-      - unfold funcomp, parallel. f_equal.
+      - destruct s1. unfold funcomp, parallel. f_equal.
         unfold bij_rew_forward. simpl.
-        destruct s1.
         rewrite eq_rect_ordinal. 
-        destruct (Compare_dec.lt_dec m0 m).
+        simpl.
+        
         rewrite eq_rect_ordinal.
         apply val_inj. simpl. apply addn0.
         exfalso.
