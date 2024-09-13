@@ -6,8 +6,8 @@ Require Import SignatureBig.
 Require Import Equality.
 Require Import Bijections.
 Require Import MyBasics.
-Require Import FinDecTypes.
 Require Import TensorProduct.
+Require Import MathCompAddings.
 
 Require Import Coq.Lists.List.
 Require Import Coq.Setoids.Setoid.
@@ -17,6 +17,8 @@ Require Import Lia.
 
 Import ListNotations.
 
+
+From mathcomp Require Import all_ssreflect.
 
 Require Import List.
 
@@ -36,8 +38,8 @@ Set Typeclasses Iterative Deepening.
 Section S1.
 Lemma arity_symmetry_eq : forall m:nat, forall X:NoDupList, 
   forall n,
-  Arity (get_control (symmetry_big m X 0 EmptyNDL) n) =
-  Arity (get_control (bigraph_id m X) n) .
+  Arity (get_control (bg := symmetry_big m X 0 EmptyNDL) n) =
+  Arity (get_control (bg := bigraph_id m X) n) .
   Proof.
     intros.
     destruct n.
@@ -53,13 +55,13 @@ Theorem symmetry_eq_id : forall m:nat, forall X:NoDupList,
       BigEq _ _ _ _ _ _ _ _  
         (symmetry_big m X 0 EmptyNDL)
         (bigraph_id m X)
-        (PeanoNat.Nat.add_0_r m) (*s*)
+        (addn0 m) (*s*)
         (fun (name : Name) => right_empty X name) (*i*)
-        (PeanoNat.Nat.add_0_r m) (*r*)
+        (addn0 m) (*r*)
         (fun (name : Name) => right_empty X name) (*o*)
         bij_id (*n*)
         bij_id (*e*)
-        (fun n => bij_rew (P := fin) (@arity_symmetry_eq m X n)) (*p*)
+        (fun n => bij_rew (@arity_symmetry_eq m X n)) (*p*)
         _ _ _
       ).
     + apply functional_extensionality.
@@ -69,7 +71,15 @@ Theorem symmetry_eq_id : forall m:nat, forall X:NoDupList,
       destruct x as [v | s1]; simpl.
       - destruct v.
       - unfold funcomp, parallel. f_equal.
-        unfold bij_rew_forward.
+        unfold bij_rew_forward. simpl.
+        destruct s1.
+        rewrite eq_rect_ordinal. 
+        destruct (Compare_dec.lt_dec m0 m).
+        rewrite eq_rect_ordinal.
+        apply val_inj. simpl. apply addn0.
+        exfalso.
+        rewrite eq_rect_ordinal.
+        apply val_inj. simpl. apply addn0.
         destruct s1; simpl.
         rewrite (@eq_rect_exist nat nat (fun n x => x < n) m (m + 0) _ x _).
         simpl. destruct (Compare_dec.lt_dec x m). 
@@ -229,7 +239,7 @@ Theorem symmetry_distributive {si0 ri1 sj0 rj1:nat} {ii0 oi1 ij0 oj1:NoDupList}
         (permutation_union_commute oi1 oj1) (*o*)
         bij_void_A_B (*n*)
         bij_void_A_B (*e*)
-        (fun n => bij_rew (P := fin) (symmetry_distributive_arity f g n)) (*p*)
+        (fun n => bij_rew (symmetry_distributive_arity f g n)) (*p*)
         _ _ _
       ).
     + apply functional_extensionality.
@@ -425,7 +435,7 @@ Theorem symmetry_distributive_s4 {mI mJ mK:nat} {XI XJ XK:NoDupList}
       (easyperm XI XJ XK) (*o*)
       bij_void4 (*n*)
       bij_void4 (*e*)
-      (fun n => bij_rew (P := fin) (void_univ_embedding n)) (*p*)
+      (fun n => bij_rew (void_univ_embedding n)) (*p*)
       _ _ _
     ).
   + apply functional_extensionality.

@@ -778,47 +778,38 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r3 r4 r2 o2 s3 i3 o
       rewrite addn0. reflexivity. apply leqnn.
       ** rewrite H. 
       destruct get_parent; try reflexivity.
-      unfold rearrange, extract1.
-      destruct (split (Ordinal (n:=s3 + s4) (m:=s34) Hs34)).
-      *** destruct get_parent; try reflexivity.
-      destruct o3. unfold split,unsplit,bij_rew_forward.
-      rewrite eq_rect_ordinal.
-      rewrite eq_rect_ordinal.
-      rewrite <- (funcomp_simpl surj_fin_add inj_fin_add).
-      rewrite inj_o_surj_id.  
-      rewrite <- eq_rect_eq.
-      destruct get_parent; try reflexivity.
     - unfold rearrange, extract1. 
-    destruct PeanoNat.Nat.ltb_spec0.
-    * destruct get_parent; try reflexivity.
-      unfold bij_rew_forward.
-      destruct f as (s1', Hs1').
       destruct eqs2r4 as [eqs2r4].
       destruct eqs1r3 as [eqs1r3].
       destruct eqs2r4.
       destruct eqs1r3.
-      rewrite <- eq_rect_eq. 
-      rewrite <- (funcomp_simpl surj_fin_add inj_fin_add).
-      rewrite inj_o_surj_id.  
-      rewrite <- eq_rect_eq.
-      destruct get_parent; try reflexivity.
-    * destruct get_parent; try reflexivity.
+      unfold split. simpl.
+      destruct (ltnP s34 s3).
+    * destruct get_parent; try reflexivity. destruct o0.
       unfold bij_rew_forward.
-      destruct f as (s1', Hs1').
-      destruct eqs2r4 as [eqs2r4].
-      destruct eqs1r3 as [eqs1r3].
-      destruct eqs2r4.
-      destruct eqs1r3.
-      rewrite <- eq_rect_eq. 
-      rewrite <- (funcomp_simpl surj_fin_add inj_fin_add).
-      rewrite inj_o_surj_id.  
-      rewrite <- eq_rect_eq.
+      rewrite eq_rect_ordinal. 
+      simpl.
+      destruct (ltnP m s1). symmetry.
+      erewrite (Ordinal_proof_irrelevance s1 m _).
+      instantiate (1:= i2).
       destruct get_parent; try reflexivity.
+      exfalso. apply (lt_ge_contradiction m s1); assumption. 
+    * destruct get_parent; try reflexivity. destruct o0.
+      unfold bij_rew_forward.
+      rewrite eq_rect_ordinal. simpl.
+      destruct (ltnP (s1 + m) s1).
+      ** exfalso. apply (not_s_lt s1 m); try assumption.
+      ** erewrite <- (parent_proof_irrelevant b2).
+      instantiate (1 := (Ordinal (n:=s2) (m:=m) i1)).
+      destruct get_parent; try reflexivity.
+      apply val_inj. simpl.
+      rewrite subDnCA.
+      rewrite subnn.
+      rewrite addn0. reflexivity. apply leqnn.
   + apply functional_extensionality.
     destruct x as [[i']|p]; simpl; unfold funcomp; simpl; unfold rearrange; unfold extract1; unfold sum_shuffle; unfold parallel; unfold switch_link; simpl.
     - unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp. 
       simpl.
-      
       unfold bij_join_port_backward, bij_dep_sum_2_forward, bijection_inv, bij_dep_sum_1_forward.
       simpl.
       unfold rearrange, switch_link, extract1, bij_subset_forward.
@@ -829,7 +820,7 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r3 r4 r2 o2 s3 i3 o
       destruct s0 as [n npf]. 
       destruct (in_dec EqDecN n i1o3).
       *** symmetry.
-      rewrite <- (innername_proof_irrelevant b1 n i2).
+      rewrite <- (innername_proof_irrelevant b1 i2).
       destruct get_link; try reflexivity.
       apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
       *** exfalso. apply n0.
@@ -855,7 +846,7 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r3 r4 r2 o2 s3 i3 o
         | inl i1 => False_ind (In i' i4) (n i1)
         | inr i1 => i1
         end).
-      rewrite <- (innername_proof_irrelevant b4 i' Hn).
+      rewrite <- (innername_proof_irrelevant b4 Hn).
       destruct get_link; try reflexivity. 
       destruct s0 as [n' npf']. 
       destruct (in_dec EqDecN n' i1o3).
@@ -863,7 +854,7 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r3 r4 r2 o2 s3 i3 o
       destruct p24 as [p24].
       unfold permutation in p24. destruct (p24 n'). apply H; assumption.
       ***
-      rewrite <- (innername_proof_irrelevant b2 n' (match PN_P p24 n' with
+      rewrite <- (innername_proof_irrelevant b2 (match PN_P p24 n' with
       | conj H _ => H
       end npf')).
       destruct get_link; try reflexivity.
@@ -883,7 +874,7 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r3 r4 r2 o2 s3 i3 o
       destruct s0.
       destruct (in_dec EqDecN x i1o3).
       ** symmetry.
-      rewrite <- (innername_proof_irrelevant b1 x i1).
+      rewrite <- (innername_proof_irrelevant b1 i1).
       destruct get_link; try reflexivity.
       apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
       ** exfalso. apply n. 
@@ -910,7 +901,7 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r3 r4 r2 o2 s3 i3 o
       destruct p24 as [p24].
       unfold permutation in p24. destruct (p24 x). apply H; assumption. 
       ***
-      rewrite <- (innername_proof_irrelevant b2 x (match PN_P p24 x with
+      rewrite <- (innername_proof_irrelevant b2 (match PN_P p24 x with
       | conj H _ => H
       end i0)).
       destruct get_link; try reflexivity.
@@ -940,15 +931,13 @@ Theorem merge_well_defined : forall n,
     - simpl. apply functional_extensionality. destruct x as [v|[v|v]]; destruct v. 
     - simpl. apply functional_extensionality. destruct x as [[v|[v|v]]|s]; try destruct v.
     simpl. unfold parallel, funcomp, rearrange, sum_shuffle, extract1, bij_rew_forward. destruct s. 
-    destruct zero1. unfold inj_fin_add. destruct (PeanoNat.Nat.ltb_spec0 x 1). 
-    + f_equal. 
-    + f_equal. 
+    unfold split. simpl. destruct (ltnP m 1); reflexivity. 
     - simpl. apply functional_extensionality. destruct x as [v|s]; try destruct v.
     + elim f. 
     + destruct s. destruct x as [v|[v|v]]; destruct v. 
     Unshelve. 
     * exact nat. * exact nat. 
-    *intros. simpl in n1. destruct n1. 
+    * intros. simpl in n1. destruct n1. 
   Qed.
   
 
