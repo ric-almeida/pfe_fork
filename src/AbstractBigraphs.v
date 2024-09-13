@@ -135,7 +135,11 @@ Definition discrete_atom {A:finType}
       - left. unfold NameSub. destruct o as [o Ho]. 
       destruct p as [i H]. destruct H as [p Hp]. 
       exists (Coq.Lists.List.nth p o DefaultName). 
-      apply nth_In. destruct Hkappa as [Hkappa]. rewrite <- Hkappa. assumption. } (*link*)
+      apply nth_In. destruct Hkappa as [Hkappa]. rewrite <- Hkappa.
+      set (tmp := ltP (m:=p) (n:=Arity k)).
+      apply Bool.reflect_iff in tmp.
+      rewrite tmp.
+      apply Hp. } (*link*)
     2:{ destruct s. exfalso. apply (nlt_0_it m). apply i. } (*parent*)
     unfold FiniteParent. simpl. (*acyclic*)
     intros u.
@@ -164,7 +168,12 @@ Definition discrete_ion {A:finType}
       - left. unfold NameSub. destruct o as [o Ho]. 
       destruct p as [i H]. destruct H as [p Hp]. 
       exists (Coq.Lists.List.nth p o DefaultName). 
-      apply nth_In. destruct Hkappa as [Hkappa]. rewrite <- Hkappa. assumption. } (*link*)
+      apply nth_In. destruct Hkappa as [Hkappa].
+      rewrite <- Hkappa.
+      set (tmp := ltP (m:=p) (n:=Arity k)).
+      apply Bool.reflect_iff in tmp.      
+      rewrite tmp.
+      apply Hp. } (*link*)
     unfold FiniteParent. simpl.
     intros u.
     apply Acc_intro.
@@ -219,7 +228,10 @@ Definition symmetry_big (m:nat) (X:NoDupList) (n:nat) (Y:NoDupList) :
       + right. destruct s as [s Hs].
       destruct (lt_dec s m).
       * exists (s+n). rewrite ltn_add2r. now apply /ltP.
-      * exists (s). apply Hs. (*TODO Check if wrong*)
+      * exists (s-m). 
+      set (tmp := leq_subr m s).
+      apply (leq_ltn_trans tmp) in Hs.
+      apply Hs.
     - intros [inner | port]. (*link : ∅*)
       + left. apply inner.
       + destruct port. destruct x.

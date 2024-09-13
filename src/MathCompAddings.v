@@ -53,3 +53,63 @@ Lemma minus_lt_iff : forall s m n, s > m -> s < m + n -> s - m < m + n.
   Proof.
   move=> s m n H H'.
   Admitted. 
+
+
+Definition replace_in_H : forall {r r' : nat} (Hrr' : r' = r) (m : nat) (Hrm : m < r'), m <r.
+Proof.
+intros. destruct Hrr'. auto. Qed. 
+
+Lemma eq_rect_ordinal : forall {r r' : nat} (Hrr' : r' = r) (m : nat) (Hrm' : m < r'),
+  @eq_rect nat r' 
+  ordinal
+  (@Ordinal r' m Hrm')
+  r 
+  Hrr' = 
+  @Ordinal r m (replace_in_H Hrr' m Hrm').
+Proof.
+intros.
+destruct Hrr'.
+simpl.
+apply val_inj.
+reflexivity.
+Qed. 
+
+Lemma Ordinal_proof_irrelevance : forall (s m : nat) (i0 i1 : m < s),
+  Ordinal i0 = Ordinal i1.
+Proof.
+  intros s m i0 i1.
+  apply val_inj.
+  reflexivity.
+Qed.
+
+Lemma lt_ge_contradiction : forall m s : nat, (m < s) -> (s <= m) -> False.
+Proof.
+  move=> m s Hlt Hge.
+  apply ltn_geF in Hlt.
+  apply Bool.diff_true_false.
+  rewrite <- Hlt.
+  rewrite <- Hge.
+  reflexivity.
+Qed.
+
+Lemma ord_same_value : forall s m m' H H', m=m'->
+@Ordinal s m H =
+@Ordinal s m' H'.
+Proof.
+  intros.
+  apply val_inj. simpl.
+  apply H0.
+Qed.
+
+Lemma leq_addl_trans s1 s2 m : s1 + s2 <= m -> s1 <= m.
+Proof.
+  move=> H.
+  apply: leq_trans H.
+  rewrite addnC.
+  apply leq_addl.
+Qed.
+
+
+Lemma not_s_lt : forall a b, a + b < a -> False.
+Proof. 
+Admitted.

@@ -20,7 +20,7 @@ End SignatureParameter.
 Module Signature (SP:SignatureParameter).
 Include SP.
 Definition Port {node : Type} (control : node -> Kappa): Type :=
-  { n : node & fin (Arity (control n)) }.
+  { n : node & 'I_(Arity (control n)) }.
 
 Definition join {A B C : Type} (p : A -> C) (q : B -> C) (ac : A+B) : C :=
   match ac with

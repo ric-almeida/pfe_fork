@@ -1,5 +1,6 @@
 -R src MyProofs
 -I src/  
+src/Tactics.v
 src/MyBasics.v
 src/MathCompAddings.v
 src/Bijections.v

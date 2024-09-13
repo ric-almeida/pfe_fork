@@ -11,6 +11,7 @@ Set Warnings "-notation-overridden, -notation-overriden".
 Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.
 Require Import PropExtensionality.
+Require Import Tactics.
 Require Import MyBasics.
 Require Import MathCompAddings.
 Require Import PeanoNat.
@@ -984,7 +985,8 @@ Theorem bij_subset_compose_compose_id : forall {A} {P : A -> Prop} {Q : A -> Pro
 End BijSubset.
 
 Section BijRew.
-Definition bij_rew_forward {A} {P : A -> Type} {a b : A} (Hab : a = b) : (P a) -> (P b) := fun pa => eq_rect a P pa b Hab.
+Definition bij_rew_forward {A} {P : A -> Type} {a b : A} (Hab : a = b) : (P a) -> (P b) := 
+  fun pa => eq_rect a P pa b Hab.
 Lemma bij_rew : forall {A} {P : A -> Type} {a b : A}, a = b -> bijection (P a) (P b).
   Proof.
   intros A P a b Hab.
@@ -1612,8 +1614,9 @@ Lemma leq_gtF_iff: forall {m n : nat}, m <= n <-> (n < m) = false.
   Qed.
 
 
-Definition inj_fin_add {n p : nat} (f : ordinal (n+p)) : ordinal n + ordinal p.
-  Proof.
+(* Definition inj_ord_add {n p : nat} (f : ordinal (n+p)) : ordinal n + ordinal p.
+  Proof. Set Printing All. Check split.
+  exact split.
   destruct f as (k, Hk).
   destruct (leq (S k) n) eqn:E.
   left.
@@ -1623,9 +1626,9 @@ Definition inj_fin_add {n p : nat} (f : ordinal (n+p)) : ordinal n + ordinal p.
   rewrite ltn_subLR.
   assumption.
   apply (leq_gtF_iff). apply E.
-  Defined.
+  Defined. *)
 
-Definition surj_fin_add {n p : nat} (f : ordinal n + ordinal p) : ordinal (n + p).
+Definition surj_ord_add {n p : nat} (f : ordinal n + ordinal p) : ordinal (n + p).
   Proof.
   destruct f as [(k, Hk) | (k, Hk)].
   exists k.
@@ -1635,116 +1638,44 @@ Definition surj_fin_add {n p : nat} (f : ordinal n + ordinal p) : ordinal (n + p
   assumption.
   Defined.
 
-(* Theorem inj_o_surj_id : forall n p, (@inj_fin_add n p) <o> (@surj_fin_add n p) = id.
+(* Theorem inj_o_surj_id : forall n p, (@inj_ord_add n p) <o> (@surj_ord_add n p) = id.
   intros n p.
   apply functional_extensionality.
-  unfold inj_fin_add.
-  unfold surj_fin_add.
+  unfold inj_ord_add.
+  unfold surj_ord_add.
   unfold funcomp.
   destruct x as [(k, Hk) | (k, Hk)].
-  Set Printing All.
-  unfold is_true in *.
-  destruct (leq (S k) n) eqn:E.
-  apply f_equal.
-  apply subset_eq_compat.
-  reflexivity.
-  destruct (Nat.ltb_spec0 (n + k) n).
-  contradiction.
-  contradiction.
-  destruct (Nat.ltb_spec0 (n + k) n).
-  lia.
-  apply f_equal.
-  apply subset_eq_compat.
-  lia.
-  Qed.
+  Admitted. *)
 
-Theorem inj_o_surj_id' : forall n p, forall x, (@inj_fin_add n p  (@surj_fin_add n p x)) = x.
+(* Theorem inj_o_surj_id' : forall n p, forall x, (@inj_ord_add n p  (@surj_ord_add n p x)) = x.
   Proof. 
   intros.
-  rewrite <- (funcomp_simpl surj_fin_add inj_fin_add).
+  rewrite <- (funcomp_simpl surj_ord_add inj_ord_add).
   rewrite inj_o_surj_id.
   auto. 
-  Qed.
+  Qed. *)
 
-Theorem surj_o_inj_id : forall n p, (@surj_fin_add n p) <o> (@inj_fin_add n p) = id.
+(* Theorem surj_o_inj_id : forall n p, (@surj_ord_add n p) <o> (@inj_ord_add n p) = id.
   intros n p.
   apply functional_extensionality.
-  unfold inj_fin_add.
-  unfold surj_fin_add.
+  unfold inj_ord_add.
+  unfold surj_ord_add.
   unfold funcomp.
   
   destruct x as (k, Hk).
-  destruct (Nat.ltb_spec0 k n).
-  apply subset_eq_compat.
-  reflexivity.
-  apply subset_eq_compat.
-  lia.
-  Defined. *)
-Require Import Eqdep_dec.
-Require Import Coq.Program.Equality.
-Theorem bij_fin_sum : forall {n p :nat}, bijection (ordinal (n+p)) ((ordinal n)+(ordinal p)).
+  Admitted. *)
+
+Theorem bij_ord_sum : forall {n p :nat}, bijection (ordinal (n+p)) ((ordinal n)+(ordinal p)).
   Proof.
   intros n p.
-  apply (mkBijection _ _ inj_fin_add surj_fin_add).
+  apply (mkBijection _ _ split unsplit).
+  - unfold funcomp.
   apply functional_extensionality.
-  unfold inj_fin_add.
-  unfold surj_fin_add.
-  unfold funcomp.
-  destruct x as [(k, Hk) | (k, Hk)].
-  unfold is_true in *.
-  Admitted.
-  (* change (k < n) with true.
-  dependent destruction Hk.
-  change ((match k < n as b return ((k < n) = b -> 'I_n + 'I_p) with 
-  | true => fun E : (k < n) = true => 
-    inl (Ordinal (n:=n) (m:=k) 
-      E) 
-  | false => fun E : (k < n) = false => 
-    inr (Ordinal (n:=p) (m:=k - n) 
-      (eq_ind_r (eq^~ true) (ltn_addr (m:=k) (n:=n) p Hk)
-      (ltn_subLR (m:=k) (n:=n) p (match leq_gtF_iff with | conj _ H0 => H0
-      end E))))
-  end) 
-  (erefl (k < n)) = inl (Ordinal (n:=n) (m:=k) Hk)).
-  case (k<n).
-  congruence.
-  rewrite_strat Hk. 
-  symmetry.
-  etransitivity.
-  replace (k < n).
-  rewrite Hk.
-  set (b := (k < n)). fold b in Hk.
-
-  destruct (Nat.ltb_spec0 k n).
-  admit.
-  exfalso. admit.
-  Search (_ + _ < _).
-  assert (n + k < n = false).
-  admit.
-  rewrite H.
-  f_equal.
-  apply subset_eq_compat.
-  reflexivity.
-  destruct (Nat.ltb_spec0 (n + k) n).
-  contradiction.
-  contradiction.
-  destruct (Nat.ltb_spec0 (n + k) n).
-  lia.
-  apply f_equal.
-  apply subset_eq_compat.
-  lia.
+  apply (@unsplitK n p).
+  - unfold funcomp.
   apply functional_extensionality.
-  unfold inj_fin_add.
-  unfold surj_fin_add.
-  unfold funcomp.
-  
-  destruct x as (k, Hk).
-  destruct (Nat.ltb_spec0 k n).
-  apply subset_eq_compat.
-  reflexivity.
-  apply subset_eq_compat.
-  lia.
-  Defined. *)
+  apply (@splitK n p).
+  Defined.
 
 
 (* Definition inj_fin_mul {n p : nat} (f : ordinal (n*p)) : ordinal n * ordinal p.
@@ -2074,7 +2005,7 @@ Definition rearrange_sum {A B C D : Type} (abcd : (A+B)+(C+D)) : ((A+C)+(B+D)) :
   | inr (inl c) => inl (inr c)
   | inr (inr d) => inr (inr d) 
   end.
-
+*)
 Lemma tensor_alt : forall {N1 I1 O1 N2 I2 O2} (f1 : N1 + I1 -> N1 + O1) (f2 : N2 + I2 -> N2 + O2), 
   f1 ** f2 = (bij_sum_shuffle <o> (parallel f1 f2) <o> (bijection_inv bij_sum_shuffle)).
   Proof.
@@ -2082,7 +2013,7 @@ Lemma tensor_alt : forall {N1 I1 O1 N2 I2 O2} (f1 : N1 + I1 -> N1 + O1) (f2 : N2
   apply functional_extensionality.
   destruct x as [[n1|n2]|[i1|i2]]; reflexivity.
   Qed.
-
+(*
 Theorem bijidObijid {A}: @bij_id A <O> bij_id = bij_id.
   Proof. apply bij_eq.
   -  unfold bij_compose,funcomp,parallel,bij_id,id. simpl. reflexivity.

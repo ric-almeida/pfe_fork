@@ -57,6 +57,10 @@ simpl.
 reflexivity.
 Qed.
 
+
+
+
+
 Lemma eq_rect_existT : forall {A B} {Q : A -> B -> Type} {a a' : A} (Haa' : a = a') (b : B) (Hb : Q a b),
                         @eq_rect A a (fun a => { b : B & Q a b}) (existT (Q a) b Hb) a' Haa' = existT (Q a') b (@eq_rect A a (fun a => Q a b) Hb a' Haa').
 Proof.

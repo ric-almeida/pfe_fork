@@ -4,11 +4,13 @@ Require Import AbstractBigraphs.
 Require Import Bijections.
 Require Import Names.
 Require Import SignatureBig.
-Require Import FinDecTypes.
 Require Import MyBasics.
 
 Require Import Coq.Lists.List.
 Require Import Coq.Setoids.Setoid.
+
+From mathcomp Require Import all_ssreflect.
+
 
 Import ListNotations.
 
@@ -38,18 +40,18 @@ Record bigraph_equality {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
     bij_i : permutation i1 i2 ; (*Permutation i1 i2*)
     bij_r : r1 = r2 ;
     bij_o : permutation o1 o2 ;
-    bij_n : bijection (type (get_node b1)) (type (get_node b2)) ;
-    bij_e : bijection (type (get_edge b1)) (type (get_edge b2)) ;
-    bij_p : forall (n1 : type (get_node b1)), bijection (fin (Arity (get_control b1 n1))) (fin (Arity (get_control b2 (bij_n n1)))) ;
-    big_control_eq : (bij_n -->> (@bij_id Kappa)) (get_control b1) = get_control b2 ;
-    big_parent_eq  : ((bij_n <+> (bij_rew (P := fin) bij_s)) -->> (bij_n <+> ((bij_rew (P := fin) bij_r)))) (get_parent b1) = get_parent b2 ;
-    big_link_eq    : ((<{bij_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{bij_id| bij_o}> <+> bij_e)) (get_link b1) = get_link b2
+    bij_n : bijection (get_node b1) (get_node b2);
+    bij_e : bijection (get_edge b1) (get_edge b2);
+    bij_p : forall (n1 : (get_node b1)), bijection ('I_(Arity (get_control (bg:=b1) n1))) ('I_(Arity (get_control (bg:=b2) (bij_n n1)))) ;
+    big_control_eq : (bij_n -->> (@bij_id Kappa)) (get_control (bg:=b1)) = get_control (bg:=b2) ;
+    big_parent_eq  : ((bij_n <+> (bij_rew bij_s)) -->> (bij_n <+> ((bij_rew bij_r)))) (get_parent (bg:=b1)) = get_parent (bg:=b2) ;
+    big_link_eq    : ((<{bij_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{bij_id| bij_o}> <+> bij_e)) (get_link (bg := b1)) = get_link (bg := b2)
   }.
-
+  
 Lemma bigraph_equality_refl {s r : nat} {i o : NoDupList} (b : bigraph s i r o) :
   bigraph_equality b b.
   Proof.
-  eapply (BigEq _ _ _ _ _ _ _ _ _ _ eq_refl _ eq_refl _ bij_id bij_id (fun _ => bij_id)).
+  eapply (BigEq _ _ _ _ _ _ _ _ _ _ erefl _ erefl _ bij_id bij_id (fun _ => bij_id)).
   + rewrite bij_fun_compose_id.
     reflexivity.
   + rewrite bij_rew_id.
@@ -78,9 +80,9 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
   intro Heqb1b2.
   destruct Heqb1b2 as (bij_s, bij_i, bij_r, bij_o, bij_n, bij_e, bij_p, big_control_eq, big_parent_eq, big_link_eq).
   apply (BigEq _ _ _ _ _ _ _ _ b2 b1
-          (eq_sym bij_s)
+          (esym bij_s)
           (adjunction_equiv bij_id bij_i)
-          (eq_sym bij_r)
+          (esym bij_r)
           (adjunction_equiv (bij_id) bij_o)
           (bijection_inv bij_n)
           (bijection_inv bij_e)
@@ -110,7 +112,7 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
       (<{ (bijection_inv bij_id) | adjunction_equiv bij_id bij_i }> <+>
       bijection_inv <{ bij_n & bij_p }> -->>
       <{ (bijection_inv bij_id) | adjunction_equiv bij_id bij_o }> <+> bijection_inv bij_e)
-        (get_link b2) = get_link b1
+        (get_link (bg:=b2)) = get_link (bg:=b1)
     ). (* just rewriting bij_id as bij_inv bij_id, TODO : look for more elegant way?*)
     rewrite <- bij_inv_subset.
     rewrite <- bij_inv_subset.
