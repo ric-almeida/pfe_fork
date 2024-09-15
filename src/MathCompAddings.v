@@ -99,6 +99,13 @@ Proof.
   apply leq_addl.
 Qed.
 
+Lemma lt_addl_trans s1 s2 m : s1 + s2 < m -> s1 < m.
+Proof.
+  move=> H.
+  apply: leq_trans H.
+  rewrite addnC.
+  apply leq_addl.
+Qed.
 
 Lemma not_s_lt : forall a b, a + b < a -> False.
 Proof. 
@@ -108,3 +115,36 @@ rewrite addn0. apply H.
 rewrite ltn_add2l in H0.
 apply (nlt_0_it b H0).
 Qed.
+
+Lemma eq_sum_r : forall m n p s : nat, 
+  m = p -> n = s -> m + n = p + s.
+Proof.
+  intros.
+  subst m. subst n. reflexivity.
+Qed.
+
+Lemma eq_sum_l : forall m n p s : nat, 
+  n = s -> m = p ->  m + n = p + s.
+Proof.
+  intros.
+  subst m. subst n. reflexivity.
+Qed.
+
+Lemma eq_sum_l_0 : forall m n p s : nat, 
+  n = 0 ->  m + n = m.
+Proof.
+  intros.  subst n. rewrite addn0. reflexivity.
+Qed.
+
+
+Lemma minus_plus : forall x y, x - y + y = x.
+Proof. 
+  intros. induction y.
+  - rewrite subn0. 
+  rewrite addn0. reflexivity.
+  - Search (_ + _.+1).  rewrite addnS. rewrite subnS.
+  Search (_.-1).  rewrite <- addnCB. rewrite addnC. apply IHy. 
+
+
+
+Lemma plus_minus : forall x y, x + y - y = x.

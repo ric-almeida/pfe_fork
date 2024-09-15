@@ -73,20 +73,11 @@ Theorem symmetry_eq_id : forall m:nat, forall X:NoDupList,
       - destruct s1. unfold funcomp, parallel. f_equal.
         unfold bij_rew_forward. simpl.
         rewrite eq_rect_ordinal. 
-        simpl.
-        
+        destruct (ltnP m0 m).
         rewrite eq_rect_ordinal.
         apply val_inj. simpl. apply addn0.
         exfalso.
-        rewrite eq_rect_ordinal.
-        apply val_inj. simpl. apply addn0.
-        destruct s1; simpl.
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) m (m + 0) _ x _).
-        simpl. destruct (Compare_dec.lt_dec x m). 
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (m+0) m _ (x+0) _).
-        unfold id. f_equal.
-        apply subset_eq_compat. apply PeanoNat.Nat.add_0_r.
-        contradiction. 
+        apply (lt_ge_contradiction m0 m); assumption.
     + apply functional_extensionality.
       destruct x as [[name] | (v, tmp)]; simpl.
       - unfold funcomp.
@@ -124,7 +115,7 @@ Definition permutation_union_commutePN : forall X Y:NoDupList,
 
 Definition commute_plus_MyEqNat : forall m n,
   MyEqNat (m + n) (n + m).
-  Proof. intros. constructor. lia. Qed.
+  Proof. intros. constructor. apply addnC. Qed.
 
 Theorem symmetry_eq_tp_id : forall m n:nat, forall X Y:NoDupList, 
   bigraph_equality 
@@ -140,7 +131,7 @@ Theorem symmetry_eq_tp_id : forall m n:nat, forall X Y:NoDupList,
           (symmetry_big m X n Y) 
           (symmetry_big n Y m X))
         (bigraph_id (m + n) (X ∪ Y))
-        (PeanoNat.Nat.add_comm n m) (*s*)
+        (addnC n m) (*s*)
         (permutation_union_commute Y X) (*i*)
         (reflexivity (m+n)) (*r*)
         (permutation_id (X ∪ Y)) (*o*)
@@ -156,17 +147,29 @@ Theorem symmetry_eq_tp_id : forall m n:nat, forall X Y:NoDupList,
       destruct x as [v | s1]; simpl.
       - destruct v.
       - unfold funcomp, parallel. simpl. f_equal.
-        unfold bij_rew_forward,id.
+        unfold bij_rew_forward.
         destruct s1; simpl.
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (m+n) (n + m) _ x _).
-        simpl. destruct (Compare_dec.lt_dec x n).
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (n+m) (m+n) _ (x+m) _).
-        destruct (Compare_dec.lt_dec (x + m) m). lia.
-        f_equal. apply subset_eq_compat. lia.
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (n+m) (m+n) _ (x-n) _).
-        destruct (Compare_dec.lt_dec (x-n) m); f_equal.
-        apply subset_eq_compat. lia.
-        apply subset_eq_compat. lia. 
+        rewrite eq_rect_ordinal.
+        destruct (ltnP m0 n). 
+        rewrite eq_rect_ordinal.
+        destruct (ltnP (m0 + m) m).
+        exfalso. rewrite addnC in i2. apply (not_s_lt m m0 i2).
+        apply val_inj. simpl. rewrite addnC. rewrite subDnCA.
+        rewrite subnn.
+        rewrite addn0. reflexivity. apply leqnn.
+        rewrite eq_rect_ordinal.
+        destruct (ltnP (m0 - n) m).
+        apply val_inj. simpl. rewrite <- subnA.
+        rewrite subnn.
+        rewrite subn0. reflexivity. apply leqnn. apply i1.
+        exfalso.
+        destruct m.
+        * rewrite addnC in i0.
+        rewrite addn0 in i0.
+        apply (lt_ge_contradiction m0 n); assumption.
+        * rewrite addnC in i0. rewrite <- ltn_psubLR in i0. apply ltnSE in i0. 
+        apply (lt_ge_contradiction m (m0 - n)); try assumption.
+        apply ltn0Sn.
     + apply functional_extensionality.
       destruct x as [[name] | (v, tmp)]; simpl.
       - unfold funcomp.
@@ -187,11 +190,11 @@ Theorem symmetry_distributive_arity {si0 ri1 sj0 rj1:nat} {ii0 oi1 ij0 oj1:NoDup
   forall g:bigraph sj0 ij0 rj1 oj1,
   forall n,
   Arity (get_control
-    (bigraph_composition 
+    (bg := bigraph_composition 
       (symmetry_big ri1 oi1 rj1 oj1) 
       (f ⊗ g)) n) =
   Arity (get_control
-    (bigraph_composition (p:=permutation_union_commutePN ii0 ij0) (eqsr := commute_plus_MyEqNat sj0 si0)
+    (bg :=bigraph_composition (p:=permutation_union_commutePN ii0 ij0) (eqsr := commute_plus_MyEqNat sj0 si0)
       (bigraph_tensor_product 
         (dis_i := D_ND (rev_disjoint (DN_D disi)))
         (dis_o := D_ND (rev_disjoint (DN_D diso))) 
@@ -199,8 +202,8 @@ Theorem symmetry_distributive_arity {si0 ri1 sj0 rj1:nat} {ii0 oi1 ij0 oj1:NoDup
       (symmetry_big si0 ii0 sj0 ij0)) (bij_void_A_B n)).
   Proof. 
     intros.
-    destruct n. elim t.
-    destruct t.
+    destruct n. elim s0.
+    destruct s0.
     reflexivity.
     reflexivity.
   Qed.
@@ -235,7 +238,7 @@ Theorem symmetry_distributive {si0 ri1 sj0 rj1:nat} {ii0 oi1 ij0 oj1:NoDupList}
           (symmetry_big si0 ii0 sj0 ij0))
         (reflexivity (si0 + sj0)) (*s*)
         (permutation_id (ii0 ∪ ij0)) (*i*)
-        (PeanoNat.Nat.add_comm ri1 rj1) (*r*)
+        (addnC ri1 rj1) (*r*)
         (permutation_union_commute oi1 oj1) (*o*)
         bij_void_A_B (*n*)
         bij_void_A_B (*e*)
@@ -251,87 +254,86 @@ Theorem symmetry_distributive {si0 ri1 sj0 rj1:nat} {ii0 oi1 ij0 oj1:NoDupList}
       destruct x as [[[ng|nf]|v] | s1]; simpl.
       - unfold funcomp, parallel.
         simpl. 
-        unfold rearrange, id, sum_shuffle, extract1.
+        unfold rearrange, sum_shuffle, extract1.
         destruct get_parent; try reflexivity.
-        f_equal. unfold bij_rew_forward,surj_fin_add.
-        destruct f0.
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (ri1 + rj1) (ri1 + rj1) _ (ri1 + x) _).
-        destruct (Compare_dec.lt_dec (ri1 + x) ri1).
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (ri1 + rj1) (rj1 + ri1) _ (ri1 + x + rj1) _).
-        apply subset_eq_compat. lia.
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (ri1 + rj1) (rj1 + ri1) _ (ri1 + x - ri1) _).
-        apply subset_eq_compat. lia.
+        f_equal. unfold bij_rew_forward.
+        destruct o0.
+        rewrite eq_rect_ordinal. simpl.
+        destruct (ltnP (ri1 + m) ri1).
+        elim (not_s_lt ri1 m i1).
+        rewrite eq_rect_ordinal.
+        unfold lshift. apply val_inj. simpl. rewrite subDnCA.
+        rewrite subnn.
+        rewrite addn0. reflexivity. apply leqnn.
       - unfold funcomp, parallel.
         simpl. 
-        unfold rearrange, id, sum_shuffle, extract1.
+        unfold rearrange, sum_shuffle, extract1.
         destruct get_parent; try reflexivity.
-        f_equal. unfold bij_rew_forward,surj_fin_add.
-        destruct f0.
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (ri1 + rj1) (ri1 + rj1) _ x _).
-        destruct (Compare_dec.lt_dec x ri1).
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (ri1 + rj1) (rj1 + ri1) _ (x + rj1) _).
-        apply subset_eq_compat. lia.
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (ri1 + rj1) (rj1 + ri1) _ (x - ri1) _).
-        apply subset_eq_compat. lia.
+        f_equal. unfold bij_rew_forward.
+        destruct o0.
+        rewrite eq_rect_ordinal. simpl.
+        destruct (ltnP m ri1).
+        rewrite eq_rect_ordinal.
+        unfold rshift. apply val_inj;simpl. apply addnC.
+        elim (lt_ge_contradiction m ri1 i0 i1).
       - elim v.
       - unfold funcomp, parallel. simpl. f_equal.
-        unfold bij_rew_forward,id, rearrange, sum_shuffle, inj_fin_add, extract1.
-        destruct s1; simpl.
-        destruct (PeanoNat.Nat.ltb_spec0 x si0).
-        destruct (Compare_dec.lt_dec x si0).
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (si0 + sj0) (sj0 + si0) _ (x + sj0) _).
-        destruct (PeanoNat.Nat.ltb_spec0 (x + sj0) sj0).
-        lia.
-        symmetry.
-        rewrite <- (parent_proof_irrelevant' f x (x + sj0 - sj0) l0). 
-        destruct get_parent; try reflexivity.
-        f_equal. unfold surj_fin_add.
-        destruct f0.
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (ri1 + rj1) (ri1 + rj1) _ x0 _).
-        destruct (Compare_dec.lt_dec x0 ri1).
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (ri1 + rj1) (rj1 + ri1) _ (x0 + rj1) _).
-        apply subset_eq_compat. lia.
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (ri1 + rj1) (rj1 + ri1) _ (x0 - ri1) _).
-        apply subset_eq_compat. lia.
-        lia.
-        lia.
-        destruct (Compare_dec.lt_dec x si0).
-        lia.
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (si0 + sj0) (sj0 + si0) _ (x - si0) _). 
-        destruct (PeanoNat.Nat.ltb_spec0 (x - si0) sj0).
-        rewrite <- (parent_proof_irrelevant g (x - si0) (x - si0) l0). (*so weird, i can also write rewrite <- (parent_proof_irrelevant g (x - si0) x l0)*)
-        destruct get_parent; try reflexivity.
-        f_equal.
-        unfold surj_fin_add. destruct f0. 
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (ri1 + rj1) (ri1 + rj1) _ (ri1 + x0) _).
-        destruct (Compare_dec.lt_dec (ri1 + x0) ri1).
-        lia.
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) (ri1 + rj1) (rj1 + ri1) _ (ri1 + x0 - ri1) _).
-        apply subset_eq_compat. lia.
-        lia.
-        exfalso. apply n1.
-        lia.
+        unfold bij_rew_forward, rearrange, sum_shuffle, extract1.
+        destruct s1; simpl. unfold fintype.split.
+        simpl.  
+        destruct (ltnP m si0).
+        rewrite eq_rect_ordinal. simpl.
+        destruct (ltnP (m + sj0) sj0).
+        * exfalso. rewrite addnC in i2. elim (not_s_lt sj0 m i2).
+        * simpl. symmetry. erewrite <- (parent_proof_irrelevant f).
+        instantiate (1:=Ordinal (n:=si0) (m:=m) i1).
+        destruct get_parent;try reflexivity.
+        f_equal. destruct o0. rewrite eq_rect_ordinal. simpl. 
+        destruct (ltnP m0 ri1).
+        unfold rshift. rewrite eq_rect_ordinal. 
+        apply val_inj. simpl. apply addnC.
+        elim (lt_ge_contradiction m0 ri1 i3 i4).
+        apply val_inj. simpl. rewrite addnC. rewrite subDnCA.
+        rewrite subnn. rewrite addn0. reflexivity. apply leqnn.
+        rewrite eq_rect_ordinal. simpl.
+        destruct (ltnP (m - si0) sj0).
+        erewrite <- (parent_proof_irrelevant g).
+        instantiate (1:=Ordinal (n:=sj0) (m:=m - si0) i2).
+        destruct get_parent;try reflexivity.
+        f_equal. destruct o0. rewrite eq_rect_ordinal. simpl. 
+        destruct (ltnP (ri1 + m0) ri1).
+        * elim (not_s_lt ri1 m0 i4).
+        * unfold lshift.
+        rewrite eq_rect_ordinal. apply val_inj. simpl. rewrite subDnCA.
+        rewrite subnn. rewrite addn0. reflexivity. apply leqnn.
+        apply val_inj. simpl. reflexivity.
+        exfalso.
+        destruct sj0.
+        * rewrite addn0 in i0.
+        apply (lt_ge_contradiction m si0); assumption.
+        * rewrite <- ltn_psubLR in i0. apply ltnSE in i0. apply (lt_ge_contradiction sj0 (m - si0)); try assumption.
+        apply ltn0Sn.
     + apply functional_extensionality.
       destruct x as [[name] | (v, tmp)]; simpl.
       - unfold funcomp.
         simpl. 
-        unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
+        unfold bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp. 
         simpl.
-        unfold rearrange, switch_link, id, extract1.
+        unfold rearrange, switch_link, extract1.
         destruct (in_dec EqDecN name ii0); destruct (in_dec EqDecN name ij0).
         * exfalso. destruct disi as [disi]. apply (disi name i1 i2).
         * unfold in_app_or_m_nod_dup. 
         destruct (in_dec EqDecN name ii0).
-        rewrite <- (innername_proof_irrelevant f name i2). 
+        rewrite <- (innername_proof_irrelevant f i2). 
         destruct get_link; try reflexivity. f_equal. unfold permut_list_forward. destruct s0. apply subset_eq_compat. reflexivity.
         contradiction.
         * unfold in_app_or_m_nod_dup. 
         destruct (in_dec EqDecN name ij0).
-        rewrite <- (innername_proof_irrelevant g name i1). 
+        rewrite <- (innername_proof_irrelevant g i1). 
         destruct get_link; try reflexivity. f_equal. unfold permut_list_forward. destruct s0. apply subset_eq_compat. reflexivity.
         contradiction.
         * simpl in i0. exfalso. rewrite in_app_iff in i0. destruct i0; contradiction.
-      - unfold parallel, sum_shuffle, choice, funcomp, id.
+      - unfold parallel, sum_shuffle, choice, funcomp.
         simpl.
         unfold bij_join_port_backward, bij_dep_sum_2_forward, bijection_inv, bij_dep_sum_1_forward.
         simpl.
@@ -385,10 +387,10 @@ Lemma MyPN {mI mJ mK:nat} {XI XJ XK:NoDupList}
   Qed.
 
 Definition myEqNatproof {mI mJ mK:nat} : MyEqNat (mI + mK + mJ) (mI + (mJ + mK)).
-  Proof. constructor. auto. lia. Qed.
-
+  Proof. constructor. auto. symmetry. rewrite addnC. rewrite addnCAC. reflexivity. Qed.
+ 
 Theorem easynat : forall mI mJ mK, mI + mJ + mK = mI + mK + mJ.
-  Proof. lia. Qed.
+  Proof. intros. rewrite addnCAC. rewrite addnC. rewrite addnA. reflexivity. Qed.
 
 Theorem easyperm : forall XI XJ XK, 
   permutation (XI ∪ XJ ∪ XK) (XI ∪ XK ∪ XJ).
@@ -429,7 +431,7 @@ Theorem symmetry_distributive_s4 {mI mJ mK:nat} {XI XJ XK:NoDupList}
       (bigraph_composition (p := P_NP (permutation_commute (MyPN (mI:=mI) (mJ:=mJ) (mK:=mK)))) (eqsr:= myEqNatproof)
         ((symmetry_big mI XI mK XK) ⊗ (bigraph_id mJ XJ))
         ((bigraph_id mI XI) ⊗ (symmetry_big mJ XJ mK XK)))
-      (Arith_base.plus_assoc_reverse_stt mI mJ mK) (*s*)
+      (esym (addnA mI mJ mK)) (*s*)
       (@tr_permutation XI XJ XK) (*i*)
       (easynat mI mJ mK) (*r*)
       (easyperm XI XJ XK) (*o*)
@@ -443,8 +445,91 @@ Theorem symmetry_distributive_s4 {mI mJ mK:nat} {XI XJ XK:NoDupList}
   + simpl. apply functional_extensionality.
     destruct x as [[[v|v]|[v|v]] | s1]; try destruct v; simpl.
     unfold funcomp, parallel. simpl. f_equal.
-    unfold bij_rew_forward,id,rearrange,sum_shuffle,extract1,inj_fin_add,surj_fin_add.
+    unfold bij_rew_forward,rearrange,sum_shuffle,extract1.
     destruct s1; simpl.
+    unfold fintype.split. simpl.
+    destruct (ltnP m mI).
+    - rewrite eq_rect_ordinal.
+    rewrite eq_rect_ordinal.
+    simpl. unfold unsplit,lshift,rshift. simpl.
+    destruct (ltnP m (mI + mJ)).
+    *  rewrite eq_rect_ordinal.
+    destruct (ltnP m (mI + mK)).
+    ** f_equal. 
+    destruct (ltnP m mI).
+    apply val_inj;simpl. reflexivity.
+    discriminate (i1).
+    ** exfalso. apply leq_addl_trans in i3. 
+    apply (lt_ge_contradiction m mI); assumption.
+    * rewrite eq_rect_ordinal.
+    destruct (ltnP m (mI + mK)).
+    ** f_equal. apply val_inj;simpl. destruct (ltnP m mI). simpl.
+    exfalso. apply leq_addl_trans in i2. 
+    apply (lt_ge_contradiction m mI); assumption.
+    discriminate i1. 
+    exfalso. apply leq_addl_trans in i2. 
+    apply (lt_ge_contradiction m mI); assumption.
+    - rewrite eq_rect_ordinal. simpl.
+    rewrite eq_rect_ordinal. simpl.
+    destruct (ltnP (m - mI) mJ).
+    * simpl. destruct (ltnP m (mI + mJ)); rewrite eq_rect_ordinal;
+    destruct (ltnP (mI + (m - mI + mK)) (mI + mK)).
+    ** f_equal. unfold unsplit,lshift.
+    apply val_inj;simpl.
+    destruct (ltnP (mI + (m - mI + mK)) mI). simpl.
+    exfalso. clear i2. clear i0. clear i3. clear i5.
+    rewrite addnC in i4.
+    rewrite <- (addnA (m-mI) mK mI) in i4.
+    rewrite addBnAC in i4; try assumption.
+    rewrite subDnCA in i4.
+    rewrite <- addnBA in i4. 
+    rewrite subnn in i4. rewrite addn0 in i4. 
+    rewrite ltn_add2r in i4.
+    apply (lt_ge_contradiction m mI); try assumption. apply leqnn.
+    apply leq_addl.
+    simpl. exfalso. clear i2. clear i0. clear i3. clear i5.
+    rewrite addnC in i4.
+    rewrite <- (addnA (m-mI) mK mI) in i4.
+    rewrite addBnAC in i4; try assumption.
+    rewrite subDnCA in i4.
+    rewrite <- addnBA in i4. 
+    rewrite subnn in i4. rewrite addn0 in i4. 
+    rewrite ltn_add2r in i4.
+    apply (lt_ge_contradiction m mI); try assumption. apply leqnn.
+    apply leq_addl.
+    ** f_equal. unfold unsplit,lshift.
+    apply val_inj;simpl.
+    symmetry.
+    rewrite subnDAC.
+    rewrite addnA.
+    rewrite addnC.
+    rewrite addnA.
+    apply eq_sum_r; try reflexivity.
+    rewrite <- subDnCA; try assumption.
+    Search (_ - _+_). assert (forall x y, x - y + y = x).
+    admit. rewrite H. 
+    assert (forall x y, x + y - y = x).
+    admit. rewrite H0. rewrite H0. reflexivity. 
+    * f_equal. unfold unsplit,lshift,rshift.
+    apply val_inj;simpl. symmetry.
+    destruct (ltnP (mI + (m - mI + mK)) mI).
+    ** exfalso.
+    
+    simpl. f_eq
+    Search (_-_ < _-_).
+    rewrite <- (ltn_sub2lE (m:= mI)) in i4.
+    rewrite addnC in i4.
+    rewrite addnC in i4.
+     rewrite addnA in i0.  apply lt_addl_trans in i0. 
+    apply (lt_ge_contradiction m mI); assumption.
+    exfalso. apply leq_addl_trans in i2. 
+    apply (lt_ge_contradiction m mI); assumption.
+    simpl.
+    rewrite addnC.  
+     Search (_-(_+_)). simpl. reflexivity.
+    unfold unsplit 
+
+
     rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + (mJ + mK)) (mI + mJ + mK) _ x _).
     simpl. destruct (Compare_dec.lt_dec x (mI + mJ)); destruct (PeanoNat.Nat.ltb_spec0 x mI).
     rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + (mJ + mK)) (mI + mK + mJ) _ x _).

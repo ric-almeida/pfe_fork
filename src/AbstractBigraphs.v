@@ -225,8 +225,8 @@ Definition symmetry_big (m:nat) (X:NoDupList) (n:nat) (Y:NoDupList) :
     - intros [v|s]. (*parent*)
       + destruct v.
       + right. destruct s as [s Hs].
-      destruct (s < m) eqn:E.
-      * exists (s+n). rewrite ltn_add2r. apply E.
+      destruct (ltnP s m).
+      * exists (s+n). rewrite ltn_add2r. apply i.
       * exists (s-m). 
       set (tmp := leq_subr m s).
       apply (leq_ltn_trans tmp) in Hs.
