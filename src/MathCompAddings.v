@@ -136,15 +136,65 @@ Proof.
   intros.  subst n. rewrite addn0. reflexivity.
 Qed.
 
+Lemma eq_sum_r_0 : forall m n p s : nat, 
+  n = 0 ->  n + m = m.
+Proof.
+  intros.  subst n. rewrite addnC. rewrite addn0. reflexivity.
+Qed.
+
 
 Lemma minus_plus : forall x y, x - y + y = x.
 Proof. 
-  intros. induction y.
+  intros.   
+  destruct (y <= x) eqn:E.
+  - rewrite subnK. reflexivity. apply E.
+  (* rewrite addnBC.
+  apply eq_sum_r_0.
+  exact 0.
+  exact 0.
+  Search (_-_=0).
+  rewrite <- subn0.
+  apply subnBl_leq.
+  apply E.
+  - 
+  Search (_-_+_=_).
+
+  rewrite addnBC.
+  apply eq_sum_r_0.
+  exact 0.
+  exact 0.
+  Search (_-_=0).
+  rewrite <- subn0.
+  apply subnBl_leq.
+  Search (_+_=_).
+
+   Search ((_ <= _) = true -> _).
+  
+  inversion E. rewrite addnC.
+  Set Printing All.
+  induction y.
   - rewrite subn0. 
   rewrite addn0. reflexivity.
-  - Search (_ + _.+1).  rewrite addnS. rewrite subnS.
-  Search (_.-1).  rewrite <- addnCB. rewrite addnC. apply IHy. 
+  - rewrite <- IHy.
+  Search (_ = _+1). *)
+  
+   (* rewrite addnC. 
+   
+   Search (_ - _.+1).  rewrite subnS.
+
+  Search (_+_.-1).  rewrite <- addnCB. rewrite addnC. apply IHy.  *)
+
+  Admitted.
 
 
 
 Lemma plus_minus : forall x y, x + y - y = x.
+Proof. 
+  intros.
+  rewrite subDnAC.
+  rewrite subnn.
+  rewrite addnC.
+  rewrite addn0.
+  reflexivity.
+  apply leqnn.
+  Qed.

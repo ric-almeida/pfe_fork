@@ -506,119 +506,54 @@ Theorem symmetry_distributive_s4 {mI mJ mK:nat} {XI XJ XK:NoDupList}
     rewrite addnA.
     apply eq_sum_r; try reflexivity.
     rewrite <- subDnCA; try assumption.
-    Search (_ - _+_). assert (forall x y, x - y + y = x).
-    admit. rewrite H. 
-    assert (forall x y, x + y - y = x).
-    admit. rewrite H0. rewrite H0. reflexivity. 
+    rewrite minus_plus. 
+    rewrite plus_minus. rewrite plus_minus. reflexivity. 
     * f_equal. unfold unsplit,lshift,rshift.
     apply val_inj;simpl. symmetry.
     destruct (ltnP (mI + (m - mI + mK)) mI).
-    ** exfalso.
-    
-    simpl. f_eq
-    Search (_-_ < _-_).
-    rewrite <- (ltn_sub2lE (m:= mI)) in i4.
+    ** simpl. exfalso. clear i2. clear i0. clear i3. clear i5.
     rewrite addnC in i4.
+    rewrite <- (addnA (m-mI) mK mI) in i4.
+    rewrite addBnAC in i4; try assumption.
+    rewrite subDnCA in i4.
+    rewrite <- addnBA in i4. 
+    rewrite subnn in i4. rewrite addn0 in i4. 
+    rewrite ltn_add2r in i4.
+    apply (lt_ge_contradiction m mI); try assumption. apply leqnn.
+    apply leq_addl.
+    ** simpl. exfalso. clear i2. clear i0. clear i3. clear i5.
     rewrite addnC in i4.
-     rewrite addnA in i0.  apply lt_addl_trans in i0. 
-    apply (lt_ge_contradiction m mI); assumption.
-    exfalso. apply leq_addl_trans in i2. 
-    apply (lt_ge_contradiction m mI); assumption.
-    simpl.
-    rewrite addnC.  
-     Search (_-(_+_)). simpl. reflexivity.
-    unfold unsplit 
-
-
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + (mJ + mK)) (mI + mJ + mK) _ x _).
-    simpl. destruct (Compare_dec.lt_dec x (mI + mJ)); destruct (PeanoNat.Nat.ltb_spec0 x mI).
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + (mJ + mK)) (mI + mK + mJ) _ x _).
-    destruct (PeanoNat.Nat.ltb_spec0 x (mI + mK)).
-    destruct (Compare_dec.lt_dec x mI).
-    f_equal. 
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x+mK) _).
-    apply subset_eq_compat.
-    reflexivity.
-    f_equal. 
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x+mK) _).
-    apply subset_eq_compat.
-    lia.
-    f_equal. 
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x+mK) _).
-    apply subset_eq_compat.
-    lia.
-    destruct (Compare_dec.lt_dec (x - mI) mJ).
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + (mJ + mK)) (mI + mK + mJ) _ (mI + (x - mI + mK)) _).
-    destruct (PeanoNat.Nat.ltb_spec0 (mI + (x - mI + mK)) (mI + mK)); destruct (Compare_dec.lt_dec (mI + (x - mI + mK)) mI).
-    lia.
-    f_equal. 
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x+mK) _).
-    apply subset_eq_compat.
-    lia.
-    f_equal. 
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x+mK) _).
-    apply subset_eq_compat.
-    lia.
-    f_equal. 
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x+mK) _).
-    apply subset_eq_compat.
-    lia.
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x+mK) _).
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + (mJ + mK)) (mI + mK + mJ) _ (mI + (x - mI - mJ)) _).
-    destruct (PeanoNat.Nat.ltb_spec0 (mI + (x - mI - mJ)) (mI + mK)); destruct (Compare_dec.lt_dec (mI + (x - mI - mJ)) mI); try lia.
-    f_equal. 
-    apply subset_eq_compat.
-    lia.
-    f_equal.
-    apply subset_eq_compat.
-    lia.
-    f_equal.
-    apply subset_eq_compat.
-    lia.
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + (mJ + mK)) (mI + mK + mJ) _ x _).
-    destruct (PeanoNat.Nat.ltb_spec0 x (mI + mK)); destruct (Compare_dec.lt_dec x mI); try lia.
-    f_equal.
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x - (mI + mJ)) _).
-    apply subset_eq_compat.
-    lia.
-    f_equal.
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x - (mI + mJ)) _).
-    apply subset_eq_compat.
-    lia.
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x - (mI + mJ)) _).
-    f_equal. apply subset_eq_compat.
-    lia.
-    f_equal. 
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x - (mI + mJ)) _).
-    apply subset_eq_compat.
-    lia.
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + mJ + mK) (mI + mK + mJ) _ (x - (mI + mJ)) _).
-    f_equal. 
-    destruct (Compare_dec.lt_dec (x - mI) mJ).
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + (mJ + mK)) (mI + mK + mJ) _ (mI + (x - mI + mK)) _).
-    destruct (PeanoNat.Nat.ltb_spec0 (mI + (x - mI + mK)) (mI + mK)).
-    destruct (Compare_dec.lt_dec (mI + (x - mI + mK)) mI).
-    f_equal. 
-    apply subset_eq_compat.
-    lia.
-    f_equal. 
-    apply subset_eq_compat.
-    lia.
-    f_equal. 
-    apply subset_eq_compat.
-    lia.
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (mI + (mJ + mK)) (mI + mK + mJ) _ (mI + (x - mI - mJ)) _).
-    destruct (PeanoNat.Nat.ltb_spec0 (mI + (x - mI - mJ)) (mI + mK)).
-    destruct (Compare_dec.lt_dec (mI + (x - mI - mJ)) mI).
-    f_equal. 
-    apply subset_eq_compat.    
-    lia.
-    f_equal. 
-    apply subset_eq_compat.
-    lia.
-    f_equal. 
-    apply subset_eq_compat.
-    lia.
+    rewrite <- (addnA (m-mI) mK mI) in i4.
+    rewrite addBnAC in i4; try assumption.
+    rewrite subDnCA in i4.
+    rewrite <- addnBA in i4. 
+    rewrite subnn in i4. rewrite addn0 in i4. 
+    rewrite ltn_add2r in i4.
+    apply (lt_ge_contradiction m mI); try assumption. apply leqnn.
+    apply leq_addl.
+    * f_equal. unfold unsplit,lshift,rshift.
+    apply val_inj;simpl. exfalso. clear i1. clear i0. clear i4. 
+    apply minus_lt in i2. rewrite addnC in i2. 
+    apply (lt_ge_contradiction m (mI+mJ)); assumption.
+    - simpl. destruct (ltnP m (mI + mJ)); rewrite eq_rect_ordinal.
+     * exfalso.
+    rewrite leq_subRL in i2.
+    apply (lt_ge_contradiction m (mI+mJ)); assumption.
+    apply i1.
+    * clear i3.
+    destruct (ltnP (mI + (m - mI - mJ)) (mI + mK)).
+    ** f_equal. unfold unsplit,lshift,rshift.
+    apply val_inj;simpl. destruct (ltnP (mI + (m - mI - mJ)) mI).
+    *** simpl.  exfalso.
+    apply (not_s_lt mI (m - mI - mJ) i4).
+    *** simpl. symmetry. rewrite addnC. rewrite plus_minus.
+    rewrite subnDA. reflexivity.
+    ** f_equal. unfold unsplit,lshift,rshift.
+    apply val_inj;simpl. exfalso.
+    rewrite leq_add2l in i3.
+    rewrite leq_subRL in i3; try apply i2. 
+    rewrite leq_subRL in i3; try apply i1. 
+    apply (lt_ge_contradiction m (mI+(mJ+mK))); assumption.
   + apply functional_extensionality.
     destruct x as [[name] | (v, tmp)]; simpl.
     - unfold funcomp,rearrange,switch_link,parallel,sequence.
@@ -631,7 +566,7 @@ Theorem symmetry_distributive_s4 {mI mJ mK:nat} {XI XJ XK:NoDupList}
       * destruct (in_dec EqDecN name (XI ∪ XK)).
       ** f_equal. apply subset_eq_compat. reflexivity.
       ** f_equal. apply subset_eq_compat. reflexivity.
-    - destruct v; simpl in t; destruct t. destruct v. destruct v. destruct v. destruct v.
+    - destruct v; simpl in s0; destruct s0. destruct e. destruct e. destruct e. destruct e.
   Qed.
 
 End S4.
