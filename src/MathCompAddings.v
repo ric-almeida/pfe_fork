@@ -25,6 +25,12 @@ Definition nlt_0_it : forall p, p<0 -> False.
   auto.
   Qed.
 
+Lemma lt1_eq0 x : x < 1 -> x = 0.
+Proof.
+  move=> Hx.
+  case: x Hx => [| n] //.
+Qed.
+
 
 Definition ordinal_0_univ_embedding {A : Type} : ordinal 0 -> A.
   Proof.

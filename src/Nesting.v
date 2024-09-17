@@ -6,14 +6,17 @@ Require Import SignatureBig.
 Require Import Equality.
 Require Import Bijections.
 Require Import MyBasics.
-Require Import FinDecTypes.
 Require Import ParallelProduct.
+Require Import MathCompAddings.
 
 Require Import Coq.Lists.List.
 Require Import Coq.Setoids.Setoid.
 Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.
 Require Import Lia.
+
+
+From mathcomp Require Import all_ssreflect.
 
 Import ListNotations.
 
@@ -50,9 +53,9 @@ Global Notation "G '<.>' F" := (nest G F) (at level 50, left associativity).
       (BigEq 0 0 0 0 (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y)
         (bigraph_identity (s := 0) (i := app_merge_NoDupList X Y) (p := P_NP (permutation_id (app_merge_NoDupList X Y))))
         ((bigraph_identity (i := X)) || (bigraph_identity (i := Y)))
-        eq_refl
+        erefl
         (permutation_id (app_merge_NoDupList X Y))
-        eq_refl
+        erefl
         (permutation_id (app_merge_NoDupList X Y))
         (bijection_inv bij_void_sum_neutral)
         (bijection_inv bij_void_sum_neutral)
@@ -66,7 +69,7 @@ Global Notation "G '<.>' F" := (nest G F) (at level 50, left associativity).
     + rewrite bij_subset_compose_id. simpl.
     apply functional_extensionality.
     intros [[i H]|x].
-    * unfold id, parallel, funcomp. simpl. unfold in_app_or_m_nod_dup.
+    * unfold , parallel, funcomp. simpl. unfold in_app_or_m_nod_dup.
     destruct (in_dec EqDecN i Y); f_equal; apply subset_eq_compat; reflexivity.
     * destruct x. destruct x as [x | x]; destruct x.
   Qed.
@@ -89,9 +92,9 @@ Lemma my_id_union : forall X Y:NoDupList,
       (BigEq 0 0 0 0 (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y)
         (@bigraph_identity O (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id_PN (@reverse_coercion NoDupList (list Name) (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y)))))
         ((bigraph_identity (i := X)) || (bigraph_identity (i := Y)))
-        eq_refl
+        erefl
         (permutation_id (app_merge_NoDupList X Y))
-        eq_refl
+        erefl
         (permutation_id (app_merge_NoDupList X Y))
         (bijection_inv bij_void_sum_neutral)
         (bijection_inv bij_void_sum_neutral)
@@ -105,7 +108,7 @@ Lemma my_id_union : forall X Y:NoDupList,
   + rewrite bij_subset_compose_id. simpl.
     apply functional_extensionality.
     intros [[i H]|x].
-    * unfold id, parallel, funcomp. simpl. unfold in_app_or_m_nod_dup.
+    * unfold , parallel, funcomp. simpl. unfold in_app_or_m_nod_dup.
     destruct (in_dec EqDecN i Y); f_equal; apply subset_eq_compat; reflexivity.
     * destruct x. destruct x as [x | x]; destruct x.
   Qed.
@@ -152,9 +155,9 @@ Lemma my_id_union' : forall X Y:NoDupList,
       (BigEq 0 0 0 0 (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y)
         (@bigraph_identity O (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id_PN (@reverse_coercion NoDupList (list Name) (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y)))))
         ((bigraph_identity (i := X)) || (bigraph_identity (i := Y)))
-        eq_refl
+        erefl
         (permutation_id (app_merge_NoDupList X Y))
-        eq_refl
+        erefl
         (permutation_id (app_merge_NoDupList X Y))
         (bijection_inv bij_void_sum_neutral)
         (bijection_inv bij_void_sum_neutral)
@@ -168,7 +171,7 @@ Lemma my_id_union' : forall X Y:NoDupList,
   + rewrite bij_subset_compose_id. simpl.
     apply functional_extensionality.
     intros [[i H]|x].
-    * unfold id, parallel, funcomp. simpl. unfold in_app_or_m_nod_dup.
+    * unfold , parallel, funcomp. simpl. unfold in_app_or_m_nod_dup.
     destruct (in_dec EqDecN i Y); f_equal; apply subset_eq_compat; reflexivity.
     * destruct x. destruct x as [x | x]; destruct x.
   Qed.
@@ -179,8 +182,8 @@ Lemma nest_arity_associative : forall {s1 r1 o1 s2 r2 o2 s3 i3 r3 o3}
   (b1 : bigraph s1 EmptyNDL r1 o1) (b2 : bigraph s2 EmptyNDL r2 o2) (b3 : bigraph s3 i3 r3 o3)
   {eqs1r2 : MyEqNat s1 r2} {eqs2r3 : MyEqNat s2 r3},
   forall n,
-  Arity (get_control ((b1 <.> b2) <.>  b3) n) =
-  Arity (get_control (b1 <.> (b2 <.> b3)) (bij_nesting_assoc n)).
+  Arity (get_control (bg:=(b1 <.> b2) <.>  b3) n) =
+  Arity (get_control (bg:=b1 <.> (b2 <.> b3)) (bij_nesting_assoc n)).
   Proof.
   intros until n.
   destruct n as [[v|[[v|a']|b']] | c']; try elim v; reflexivity.
@@ -198,11 +201,11 @@ Theorem nest_associative : forall {s1 r1 o1 s2 r2 o2 s3 i3 r3 o3}
     refine (BigEq _ _ _ _ _ _ _ _ ((b1 <.> b2) <.> b3) (b1 <.> (b2 <.> b3))
     (reflexivity s3)
     (permutation_id i3)
-    (eq_refl)
+    (erefl)
     (permutation_commute tr_permutation)
     bij_nesting_assoc
     bij_nesting_assoc
-    (fun n12_3 => bij_rew (P := fin) (nest_arity_associative b1 b2 b3 n12_3)) _ _ _ 
+    (fun n12_3 => bij_rew (nest_arity_associative b1 b2 b3 n12_3)) _ _ _ 
     ).
     + apply functional_extensionality. simpl.
       destruct x as [[v|a']|[[v|b']|c']]; try elim v; try reflexivity.
@@ -211,124 +214,122 @@ Theorem nest_associative : forall {s1 r1 o1 s2 r2 o2 s3 i3 r3 o3}
       - unfold extract1, parallel, sum_shuffle. 
         destruct get_parent; try reflexivity.
         f_equal. 
-        unfold inj_fin_add, bij_rew_forward, surj_fin_add, id.
-        destruct f.
-        rewrite <- eq_rect_eq.
-        apply subset_eq_compat. reflexivity.
+        unfold bij_rew_forward,unsplit,rshift.
+        destruct o0.
+        rewrite eq_rect_ordinal.
+        apply val_inj;simpl. rewrite addnC. rewrite addn0. reflexivity.
       - unfold extract1, parallel, sum_shuffle. 
         unfold rearrange.
         destruct get_parent; try reflexivity.
         f_equal. 
-        unfold extract1, inj_fin_add, bij_rew_forward, surj_fin_add, id, rearrange.
-        destruct f. 
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) r2 s1 _ (0 + x) _).
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) r2 s1 _ (0 + x) _).
-        destruct (PeanoNat.Nat.ltb_spec0 (0 + x) 0).
-        lia.
-        erewrite <- (parent_proof_irrelevant b1 (0 + x - 0) (0 + x - 0) (ZifyClasses.rew_iff_rev (0 + x - 0 < s1) (BinInt.Z.lt (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (0 + x)) (BinInt.Z.of_nat 0))) (BinInt.Z.of_nat s1)) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (0 + x - 0) (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (0 + x)) (BinInt.Z.of_nat 0))) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.sub BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat (fun n0 m : BinNums.Z => BinInt.Z.max BinNums.Z0 (BinInt.Z.sub n0 m)) Znat.Nat2Z.inj_sub_max (0 + x) (BinInt.Z.of_nat (0 + x)) eq_refl 0 (BinInt.Z.of_nat 0) eq_refl) s1 (BinInt.Z.of_nat s1) eq_refl) (ZMicromega.ZTautoChecker_sound (Tauto.IMPL (Tauto.OR (Tauto.AND (Tauto.X Tauto.isProp (BinInt.Z.lt BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (0 + x)) (BinInt.Z.of_nat 0)))) (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX BinNums.xH; RingMicromega.Fop := RingMicromega.OpEq; RingMicromega.Frhs := EnvRing.PEsub (EnvRing.PEX (BinNums.xI BinNums.xH)) (EnvRing.PEX (BinNums.xO (BinNums.xO BinNums.xH))) |} tt)) (Tauto.AND (Tauto.X Tauto.isProp (BinInt.Z.le (BinInt.Z.sub (BinInt.Z.of_nat (0 + x)) (BinInt.Z.of_nat 0)) BinNums.Z0)) (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX BinNums.xH; RingMicromega.Fop := RingMicromega.OpEq; RingMicromega.Frhs := EnvRing.PEc BinNums.Z0 |} tt))) None (Tauto.IMPL (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX (BinNums.xI BinNums.xH); RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEadd (EnvRing.PEX (BinNums.xO (BinNums.xO BinNums.xH))) (EnvRing.PEX (BinNums.xO BinNums.xH)) |} tt) None (Tauto.IMPL (Tauto.NOT (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX (BinNums.xI BinNums.xH); RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEX (BinNums.xO (BinNums.xO BinNums.xH)) |} tt)) None (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX BinNums.xH; RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEX (BinNums.xO BinNums.xH) |} tt)))) [ZMicromega.RatProof (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 3) (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 2) (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 1) (RingMicromega.PsatzIn BinNums.Z 0)))) ZMicromega.DoneProof; ZMicromega.RatProof (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 3) (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 2) (RingMicromega.PsatzIn BinNums.Z 0))) ZMicromega.DoneProof] eq_refl (VarMap.find BinNums.Z0 (VarMap.Branch (VarMap.Branch (VarMap.Elt (BinInt.Z.of_nat 0)) (BinInt.Z.of_nat s1) VarMap.Empty) (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (0 + x)) (BinInt.Z.of_nat 0))) (VarMap.Elt (BinInt.Z.of_nat (0 + x))))) (BinInt.Z.max_spec BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (0 + x)) (BinInt.Z.of_nat 0))) (ZifyClasses.rew_iff (0 + x < 0 + s1) (BinInt.Z.lt (BinInt.Z.of_nat (0 + x)) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat s1))) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (0 + x) (BinInt.Z.of_nat (0 + x)) eq_refl (0 + s1) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat s1)) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.add BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.add Znat.Nat2Z.inj_add 0 (BinInt.Z.of_nat 0) eq_refl s1 (BinInt.Z.of_nat s1) eq_refl)) (eq_rect r2 (fun a : nat => 0 + x < a) (ZifyClasses.rew_iff_rev (0 + x < 0 + r2) (BinInt.Z.lt (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat x)) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat r2))) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (0 + x) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat x)) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.add BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.add Znat.Nat2Z.inj_add 0 (BinInt.Z.of_nat 0) eq_refl x (BinInt.Z.of_nat x) eq_refl) (0 + r2) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat r2)) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.add BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.add Znat.Nat2Z.inj_add 0 (BinInt.Z.of_nat 0) eq_refl r2 (BinInt.Z.of_nat r2) eq_refl)) (ZMicromega.ZTautoChecker_sound (Tauto.IMPL (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX (BinNums.xO BinNums.xH); RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEX (BinNums.xI BinNums.xH) |} tt) None (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEadd (EnvRing.PEX BinNums.xH) (EnvRing.PEX (BinNums.xO BinNums.xH)); RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEadd (EnvRing.PEX BinNums.xH) (EnvRing.PEX (BinNums.xI BinNums.xH)) |} tt)) [] eq_refl (VarMap.find BinNums.Z0 (VarMap.Branch (VarMap.Elt (BinInt.Z.of_nat x)) (BinInt.Z.of_nat 0) (VarMap.Elt (BinInt.Z.of_nat r2)))) (ZifyClasses.rew_iff (x < r2) (BinInt.Z.lt (BinInt.Z.of_nat x) (BinInt.Z.of_nat r2)) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt x (BinInt.Z.of_nat x) eq_refl r2 (BinInt.Z.of_nat r2) eq_refl) l))) s1 (eq_sym eqxy))) (ZifyClasses.rew_iff (~ 0 + x < 0) (~ BinInt.Z.lt (BinInt.Z.of_nat (0 + x)) (BinInt.Z.of_nat 0)) (ZifyClasses.not_morph (0 + x < 0) (BinInt.Z.lt (BinInt.Z.of_nat (0 + x)) (BinInt.Z.of_nat 0)) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (0 + x) (BinInt.Z.of_nat (0 + x)) eq_refl 0 (BinInt.Z.of_nat 0) eq_refl)) n)))).
+        unfold extract1, bij_rew_forward, rearrange.
+        destruct o0. simpl.
+        rewrite eq_rect_ordinal. 
+        rewrite eq_rect_ordinal. simpl. 
+        unfold split. simpl.
+        destruct (ltnP m 0).
+        * elim (nlt_0_it m i1).
+        * destruct (ltnP (0 + m) 0).
+        ** elim (nlt_0_it (0+m) i2).
+        ** symmetry. erewrite <- (parent_proof_irrelevant b1 _).
+        instantiate (1:= Ordinal (n:=s1) (m:=m - 0) (split_subproof (m:=0) (n:=s1) (i:=Ordinal (n:=0 + s1) (m:=m) (replace_in_H (Logic.eq_sym eqxy) m i0)) i1)).
         destruct get_parent; try reflexivity.
-        destruct f.
-        rewrite <- eq_rect_eq.
-        f_equal. apply subset_eq_compat. lia.
-        lia. 
+        f_equal. f_equal. f_equal. unfold unsplit,rshift. destruct o0.
+        apply val_inj;simpl. rewrite addnC; rewrite addn0;reflexivity. 
       - unfold extract1, parallel, sum_shuffle. 
         unfold rearrange.
         destruct get_parent; try reflexivity.
         f_equal. 
-        unfold extract1, inj_fin_add, bij_rew_forward, surj_fin_add, id, rearrange,sequence.
-        destruct f. 
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) r3 s2 _ x _).
-        destruct (PeanoNat.Nat.ltb_spec0 x 0).
-        lia.
-        unfold rearrange.
-        erewrite <- (parent_proof_irrelevant b2 (x - 0) (x - 0) (ZifyClasses.rew_iff_rev (x - 0 < s2) (BinInt.Z.lt (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat 0))) (BinInt.Z.of_nat s2)) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (x - 0) (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat 0))) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.sub BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat (fun n0 m : BinNums.Z => BinInt.Z.max BinNums.Z0 (BinInt.Z.sub n0 m)) Znat.Nat2Z.inj_sub_max x (BinInt.Z.of_nat x) eq_refl 0 (BinInt.Z.of_nat 0) eq_refl) s2 (BinInt.Z.of_nat s2) eq_refl) (ZMicromega.ZTautoChecker_sound (Tauto.IMPL (Tauto.OR (Tauto.AND (Tauto.X Tauto.isProp (BinInt.Z.lt BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat 0)))) (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX BinNums.xH; RingMicromega.Fop := RingMicromega.OpEq; RingMicromega.Frhs := EnvRing.PEsub (EnvRing.PEX (BinNums.xI BinNums.xH)) (EnvRing.PEX (BinNums.xO (BinNums.xO BinNums.xH))) |} tt)) (Tauto.AND (Tauto.X Tauto.isProp (BinInt.Z.le (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat 0)) BinNums.Z0)) (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX BinNums.xH; RingMicromega.Fop := RingMicromega.OpEq; RingMicromega.Frhs := EnvRing.PEc BinNums.Z0 |} tt))) None (Tauto.IMPL (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX (BinNums.xI BinNums.xH); RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEadd (EnvRing.PEX (BinNums.xO (BinNums.xO BinNums.xH))) (EnvRing.PEX (BinNums.xO BinNums.xH)) |} tt) None (Tauto.IMPL (Tauto.NOT (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX (BinNums.xI BinNums.xH); RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEX (BinNums.xO (BinNums.xO BinNums.xH)) |} tt)) None (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX BinNums.xH; RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEX (BinNums.xO BinNums.xH) |} tt)))) [ZMicromega.RatProof (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 3) (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 2) (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 1) (RingMicromega.PsatzIn BinNums.Z 0)))) ZMicromega.DoneProof; ZMicromega.RatProof (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 3) (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 2) (RingMicromega.PsatzIn BinNums.Z 0))) ZMicromega.DoneProof] eq_refl (VarMap.find BinNums.Z0 (VarMap.Branch (VarMap.Branch (VarMap.Elt (BinInt.Z.of_nat 0)) (BinInt.Z.of_nat s2) VarMap.Empty) (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat 0))) (VarMap.Elt (BinInt.Z.of_nat x)))) (BinInt.Z.max_spec BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat 0))) (ZifyClasses.rew_iff (x < 0 + s2) (BinInt.Z.lt (BinInt.Z.of_nat x) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat s2))) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt x (BinInt.Z.of_nat x) eq_refl (0 + s2) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat s2)) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.add BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.add Znat.Nat2Z.inj_add 0 (BinInt.Z.of_nat 0) eq_refl s2 (BinInt.Z.of_nat s2) eq_refl)) (eq_rect r3 (fun a : nat => x < a) l s2 (eq_sym eqxy))) (ZifyClasses.rew_iff (~ x < 0) (~ BinInt.Z.lt (BinInt.Z.of_nat x) (BinInt.Z.of_nat 0)) (ZifyClasses.not_morph (x < 0) (BinInt.Z.lt (BinInt.Z.of_nat x) (BinInt.Z.of_nat 0)) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt x (BinInt.Z.of_nat x) eq_refl 0 (BinInt.Z.of_nat 0) eq_refl)) n)))).
+        unfold extract1, bij_rew_forward, rearrange,sequence.
+        destruct o0. 
+        rewrite eq_rect_ordinal. unfold split. simpl.
+        destruct (ltnP m 0).
+        * elim (nlt_0_it m i1).
+        * unfold rearrange.
         destruct get_parent; try reflexivity.
-        unfold extract1. destruct f.
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) r2 s1 _ x0 _).
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) r2 s1 _ (0+x0) _).
-        destruct (PeanoNat.Nat.ltb_spec0 x0 0).
-        destruct (PeanoNat.Nat.ltb_spec0 (0 + x0) 0).
-        lia.
-        lia.
-        destruct (PeanoNat.Nat.ltb_spec0 (0 + x0) 0).
-        lia.
-        erewrite <- (parent_proof_irrelevant' b1 (x0 - 0) (0 + x0 - 0) ((ZifyClasses.rew_iff_rev (0 + x0 - 0 < s1) (BinInt.Z.lt (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (0 + x0)) (BinInt.Z.of_nat 0))) (BinInt.Z.of_nat s1)) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (0 + x0 - 0) (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (0 + x0)) (BinInt.Z.of_nat 0))) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.sub BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat (fun n2 m : BinNums.Z => BinInt.Z.max BinNums.Z0 (BinInt.Z.sub n2 m)) Znat.Nat2Z.inj_sub_max (0 + x0) (BinInt.Z.of_nat (0 + x0)) eq_refl 0 (BinInt.Z.of_nat 0) eq_refl) s1 (BinInt.Z.of_nat s1) eq_refl) (ZMicromega.ZTautoChecker_sound (Tauto.IMPL (Tauto.OR (Tauto.AND (Tauto.X Tauto.isProp (BinInt.Z.lt BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (0 + x0)) (BinInt.Z.of_nat 0)))) (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX BinNums.xH; RingMicromega.Fop := RingMicromega.OpEq; RingMicromega.Frhs := EnvRing.PEsub (EnvRing.PEX (BinNums.xI BinNums.xH)) (EnvRing.PEX (BinNums.xO (BinNums.xO BinNums.xH))) |} tt)) (Tauto.AND (Tauto.X Tauto.isProp (BinInt.Z.le (BinInt.Z.sub (BinInt.Z.of_nat (0 + x0)) (BinInt.Z.of_nat 0)) BinNums.Z0)) (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX BinNums.xH; RingMicromega.Fop := RingMicromega.OpEq; RingMicromega.Frhs := EnvRing.PEc BinNums.Z0 |} tt))) None (Tauto.IMPL (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX (BinNums.xI BinNums.xH); RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEadd (EnvRing.PEX (BinNums.xO (BinNums.xO BinNums.xH))) (EnvRing.PEX (BinNums.xO BinNums.xH)) |} tt) None (Tauto.IMPL (Tauto.NOT (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX (BinNums.xI BinNums.xH); RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEX (BinNums.xO (BinNums.xO BinNums.xH)) |} tt)) None (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX BinNums.xH; RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEX (BinNums.xO BinNums.xH) |} tt)))) [ZMicromega.RatProof (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 3) (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 2) (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 1) (RingMicromega.PsatzIn BinNums.Z 0)))) ZMicromega.DoneProof; ZMicromega.RatProof (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 3) (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 2) (RingMicromega.PsatzIn BinNums.Z 0))) ZMicromega.DoneProof] eq_refl (VarMap.find BinNums.Z0 (VarMap.Branch (VarMap.Branch (VarMap.Elt (BinInt.Z.of_nat 0)) (BinInt.Z.of_nat s1) VarMap.Empty) (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (0 + x0)) (BinInt.Z.of_nat 0))) (VarMap.Elt (BinInt.Z.of_nat (0 + x0))))) (BinInt.Z.max_spec BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (0 + x0)) (BinInt.Z.of_nat 0))) (ZifyClasses.rew_iff (0 + x0 < 0 + s1) (BinInt.Z.lt (BinInt.Z.of_nat (0 + x0)) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat s1))) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (0 + x0) (BinInt.Z.of_nat (0 + x0)) eq_refl (0 + s1) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat s1)) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.add BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.add Znat.Nat2Z.inj_add 0 (BinInt.Z.of_nat 0) eq_refl s1 (BinInt.Z.of_nat s1) eq_refl)) (eq_rect r2 (fun a : nat => 0 + x0 < a) (ZifyClasses.rew_iff_rev (0 + x0 < 0 + r2) (BinInt.Z.lt (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat x0)) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat r2))) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (0 + x0) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat x0)) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.add BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.add Znat.Nat2Z.inj_add 0 (BinInt.Z.of_nat 0) eq_refl x0 (BinInt.Z.of_nat x0) eq_refl) (0 + r2) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat r2)) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.add BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.add Znat.Nat2Z.inj_add 0 (BinInt.Z.of_nat 0) eq_refl r2 (BinInt.Z.of_nat r2) eq_refl)) (ZMicromega.ZTautoChecker_sound (Tauto.IMPL (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX (BinNums.xO BinNums.xH); RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEX (BinNums.xI BinNums.xH) |} tt) None (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEadd (EnvRing.PEX BinNums.xH) (EnvRing.PEX (BinNums.xO BinNums.xH)); RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEadd (EnvRing.PEX BinNums.xH) (EnvRing.PEX (BinNums.xI BinNums.xH)) |} tt)) [] eq_refl (VarMap.find BinNums.Z0 (VarMap.Branch (VarMap.Elt (BinInt.Z.of_nat x0)) (BinInt.Z.of_nat 0) (VarMap.Elt (BinInt.Z.of_nat r2)))) (ZifyClasses.rew_iff (x0 < r2) (BinInt.Z.lt (BinInt.Z.of_nat x0) (BinInt.Z.of_nat r2)) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt x0 (BinInt.Z.of_nat x0) eq_refl r2 (BinInt.Z.of_nat r2) eq_refl) l0))) s1 (eq_sym eqxy))) (ZifyClasses.rew_iff (~ 0 + x0 < 0) (~ BinInt.Z.lt (BinInt.Z.of_nat (0 + x0)) (BinInt.Z.of_nat 0)) (ZifyClasses.not_morph (0 + x0 < 0) (BinInt.Z.lt (BinInt.Z.of_nat (0 + x0)) (BinInt.Z.of_nat 0)) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (0 + x0) (BinInt.Z.of_nat (0 + x0)) eq_refl 0 (BinInt.Z.of_nat 0) eq_refl)) n1))))).
+        unfold extract1. destruct o0.
+        rewrite eq_rect_ordinal.
+        rewrite eq_rect_ordinal. simpl.
+        destruct (ltnP m0 0).
+        ** elim (nlt_0_it m0 i4).
+        ** destruct (ltnP (0 + m0) 0).
+        *** elim (nlt_0_it (0 + m0) i5).
+        *** symmetry. erewrite <- (parent_proof_irrelevant b1 _).
+        instantiate (1:= Ordinal (n:=s1) (m:=m0 - 0) (split_subproof (m:=0) (n:=s1) (i:=Ordinal (n:=0 + s1) (m:=m0) (replace_in_H (Logic.eq_sym eqxy) m0 i2)) i4)).
         destruct get_parent; try reflexivity.
-        destruct f.
-        f_equal. apply subset_eq_compat. lia.
-        lia. 
-        lia.
-      - unfold extract1, parallel, sum_shuffle, rearrange, id. 
+        f_equal. f_equal. f_equal. unfold unsplit,rshift. destruct o0.
+        apply val_inj. simpl. rewrite addnC. rewrite addn0. reflexivity.
+      - unfold extract1, parallel, sum_shuffle, rearrange. 
         destruct get_parent; try reflexivity.
-        unfold extract1, inj_fin_add, bij_rew_forward, surj_fin_add, id, rearrange,sequence.
-        destruct (eq_rect r3 fin f s2 (eq_sym eqxy)).
-        destruct (PeanoNat.Nat.ltb_spec0 x 0).
-        lia.
-        unfold rearrange.
-        erewrite <- (parent_proof_irrelevant b2 (x - 0) (x - 0) ((ZifyClasses.rew_iff_rev (x - 0 < s2) (BinInt.Z.lt (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat 0))) (BinInt.Z.of_nat s2)) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (x - 0) (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat 0))) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.sub BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat (fun n0 m : BinNums.Z => BinInt.Z.max BinNums.Z0 (BinInt.Z.sub n0 m)) Znat.Nat2Z.inj_sub_max x (BinInt.Z.of_nat x) eq_refl 0 (BinInt.Z.of_nat 0) eq_refl) s2 (BinInt.Z.of_nat s2) eq_refl) (ZMicromega.ZTautoChecker_sound (Tauto.IMPL (Tauto.OR (Tauto.AND (Tauto.X Tauto.isProp (BinInt.Z.lt BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat 0)))) (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX BinNums.xH; RingMicromega.Fop := RingMicromega.OpEq; RingMicromega.Frhs := EnvRing.PEsub (EnvRing.PEX (BinNums.xI BinNums.xH)) (EnvRing.PEX (BinNums.xO (BinNums.xO BinNums.xH))) |} tt)) (Tauto.AND (Tauto.X Tauto.isProp (BinInt.Z.le (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat 0)) BinNums.Z0)) (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX BinNums.xH; RingMicromega.Fop := RingMicromega.OpEq; RingMicromega.Frhs := EnvRing.PEc BinNums.Z0 |} tt))) None (Tauto.IMPL (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX (BinNums.xI BinNums.xH); RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEadd (EnvRing.PEX (BinNums.xO (BinNums.xO BinNums.xH))) (EnvRing.PEX (BinNums.xO BinNums.xH)) |} tt) None (Tauto.IMPL (Tauto.NOT (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX (BinNums.xI BinNums.xH); RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEX (BinNums.xO (BinNums.xO BinNums.xH)) |} tt)) None (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX BinNums.xH; RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEX (BinNums.xO BinNums.xH) |} tt)))) [ZMicromega.RatProof (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 3) (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 2) (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 1) (RingMicromega.PsatzIn BinNums.Z 0)))) ZMicromega.DoneProof; ZMicromega.RatProof (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 3) (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 2) (RingMicromega.PsatzIn BinNums.Z 0))) ZMicromega.DoneProof] eq_refl (VarMap.find BinNums.Z0 (VarMap.Branch (VarMap.Branch (VarMap.Elt (BinInt.Z.of_nat 0)) (BinInt.Z.of_nat s2) VarMap.Empty) (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat 0))) (VarMap.Elt (BinInt.Z.of_nat x)))) (BinInt.Z.max_spec BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat 0))) (ZifyClasses.rew_iff (x < 0 + s2) (BinInt.Z.lt (BinInt.Z.of_nat x) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat s2))) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt x (BinInt.Z.of_nat x) eq_refl (0 + s2) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat s2)) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.add BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.add Znat.Nat2Z.inj_add 0 (BinInt.Z.of_nat 0) eq_refl s2 (BinInt.Z.of_nat s2) eq_refl)) l) (ZifyClasses.rew_iff (~ x < 0) (~ BinInt.Z.lt (BinInt.Z.of_nat x) (BinInt.Z.of_nat 0)) (ZifyClasses.not_morph (x < 0) (BinInt.Z.lt (BinInt.Z.of_nat x) (BinInt.Z.of_nat 0)) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt x (BinInt.Z.of_nat x) eq_refl 0 (BinInt.Z.of_nat 0) eq_refl)) n))))).
+        unfold extract1, bij_rew_forward, rearrange,sequence.
+        destruct o0; destruct s1_23'.
+        rewrite eq_rect_ordinal. simpl. unfold split. simpl.
+        destruct (ltnP m 0).
+        * elim (nlt_0_it m i2).
+        * unfold rearrange.
         destruct get_parent; try reflexivity.
-        unfold extract1. destruct f0.
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) r2 s1 _ (0 + x0) _).
-        rewrite (@eq_rect_exist nat nat (fun n x => x < n) r2 s1 _ (0 + x0) _).
-        destruct (PeanoNat.Nat.ltb_spec0 (0 + x0) 0).
-        f_equal.
-        apply subset_eq_compat.
-        lia.
-        erewrite <- (parent_proof_irrelevant b1 (0 + x0 - 0) (0 + x0 - 0) ((ZifyClasses.rew_iff_rev (0 + x0 - 0 < s1) (BinInt.Z.lt (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (0 + x0)) (BinInt.Z.of_nat 0))) (BinInt.Z.of_nat s1)) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (0 + x0 - 0) (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (0 + x0)) (BinInt.Z.of_nat 0))) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.sub BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat (fun n1 m : BinNums.Z => BinInt.Z.max BinNums.Z0 (BinInt.Z.sub n1 m)) Znat.Nat2Z.inj_sub_max (0 + x0) (BinInt.Z.of_nat (0 + x0)) eq_refl 0 (BinInt.Z.of_nat 0) eq_refl) s1 (BinInt.Z.of_nat s1) eq_refl) (ZMicromega.ZTautoChecker_sound (Tauto.IMPL (Tauto.OR (Tauto.AND (Tauto.X Tauto.isProp (BinInt.Z.lt BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (0 + x0)) (BinInt.Z.of_nat 0)))) (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX BinNums.xH; RingMicromega.Fop := RingMicromega.OpEq; RingMicromega.Frhs := EnvRing.PEsub (EnvRing.PEX (BinNums.xI BinNums.xH)) (EnvRing.PEX (BinNums.xO (BinNums.xO BinNums.xH))) |} tt)) (Tauto.AND (Tauto.X Tauto.isProp (BinInt.Z.le (BinInt.Z.sub (BinInt.Z.of_nat (0 + x0)) (BinInt.Z.of_nat 0)) BinNums.Z0)) (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX BinNums.xH; RingMicromega.Fop := RingMicromega.OpEq; RingMicromega.Frhs := EnvRing.PEc BinNums.Z0 |} tt))) None (Tauto.IMPL (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX (BinNums.xI BinNums.xH); RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEadd (EnvRing.PEX (BinNums.xO (BinNums.xO BinNums.xH))) (EnvRing.PEX (BinNums.xO BinNums.xH)) |} tt) None (Tauto.IMPL (Tauto.NOT (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX (BinNums.xI BinNums.xH); RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEX (BinNums.xO (BinNums.xO BinNums.xH)) |} tt)) None (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX BinNums.xH; RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEX (BinNums.xO BinNums.xH) |} tt)))) [ZMicromega.RatProof (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 3) (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 2) (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 1) (RingMicromega.PsatzIn BinNums.Z 0)))) ZMicromega.DoneProof; ZMicromega.RatProof (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 3) (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 2) (RingMicromega.PsatzIn BinNums.Z 0))) ZMicromega.DoneProof] eq_refl (VarMap.find BinNums.Z0 (VarMap.Branch (VarMap.Branch (VarMap.Elt (BinInt.Z.of_nat 0)) (BinInt.Z.of_nat s1) VarMap.Empty) (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (0 + x0)) (BinInt.Z.of_nat 0))) (VarMap.Elt (BinInt.Z.of_nat (0 + x0))))) (BinInt.Z.max_spec BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat (0 + x0)) (BinInt.Z.of_nat 0))) (ZifyClasses.rew_iff (0 + x0 < 0 + s1) (BinInt.Z.lt (BinInt.Z.of_nat (0 + x0)) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat s1))) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (0 + x0) (BinInt.Z.of_nat (0 + x0)) eq_refl (0 + s1) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat s1)) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.add BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.add Znat.Nat2Z.inj_add 0 (BinInt.Z.of_nat 0) eq_refl s1 (BinInt.Z.of_nat s1) eq_refl)) (eq_rect r2 (fun a : nat => 0 + x0 < a) (ZifyClasses.rew_iff_rev (0 + x0 < 0 + r2) (BinInt.Z.lt (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat x0)) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat r2))) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (0 + x0) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat x0)) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.add BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.add Znat.Nat2Z.inj_add 0 (BinInt.Z.of_nat 0) eq_refl x0 (BinInt.Z.of_nat x0) eq_refl) (0 + r2) (BinInt.Z.add (BinInt.Z.of_nat 0) (BinInt.Z.of_nat r2)) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.add BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.add Znat.Nat2Z.inj_add 0 (BinInt.Z.of_nat 0) eq_refl r2 (BinInt.Z.of_nat r2) eq_refl)) (ZMicromega.ZTautoChecker_sound (Tauto.IMPL (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX (BinNums.xO BinNums.xH); RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEX (BinNums.xI BinNums.xH) |} tt) None (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEadd (EnvRing.PEX BinNums.xH) (EnvRing.PEX (BinNums.xO BinNums.xH)); RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEadd (EnvRing.PEX BinNums.xH) (EnvRing.PEX (BinNums.xI BinNums.xH)) |} tt)) [] eq_refl (VarMap.find BinNums.Z0 (VarMap.Branch (VarMap.Elt (BinInt.Z.of_nat x0)) (BinInt.Z.of_nat 0) (VarMap.Elt (BinInt.Z.of_nat r2)))) (ZifyClasses.rew_iff (x0 < r2) (BinInt.Z.lt (BinInt.Z.of_nat x0) (BinInt.Z.of_nat r2)) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt x0 (BinInt.Z.of_nat x0) eq_refl r2 (BinInt.Z.of_nat r2) eq_refl) l0))) s1 (eq_sym eqxy))) (ZifyClasses.rew_iff (~ 0 + x0 < 0) (~ BinInt.Z.lt (BinInt.Z.of_nat (0 + x0)) (BinInt.Z.of_nat 0)) (ZifyClasses.not_morph (0 + x0 < 0) (BinInt.Z.lt (BinInt.Z.of_nat (0 + x0)) (BinInt.Z.of_nat 0)) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (0 + x0) (BinInt.Z.of_nat (0 + x0)) eq_refl 0 (BinInt.Z.of_nat 0) eq_refl)) n0))))).
+        unfold extract1. destruct o0.
+        rewrite eq_rect_ordinal.
+        rewrite eq_rect_ordinal. simpl.
+        destruct (ltnP m1 0).
+        ** elim (nlt_0_it m1 i5).
+        ** destruct (ltnP (0+m1) 0).
+        *** elim (nlt_0_it (0+m1) i6).
+        *** symmetry. erewrite <- (parent_proof_irrelevant b1 _).
+        instantiate (1:= Ordinal (n:=s1) (m:=m1 - 0) (split_subproof (m:=0) (n:=s1) (i:=Ordinal (n:=0 + s1) (m:=m1) (replace_in_H (Logic.eq_sym eqxy) m1 i4)) i5)).
         destruct get_parent; try reflexivity.
-        f_equal.
-        destruct f0.
-        rewrite <- eq_rect_eq.
-        apply subset_eq_compat.
-        lia.
-        lia.
-        lia.
+        f_equal. f_equal. f_equal. unfold unsplit,rshift. destruct o0.
+        apply val_inj. simpl. rewrite addnC. rewrite addn0. reflexivity.
     + apply functional_extensionality.
       destruct x as [[i123] | p123]; simpl; unfold funcomp; simpl.
-      - unfold parallel, bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
+      - unfold parallel, bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp. 
         simpl.
-        unfold id, rearrange, switch_link. simpl. 
+        unfold rearrange, switch_link. simpl. 
         unfold in_app_or_m_nod_dup, extract1.
-        rewrite <- (innername_proof_irrelevant b3 i123 i0). 
+        rewrite <- (innername_proof_irrelevant b3 i0). 
         destruct get_link; try reflexivity.
         unfold permut_list_forward. destruct s0.
         f_equal. apply subset_eq_compat. reflexivity.
-      - unfold parallel, bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id. 
+      - unfold parallel, bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp. 
         simpl.
-        unfold id, rearrange, switch_link. simpl.
-        unfold rearrange, switch_link, bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, id, extract1. 
+        unfold rearrange, switch_link. simpl.
+        unfold rearrange, switch_link, bij_list_forward, bij_list_backward', bij_subset_forward, bij_subset_backward, parallel, sum_shuffle, choice, funcomp, extract1. 
         unfold bij_join_port_backward, bij_dep_sum_2_forward, bij_dep_sum_1_forward.
         destruct p123. simpl.  
         destruct x as [[v|a']|[[v|b']|c']]; try destruct v.
-        * unfold bij_rew_forward, funcomp, id, join, void_univ_embedding. destruct f.
+        * unfold bij_rew_forward, funcomp, join, void_univ_embedding. destruct o0.
           rewrite <- eq_rect_eq.
           unfold eq_rect_r.
           simpl.
           rewrite <- eq_rect_eq.
           destruct get_link. f_equal. destruct s0. apply subset_eq_compat. reflexivity.
           reflexivity.
-        * unfold bij_rew_forward, funcomp, id, join, void_univ_embedding, permut_list_forward. destruct f.
+        * unfold bij_rew_forward, funcomp, join, void_univ_embedding, permut_list_forward. destruct o0.
           rewrite <- eq_rect_eq.
           unfold eq_rect_r.
           simpl.
           rewrite <- eq_rect_eq.
           destruct get_link. destruct s0. f_equal. apply subset_eq_compat. reflexivity.
           reflexivity.
-        * unfold bij_rew_forward, funcomp, id, join, void_univ_embedding, permut_list_forward. destruct f.
+        * unfold bij_rew_forward, funcomp, join, void_univ_embedding, permut_list_forward. destruct o0.
           rewrite <- eq_rect_eq.
           unfold eq_rect_r.
           simpl.
           rewrite <- eq_rect_eq.
           destruct get_link. destruct s0. f_equal. apply subset_eq_compat. reflexivity.
           reflexivity.
+  Unshelve. 
+  apply val_inj;simpl. rewrite addnC. rewrite addn0. reflexivity.
+  apply val_inj;simpl. rewrite addnC. rewrite addn0. reflexivity.
+  apply val_inj;simpl. rewrite addnC. rewrite addn0. reflexivity.
   Qed.
 
 
 Lemma arity_nest_right_neutral {s1 r1 : nat} {o1 : NoDupList} 
   (b1 : bigraph s1 EmptyNDL r1 o1) :
   forall n, 
-  Arity (get_control (b1 <.> bigraph_id s1 EmptyNDL) n) =
-  Arity (get_control b1 (bijection_nest_right_neutral n)).
+  Arity (get_control (bg:=b1 <.> bigraph_id s1 EmptyNDL) n) =
+  Arity (get_control (bg:=b1) (bijection_nest_right_neutral n)).
   Proof.
   intros.
   destruct n as [[v| n] | v]; try elim v; reflexivity.
@@ -342,13 +343,13 @@ Lemma nest_right_neutral {s1 r1 : nat} {o1 : NoDupList}
   Proof.
   eapply 
     (BigEq s1 r1 s1 r1 _ _ _ _ (b <.> bigraph_id s1 EmptyNDL) b
-      eq_refl
+      erefl
       (left_empty EmptyNDL)
-      eq_refl
+      erefl
       (left_empty o1)
       bijection_nest_right_neutral
       bijection_nest_right_neutral
-      (fun n => bij_rew (P := fin) (arity_nest_right_neutral b n))
+      (fun n => bij_rew (arity_nest_right_neutral b n))
     ).
   + apply functional_extensionality.
     intro x.
@@ -358,21 +359,21 @@ Lemma nest_right_neutral {s1 r1 : nat} {o1 : NoDupList}
     - unfold funcomp,parallel,sum_shuffle,extract1.
       simpl. unfold extract1.
       destruct get_parent; try reflexivity.
-      unfold id, surj_fin_add. f_equal. destruct f. apply subset_eq_compat. reflexivity.
+      f_equal. destruct o0. unfold unsplit,rshift. apply Ordinal_proof_irrelevance.
     - unfold funcomp,parallel,sum_shuffle,extract1.
       simpl. unfold extract1.
-      unfold bij_rew_forward,inj_fin_add. 
-      rewrite <- eq_rect_eq.
+      unfold bij_rew_forward. 
       destruct s1'.
-      destruct (PeanoNat.Nat.ltb_spec0 x 0). lia.
-      rewrite <- (parent_proof_irrelevant' b x (x - 0) l).   
+      rewrite eq_rect_ordinal. unfold split. simpl.
+      destruct (ltnP m 0). elim (nlt_0_it m i1).
+      erewrite <- (parent_proof_irrelevant b _).
+      instantiate (1:=Ordinal (n:=s1) (m:=m) i0).   
       destruct get_parent; try reflexivity.
-      unfold id, surj_fin_add. f_equal. destruct f. apply subset_eq_compat. reflexivity.
-      lia.
+      f_equal. destruct o0. unfold unsplit,rshift. apply Ordinal_proof_irrelevance.
   + apply functional_extensionality.      
     destruct x as [[name] | (v1, (k1, Hvk1))]; simpl.
     - destruct i0. 
-    - unfold parallel, sum_shuffle, choice, funcomp, id.
+    - unfold parallel, sum_shuffle, choice, funcomp.
       simpl.
       unfold bij_join_port_backward, bij_dep_sum_2_forward, bijection_inv, bij_dep_sum_1_forward.
       simpl.
@@ -388,13 +389,15 @@ Lemma nest_right_neutral {s1 r1 : nat} {o1 : NoDupList}
       rewrite <- eq_rect_eq.
       destruct get_link; try reflexivity. 
       * f_equal. destruct s0. apply subset_eq_compat. reflexivity.
+  Unshelve.
+  apply val_inj. simpl. rewrite subn0. reflexivity.
   Qed.
 
 Lemma arity_nest_left_neutral {s1 r1 : nat} {o1 : NoDupList} 
   (b1 : bigraph s1 EmptyNDL r1 o1) :
   forall n, 
-  Arity (get_control (bigraph_id r1 EmptyNDL <.> b1) n) =
-  Arity (get_control b1 (bijection_nest_left_neutral n)).
+  Arity (get_control (bg:=bigraph_id r1 EmptyNDL <.> b1) n) =
+  Arity (get_control (bg:=b1) (bijection_nest_left_neutral n)).
   Proof.
   intros.
   destruct n as [[v| v] | n]; try elim v; reflexivity.
@@ -408,13 +411,13 @@ Lemma nest_left_neutral {s1 r1 : nat} {o1 : NoDupList}
   Proof.
   eapply 
     (BigEq s1 r1 s1 r1 _ _ _ _ (bigraph_id r1 EmptyNDL <.> b) b
-      eq_refl
+      erefl
       (left_empty EmptyNDL)
-      eq_refl
+      erefl
       (right_empty o1)
       bijection_nest_left_neutral
       bijection_nest_left_neutral
-      (fun n => bij_rew (P := fin) (arity_nest_left_neutral b n))
+      (fun n => bij_rew (arity_nest_left_neutral b n))
     ).
   + apply functional_extensionality.
     intro x.
@@ -424,23 +427,25 @@ Lemma nest_left_neutral {s1 r1 : nat} {o1 : NoDupList}
     - unfold funcomp,parallel,sum_shuffle,extract1,rearrange.
       simpl. unfold rearrange.
       destruct get_parent; try reflexivity.
-      unfold id, extract1, surj_fin_add,inj_fin_add,bij_rew_forward. 
-      rewrite <- eq_rect_eq.
-      destruct f. destruct (PeanoNat.Nat.ltb_spec0 x 0).
-      f_equal. apply subset_eq_compat. reflexivity.
-      f_equal. apply subset_eq_compat. lia.
+      unfold extract1, bij_rew_forward. 
+      destruct o0. 
+      rewrite eq_rect_ordinal.
+      unfold split. simpl. destruct (ltnP m 0).
+      * elim (nlt_0_it m i1).
+      * f_equal. unfold unsplit,rshift. apply val_inj. simpl. rewrite addnC. rewrite addn0. rewrite subn0. reflexivity.
     - unfold funcomp,parallel,sum_shuffle,extract1.
       simpl. unfold rearrange.
       destruct get_parent; try reflexivity.
-      unfold extract1,bij_rew_forward,inj_fin_add. 
-      rewrite <- eq_rect_eq.
-      destruct f. destruct (PeanoNat.Nat.ltb_spec0 x 0). unfold id.
-      f_equal. apply subset_eq_compat. reflexivity. unfold id.
-      f_equal. apply subset_eq_compat. lia.
+      unfold extract1,bij_rew_forward.
+      destruct s1'; destruct o0. 
+      rewrite eq_rect_ordinal.
+      unfold split;simpl. destruct (ltnP m0 0).
+      * elim (nlt_0_it m0 i2).
+      * f_equal. unfold unsplit,rshift. apply val_inj. simpl. rewrite addnC. rewrite addn0. rewrite subn0. reflexivity.
   + apply functional_extensionality.      
     destruct x as [[name] | (v1, (k1, Hvk1))]; simpl.
     - destruct i0. 
-    - unfold parallel, sum_shuffle, choice, funcomp, id.
+    - unfold parallel, sum_shuffle, choice, funcomp.
       simpl.
       unfold bij_join_port_backward, bij_dep_sum_2_forward, bijection_inv, bij_dep_sum_1_forward.
       simpl.

@@ -6,8 +6,8 @@ Require Import SignatureBig.
 Require Import Equality.
 Require Import Bijections.
 Require Import MyBasics.
-Require Import FinDecTypes.
 Require Import TensorProduct.
+Require Import MathCompAddings.
 
 
 Require Import Coq.Lists.List.
@@ -17,6 +17,8 @@ Require Import ProofIrrelevance.
 Require Import Lia.
 
 Import ListNotations.
+From mathcomp Require Import all_ssreflect.
+
 
 
 Require Import List.
@@ -29,10 +31,10 @@ Include tp.
 Definition union_possible {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :=
   forall (i : NameSub (i1 ∩ i2)),
-  match (get_link b1 (inl (to_left i))) with
+  match (get_link (bg:=b1) (inl (to_left i))) with
   | inr e => False
   | inl o1' => 
-    match get_link b2 (inl (to_right i)) with
+    match get_link (bg:=b2) (inl (to_right i)) with
     | inr e => False
     | inl o2' => proj1_sig o1' = proj1_sig o2' 
     end
@@ -74,18 +76,18 @@ Lemma union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
     destruct i as [i H21].
     unfold to_left,to_right in *.
     destruct get_link eqn:E.
-    - rewrite <- (innername_proof_irrelevant b2 i (from_intersection_left H21)) in up12. 
-    destruct (get_link b2 (inl (exist (fun name : Name => In name i2) i (from_intersection_left H21)))). 
-    + rewrite <- (innername_proof_irrelevant b1 i (from_intersection_left (intersection_commutes H21))).
+    - rewrite <- (innername_proof_irrelevant b2 (from_intersection_left H21)) in up12. 
+    destruct (get_link (bg:=b2) (inl (exist (fun name : Name => In name i2) i (from_intersection_left H21)))). 
+    + rewrite <- (innername_proof_irrelevant b1 (from_intersection_left (intersection_commutes H21))).
     rewrite E.
     destruct s0. destruct s3.
     simpl in *. symmetry. apply up12.
     + apply up12.
-    - destruct (get_link b2
+    - destruct (get_link (bg:=b2)
     (inl
       (exist (fun name : Name => In name i2) i
           (from_intersection_left H21)))) eqn:E'.
-    + rewrite <- (innername_proof_irrelevant b1 i (from_intersection_left (intersection_commutes H21))).
+    + rewrite <- (innername_proof_irrelevant b1 (from_intersection_left (intersection_commutes H21))).
     rewrite E. apply up12.
     + apply up12.
   Qed.
@@ -110,7 +112,7 @@ Lemma union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
     unfold bigraph_composition.
     simpl. 
     intros.
-    unfold funcomp, parallel, id, sequence, switch_link, permut_list_forward, bij_join_port_backward.
+    unfold funcomp, parallel, sequence, switch_link, permut_list_forward, bij_join_port_backward.
     unfold rearrange, extract1.
     simpl.
     specialize (up34 i0).
@@ -122,13 +124,13 @@ Lemma union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
         apply (p13 o') in Ho''.
         specialize (up12 (to_intersection o' Ho'' i1)).
         unfold to_left, to_right, to_intersection in *. 
-        rewrite <- (innername_proof_irrelevant b1 o' (from_intersection_left (in_both_in_intersection Ho'' i1))).
+        rewrite <- (innername_proof_irrelevant b1 (from_intersection_left (in_both_in_intersection Ho'' i1))).
         destruct get_link eqn:E'.
         ++ destruct i0.
-          destruct (get_link b4 (inl (exist (fun name : Name => In name i4) x (from_intersection_right i0)))) eqn:E''.
+          destruct (get_link (bg:=b4) (inl (exist (fun name : Name => In name i4) x (from_intersection_right i0)))) eqn:E''.
           * destruct s5.
             simpl in up34. destruct up34.
-            rewrite <- (innername_proof_irrelevant b2 o' (from_intersection_right
+            rewrite <- (innername_proof_irrelevant b2 (from_intersection_right
             (in_both_in_intersection Ho'' i1))).
             set (Tmp := from_intersection_right
             (in_both_in_intersection Ho'' i1)).
@@ -143,7 +145,7 @@ Lemma union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
                (ndlist i2o4) o' Ho'' i1) = Tmp).
                auto.
                rewrite H in up12.
-            destruct (get_link b2 (inl (exist (fun x : Name => In x i2o4) o' Tmp))) eqn:EI.
+            destruct (get_link (bg:=b2) (inl (exist (fun x : Name => In x i2o4) o' Tmp))) eqn:EI.
             ** apply up12.
             ** apply up12.
           * apply up34.
@@ -154,7 +156,7 @@ Lemma union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
       * destruct s0. destruct s5. simpl in *. destruct up34.
       exfalso. apply n. destruct p24 as [p24]. apply (p24 o'). apply i2.
       * exfalso. apply up34.
-      * destruct s0. simpl in *. destruct up34.
+      * simpl in s0. destruct s5. simpl in *. destruct up34.
       exfalso. apply n. destruct p24 as [p24]. apply (p24 o'). apply i1.
       * exfalso. apply up34.
     - apply up34.
