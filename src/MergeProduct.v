@@ -227,7 +227,7 @@ Theorem mp_left_neutral {s i o} (b : bigraph s i 1 o):
    unfold intersectionNDL in *.
    simpl in *.
    pose Hinter12_3 as Htmp.
-   rewrite intersection_eq in Htmp.
+   apply intersection_eq in Htmp.
    destruct Htmp.
    unfold switch_link, parallel, permut_list_forward. 
    unfold sum_shuffle, sum_shuffle, funcomp.
@@ -238,20 +238,20 @@ Theorem mp_left_neutral {s i o} (b : bigraph s i 1 o):
    destruct (in_dec EqDecN inter12_3 i2).
    + specialize (up23 (to_intersection inter12_3 i0 H0)).
    unfold to_intersection,to_left,to_right,extract1 in up23.
-   rewrite <- (innername_proof_irrelevant b2 inter12_3 i0) in up23.
+   rewrite <- (innername_proof_irrelevant b2 i0) in up23.
    destruct get_link.
    * set (Hi3 := from_intersection_right Hinter12_3).
-   rewrite <- (innername_proof_irrelevant b3 inter12_3 Hi3) in up23.
+   rewrite <- (innername_proof_irrelevant b3 Hi3) in up23.
    destruct get_link.
    ** destruct s0. destruct s4. simpl. simpl in up23. apply up23.
    ** unfold extract1. destruct s0. destruct (in_dec EqDecN x EmptyNDL). apply i5. apply up23.
    * apply up23.
    + specialize (up13 (to_intersection inter12_3 H H0)).
    unfold to_intersection,to_left,to_right in up13.
-   rewrite <- (innername_proof_irrelevant b1 inter12_3 (not_in_left (from_intersection_left Hinter12_3) n)) in up13.
+   rewrite <- (innername_proof_irrelevant b1 (not_in_left (from_intersection_left Hinter12_3) n)) in up13.
    destruct get_link. 
    * set (Hi3 := from_intersection_right Hinter12_3).
-   rewrite <- (innername_proof_irrelevant b3 inter12_3 Hi3) in up13.
+   rewrite <- (innername_proof_irrelevant b3 Hi3) in up13.
    destruct get_link.
    ** destruct s0. destruct s4. simpl. simpl in up13. apply up13.
    ** unfold extract1. destruct s0. destruct (in_dec EqDecN x EmptyNDL). apply i4. apply up13. 
@@ -260,10 +260,10 @@ Theorem mp_left_neutral {s i o} (b : bigraph s i 1 o):
    destruct (in_dec EqDecN inter12_3 i2).
    + specialize (up23 (to_intersection inter12_3 i0 H0)).
    unfold to_intersection,to_left,to_right in up23.
-   rewrite <- (innername_proof_irrelevant b2 inter12_3 i0) in up23.
+   rewrite <- (innername_proof_irrelevant b2 i0) in up23.
    destruct get_link.
    * set (Hi3 := from_intersection_right Hinter12_3).
-   rewrite <- (innername_proof_irrelevant b3 inter12_3 Hi3) in up23.
+   rewrite <- (innername_proof_irrelevant b3 Hi3) in up23.
    destruct get_link.
    ** destruct s0. destruct s4. simpl. simpl in up23. apply up23.
    ** unfold extract1. destruct s0. destruct (in_dec EqDecN x EmptyNDL). apply i5. apply up23. 
@@ -297,7 +297,7 @@ Theorem bigraph_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   Proof.
   intros.
   apply (BigEq _ _ _ _ _ _ _ _ ((b1 <|> b2) <|> b3) (b1 <|> (b2 <|> b3))
-    (esym (PeanoNat.Nat.add_assoc _ _ _))
+    (esym (addnA _ _ _))
     tr_permutation
     (erefl)
     permutationtr
@@ -313,163 +313,121 @@ Theorem bigraph_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
       simpl. 
       unfold rearrange. unfold extract1, parallel, sum_shuffle. 
       destruct get_parent; try reflexivity.
-      unfold inj_fin_add, bij_rew_forward, surj_fin_add.
+      unfold  bij_rew_forward.
       destruct o0.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+r2) (r1 + r2 + 0) _ x _).
-      destruct (PeanoNat.Nat.ltb_spec0 x (r1 + r2)).
-      destruct zero1. 
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (S r3) (S (r3 + 0)) _ x0 _).
-      destruct (PeanoNat.Nat.ltb_spec0 x0 (S r3)).
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+1) (r1 + 1 + 0) _ x _).
-      destruct (PeanoNat.Nat.ltb_spec0 x (r1 + 1)).
-      f_equal. f_equal. apply subset_eq_compat. lia.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+1) (r1 + 1 + 0) _ x _).
-      destruct (PeanoNat.Nat.ltb_spec0 x (r1 + 1)).
-      f_equal. f_equal. apply subset_eq_compat. lia.
-      f_equal. f_equal. apply subset_eq_compat. lia.
-      lia.
+      rewrite eq_rect_ordinal.
+      rewrite eq_rect_ordinal. unfold split. simpl.
+      destruct (ltnP m (r1 + r2)).
+      2:{exfalso. apply (leq_addl_trans r1 r2 m) in i4. elim (lt_ge_contradiction m r1 i0 i4). }
+      rewrite eq_rect_ordinal. simpl.
+      destruct (ltnP 0 (1 + 0 + r3)).
+      2:{exfalso. rewrite addn0 in i5. apply (leq_addl_trans 1 r3 0) in i5. apply nlt_0_it in i5. apply i5. }
+      destruct (ltnP m (r1 + (1 + 0))).
+      * reflexivity.
+      * exfalso. rewrite addn0 in i6. apply (leq_addl_trans r1 1 m) in i6. 
+      elim (lt_ge_contradiction m r1 i0 i6). 
     - f_equal. 
       simpl. 
       unfold rearrange. unfold extract1, parallel, sum_shuffle. 
       destruct get_parent; try reflexivity.
-      unfold inj_fin_add, bij_rew_forward, surj_fin_add.
-      destruct o0.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+r2) (r1 + r2 + 0) _ (r1 + x) _).
-      destruct (PeanoNat.Nat.ltb_spec0 (r1 + x) (r1 + r2)).
-      destruct zero1. 
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (S r3) (S (r3 + 0)) _ x0 _).
-      destruct (PeanoNat.Nat.ltb_spec0 x0 (S r3)).
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r2 + r3) (r2 + r3 + 0) _ x _).
-      destruct (PeanoNat.Nat.ltb_spec0 x (r2 + r3)).
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+1) (r1 + 1 + 0) _ (r1 + x0) _).
-      destruct (PeanoNat.Nat.ltb_spec0 (r1 + x0) (r1 + 1)).
-      f_equal. f_equal. apply subset_eq_compat. lia.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+1) (r1 + 1 + 0) _ (r1 + (1 + (x - (r2 + r3)))) _).
-      destruct (PeanoNat.Nat.ltb_spec0 (r1 + (1 + (x - (r2 + r3)))) (r1 + 1)).
-      lia.
-      f_equal. f_equal. apply subset_eq_compat. lia.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r2+r3) (r2 + r3 + 0) _ x _).
-      destruct (PeanoNat.Nat.ltb_spec0 x (r2 + r3)).
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+1) (r1 + 1 + 0) _ (r1 + x0) _).
-      destruct (PeanoNat.Nat.ltb_spec0 (r1 + x0) (r1 + 1)).
-      f_equal. f_equal. apply subset_eq_compat. lia.
-      f_equal. f_equal. apply subset_eq_compat. lia.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+1) (r1 + 1 + 0) _ (r1 + (1 + (x - (r2 + r3)))) _).
-      destruct (PeanoNat.Nat.ltb_spec0 (r1 + (1 + (x - (r2 + r3)))) (r1 + 1)).
-      f_equal. f_equal. apply subset_eq_compat. lia.
-      f_equal. f_equal. apply subset_eq_compat. lia.
-      lia.
+      destruct o0. simpl.
+      unfold  bij_rew_forward. rewrite eq_rect_ordinal.
+      rewrite eq_rect_ordinal. unfold split. simpl.
+      destruct (ltnP (r1 + m) (r1 + r2)).
+      2:{exfalso. rewrite leq_add2l in i4. apply (lt_ge_contradiction m r2 i0 i4). }
+      rewrite eq_rect_ordinal. simpl. 
+      destruct (ltnP 0 (1 + 0 + r3)).
+      2:{exfalso. rewrite addn0 in i5. apply (leq_addl_trans 1 r3 0) in i5. apply nlt_0_it in i5. apply i5. }
+      destruct (ltnP m (r2 + r3)).
+      2:{exfalso. apply leq_addl_trans in i6. elim (lt_ge_contradiction m r2 i0 i6). }
+      rewrite eq_rect_ordinal. simpl.  
+      destruct ( ltnP (r1 + 0) (r1 + (1 + 0))).
+      2:{exfalso. rewrite addn0 in i7. rewrite addn0 in i7. apply add1_leq_false in i7. apply i7. }
+      simpl. reflexivity.
     - f_equal. 
       simpl. 
       unfold rearrange. unfold extract1, parallel, sum_shuffle. 
       destruct get_parent; try reflexivity.
-      unfold inj_fin_add, bij_rew_forward, surj_fin_add.
-      destruct o0.
-       destruct zero1.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (S r3) (S (r3 + 0)) _ (1+x) _).
-      destruct (PeanoNat.Nat.ltb_spec0 (1+x) (S r3)).
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r2 + r3) (r2 + r3 + 0) _ (r2 + x) _).
-      destruct (PeanoNat.Nat.ltb_spec0 (r2 + x) (r2 + r3)).
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+1) (r1 + 1 + 0) _ (r1 + x0) _).
-      destruct (PeanoNat.Nat.ltb_spec0 (r1 + x0) (r1 + 1)).
-      f_equal. f_equal. apply subset_eq_compat. lia.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+1) (r1 + 1 + 0) _ (r1 + (1 + (r2 + x - (r2 + r3)))) _).
-      destruct (PeanoNat.Nat.ltb_spec0 (r1 + (1 + (r2 + x - (r2 + r3)))) (r1 + 1)).
-      lia.
-      f_equal. f_equal. apply subset_eq_compat. lia.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r2+r3) (r2 + r3 + 0) _ (r2 + x) _).
-      destruct (PeanoNat.Nat.ltb_spec0 (r2 + x) (r2 + r3)).
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+1) (r1 + 1 + 0) _ (r1 + x0) _).
-      destruct (PeanoNat.Nat.ltb_spec0 (r1 + x0) (r1 + 1)).
-      f_equal. f_equal. apply subset_eq_compat. lia.
-      f_equal. f_equal. apply subset_eq_compat. lia.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+1) (r1 + 1 + 0) _ (r1 + (1 + (r2 + x - (r2 + r3)))) _).
-      destruct (PeanoNat.Nat.ltb_spec0 (r1 + (1 + (r2 + x - (r2 + r3)))) (r1 + 1)).
-      f_equal. f_equal. apply subset_eq_compat. lia.
-      f_equal. f_equal. apply subset_eq_compat. lia.
+      destruct o0. simpl.
+      unfold  bij_rew_forward.
+      rewrite eq_rect_ordinal.
+      rewrite eq_rect_ordinal. unfold split. simpl.
+      destruct (ltnP (1 + 0 + m) (1 + 0 + r3)).
+      2:{exfalso. rewrite addn0 in i4. rewrite (leq_add2l 1 r3 m) in i4. elim (lt_ge_contradiction m r3 i0 i4). }
+      destruct (ltnP (r2 + m) (r2 + r3)).
+      2:{exfalso. rewrite (leq_add2l r2 r3 m) in i5. elim (lt_ge_contradiction m r3 i0 i5). }
+      rewrite eq_rect_ordinal. simpl.
+      destruct (ltnP (r1 + 0) (r1 + (1 + 0))).
+      f_equal.
+      exfalso. rewrite addn0 in i6.
+      rewrite addn0 in i6.
+      apply (add1_leq_false r1 i6).
     - f_equal. 
       destruct s1_23'; simpl.
-      unfold parallel, sum_shuffle, inj_fin_add.
+      unfold parallel, sum_shuffle.
       unfold rearrange.
       unfold bij_rew_forward.
-      unfold sequence, extract1, rearrange.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (s1 + (s2 + s3)) (s1 + s2 + s3) _ x _).
-      destruct (PeanoNat.Nat.ltb_spec0 x (s1 + s2)); simpl.
-      destruct (PeanoNat.Nat.ltb_spec0 x s1); simpl.
-      destruct get_parent; try reflexivity. unfold surj_fin_add. 
-      destruct o0.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+r2) (r1 + r2 + 0) _ x0 _).
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+1) (r1 + 1 + 0) _ x0 _).
-      unfold extract1. 
-      destruct (PeanoNat.Nat.ltb_spec0 x0 (r1 + r2)). 
-      destruct (PeanoNat.Nat.ltb_spec0 x0 (r1 + 1)). 
-      destruct zero1. simpl. 
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (S r3) _ _ x1 _). 
-      destruct (PeanoNat.Nat.ltb_spec0 x1 (S r3)). 
-      f_equal.
-      f_equal. apply subset_eq_compat. lia. 
-      destruct zero1. simpl. 
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (S r3) _ _ x1 _). 
-      destruct (PeanoNat.Nat.ltb_spec0 x1 (S r3)). 
-      f_equal. apply subset_eq_compat. lia. 
-      f_equal. apply subset_eq_compat. lia. 
-      exfalso.  apply n. lia. 
-      destruct (PeanoNat.Nat.ltb_spec0 (x - s1) s2). 
-      erewrite <- (parent_proof_irrelevant b2 (x-s1) (x-s1) l1).   
-      destruct (get_parent b2); try reflexivity;
-      unfold extract1, surj_fin_add. 
-      destruct o0. 
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r2+r3) _ _ x0 _).
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+r2) _ _ (r1+x0) _).
-      destruct (PeanoNat.Nat.ltb_spec0 (r1 + x0) (r1 + r2)).
-      destruct (PeanoNat.Nat.ltb_spec0 x0 (r2 + r3)). 
-      destruct zero1. rewrite (@eq_rect_exist nat nat (fun n x => x < n) (S r3) _ _ x1 _). 
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+1) _ _ (r1+x1) _).
-      destruct (PeanoNat.Nat.ltb_spec0 (r1 + x1) (r1 + 1)).
-      destruct (PeanoNat.Nat.ltb_spec0 x1 (S r3)). 
-      reflexivity. 
-      f_equal. apply subset_eq_compat. lia. 
-      exfalso. lia. 
-      exfalso. lia. 
-      exfalso. lia.  
-      reflexivity. 
-      exfalso. lia.
-      destruct (PeanoNat.Nat.ltb_spec0 x s1); simpl.
-      exfalso. lia. 
-      destruct (PeanoNat.Nat.ltb_spec0 (x - s1) s2). 
-      exfalso. lia. 
-      erewrite <- (parent_proof_irrelevant' b3 (x - (s1 + s2)) (x - s1 - s2) ((ZifyClasses.rew_iff_rev (x - (s1 + s2) < s3) (BinInt.Z.lt (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat (s1 + s2)))) (BinInt.Z.of_nat s3)) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt (x - (s1 + s2)) (BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat (s1 + s2)))) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.sub BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat (fun n2 m : BinNums.Z => BinInt.Z.max BinNums.Z0 (BinInt.Z.sub n2 m)) Znat.Nat2Z.inj_sub_max x (BinInt.Z.of_nat x) erefl (s1 + s2) (BinInt.Z.of_nat (s1 + s2)) erefl) s3 (BinInt.Z.of_nat s3) erefl) (ZMicromega.ZTautoChecker_sound (Tauto.IMPL (Tauto.OR (Tauto.AND (Tauto.X Tauto.isProp (BinInt.Z.lt BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat (s1 + s2))))) (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX BinNums.xH; RingMicromega.Fop := RingMicromega.OpEq; RingMicromega.Frhs := EnvRing.PEsub (EnvRing.PEX (BinNums.xI BinNums.xH)) (EnvRing.PEX (BinNums.xO (BinNums.xO BinNums.xH))) |} tt)) (Tauto.AND (Tauto.X Tauto.isProp (BinInt.Z.le (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat (s1 + s2))) BinNums.Z0)) (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX BinNums.xH; RingMicromega.Fop := RingMicromega.OpEq; RingMicromega.Frhs := EnvRing.PEc BinNums.Z0 |} tt))) None (Tauto.IMPL (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX (BinNums.xI BinNums.xH); RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEadd (EnvRing.PEX (BinNums.xO (BinNums.xO BinNums.xH))) (EnvRing.PEX (BinNums.xO BinNums.xH)) |} tt) None (Tauto.IMPL (Tauto.NOT (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX (BinNums.xI BinNums.xH); RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEX (BinNums.xO (BinNums.xO BinNums.xH)) |} tt)) None (Tauto.A Tauto.isProp {| RingMicromega.Flhs := EnvRing.PEX BinNums.xH; RingMicromega.Fop := RingMicromega.OpLt; RingMicromega.Frhs := EnvRing.PEX (BinNums.xO BinNums.xH) |} tt)))) [ZMicromega.RatProof (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 3) (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 2) (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 1) (RingMicromega.PsatzIn BinNums.Z 0)))) ZMicromega.DoneProof; ZMicromega.RatProof (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 3) (RingMicromega.PsatzAdd (RingMicromega.PsatzIn BinNums.Z 2) (RingMicromega.PsatzIn BinNums.Z 0))) ZMicromega.DoneProof] erefl (fun p : BinNums.positive => match p with
-        | BinNums.xI _ => BinInt.Z.of_nat x
-        | BinNums.xO (BinNums.xI _) => BinNums.Z0
-        | BinNums.xO (BinNums.xO _) => BinInt.Z.of_nat (s1 + s2)
-        | BinNums.xO BinNums.xH => BinInt.Z.of_nat s3
-        | BinNums.xH => BinInt.Z.max BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat (s1 + s2)))
-        end) (BinInt.Z.max_spec BinNums.Z0 (BinInt.Z.sub (BinInt.Z.of_nat x) (BinInt.Z.of_nat (s1 + s2)))) (ZifyClasses.rew_iff (x < s1 + s2 + s3) (BinInt.Z.lt (BinInt.Z.of_nat x) (BinInt.Z.add (BinInt.Z.of_nat (s1 + s2)) (BinInt.Z.of_nat s3))) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt x (BinInt.Z.of_nat x) erefl (s1 + s2 + s3) (BinInt.Z.add (BinInt.Z.of_nat (s1 + s2)) (BinInt.Z.of_nat s3)) (ZifyClasses.mkapp2 nat nat nat BinNums.Z BinNums.Z BinNums.Z PeanoNat.Nat.add BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.of_nat BinInt.Z.add Znat.Nat2Z.inj_add (s1 + s2) (BinInt.Z.of_nat (s1 + s2)) erefl s3 (BinInt.Z.of_nat s3) erefl)) (eq_rect (s1 + (s2 + s3)) (fun a : nat => x < a) l (s1 + s2 + s3) (esym (esym (PeanoNat.Nat.add_assoc s1 s2 s3))))) (ZifyClasses.rew_iff (~ x < s1 + s2) (~ BinInt.Z.lt (BinInt.Z.of_nat x) (BinInt.Z.of_nat (s1 + s2))) (ZifyClasses.not_morph (x < s1 + s2) (BinInt.Z.lt (BinInt.Z.of_nat x) (BinInt.Z.of_nat (s1 + s2))) (ZifyClasses.mkrel nat BinNums.Z lt BinInt.Z.of_nat BinInt.Z.lt Znat.Nat2Z.inj_lt x (BinInt.Z.of_nat x) erefl (s1 + s2) (BinInt.Z.of_nat (s1 + s2)) erefl)) n))))).
-      unfold extract1.
-      destruct get_parent; try reflexivity.
-      unfold surj_fin_add. 
-      destruct o0. 
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (S r3) _ _ (1+x0) _). 
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r2 + r3) _ _ (r2+x0) _).
-      destruct (PeanoNat.Nat.ltb_spec0 (1 + x0) (S r3)).
-      destruct zero1. destruct (PeanoNat.Nat.ltb_spec0 (r2 + x0) (r2 + r3)). 
-       
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1 + 1) (r1 + 1 + 0) _ (r1+x1) _).
-      destruct (PeanoNat.Nat.ltb_spec0 (r1 + x1) (r1 + 1)).
+      unfold sequence, extract1, rearrange,split. 
+      rewrite eq_rect_ordinal;simpl.
+      destruct (ltnP m (s1 + s2));simpl; destruct (ltnP m s1);simpl.
+      * destruct get_parent;try reflexivity. destruct o0.
+      unfold extract1. rewrite eq_rect_ordinal. rewrite eq_rect_ordinal. simpl.
+      destruct (ltnP m0 (r1 + r2)); rewrite eq_rect_ordinal;simpl.
+      2:{exfalso. apply leq_addl_trans in i7. elim (lt_ge_contradiction m0 r1 i6 i7). }
+      destruct (ltnP 0 (1 + 0 + r3)).
+      2:{exfalso. rewrite addn0 in i8.
+      rewrite addnC in i8. rewrite leqn0 in i8. rewrite addn_eq0 in i8.
+      generalize i8. 
+      move/andP => [Hr3 Hfalse].
+      discriminate Hfalse. } 
+      destruct ( ltnP m0 (r1 + (1 + 0))).
       reflexivity.
-      f_equal. apply subset_eq_compat. lia.
-      lia.
-      destruct (PeanoNat.Nat.ltb_spec0 (r2 + x0) (r2 + r3)).
-      destruct zero1.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1 + 1) (r1 + 1 + 0) _ (r1+x1) _).
-      destruct (PeanoNat.Nat.ltb_spec0 (r1 + x1) (r1 + 1)).
-      f_equal. apply subset_eq_compat. lia.
-      f_equal. apply subset_eq_compat. lia.
-      rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1 + 1) (r1 + 1 + 0) _ (r1 + (1 + (r2 + x0 - (r2 + r3)))) _).
-      destruct (PeanoNat.Nat.ltb_spec0 (r1 + (1 + (r2 + x0 - (r2 + r3)))) (r1 + 1)).
-      f_equal. apply subset_eq_compat. lia.
-      f_equal. apply subset_eq_compat. lia.
-      lia.
+      exfalso. rewrite addn0 in i9. 
+      apply (leq_addl_trans r1 1 m0) in i9.
+      elim (lt_ge_contradiction m0 r1 i6 i9).
+      * destruct (ltnP (m - s1) s2).
+      rewrite (Ordinal_proof_irrelevance s2 (m-s1) _ i6).
+      destruct get_parent;try reflexivity.
+      unfold extract1. rewrite eq_rect_ordinal. simpl. destruct o0. simpl.
+      destruct (ltnP (r1 + m0) (r1 + r2)).
+      2:{exfalso. rewrite (leq_add2l r1 r2 m0) in i8. elim (lt_ge_contradiction m0 r2 i7 i8). }
+      rewrite eq_rect_ordinal. rewrite eq_rect_ordinal. simpl. 
+      destruct (ltnP 0 (1 + 0 + r3)).
+      2:{exfalso. rewrite addn0 in i9.
+      rewrite addnC in i9. rewrite leqn0 in i9. rewrite addn_eq0 in i9.
+      generalize i9. 
+      move/andP => [Hr3 Hfalse].
+      discriminate Hfalse. }
+      destruct (ltnP m0 (r2 + r3)). 
+      2:{exfalso. apply (leq_addl_trans r2 r3 m0) in i10. elim (lt_ge_contradiction m0 r2 i7 i10). }
+      rewrite eq_rect_ordinal. simpl. 
+      destruct (ltnP (r1 + 0) (r1 + (1 + 0))).
+      2:{exfalso. rewrite addn0 in i11.
+      rewrite addn0 in i11.
+      apply (add1_leq_false r1 i11). }
+      reflexivity.
+      exfalso. rewrite leq_subRL in i6; try assumption. 
+      elim (lt_ge_contradiction m (s1+s2) i4 i6).
+      exfalso. apply (leq_addl_trans s1 s2 m) in i4.
+      elim (lt_ge_contradiction m s1 i5 i4).
+      * destruct (ltnP (m - s1) s2).
+      exfalso. rewrite <- leq_subRL in i4; try assumption.  
+      elim (lt_ge_contradiction (m-s1) s2 i6 i4).
+      erewrite <- (parent_proof_irrelevant b3 _).
+      instantiate (1:= Ordinal (n:=s3) (m:=m - s1 - s2) (split_subproof (m:=s2) (n:=s3) (i:=Ordinal (n:=s2 + s3) (m:=m - s1) (split_subproof (m:=s1) (n:=s2 + s3) (i:=Ordinal (n:=s1 + (s2 + s3)) (m:=m) i0) i5)) i6)).
+      destruct get_parent;try reflexivity.
+      destruct o0.
+      unfold extract1. rewrite eq_rect_ordinal. simpl. rewrite eq_rect_ordinal;simpl.
+      destruct (ltnP (1 + 0 + m0) (1 + 0 + r3)).
+      2:{exfalso. rewrite addn0 in i8. rewrite leq_add2l in i8. elim(lt_ge_contradiction m0 r3 i7 i8). }
+      destruct (ltnP (r2 + m0) (r2 + r3)).
+      2:{exfalso. rewrite leq_add2l in i9. elim(lt_ge_contradiction m0 r3 i7 i9). }
+      rewrite eq_rect_ordinal. simpl.
+      destruct (ltnP (r1 + 0) (r1 + (1 + 0))).
+      2:{exfalso. rewrite addn0 in i10.
+      rewrite addn0 in i10.
+      apply (add1_leq_false r1 i10). }
+      reflexivity.
   + apply functional_extensionality.
     destruct x as [[i123] | p123]; simpl; unfold funcomp; simpl.
     - unfold funcomp.
@@ -484,7 +442,7 @@ Theorem bigraph_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
       *** unfold permut_list_forward. 
       destruct s0. f_equal. apply subset_eq_compat. reflexivity.
       ** destruct (in_dec EqDecN i123 i2).      
-      *** symmetry. rewrite <- (innername_proof_irrelevant b2 i123 i5). 
+      *** symmetry. rewrite <- (innername_proof_irrelevant b2 i5). 
       destruct get_link; try reflexivity.
       **** unfold permut_list_forward. destruct s0. f_equal. apply subset_eq_compat. reflexivity.
       *** exfalso. apply in_app_or_m in i4. destruct i4.
@@ -494,7 +452,7 @@ Theorem bigraph_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
       ** exfalso. apply n. apply in_right_list. apply i4.
       ** destruct (in_dec EqDecN i123 i2).
       *** exfalso. apply n. apply in_left_list. apply i4.
-      *** rewrite <- (innername_proof_irrelevant b1 i123 (not_in_left i0 n)). 
+      *** rewrite <- (innername_proof_irrelevant b1 (not_in_left i0 n)). 
       destruct get_link; try reflexivity.
       **** destruct s0. apply f_equal. apply subset_eq_compat. reflexivity.
     - destruct p123 as ([[v | v] | [a | [[v|v]|[b|c]]]], (i123, Hvi123)); simpl.
@@ -532,9 +490,11 @@ Theorem bigraph_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
         unfold extract1. simpl. 
         destruct get_link; try reflexivity.
         ** destruct s0. apply f_equal. apply subset_eq_compat. reflexivity.
+  Unshelve.
+  apply val_inj. simpl. rewrite addnC. rewrite subnDAC. reflexivity.
   Qed. 
 
-Lemma arity_mp_commu : forall {s1 i1 r1 o1 s2 i2 r2 o2}
+(* Lemma arity_mp_commu : forall {s1 i1 r1 o1 s2 i2 r2 o2}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
   {up12 : UnionPossible b1 b2} n12,
   Arity (get_control (bg:=b1 <|> b2) n12) 
@@ -554,7 +514,7 @@ Theorem bigraph_mp_comu : forall {s1 i1 r1 o1 s2 i2 r2 o2}
   Proof.
   intros.
   eapply (BigEq _ _ _ _ _ _ _ _ (b1 <|> b2) (b2 <|> b1)
-    (PeanoNat.Nat.add_comm s1 s2)
+    (addnC s1 s2)
     permutation_union_commutes
     (erefl)
     permutation_empty_union_commutes
@@ -570,7 +530,7 @@ Theorem bigraph_mp_comu : forall {s1 i1 r1 o1 s2 i2 r2 o2}
     unfold parallel, rearrange, extract1, sum_shuffle.
     destruct get_parent; try reflexivity. 
     destruct o0.
-    unfold inj_fin_add, bij_rew_forward, surj_fin_add.
+    unfold  bij_rew_forward.
     rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+r2) (r1 + r2 + 0) _ (r1 + x) _).
     destruct (PeanoNat.Nat.ltb_spec0 (r1 + x) (r1 + r2)).
     destruct zero1. 
@@ -582,7 +542,7 @@ Theorem bigraph_mp_comu : forall {s1 i1 r1 o1 s2 i2 r2 o2}
     unfold parallel, rearrange, extract1, sum_shuffle.
     destruct get_parent; try reflexivity. 
     destruct o0.
-    unfold inj_fin_add, bij_rew_forward, surj_fin_add.
+    unfold  bij_rew_forward.
     rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1+r2) (r1 + r2 + 0) _ x _).
     destruct (PeanoNat.Nat.ltb_spec0 x (r1 + r2)).
     destruct zero1. 
@@ -592,14 +552,14 @@ Theorem bigraph_mp_comu : forall {s1 i1 r1 o1 s2 i2 r2 o2}
     exfalso. apply n. lia.
     - simpl. 
     unfold parallel, rearrange, extract1, sum_shuffle.
-    unfold inj_fin_add, bij_rew_forward, surj_fin_add.
+    unfold  bij_rew_forward.
     destruct s1_23'.
     rewrite (@eq_rect_exist nat nat (fun n x => x < n) (s2+s1) (s1+s2) _ x _).
     destruct (PeanoNat.Nat.ltb_spec0 x s1).
     destruct (PeanoNat.Nat.ltb_spec0 x s2).
     destruct get_parent.
     destruct get_parent. 
-     f_equal. f_equal. f_equal.  Abort.
+     f_equal. f_equal. f_equal.  Abort. *)
       
       
 End MergeBig.

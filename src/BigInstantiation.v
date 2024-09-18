@@ -6,7 +6,6 @@ Require Import SignatureBig.
 Require Import Equality.
 Require Import Bijections.
 Require Import MyBasics.
-Require Import FinDecTypes.
 Require Import ParallelProduct.
 Require Import MergeProduct.
 Require Import Nesting.

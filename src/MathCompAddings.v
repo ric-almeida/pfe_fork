@@ -204,3 +204,8 @@ Proof.
   reflexivity.
   apply leqnn.
   Qed.
+
+Lemma add1_leq_false r : r + 1 <= r -> False.
+Proof.
+  move/leq_trans.
+Admitted.
