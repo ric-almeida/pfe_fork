@@ -9,25 +9,16 @@ Require Import MyBasics.
 Require Import ParallelProduct.
 Require Import MergeProduct.
 Require Import Nesting.
+Require Import MathCompAddings.
 
 
 Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.
-Require Import Lia.
-
-Require Import Coq.Arith.PeanoNat.
-Require Import Coq.Arith.Peano_dec.
 Require Import Coq.Lists.List.
-Require Import Coq.Program.Equality.
-Require Import Coq.Sorting.Permutation.
-Require Import Coq.Classes.CRelationClasses.
-Require Import Coq.Arith.Arith.
-Require Import Coq.Arith.Wf_nat.
-Require Import Coq.Program.Wf.
-Require Import Coq.Strings.String.
-Require Import Coq.Bool.Sumbool.
 
 
+
+From mathcomp Require Import all_ssreflect.
 
 Import ListNotations.
 

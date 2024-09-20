@@ -177,8 +177,6 @@ Theorem symmetry_eq_tp_id : forall m n:nat, forall X Y:NoDupList,
         f_equal. apply subset_eq_compat. reflexivity. 
       - destruct v.
     Unshelve.
-    exact nat.
-    exact nat.
     intros [v|v]; destruct v.
   Qed.
 End S2.
@@ -506,8 +504,10 @@ Theorem symmetry_distributive_s4 {mI mJ mK:nat} {XI XJ XK:NoDupList}
     rewrite addnA.
     apply eq_sum_r; try reflexivity.
     rewrite <- subDnCA; try assumption.
-    rewrite minus_plus. 
-    rewrite plus_minus. rewrite plus_minus. reflexivity. 
+    rewrite plus_minus. 
+    rewrite plus_minus.
+    rewrite addnBAC; try assumption.
+    rewrite plus_minus. reflexivity. 
     * f_equal. unfold unsplit,lshift,rshift.
     apply val_inj;simpl. symmetry.
     destruct (ltnP (mI + (m - mI + mK)) mI).
@@ -570,5 +570,92 @@ Theorem symmetry_distributive_s4 {mI mJ mK:nat} {XI XJ XK:NoDupList}
   Qed.
 
 End S4.
+
+Section SymmetryAxiom.
+
+Lemma symmetry_axiom : forall m n X Y, 
+  bigraph_equality 
+    (symmetry_big m X n Y) 
+    (symmetry_big m EmptyNDL n EmptyNDL ⊗ bigraph_id 0 (X ∪ Y)).
+  Proof.
+  intros. 
+  refine (
+    BigEq _ _ _ _ _ _ _ _
+      (symmetry_big m X n Y)
+      (symmetry_big m EmptyNDL n EmptyNDL ⊗ bigraph_id 0 (X ∪ Y))
+      (esym (addn0 (m+n))) (*s*)
+      (permutation_left_neutral_neutral) (*i*)
+      (esym (addn0 (m+n))) (*r*)
+      (permutation_left_neutral_neutral) (*o*)
+      (bijection_inv bij_void_sum_void) (*n*)
+      (bijection_inv bij_void_sum_void) (*e*)
+      (fun n => bij_rew (void_univ_embedding n)) (*p*)
+      _ _ _
+    ).
+  + apply functional_extensionality.
+    intros [v|v]; destruct v.
+  + simpl. apply functional_extensionality.
+    destruct x as [[v|v] | s1]; try destruct v; simpl.
+    unfold funcomp, parallel. simpl.
+    unfold bij_rew_forward,rearrange,sum_shuffle,extract1.
+    destruct s1; simpl.
+    rewrite eq_rect_ordinal.
+    unfold fintype.split;simpl.
+    destruct (ltnP m0 (m + n)).
+    2: {exfalso. rewrite addn0 in i0. elim (lt_ge_contradiction m0 (m+n) i0 i1). }
+    unfold unsplit,lshift. f_equal. simpl.
+    destruct (ltnP m0 m); rewrite eq_rect_ordinal; apply val_inj;simpl; reflexivity.
+  + apply functional_extensionality.
+    destruct x as [[name] | (v, tmp)]; simpl.
+    - unfold funcomp,rearrange,switch_link,parallel,sequence.
+      simpl.
+      unfold funcomp,rearrange,switch_link,parallel,sequence,sum_shuffle,extract1,bij_list_backward',permut_list_forward,bij_list_forward.
+      f_equal. apply subset_eq_compat. reflexivity.    
+    - simpl in v. destruct v as [v|v]; destruct v.
+  Qed.
+
+End SymmetryAxiom. 
+
+    
+Section PlaceAxioms.
+
+(* Place axioms: 
+  join ◦ γ1,1 = join 
+  join ◦ (1 ⊗ id1)=id1 
+  join ◦ (join ⊗ id1)=join ◦ (id1 ⊗ join) *)
+
+Lemma place_axiom_join_sym1_1 : 
+  bigraph_equality
+    (join_big <<o>> symmetry_big 1 EmptyNDL 1 EmptyNDL)
+    join_big.
+  Proof.
+  refine (
+    BigEq _ _ _ _ _ _ _ _
+      (join_big <<o>> symmetry_big 1 EmptyNDL 1 EmptyNDL)
+      join_big
+      (esym (addn0 (1+1))) (*s*)
+      (permutation_left_neutral_neutral) (*i*)
+      (erefl) (*r*)
+      (permutation_left_neutral_neutral) (*o*)
+      (bij_void_sum_void) (*n*)
+      (bij_void_sum_void) (*e*)
+      (fun n => match n with 
+      | inl n => bij_rew (void_univ_embedding n) (*p*)
+      | inr n => bij_rew (void_univ_embedding n)
+      end) (*p*)
+      _ _ _
+    ).
+  + apply functional_extensionality.
+    destruct x.
+  + simpl. apply functional_extensionality.
+    destruct x as [v | s1]; try destruct v; simpl.
+    unfold funcomp, parallel. simpl. reflexivity.
+  + apply functional_extensionality.
+    destruct x as [[name] | (v, tmp)]; simpl.
+    - elim i0.    
+    - simpl in v. destruct v.
+  Qed.
+
+End PlaceAxioms.
 
 End Symmetries.

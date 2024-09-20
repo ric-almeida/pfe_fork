@@ -936,7 +936,6 @@ Theorem merge_well_defined : forall n,
     + elim f. 
     + destruct s. destruct x as [v|[v|v]]; destruct v. 
     Unshelve. 
-    * exact nat. * exact nat. 
     * intros. simpl in n1. destruct n1. 
   Qed.
   

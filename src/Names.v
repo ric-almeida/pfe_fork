@@ -1573,6 +1573,7 @@ Lemma permutationtr {o1 o2 o3}:
   constructor. apply (merge_not_inl_and_inl o1 o2).
   Qed.
 
+
 Lemma permutation_commute {i1 i2} : 
   permutation i1 i2 -> permutation i2 i1.
   unfold permutation. intros.
@@ -1607,8 +1608,36 @@ Definition permutationtr' {o1 o2 o3}:
   Proof.
   constructor. 
   apply (permutation_commute (merge_not_inr_and_inr i1 i2)).
+  Qed.  
+
+
+Definition permutation_left_neutral {X:NoDupList} :
+  permutation X (EmptyNDL ∪ X).
+  Proof.
+  unfold permutation.
+  intros. split;intros.
+  - apply in_right_list. apply H.
+  - apply in_app_iff in H. destruct H.
+  + elim H.
+  + apply H.
   Qed.
+
+Definition permutation_left_neutral_neutral {X:NoDupList} :
+  permutation X (EmptyNDL ∪ (EmptyNDL ∪ X)).
+  Proof.
+  unfold permutation.
+  intros. split;intros.
+  - apply in_right_list. apply in_right_list. apply H.
+  - apply in_app_iff in H. destruct H.
+  + elim H.
+  + apply in_app_iff in H. destruct H.
+  * elim H.
+  * apply H.
+  Qed.
+
 End permutationsNDL.
+
+
 
 End Names.
 

@@ -150,47 +150,8 @@ Qed.
 
 
 Lemma minus_plus : forall x y, x - y + y = x.
-Proof. 
-  intros.   
-  destruct (y <= x) eqn:E.
-  - rewrite subnK. reflexivity. apply E.
-  (* rewrite addnBC.
-  apply eq_sum_r_0.
-  exact 0.
-  exact 0.
-  Search (_-_=0).
-  rewrite <- subn0.
-  apply subnBl_leq.
-  apply E.
-  - 
-  Search (_-_+_=_).
-
-  rewrite addnBC.
-  apply eq_sum_r_0.
-  exact 0.
-  exact 0.
-  Search (_-_=0).
-  rewrite <- subn0.
-  apply subnBl_leq.
-  Search (_+_=_).
-
-   Search ((_ <= _) = true -> _).
-  
-  inversion E. rewrite addnC.
-  Set Printing All.
-  induction y.
-  - rewrite subn0. 
-  rewrite addn0. reflexivity.
-  - rewrite <- IHy.
-  Search (_ = _+1). *)
-  
-   (* rewrite addnC. 
-   
-   Search (_ - _.+1).  rewrite subnS.
-
-  Search (_+_.-1).  rewrite <- addnCB. rewrite addnC. apply IHy.  *)
-
-  Admitted.
+Proof.
+Abort.
 
 
 
@@ -207,5 +168,11 @@ Proof.
 
 Lemma add1_leq_false r : r + 1 <= r -> False.
 Proof.
-  move/leq_trans.
-Admitted.
+  intros.
+  induction r.
+  rewrite leqn0 in H.
+  rewrite addnC in H. rewrite addn0 in H. discriminate H.
+  apply IHr.
+  rewrite addSn in H.
+  apply ltnSE in H. apply H.
+  Qed.

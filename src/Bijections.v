@@ -365,7 +365,7 @@ Theorem bij_sum_assoc_mp : forall {A B C}, bijection ((void+void)+(((void+void)+
   Defined.
 
 
-Theorem bij_void_sum_sum : forall {A : Type}, bijection void (void + (void + void)).
+Theorem bij_void_sum_sum :  bijection void (void + (void + void)).
   Proof.
   intros.
   apply (mkBijection void (void + (void + void)) void_univ_embedding 
@@ -376,7 +376,7 @@ Theorem bij_void_sum_sum : forall {A : Type}, bijection void (void + (void + voi
   destruct x. 
   Defined.
 
-Theorem bij_void_sum_void : forall {A : Type}, bijection (void + void) void.
+Theorem bij_void_sum_void : bijection (void + void) void.
   Proof.
   intros.
   apply (mkBijection (void + void) void 
@@ -1637,33 +1637,6 @@ Definition surj_ord_add {n p : nat} (f : ordinal n + ordinal p) : ordinal (n + p
   rewrite ltn_add2l.
   assumption.
   Defined.
-
-(* Theorem inj_o_surj_id : forall n p, (@inj_ord_add n p) <o> (@surj_ord_add n p) = id.
-  intros n p.
-  apply functional_extensionality.
-  unfold inj_ord_add.
-  unfold surj_ord_add.
-  unfold funcomp.
-  destruct x as [(k, Hk) | (k, Hk)].
-  Admitted. *)
-
-(* Theorem inj_o_surj_id' : forall n p, forall x, (@inj_ord_add n p  (@surj_ord_add n p x)) = x.
-  Proof. 
-  intros.
-  rewrite <- (funcomp_simpl surj_ord_add inj_ord_add).
-  rewrite inj_o_surj_id.
-  auto. 
-  Qed. *)
-
-(* Theorem surj_o_inj_id : forall n p, (@surj_ord_add n p) <o> (@inj_ord_add n p) = id.
-  intros n p.
-  apply functional_extensionality.
-  unfold inj_ord_add.
-  unfold surj_ord_add.
-  unfold funcomp.
-  
-  destruct x as (k, Hk).
-  Admitted. *)
 
 Theorem bij_ord_sum : forall {n p :nat}, bijection (ordinal (n+p)) ((ordinal n)+(ordinal p)).
   Proof.
