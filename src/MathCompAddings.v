@@ -3,6 +3,8 @@ Set Warnings "-notation-overridden, -notation-overriden".
 
 Require Import Arith.
 
+Require Import List.
+
 From mathcomp Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq fintype finfun. 
 
 
@@ -176,3 +178,12 @@ Proof.
   rewrite addSn in H.
   apply ltnSE in H. apply H.
   Qed.
+
+Lemma in_or_app_mc {Name} : forall (l1 l2 : seq Name) (inner : Name),
+  In inner ((l1 ++ (inner :: l2)%SEQ)%list).
+  Proof.
+  intros l1 l2 inner.
+  apply in_or_app.
+  right. constructor. reflexivity. 
+Qed.
+

@@ -44,6 +44,10 @@ Include n.
   This section defines the Type bigraph *)
 Section IntroBigraphs.
 
+(* Check subFinType.
+Print adhoc_seq_sub_finType.
+Search (adhoc_seq_sub_finType).
+Search (list _ -> finType). *)
 Record bigraph  (site: nat) 
                 (innername: NoDupList) 
                 (root: nat) 
@@ -75,6 +79,10 @@ Definition get_parent {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : (ge
   @parent s i r o bg.
 Definition get_link {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : {inner:Name | In inner i} + Port (@get_control s r i o bg) -> {outer:Name | In outer o} + (get_edge bg) :=
   @link s i r o bg.
+Definition get_ap {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : FiniteParent (get_parent (bg:=bg)) := 
+  @ap s i r o bg.
+Definition get_port {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : Type :=
+  Port (get_control (bg:=bg)).
 End GettersBigraphs.
 
 (** Tools for proof irrelevance *)

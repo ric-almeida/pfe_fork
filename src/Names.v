@@ -814,6 +814,17 @@ Theorem dis_trans_r {i1 i2 i3}
   Qed.
 
 Class DisjointNames (l1 l2 : NoDupList) := { disj : forall n, In n l1 -> In n l2 -> False }.
+#[export] Instance disj_OneEl (n:Name) (l : NoDupList) (not_in : ~ In n l):
+  DisjointNames l (OneelNDL n).
+  Proof.
+  constructor.
+  intros n' Hn' H'.
+  simpl in H'. destruct H'.
+  - subst n. contradiction.
+  - apply H.
+  Qed.
+
+
 #[export] Instance disj_left_neutral (l : NoDupList) : DisjointNames EmptyNDL l.
   Proof.
   constructor.
