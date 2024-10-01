@@ -6,6 +6,8 @@ Require Import Names.
 Require Import SignatureBig.
 Require Import MyBasics.
 Require Import MathCompAddings.
+Require Import FunctionalExtensionality.
+
 
 Require Import Coq.Lists.List.
 Require Import Coq.Setoids.Setoid.
@@ -28,10 +30,10 @@ Import ListNotations.
   between bigraphs, we want an equivalence between each Type and between 
   each function.
   To do that, we make definitions of equivalence between each function. 
-  We coerce the Record bigraph_equality into a Prop, which means that we can
+  We coerce the Record support_equivalence into a Prop, which means that we can
   access the bjections, but also that their existence means the Prop is True.
   Note that our equivalence is heterogeneous. 
-  We prove that our relation bigraph_equality is reflexive, 
+  We prove that our relation support_equivalence is reflexive, 
   symmetric and transitive. This is going to be useful to be able to rewrite 
   bigraphs at will. *)
 Module EquivalenceBigraphs (s : SignatureParameter) (n : NamesParameter).
@@ -39,9 +41,9 @@ Module b := Bigraphs s n.
 Include b. 
 
 (** ** On the heterogeneous type *)
-Record bigraph_equality {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+Record support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
-  BigEq
+  SupEq
   {
     bij_s : s1 = s2 ;
     bij_i : permutation i1 i2 ; (*Permutation i1 i2*)
@@ -55,10 +57,10 @@ Record bigraph_equality {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
     big_link_eq    : ((<{bij_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{bij_id| bij_o}> <+> bij_e)) (get_link (bg := b1)) = get_link (bg := b2)
   }.
   
-Lemma bigraph_equality_refl {s r : nat} {i o : NoDupList} (b : bigraph s i r o) :
-  bigraph_equality b b.
+Lemma support_equivalence_refl {s r : nat} {i o : NoDupList} (b : bigraph s i r o) :
+  support_equivalence b b.
   Proof.
-  eapply (BigEq _ _ _ _ _ _ _ _ _ _ erefl _ erefl _ bij_id bij_id (fun _ => bij_id)).
+  eapply (SupEq _ _ _ _ _ _ _ _ _ _ erefl _ erefl _ bij_id bij_id (fun _ => bij_id)).
   + rewrite bij_fun_compose_id.
     reflexivity.
   + rewrite bij_rew_id.
@@ -79,14 +81,14 @@ Lemma bigraph_equality_refl {s r : nat} {i o : NoDupList} (b : bigraph s i r o) 
   - unfold permutation. intros. reflexivity.
   Qed.
 
-Lemma bigraph_equality_sym {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}  
+Lemma support_equivalence_sym {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}  
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
-  bigraph_equality b1 b2
-      -> bigraph_equality b2 b1.
+  support_equivalence b1 b2
+      -> support_equivalence b2 b1.
   Proof.
   intro Heqb1b2.
   destruct Heqb1b2 as (bij_s, bij_i, bij_r, bij_o, bij_n, bij_e, bij_p, big_control_eq, big_parent_eq, big_link_eq).
-  apply (BigEq _ _ _ _ _ _ _ _ b2 b1
+  apply (SupEq _ _ _ _ _ _ _ _ b2 b1
           (esym bij_s)
           (adjunction_equiv bij_id bij_i)
           (esym bij_r)
@@ -132,17 +134,17 @@ Lemma bigraph_equality_sym {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
     reflexivity.
   Qed.
 
-Lemma bigraph_equality_trans 
+Lemma support_equivalence_trans 
   {s1 r1 s2 r2 s3 r3 : nat} {i1 o1 i2 o2 i3 o3: NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3):
-    bigraph_equality b1 b2
-      -> bigraph_equality b2 b3  
-        -> bigraph_equality b1 b3.
+    support_equivalence b1 b2
+      -> support_equivalence b2 b3  
+        -> support_equivalence b1 b3.
   Proof.
   intros Heqb1b2 Heqb2b3.
   destruct Heqb1b2 as (bij_s12, bij_i12, bij_r12, bij_o12, bij_n12, bij_e12, bij_p12, big_control_eq12, big_parent_eq12, big_link_eq12).
   destruct Heqb2b3 as (bij_s23, bij_i23, bij_r23, bij_o23, bij_n23, bij_e23, bij_p23, big_control_eq23, big_parent_eq23, big_link_eq23).
-  apply (BigEq _ _ _ _ _ _ _ _ b1 b3
+  apply (SupEq _ _ _ _ _ _ _ _ b1 b3
           (eq_trans bij_s12 bij_s23)
           (fun name : Name => @iff_trans 
             (@In Name name (ndlist i1)) 
@@ -200,48 +202,48 @@ Coercion packing {s i r o} (b : bigraph s i r o) :=
 Definition unpacking (b : bigraph_packed) : bigraph (s b) (i b) (r b) (o b) := 
   big b.
 
-Definition bigraph_packed_equality (bp1 bp2 : bigraph_packed) := 
-  bigraph_equality (big bp1) (big bp2).
+Definition bigraph_pkd_s_e (bp1 bp2 : bigraph_packed) := 
+  support_equivalence (big bp1) (big bp2).
 
 Theorem eq_packed_eq_eq {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}  
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :
-   bigraph_equality b1 b2 <-> bigraph_packed_equality b1 b2.
+   support_equivalence b1 b2 <-> bigraph_pkd_s_e b1 b2.
    split. auto. auto. 
    Qed. 
 
-Lemma bigraph_packed_equality_refl (bp : bigraph_packed) : bigraph_packed_equality bp bp.
+Lemma bigraph_pkd_s_e_refl (bp : bigraph_packed) : bigraph_pkd_s_e bp bp.
   Proof.
-  apply bigraph_equality_refl.
+  apply support_equivalence_refl.
   Qed.
 
-Lemma bigraph_packed_equality_sym (bp1 bp2 : bigraph_packed) : bigraph_packed_equality bp1 bp2 -> bigraph_packed_equality bp2 bp1.
+Lemma bigraph_pkd_s_e_sym (bp1 bp2 : bigraph_packed) : bigraph_pkd_s_e bp1 bp2 -> bigraph_pkd_s_e bp2 bp1.
   Proof.
-  apply bigraph_equality_sym.
+  apply support_equivalence_sym.
   Qed.
 
-Lemma bigraph_packed_equality_trans (bp1 bp2 bp3 : bigraph_packed) : bigraph_packed_equality bp1 bp2 -> bigraph_packed_equality bp2 bp3 -> bigraph_packed_equality bp1 bp3.
+Lemma bigraph_pkd_s_e_trans (bp1 bp2 bp3 : bigraph_packed) : bigraph_pkd_s_e bp1 bp2 -> bigraph_pkd_s_e bp2 bp3 -> bigraph_pkd_s_e bp1 bp3.
   Proof.
-  apply bigraph_equality_trans.
+  apply support_equivalence_trans.
   Qed. 
 
-Add Parametric Relation: (bigraph_packed) (bigraph_packed_equality)
-  reflexivity proved by (bigraph_packed_equality_refl)
-  symmetry proved by (bigraph_packed_equality_sym)
-  transitivity proved by (bigraph_packed_equality_trans)
-    as bigraph_packed_equality_rel.
+Add Parametric Relation: (bigraph_packed) (bigraph_pkd_s_e)
+  reflexivity proved by (bigraph_pkd_s_e_refl)
+  symmetry proved by (bigraph_pkd_s_e_sym)
+  transitivity proved by (bigraph_pkd_s_e_trans)
+    as bigraph_pkd_s_e_rel.
 
-Lemma bigraph_packed_equality_dec  
+Lemma bigraph_pkd_s_e_dec  
   (b1 : bigraph_packed) (b2 : bigraph_packed) :
-  {bigraph_packed_equality b1 b2} + {~ bigraph_packed_equality b1 b2}.
-  Proof. (* same problem, bigraph_packed_equality not transparent enough *)
+  {bigraph_pkd_s_e b1 b2} + {~ bigraph_pkd_s_e b1 b2}.
+  Proof. (* same problem, bigraph_pkd_s_e not transparent enough *)
     Fail decide equality. 
   Abort.
 
-#[export] Instance big_Equivalence: Equivalence bigraph_packed_equality.
+#[export] Instance big_Equivalence: Equivalence bigraph_pkd_s_e.
   constructor. 
-  exact @bigraph_packed_equality_refl. 
-  exact @bigraph_packed_equality_sym. 
-  exact @bigraph_packed_equality_trans. Defined. 
+  exact @bigraph_pkd_s_e_refl. 
+  exact @bigraph_pkd_s_e_sym. 
+  exact @bigraph_pkd_s_e_trans. Defined. 
 
 
 
@@ -354,6 +356,13 @@ Definition not_is_idle {s i r o} {b:bigraph s i r o} (e: get_edge b) : bool :=
       end) 
     (make_seq_link_domain b).
 
+Fail Fixpoint is_idle {s i r o} {b:bigraph s i r o} (e: get_edge b) : bool := 
+  forall ip, match get_link (bg:=b) ip with 
+  |inr e' => e' == e
+  | _ => true
+  end.
+
+
 Lemma exists_inner_implies_not_idle {s i r o} {b:bigraph s i r o} (i':NameSub i) (e: get_edge b) : 
   get_link (bg:=b) (inl i') = (inr e) -> 
     not_is_idle e.
@@ -413,18 +422,17 @@ Definition lean {s i r o} (b:bigraph s i r o) :
     (get_parent (bg:=b))
     _
     (get_ap (bg:=b))).
-  intros [i' | p'].
-  - destruct (get_link (bg:=b) (inl i')) as [o'|e'] eqn:El.
+  unfold get_edges_wo_idles. 
+  intros [i'|p'].
+  - destruct (get_link (bg:=b) (inl i')) as [o'|e'] eqn:El. 
   + left. exact o'.
-  + right. unfold get_edges_wo_idles. exists e'. (*le GOAL*) 
-  apply (exists_inner_implies_not_idle i'). apply El.
+  + right. exists e'. (*le GOAL*) 
+  eapply (exists_inner_implies_not_idle _). simpl. apply El.
   - destruct (get_link (bg:=b) (inr p')) as [o'|e'] eqn:El.
   + left. exact o'.
   + right. unfold get_edges_wo_idles. exists e'. (*le GOAL*) 
   apply (exists_port_implies_not_idle p'). apply El.
   Defined.
-
-
 
 
 
@@ -439,15 +447,15 @@ Theorem lean_is_lean {s i r o} (b:bigraph s i r o) :
   is_lean (lean b).
   Proof.
   unfold is_lean,surjective_link.
-  unfold lean. simpl.
-  intros nie.
+  unfold lean.
+  intros nie. simpl in nie. simpl.
   destruct nie as [nie Hnie].
   set (ip':= not_is_idle_implies_exists_inner_or_node nie Hnie).
   destruct ip' as [ip Hip].
-  simpl. 
   exists ip.
   destruct ip as [inner | port]; simpl.
-  - Fail rewrite Hip. admit. 
+  - destruct inner. simpl.
+    admit. 
   - Fail rewrite Hip. admit. 
   Abort.
 
@@ -503,17 +511,96 @@ Theorem lean_bigraph_same_bigraph {s i r o} (b:bigraph s i r o) :
       rewrite bij_sum_compose_id.
       rewrite bij_fun_compose_id.
       reflexivity.
-    - Admitted.
+    - destruct ip as [inner|port].
+      + destruct get_link eqn:E; simpl.
+        * Fail destruct get_link. admit.
+        * Fail destruct get_link. admit.
+      + destruct get_link eqn:E; simpl.
+        * Fail destruct get_link. admit.
+        * Fail destruct get_link. admit.
+  Admitted.
 
 
 Definition lean_support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) := 
-  bigraph_equality (lean b1) (lean b2).
+  support_equivalence (lean b1) (lean b2).
+
+Lemma id_left_neutral : forall A B, forall f:A -> B, id <o> f =f. 
+  Proof. intros. simpl; reflexivity. Qed.
 
 Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : 
-  bigraph_equality b1 b2 -> lean_support_equivalence b1 b2.
+  support_equivalence b1 b2 -> lean_support_equivalence b1 b2.
   Proof.
+  intros [bij_s bij_i bij_r bij_o bij_n bij_e bij_p control_eq parent_eq link_eq].
+  unfold lean_support_equivalence.
+  refine (
+    SupEq _ _ _ _ _ _ _ _ (lean b1) (lean b2)
+      bij_s bij_i bij_r bij_o bij_n _ bij_p control_eq parent_eq _
+  ).
+  Unshelve.  
+  2:{simpl.
+  refine (<{ bij_e | _ }>).
+  intros e. simpl. 
+  split; intros.
+  * apply not_is_idle_implies_exists_inner_or_node in H.
+  destruct H as [[[inner Hinner]|[n [port Hport]]] H].
+  - destruct (bij_i inner). 
+  eapply (exists_inner_implies_not_idle (exist _ inner (H0 Hinner))).
+  rewrite <- link_eq.
+  simpl.
+  unfold parallel,funcomp, bij_subset_backward. simpl.
+  rewrite <- (innername_proof_irrelevant b1 Hinner).
+  destruct get_link.
+  + discriminate H.
+  + f_equal. f_equal.
+  injection H. auto.
+  - eapply (exists_port_implies_not_idle (existT _ (bij_n n) (Ordinal (m:=port) _))).
+  Unshelve.
+  3:{ rewrite <-control_eq. simpl. 
+  rewrite (id_left_neutral _ _ (get_control (bg:=b1))).
+  unfold funcomp.
+  set (tmpH := equal_f (bof_id _ _ bij_n) (n)).
+  unfold funcomp in tmpH.  
+  rewrite tmpH.
+  apply Hport. }
+  rewrite <- link_eq.
+  simpl.
+  unfold parallel,funcomp, bij_subset_backward. simpl.
+  unfold eq_rect_r.
+  erewrite (port_proof_irrelevant_full (b:=b1) (n':=n)
+  (port':=Ordinal (n:=Arity (get_control (bg:=b1) n)) (m:=port) Hport)).
+  destruct get_link.
+  + discriminate H.
+  + f_equal. f_equal.
+  injection H. auto.
+  -- set (tmpH := equal_f (bof_id _ _ bij_n) (n)).
+  unfold funcomp in tmpH.  
+  apply tmpH.
+  -- admit.
+
+  * apply not_is_idle_implies_exists_inner_or_node in H.
+  destruct H as [[[inner Hinner]|[n [port Hport]]] H].
+  - destruct (bij_i inner). 
+  eapply (exists_inner_implies_not_idle (exist _ inner (H1 Hinner))).
+  rewrite <- link_eq in H.
+  simpl in H.
+  unfold parallel,funcomp, bij_subset_backward in H. simpl in H.
+  rewrite <- (innername_proof_irrelevant b1 (H1 Hinner)) in H.
+  destruct get_link.
+  + discriminate H.
+  + f_equal. injection H. apply (bij_injective bij_e _ _).
+  - eapply (exists_port_implies_not_idle (existT _ (bij_n⁻¹ n) (Ordinal (m:=port) _))).
+  Unshelve.
+  2:{ clear H.
+  rewrite <-control_eq in Hport. simpl in Hport. 
+  rewrite (id_left_neutral _ _ (get_control (bg:=b1))) in Hport.
+  unfold funcomp in Hport. apply Hport. }
+  rewrite <- link_eq in H.
+  simpl in H.
+  unfold parallel,funcomp, bij_subset_backward in H. simpl in H.
+  unfold eq_rect_r in H.
+  admit.
   Admitted.
 
 

@@ -100,6 +100,41 @@ Theorem innername_proof_irrelevant {s i r o} (b:bigraph s i r o):
   Proof. 
   intros. apply f_equal. apply f_equal. apply subset_eq_compat. reflexivity.
   Qed.
+Theorem port_proof_irrelevant {s i r o} (b:bigraph s i r o): 
+  forall n n':get_node b, forall port:nat, forall Hport Hport', n=n' ->
+  get_link (bg:=b) (inr (existT 
+    (fun n : get_node b => 'I_(Arity (get_control (bg:=b) n))) 
+    n
+    (Ordinal (n:=Arity (get_control (bg:=b) n)) (m:=port) Hport))) =
+  get_link (bg:=b) (inr (existT 
+    (fun n : get_node b => 'I_(Arity (get_control (bg:=b) n))) 
+    n'
+    (Ordinal (n:=Arity (get_control (bg:=b) n')) (m:=port) Hport'))).
+  Proof. 
+  intros. apply f_equal. apply f_equal. subst n. 
+  rewrite (Ordinal_proof_irrelevance _ _ Hport). reflexivity.
+  Qed.
+Theorem port_proof_irrelevant_full {s i r o} (b:bigraph s i r o): 
+  forall n n':get_node b, 
+  forall port : 'I_(Arity (get_control n)),
+  forall port': 'I_(Arity (get_control n')), 
+  n=n' -> nat_of_ord port = nat_of_ord port' ->
+  get_link (bg:=b) (inr (existT 
+    _ 
+    n port)) =
+  get_link (bg:=b) (inr (existT 
+    _ 
+    n' port')).
+  Proof. 
+  intros. apply f_equal. apply f_equal. subst n.
+  unfold nat_of_ord in H0.
+  simpl in H0.
+  destruct port as [m Hm]. 
+  destruct port' as [m' Hm'].
+  subst m.
+  erewrite (Ordinal_proof_irrelevance _ _ Hm Hm').
+  reflexivity.
+  Qed.
 
 (** Section defining some elementary bigraphs *)
 Section ElementaryBigraphs. 

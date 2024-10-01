@@ -86,10 +86,10 @@ Lemma arity_tp_left_neutral : forall {s i r o} (b : bigraph s i r o) n,
   Qed.
 
 Theorem bigraph_tp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
-  bigraph_equality b (∅ ⊗ b).
+  support_equivalence b (∅ ⊗ b).
   Proof.
   intros s i r o b.
-  apply (BigEq s r s r i o (EmptyNDL ∪ i) (EmptyNDL ∪ o) b (∅ ⊗ b)
+  apply (SupEq s r s r i o (EmptyNDL ∪ i) (EmptyNDL ∪ o) b (∅ ⊗ b)
     erefl
     (left_empty i)
     erefl
@@ -167,10 +167,10 @@ Lemma arity_tp_right_neutral : forall {s i r o} (b : bigraph s i r o) n,
   Qed.
   
 Theorem bigraph_tp_right_neutral : forall {s i r o} (b : bigraph s i r o), 
-  bigraph_equality (b ⊗ ∅) b.
+  support_equivalence (b ⊗ ∅) b.
   Proof.
   intros s i r o b.
-  apply (BigEq _ _ _ _ _ _ _ _ (b ⊗ ∅) b
+  apply (SupEq _ _ _ _ _ _ _ _ (b ⊗ ∅) b
     (addn0 _)
     (right_empty i)
     (addn0 _)
@@ -254,12 +254,12 @@ Theorem bigraph_tp_assoc :
   {dis_i12 : i1 # i2} {dis_i23 : i2 # i3} {dis_i13 : i1 # i3}
   {dis_o12 : o1 # o2} {dis_o23 : o2 # o3} {dis_o13 : o1 # o3}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3),
-  bigraph_equality
+  support_equivalence
     ((b1 ⊗ b2) ⊗ b3) 
     (b1 ⊗ (b2 ⊗ b3)).
   Proof.
   intros.
-  apply (BigEq _ _ _ _ _ _ _ _ ((b1 ⊗ b2) ⊗ b3) (b1 ⊗ (b2 ⊗ b3))
+  apply (SupEq _ _ _ _ _ _ _ _ ((b1 ⊗ b2) ⊗ b3) (b1 ⊗ (b2 ⊗ b3))
     (esym (addnA _ _ _))
     in_app_merge_transi
     (esym (addnA _ _ _))
@@ -501,8 +501,8 @@ Theorem bigraph_tp_congruence :
   {dis_i13 : i1 # i3} {dis_o13 : o1 # o3}
   {dis_i24 : i2 # i4} {dis_o24 : o2 # o4}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4),
-  bigraph_equality b1 b2 -> bigraph_equality b3 b4 -> 
-    bigraph_equality 
+  support_equivalence b1 b2 -> support_equivalence b3 b4 -> 
+    support_equivalence 
       (b1 ⊗ b3) 
       (b2 ⊗ b4).
   Proof.
@@ -510,7 +510,7 @@ Theorem bigraph_tp_congruence :
   intros Heqb1b2 Heqb3b4.
   destruct Heqb1b2 as (bij_s12, bij_i12, bij_r12, bij_o12, bij_n12, bij_e12, bij_p12, big_control_eq12, big_parent_eq12, big_link_eq12).
   destruct Heqb3b4 as (bij_s34, bij_i34, bij_r34, bij_o34, bij_n34, bij_e34, bij_p34, big_control_eq34, big_parent_eq34, big_link_eq34).
-  apply (BigEq _ _ _ _ _ _ _ _ (b1 ⊗ b3) (b2 ⊗ b4)
+  apply (SupEq _ _ _ _ _ _ _ _ (b1 ⊗ b3) (b2 ⊗ b4)
     (f_equal2_plus _ _ _ _ bij_s12 bij_s34)
     (app_merge_cong bij_i12 bij_i34)
     (f_equal2_plus _ _ _ _ bij_r12 bij_r34)
@@ -717,12 +717,12 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r3 r4 r2 o2 s3 i3 o
   {eqs2r4 : MyEqNat s2 r4} {eqs1r3 : MyEqNat s1 r3} 
   {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
   {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)},
-  bigraph_equality 
+  support_equivalence 
   ((b1 ⊗ b2) <<o>> (b3 ⊗ b4))
   ((b1 <<o>> b3) ⊗ (b2 <<o>> b4)).
   Proof.
   intros.
-  apply (BigEq
+  apply (SupEq
     _ _ _ _
     _ _ _ _ 
     ((b1 ⊗ b2) <<o>> (b3 ⊗ b4)) 
@@ -912,12 +912,12 @@ End M3.
 
 (** Small lemma about the merge bigraph*)
 Theorem merge_well_defined : forall n, 
-  bigraph_equality
+  support_equivalence
     (@merge (n+1))
     (join_big <<o>> (@bigraph_id 1 EmptyNDL ⊗ @merge n)).
   Proof. 
     intros. simpl. 
-    refine (BigEq _ _ _ _ _ _ _ _ 
+    refine (SupEq _ _ _ _ _ _ _ _ 
       (@merge (n+1))
       (join_big <<o>> (@bigraph_id 1 EmptyNDL ⊗ @merge n))
       (addnC n 1)
@@ -966,16 +966,16 @@ Arguments Build_bigraph_packed_disjoint_pair _ _ {disj_ppair_tp}. (*What does th
   
 Record bigraph_packed_disjoint_pair_equality (pp1 pp2 : bigraph_packed_disjoint_pair) : Prop :=
   { 
-    fst_ppair_tp_equ : bigraph_packed_equality (fst_ppair_tp pp1) (fst_ppair_tp pp2);
-    snd_ppair_tp_equ : bigraph_packed_equality (snd_ppair_tp pp1) (snd_ppair_tp pp2)
+    fst_ppair_tp_equ : bigraph_pkd_s_e (fst_ppair_tp pp1) (fst_ppair_tp pp2);
+    snd_ppair_tp_equ : bigraph_pkd_s_e (snd_ppair_tp pp1) (snd_ppair_tp pp2)
   }. (*Why 4 bigraphs?*)
   
 Lemma bigraph_packed_disjoint_pair_equality_refl (pp : bigraph_packed_disjoint_pair) :
   bigraph_packed_disjoint_pair_equality pp pp.
   Proof.
   constructor.
-  + apply bigraph_equality_refl.
-  + apply bigraph_equality_refl.
+  + apply support_equivalence_refl.
+  + apply support_equivalence_refl.
   Qed.
   
 Lemma bigraph_packed_disjoint_pair_equality_sym (pp1 pp2 : bigraph_packed_disjoint_pair):
@@ -1019,9 +1019,9 @@ Definition bigraph_packed_disjoint_pair_tp (pp : bigraph_packed_disjoint_pair) :
 
 Add Parametric Morphism : bigraph_packed_disjoint_pair_tp with
   signature bigraph_packed_disjoint_pair_equality ==> 
-  bigraph_packed_equality as tp_morphism.
+  bigraph_pkd_s_e as tp_morphism.
   Proof.
-  unfold bigraph_packed_equality, bigraph_packed_disjoint_pair_tp, bigraph_packed_tp.
+  unfold bigraph_pkd_s_e, bigraph_packed_disjoint_pair_tp, bigraph_packed_tp.
   destruct x; destruct y; simpl.
   destruct 1.
   simpl in * |- *.

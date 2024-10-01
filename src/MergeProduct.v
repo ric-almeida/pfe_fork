@@ -45,11 +45,11 @@ Lemma arity_mp_right_neutral {s i o} (b : bigraph s i 1 o): forall n,
     Qed.
 
 Theorem mp_right_neutral {s i o} (b : bigraph s i 1 o): 
-  bigraph_equality
+  support_equivalence
     (b <|> big_1) 
     b.
   Proof.
-  apply (BigEq _ _ _ _ _ _ _ _ (b <|> big_1) b
+  apply (SupEq _ _ _ _ _ _ _ _ (b <|> big_1) b
     (addn0 s)
     (right_empty i)
     (addn0 1)
@@ -128,9 +128,9 @@ Lemma arity_mp_left_neutral {s i o} (b : bigraph s i 1 o): forall n,
     Qed.
 
 Theorem mp_left_neutral {s i o} (b : bigraph s i 1 o): 
-  bigraph_equality (big_1 <|> b) b.
+  support_equivalence (big_1 <|> b) b.
   Proof.
-  apply (BigEq _ _ _ _ _ _ _ _ (big_1 <|> b) b
+  apply (SupEq _ _ _ _ _ _ _ _ (big_1 <|> b) b
     erefl
     (left_empty i)
     erefl
@@ -288,7 +288,7 @@ Lemma arity_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
 Theorem bigraph_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
   {up12 : UnionPossible b1 b2} {up23 : UnionPossible b2 b3} {up13 : UnionPossible b1 b3},
-  bigraph_equality 
+  support_equivalence 
     ((b1 <|> b2) <|>  b3)
     (bigraph_merge_product 
       (up := union_possible_commutes (union_possible_assoc_mp up23 (union_possible_commutes up13) (union_possible_commutes up12))) 
@@ -296,7 +296,7 @@ Theorem bigraph_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
       (b2 <|> b3)).
   Proof.
   intros.
-  apply (BigEq _ _ _ _ _ _ _ _ ((b1 <|> b2) <|> b3) (b1 <|> (b2 <|> b3))
+  apply (SupEq _ _ _ _ _ _ _ _ ((b1 <|> b2) <|> b3) (b1 <|> (b2 <|> b3))
     (esym (addnA _ _ _))
     tr_permutation
     (erefl)
@@ -508,12 +508,12 @@ Theorem bigraph_mp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
 Theorem bigraph_mp_comu : forall {s1 i1 r1 o1 s2 i2 r2 o2}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
   {up12 : UnionPossible b1 b2},
-  bigraph_equality 
+  support_equivalence 
     (b1 <|> b2)
     (bigraph_merge_product (up := union_possible_commutes up12) b2 b1).
   Proof.
   intros.
-  eapply (BigEq _ _ _ _ _ _ _ _ (b1 <|> b2) (b2 <|> b1)
+  eapply (SupEq _ _ _ _ _ _ _ _ (b1 <|> b2) (b2 <|> b1)
     (addnC s1 s2)
     permutation_union_commutes
     (erefl)

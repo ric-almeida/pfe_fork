@@ -87,11 +87,11 @@ Lemma arity_comp_left_neutral : forall {s i r o}
 
 Theorem bigraph_comp_left_neutral : forall {s i r o} 
   (b : bigraph s i r o), 
-  bigraph_equality (bigraph_id r o <<o>> b) b.
+  support_equivalence (bigraph_id r o <<o>> b) b.
   Proof.
   intros s i r o b.
   refine (
-    BigEq s r s r i o i o (bigraph_id r o <<o>> b) b
+    SupEq s r s r i o i o (bigraph_id r o <<o>> b) b
       erefl (*s*)
       (fun (name : Name) => reflexivity (In name i)) (*i*)
       erefl (*r*)
@@ -159,11 +159,11 @@ Lemma arity_comp_right_neutral : forall {s i r o}
 
 Theorem bigraph_comp_right_neutral : forall {s i r o}
   (b : bigraph s i r o), 
-  bigraph_equality (b <<o>> bigraph_id s i) b.
+  support_equivalence (b <<o>> bigraph_id s i) b.
   Proof.
   intros s i r o b.
   apply 
-    (BigEq _ _ _ _ _ _ _ _ (b <<o>> bigraph_id s i) b
+    (SupEq _ _ _ _ _ _ _ _ (b <<o>> bigraph_id s i) b
       erefl
       (fun (name : Name) => reflexivity (In name i))
       erefl
@@ -241,12 +241,12 @@ Theorem bigraph_comp_assoc : forall {s1 i1o2 r1 o1 s2 r2 r3 i2o3 o2i1 s3 i3 o3i2
   (b1 : bigraph s1 i1o2 r1 o1) 
   (b2 : bigraph s2 i2o3 r2 o2i1) 
   (b3 : bigraph s3 i3 r3 o3i2),
-  bigraph_equality 
+  support_equivalence 
   ((b1 <<o>> b2) <<o>> b3) 
   (b1 <<o>> (b2 <<o>> b3)).
   Proof.
   intros.
-  apply (BigEq _ _ _ _ _ _ _ _ ((b1 <<o>> b2) <<o>> b3) (b1 <<o>> (b2 <<o>> b3))
+  apply (SupEq _ _ _ _ _ _ _ _ ((b1 <<o>> b2) <<o>> b3) (b1 <<o>> (b2 <<o>> b3))
     erefl
     (fun (name : Name) => iff_refl (In name i3))
     erefl
@@ -397,15 +397,15 @@ Theorem bigraph_comp_congruence : forall
   (b2 : bigraph s2 i2o4 r2 o2) 
   (b3 : bigraph s3 i3 r3 o3i1) 
   (b4 : bigraph s4 i4 r4 o4i2) 
-  (be12 : bigraph_equality b1 b2)
-  (be34 : bigraph_equality b3 b4), 
-  bigraph_equality (b1 <<o>> b3) (b2 <<o>> b4).
+  (be12 : support_equivalence b1 b2)
+  (be34 : support_equivalence b3 b4), 
+  support_equivalence (b1 <<o>> b3) (b2 <<o>> b4).
   Proof.
   intros until b4.
   intros Heqb1b2 Heqb3b4.
   destruct Heqb1b2 as (bij_s12, bij_i12, bij_r12, bij_o12, bij_n12, bij_e12, bij_p12, big_control_eq12, big_parent_eq12, big_link_eq12).
   destruct Heqb3b4 as (bij_s34, bij_i34, bij_r34_s12, bij_o34_i12, bij_n34, bij_e34, bij_p34, big_control_eq34, big_parent_eq34, big_link_eq34).
-  apply (BigEq 
+  apply (SupEq 
     s3 r1 
     s4 r2 
     i3 o1 i4 o2

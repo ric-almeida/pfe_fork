@@ -191,16 +191,16 @@ Arguments Build_bigraph_packed_up_pair _ _ {up_ppair_pp}.
   
 Record bigraph_packed_up_pair_equality (pp1 pp2 : bigraph_packed_up_pair) : Prop :=
   { 
-    fst_ppair_pp_equ : bigraph_packed_equality (fst_ppair_pp pp1) (fst_ppair_pp pp2);
-    snd_ppair_pp_equ : bigraph_packed_equality (snd_ppair_pp pp1) (snd_ppair_pp pp2)
+    fst_ppair_pp_equ : bigraph_pkd_s_e (fst_ppair_pp pp1) (fst_ppair_pp pp2);
+    snd_ppair_pp_equ : bigraph_pkd_s_e (snd_ppair_pp pp1) (snd_ppair_pp pp2)
   }.
   
 Lemma bigraph_packed_up_pair_equality_refl (pp : bigraph_packed_up_pair) :
   bigraph_packed_up_pair_equality pp pp.
   Proof.
   constructor.
-  + apply bigraph_equality_refl.
-  + apply bigraph_equality_refl.
+  + apply support_equivalence_refl.
+  + apply support_equivalence_refl.
   Qed.
 
 Lemma bigraph_packed_up_pair_equality_sym (pp1 pp2 : bigraph_packed_up_pair):

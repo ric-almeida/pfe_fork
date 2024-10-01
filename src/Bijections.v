@@ -987,6 +987,7 @@ End BijSubset.
 Section BijRew.
 Definition bij_rew_forward {A} {P : A -> Type} {a b : A} (Hab : a = b) : (P a) -> (P b) := 
   fun pa => eq_rect a P pa b Hab.
+  
 Lemma bij_rew : forall {A} {P : A -> Type} {a b : A}, a = b -> bijection (P a) (P b).
   Proof.
   intros A P a b Hab.

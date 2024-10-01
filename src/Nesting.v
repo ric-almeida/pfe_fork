@@ -36,7 +36,7 @@ Definition nest {s1 r1 s2 r2 : nat} {o1 i2 o2 : NoDupList}
 Global Notation "G '<.>' F" := (nest G F) (at level 50, left associativity).
 
 (* Lemma id_union'' : forall X Y:NoDupList, 
-  bigraph_equality
+  support_equivalence
   (bigraph_identity (s := 0) (i := app_merge_NoDupList X Y) (p := P_NP (permutation_id (app_merge_NoDupList X Y))))
   ((bigraph_identity (i := X)) || (bigraph_identity (i := Y))).
   Proof.
@@ -50,7 +50,7 @@ Global Notation "G '<.>' F" := (nest G F) (at level 50, left associativity).
     unfold join.
     unfold sum_shuffle.
     refine 
-      (BigEq 0 0 0 0 (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y)
+      (SupEq 0 0 0 0 (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y)
         (bigraph_identity (s := 0) (i := app_merge_NoDupList X Y) (p := P_NP (permutation_id (app_merge_NoDupList X Y))))
         ((bigraph_identity (i := X)) || (bigraph_identity (i := Y)))
         erefl
@@ -75,7 +75,7 @@ Global Notation "G '<.>' F" := (nest G F) (at level 50, left associativity).
   Qed.
 
 Lemma my_id_union : forall X Y:NoDupList, 
-  bigraph_packed_equality
+  bigraph_pkd_s_e
     (@bigraph_identity O (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id_PN (@reverse_coercion NoDupList (list Name) (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y)))))
     ((bigraph_identity (i := X)) || (bigraph_identity (i := Y))).
   Proof.
@@ -89,7 +89,7 @@ Lemma my_id_union : forall X Y:NoDupList,
     unfold join.
     unfold sum_shuffle.
     refine 
-      (BigEq 0 0 0 0 (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y)
+      (SupEq 0 0 0 0 (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y)
         (@bigraph_identity O (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id_PN (@reverse_coercion NoDupList (list Name) (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y)))))
         ((bigraph_identity (i := X)) || (bigraph_identity (i := Y)))
         erefl
@@ -115,7 +115,7 @@ Lemma my_id_union : forall X Y:NoDupList,
 
 Theorem testimportant {I X Y}
   (F : bigraph 1 I 1 X) (G : bigraph 1 EmptyNDL 1 Y) :
-  bigraph_packed_equality F G -> bigraph_packed_equality F F.
+  bigraph_pkd_s_e F G -> bigraph_pkd_s_e F F.
   Proof. 
     intros H. 
     rewrite H. auto. reflexivity. 
@@ -125,8 +125,8 @@ Theorem intermediaire_rewrie {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
   (b3 : bigraph (s1 + s2) (app_merge_NoDupList i1 i2) (r1 + r2) (app_merge_NoDupList o1 o2))
   {up : UnionPossible b1 b2} :
-  bigraph_packed_equality (b1 || b2) b3
-  <-> bigraph_packed_equality ((packing b1) || (packing b2)) b3.
+  bigraph_pkd_s_e (b1 || b2) b3
+  <-> bigraph_pkd_s_e ((packing b1) || (packing b2)) b3.
   split. auto. auto. Qed. 
 
 Theorem intermediaire_rewrie' {s1 r1 s2 r2 : nat} {i1o2 o2i1 o1 i2 : NoDupList}
@@ -134,12 +134,12 @@ Theorem intermediaire_rewrie' {s1 r1 s2 r2 : nat} {i1o2 o2i1 o1 i2 : NoDupList}
   (b1 : bigraph s1 i1o2 r1 o1) (b2 : bigraph s2 i2 r2 o2i1) 
   (b3 : bigraph s2 i2 r1 o1)
   {up : UnionPossible b1 b2} :
-  bigraph_packed_equality (b1 <<o>> b2) b3
-  <-> bigraph_packed_equality ((packing b1) <<o>> (packing b2)) b3.
+  bigraph_pkd_s_e (b1 <<o>> b2) b3
+  <-> bigraph_pkd_s_e ((packing b1) <<o>> (packing b2)) b3.
   split. auto. auto. Qed. 
 
 Lemma my_id_union' : forall X Y:NoDupList, 
-  bigraph_packed_equality
+  bigraph_pkd_s_e
     (@packing O (app_merge_NoDupList X Y) O (app_merge_NoDupList X Y) (@bigraph_identity O (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id_PN (@reverse_coercion NoDupList (list Name) (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y))))))
     (packing ((bigraph_identity (i := X)) || (bigraph_identity (i := Y)))).
   intros X Y.
@@ -152,7 +152,7 @@ Lemma my_id_union' : forall X Y:NoDupList,
     unfold join.
     unfold sum_shuffle.
     refine 
-      (BigEq 0 0 0 0 (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y)
+      (SupEq 0 0 0 0 (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y)
         (@bigraph_identity O (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id_PN (@reverse_coercion NoDupList (list Name) (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y)))))
         ((bigraph_identity (i := X)) || (bigraph_identity (i := Y)))
         erefl
@@ -193,12 +193,12 @@ Lemma nest_arity_associative : forall {s1 r1 o1 s2 r2 o2 s3 i3 r3 o3}
 Theorem nest_associative : forall {s1 r1 o1 s2 r2 o2 s3 i3 r3 o3} 
   (b1 : bigraph s1 EmptyNDL r1 o1) (b2 : bigraph s2 EmptyNDL r2 o2) (b3 : bigraph s3 i3 r3 o3)
   {eqs1r2 : MyEqNat s1 r2} {eqs2r3 : MyEqNat s2 r3},
-  bigraph_equality 
+  support_equivalence 
     ((b1 <.> b2) <.>  b3)
     (b1 <.> (b2 <.> b3)).
   Proof.
     intros.
-    refine (BigEq _ _ _ _ _ _ _ _ ((b1 <.> b2) <.> b3) (b1 <.> (b2 <.> b3))
+    refine (SupEq _ _ _ _ _ _ _ _ ((b1 <.> b2) <.> b3) (b1 <.> (b2 <.> b3))
     (reflexivity s3)
     (permutation_id i3)
     (erefl)
@@ -337,12 +337,12 @@ Lemma arity_nest_right_neutral {s1 r1 : nat} {o1 : NoDupList}
 
 Lemma nest_right_neutral {s1 r1 : nat} {o1 : NoDupList} 
   (b : bigraph s1 EmptyNDL r1 o1) :
-  bigraph_equality 
+  support_equivalence 
     (b <.> bigraph_id s1 EmptyNDL)
     b.
   Proof.
   eapply 
-    (BigEq s1 r1 s1 r1 _ _ _ _ (b <.> bigraph_id s1 EmptyNDL) b
+    (SupEq s1 r1 s1 r1 _ _ _ _ (b <.> bigraph_id s1 EmptyNDL) b
       erefl
       (left_empty EmptyNDL)
       erefl
@@ -405,12 +405,12 @@ Lemma arity_nest_left_neutral {s1 r1 : nat} {o1 : NoDupList}
 
 Lemma nest_left_neutral {s1 r1 : nat} {o1 : NoDupList} 
   (b : bigraph s1 EmptyNDL r1 o1) :
-  bigraph_equality 
+  support_equivalence 
     (bigraph_id r1 EmptyNDL <.> b)
     b.
   Proof.
   eapply 
-    (BigEq s1 r1 s1 r1 _ _ _ _ (bigraph_id r1 EmptyNDL <.> b) b
+    (SupEq s1 r1 s1 r1 _ _ _ _ (bigraph_id r1 EmptyNDL <.> b) b
       erefl
       (left_empty EmptyNDL)
       erefl

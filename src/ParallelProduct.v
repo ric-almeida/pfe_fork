@@ -104,11 +104,11 @@ Global Notation "b1 || b2" := (bigraph_parallel_product b1 b2) (at level 50, lef
 Theorem tp_eq_pp {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
   {dis_i : i1 # i2} {dis_o : o1 # o2} :
-  bigraph_equality 
+  support_equivalence 
     (b1 ⊗ b2) 
     (b1 || b2).
   Proof.
-  refine (BigEq _ _ _ _ _ _ _ _ (b1 ⊗ b2) (b1 || b2)
+  refine (SupEq _ _ _ _ _ _ _ _ (b1 ⊗ b2) (b1 || b2)
     erefl
     (permutation_id (app_merge i1 i2))
     erefl
@@ -166,10 +166,10 @@ Lemma arity_pp_left_neutral : forall {s i r o} (b : bigraph s i r o) n,
   Qed.
 
 Theorem bigraph_pp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
-  bigraph_equality (∅ || b) b.
+  support_equivalence (∅ || b) b.
   Proof.
   intros s i r o b.
-  apply (BigEq _ _ _ _ _ _ _ _ (∅ || b) b
+  apply (SupEq _ _ _ _ _ _ _ _ (∅ || b) b
     erefl
     (left_empty i)
     erefl
@@ -237,10 +237,10 @@ Lemma arity_pp_right_neutral : forall {s i r o} (b : bigraph s i r o) n,
   Qed.
 
 Theorem bigraph_pp_right_neutral : forall {s i r o} (b : bigraph s i r o), 
-  bigraph_equality (b || ∅) b.
+  support_equivalence (b || ∅) b.
   Proof.
   intros s i r o b.
-  apply (BigEq _ _ _ _ _ _ _ _ (b || ∅) b
+  apply (SupEq _ _ _ _ _ _ _ _ (b || ∅) b
     (PeanoNat.Nat.add_0_r s)
     (right_empty i)
     (PeanoNat.Nat.add_0_r r)
@@ -305,10 +305,10 @@ Theorem bigraph_pp_right_neutral : forall {s i r o} (b : bigraph s i r o),
   Qed. *)
 
 (* Theorem bigraph_pp_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) {up : UnionPossible b1 b2},
-  bigraph_equality (b1 ||b2) (bigraph_parallel_product (up:=union_possible_commutes up) b2 b1).
+  support_equivalence (b1 ||b2) (bigraph_parallel_product (up:=union_possible_commutes up) b2 b1).
   Proof.
   intros.
-  refine (BigEq _ _ _ _ _ _ _ _ (b1 || b2) (b2 || b1)
+  refine (SupEq _ _ _ _ _ _ _ _ (b1 || b2) (b2 || b1)
     (@esym _ _ _ _)
     in_app_merge_comu
     (@esym _ _ _ _)
@@ -417,7 +417,7 @@ Lemma arity_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
 Theorem bigraph_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3)
   {up12 : UnionPossible b1 b2} {up23 : UnionPossible b2 b3} {up13 : UnionPossible b1 b3},
-  bigraph_equality 
+  support_equivalence 
   ((b1 || b2) || b3)
   (b1 || (b2 || b3)).
   Proof.
@@ -425,7 +425,7 @@ Theorem bigraph_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   destruct up12 as [up12]. 
   destruct up13 as [up13].
   destruct up23 as [up23].
-  apply (BigEq _ _ _ _ _ _ _ _ ((b1 || b2) || b3) (b1 || (b2 || b3))
+  apply (SupEq _ _ _ _ _ _ _ _ ((b1 || b2) || b3) (b1 || (b2 || b3))
     (esym (addnA _ _ _))
     tr_permutation
     (esym (addnA _ _ _))
@@ -606,8 +606,8 @@ Lemma arity_pp_congruence :
 Theorem bigraph_pp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i4 r4 o4}
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) (b3 : bigraph s3 i3 r3 o3) (b4 : bigraph s4 i4 r4 o4)
   {up13 : UnionPossible b1 b3} {up24 : UnionPossible b2 b4},
-  bigraph_equality b1 b2 -> bigraph_equality b3 b4 -> 
-    bigraph_equality (b1|| b3) (b2 || b4).
+  support_equivalence b1 b2 -> support_equivalence b3 b4 -> 
+    support_equivalence (b1|| b3) (b2 || b4).
   Proof.
   intros until b4.
   intros up13 up24 Heqb1b2 Heqb3b4.
@@ -615,7 +615,7 @@ Theorem bigraph_pp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i
   destruct up24 as [up24].
   destruct Heqb1b2 as (bij_s12, bij_i12, bij_r12, bij_o12, bij_n12, bij_e12, bij_p12, big_control_eq12, big_parent_eq12, big_link_eq12).
   destruct Heqb3b4 as (bij_s34, bij_i34, bij_r34, bij_o34, bij_n34, bij_e34, bij_p34, big_control_eq34, big_parent_eq34, big_link_eq34).
-  apply (BigEq _ _ _ _ _ _ _ _ (b1 || b3) (b2 || b4)
+  apply (SupEq _ _ _ _ _ _ _ _ (b1 || b3) (b2 || b4)
     (f_equal2_plus _ _ _ _ bij_s12 bij_s34)
     (app_merge_cong bij_i12 bij_i34)
     (f_equal2_plus _ _ _ _ bij_r12 bij_r34)
@@ -760,14 +760,14 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o
   {up12 : UnionPossible b1 b2} {up34 : UnionPossible b3 b4}
   {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
   {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)},
-  bigraph_equality 
+  support_equivalence 
     ((b1 || b2) <<o>> (b3 || b4))
     ((b1 <<o>> b3) || (b2 <<o>> b4)).
   Proof.
   intros.
   destruct up12 as [up12].
   destruct up34 as [up34].
-  apply (BigEq
+  apply (SupEq
     _ _ _ _
     _ _ _ _ 
     ((b1 || b2) <<o>> (b3 || b4))
@@ -1046,7 +1046,7 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o
 
 (*Lemmas about decomposition bigraph_id*)
 Lemma id_union : forall X Y:NoDupList, 
-  bigraph_equality
+  support_equivalence
   (bigraph_id 0 (X ∪ Y))
   ((bigraph_id 0 X) || (bigraph_id 0 Y)).
   Proof.
@@ -1059,7 +1059,7 @@ Lemma id_union : forall X Y:NoDupList,
     unfold join.
     unfold sum_shuffle.
     refine 
-      (BigEq 0 0 (0+0) _ _ _ _ _ (bigraph_id 0 (X ∪ Y)) (bigraph_id 0 X || (bigraph_id 0 Y))
+      (SupEq 0 0 (0+0) _ _ _ _ _ (bigraph_id 0 (X ∪ Y)) (bigraph_id 0 X || (bigraph_id 0 Y))
         erefl
         (permutation_id (X ∪ Y))
         erefl
@@ -1091,9 +1091,9 @@ Definition bigraph_packed_up_pair_pp (pp : bigraph_packed_up_pair) :=
 
 
 Add Parametric Morphism : bigraph_packed_up_pair_pp with
-  signature bigraph_packed_up_pair_equality ==> bigraph_packed_equality as pp_morphism.
+  signature bigraph_packed_up_pair_equality ==> bigraph_pkd_s_e as pp_morphism.
   Proof.
-  unfold bigraph_packed_equality, bigraph_packed_up_pair_pp, bigraph_packed_pp.
+  unfold bigraph_pkd_s_e, bigraph_packed_up_pair_pp, bigraph_packed_pp.
   destruct x; destruct y; simpl.
   destruct 1.
   simpl in * |- *.
@@ -1105,17 +1105,17 @@ Add Parametric Morphism : bigraph_packed_up_pair_pp with
 Notation "b1 [||] b2" := (bigraph_packed_up_pair_pp (Build_bigraph_packed_up_pair b1 b2)) (at level 50, left associativity).
 
 Theorem bigraph_packed_pp_left_neutral : forall {s i r o} (b : bigraph s i r o), 
-  bigraph_packed_equality (bigraph_packed_pp bigraph_empty b) b.
+  bigraph_pkd_s_e (bigraph_packed_pp bigraph_empty b) b.
   Proof.
-  unfold bigraph_packed_equality, bigraph_packed_pp.
+  unfold bigraph_pkd_s_e, bigraph_packed_pp.
   intros.
   apply bigraph_pp_left_neutral.
   Qed.
 
 Theorem bigraph_packed_pp_right_neutral : forall {s i r o} (b : bigraph s i r o), 
-  bigraph_packed_equality (bigraph_packed_pp b bigraph_empty) b.
+  bigraph_pkd_s_e (bigraph_packed_pp b bigraph_empty) b.
   Proof.
-  unfold bigraph_packed_equality, bigraph_packed_pp.
+  unfold bigraph_pkd_s_e, bigraph_packed_pp.
   intros.
   apply bigraph_pp_right_neutral.
   Qed. 
@@ -1125,11 +1125,11 @@ Theorem bigraph_packed_pp_assoc : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   {HUP12 : UnionPossiblePacked b1 b2} 
   {HUP13 : UnionPossiblePacked b1 b3} 
   {HUP23 : UnionPossiblePacked b2 b3},
-  bigraph_packed_equality 
+  bigraph_pkd_s_e 
     (bigraph_packed_pp (bigraph_packed_pp b1 b2) b3)
     (bigraph_packed_pp b1 (bigraph_packed_pp b2 b3)).
   Proof.
-  unfold bigraph_packed_equality, bigraph_packed_pp.
+  unfold bigraph_pkd_s_e, bigraph_packed_pp.
   intros. destruct HUP13. destruct HUP12. destruct HUP23. simpl in upp1. simpl in upp0. simpl in upp2.
   simpl.
   apply (@bigraph_pp_assoc s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 b1 b2 b3 upp1 upp2 upp0).

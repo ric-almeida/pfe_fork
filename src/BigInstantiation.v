@@ -532,7 +532,7 @@ Example simplBigboolOp :=
 
 
 Theorem eqmesbig : 
-  bigraph_equality simplBigbool simplBigboolOp. 
+  support_equivalence simplBigbool simplBigboolOp. 
   Admitted.
   
 

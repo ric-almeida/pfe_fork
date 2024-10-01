@@ -46,13 +46,13 @@ Lemma arity_symmetry_eq : forall m:nat, forall X:NoDupList,
   Qed.
 
 Theorem symmetry_eq_id : forall m:nat, forall X:NoDupList, 
-  bigraph_equality 
+  support_equivalence 
     (symmetry_big m X 0 EmptyNDL)
     (bigraph_id m X). 
   Proof.
     intros m X.
     refine (
-      BigEq _ _ _ _ _ _ _ _  
+      SupEq _ _ _ _ _ _ _ _  
         (symmetry_big m X 0 EmptyNDL)
         (bigraph_id m X)
         (addn0 m) (*s*)
@@ -118,7 +118,7 @@ Definition commute_plus_MyEqNat : forall m n,
   Proof. intros. constructor. apply addnC. Qed.
 
 Theorem symmetry_eq_tp_id : forall m n:nat, forall X Y:NoDupList, 
-  bigraph_equality 
+  support_equivalence 
     (bigraph_composition (p:=permutation_union_commutePN Y X) (eqsr := commute_plus_MyEqNat m n)
       (symmetry_big m X n Y) 
       (symmetry_big n Y m X))
@@ -126,7 +126,7 @@ Theorem symmetry_eq_tp_id : forall m n:nat, forall X Y:NoDupList,
   Proof.
     intros m n X Y.
     refine (
-      BigEq (n + m) (m + n) (m + n) (m + n) (Y ∪ X) (X ∪ Y) (X ∪ Y) (X ∪ Y)  
+      SupEq (n + m) (m + n) (m + n) (m + n) (Y ∪ X) (X ∪ Y) (X ∪ Y) (X ∪ Y)  
         (bigraph_composition (p:=permutation_union_commutePN Y X) (eqsr := commute_plus_MyEqNat m n)
           (symmetry_big m X n Y) 
           (symmetry_big n Y m X))
@@ -210,7 +210,7 @@ Theorem symmetry_distributive {si0 ri1 sj0 rj1:nat} {ii0 oi1 ij0 oj1:NoDupList}
   {disi: ii0#ij0} {diso: oi1#oj1}: 
   forall f:bigraph si0 ii0 ri1 oi1, 
   forall g:bigraph sj0 ij0 rj1 oj1,
-  bigraph_equality 
+  support_equivalence 
     (bigraph_composition 
       (symmetry_big ri1 oi1 rj1 oj1) 
       (f ⊗ g))
@@ -223,7 +223,7 @@ Theorem symmetry_distributive {si0 ri1 sj0 rj1:nat} {ii0 oi1 ij0 oj1:NoDupList}
   Proof. 
     intros.
     refine (
-      BigEq _ _ _ _ _ _ _ _
+      SupEq _ _ _ _ _ _ _ _
         (bigraph_composition 
           (symmetry_big ri1 oi1 rj1 oj1) 
           (f ⊗ g))
@@ -414,14 +414,14 @@ Theorem easyperm : forall XI XJ XK,
 
 Theorem symmetry_distributive_s4 {mI mJ mK:nat} {XI XJ XK:NoDupList}
   {disIJ : XI # XJ} {disKJ : XK # XJ} {disIK : XI # XK}:
-  bigraph_equality
+  support_equivalence
     (symmetry_big (mI+mJ) (XI ∪ XJ) mK XK)
     (bigraph_composition (p := P_NP (permutation_commute (MyPN (mI:=mI) (mJ:=mJ) (mK:=mK)))) (eqsr:= myEqNatproof)
       ((symmetry_big mI XI mK XK) ⊗ (bigraph_id mJ XJ))
       ((bigraph_id mI XI) ⊗ (symmetry_big mJ XJ mK XK))).
   Proof.
   refine (
-    BigEq _ _ _ _ _ _ _ _
+    SupEq _ _ _ _ _ _ _ _
       (symmetry_big (mI+mJ) (XI ∪ XJ) mK XK)
       (bigraph_composition (p := P_NP (permutation_commute (MyPN (mI:=mI) (mJ:=mJ) (mK:=mK)))) (eqsr:= myEqNatproof)
         ((symmetry_big mI XI mK XK) ⊗ (bigraph_id mJ XJ))
@@ -570,13 +570,13 @@ End S4.
 
 Section SymmetryAxiom.
 Lemma symmetry_axiom : forall m n X Y, 
-  bigraph_equality 
+  support_equivalence 
     (symmetry_big m X n Y) 
     (symmetry_big m EmptyNDL n EmptyNDL ⊗ bigraph_id 0 (X ∪ Y)).
   Proof.
   intros. 
   refine (
-    BigEq _ _ _ _ _ _ _ _
+    SupEq _ _ _ _ _ _ _ _
       (symmetry_big m X n Y)
       (symmetry_big m EmptyNDL n EmptyNDL ⊗ bigraph_id 0 (X ∪ Y))
       (esym (addn0 (m+n))) (*s*)
@@ -615,12 +615,12 @@ End SymmetryAxiom.
     
 Section PlaceAxioms.
 Lemma place_axiom_join_sym1_1 : 
-  bigraph_equality
+  support_equivalence
     (join_big <<o>> symmetry_big 1 EmptyNDL 1 EmptyNDL)
     join_big.
   Proof.
   refine (
-    BigEq _ _ _ _ _ _ _ _
+    SupEq _ _ _ _ _ _ _ _
       (join_big <<o>> symmetry_big 1 EmptyNDL 1 EmptyNDL)
       join_big
       (esym (addn0 (1+1))) (*s*)
@@ -647,12 +647,12 @@ Lemma place_axiom_join_sym1_1 :
   Qed.
 
 Lemma place_axiom_join_1_id_1 : 
-  bigraph_equality
+  support_equivalence
     (join_big <<o>> (big_1 ⊗ bigraph_id 1 EmptyNDL))
     (bigraph_id 1 EmptyNDL).
   Proof.
   refine (
-    BigEq _ _ _ _ _ _ _ _
+    SupEq _ _ _ _ _ _ _ _
       (join_big <<o>> (big_1 ⊗ bigraph_id 1 EmptyNDL))
       (bigraph_id 1 EmptyNDL)
       (esym (addn0 (1))) (*s*)
@@ -689,12 +689,12 @@ Lemma place_axiom_join_1_id_1 :
 
 
 Lemma place_axiom_join_id_commutes : 
-  bigraph_equality
+  support_equivalence
     (join_big <<o>> (join_big ⊗ bigraph_id 1 EmptyNDL))
     (join_big <<o>> (bigraph_id 1 EmptyNDL ⊗ join_big)).
   Proof.
   refine (
-    BigEq _ _ _ _ _ _ _ _
+    SupEq _ _ _ _ _ _ _ _
       (join_big <<o>> (join_big ⊗ bigraph_id 1 EmptyNDL))
       (join_big <<o>> (bigraph_id 1 EmptyNDL ⊗ join_big))
       (addnC 1 2) (*s*)
@@ -733,13 +733,13 @@ End PlaceAxioms.
 
 Section LinkAxioms.
 Lemma sub_eq_id : forall x, 
-  bigraph_equality
+  support_equivalence
     (substitution (OneelNDL x) x)
     (bigraph_id 0 (OneelNDL x)).
   Proof.
   intros.
   refine (
-    BigEq _ _ _ _ _ _ _ _
+    SupEq _ _ _ _ _ _ _ _
       (substitution (OneelNDL x) x)
       (bigraph_id 0 (OneelNDL x))
       (erefl) (*s*)
@@ -767,13 +767,13 @@ Lemma sub_eq_id : forall x,
   Qed.
 
 Lemma closure_o_subst_neutral : forall x, 
-  bigraph_equality
+  support_equivalence
     (closure x <<o>> substitution EmptyNDL x)
     (bigraph_id 0 EmptyNDL).
   Proof.
   intros.
   refine (
-    BigEq _ _ _ _ _ _ _ _
+    SupEq _ _ _ _ _ _ _ _
       (closure x <<o>> substitution EmptyNDL x)
       (bigraph_id 0 EmptyNDL)
       (erefl) (*s*)
@@ -788,13 +788,13 @@ Lemma closure_o_subst_neutral : forall x,
     Unshelve. 4:{simpl. (*AAAAAAAAAAAAAAAAAAAAAAAAH*) Abort.
 (*Note that a closure /x ◦ G may create an idle edge, if x is an idle name of G. Intuitively idle edges are ‘invisible’, and indeed we shall see later how to ignore them.*)
 Lemma closure_o_sub_eq_closure : forall x y, 
-  bigraph_equality
+  support_equivalence
     (closure y <<o>> substitution (OneelNDL x) y)
     (closure x).
   Proof.
   intros.
   refine (
-    BigEq _ _ _ _ _ _ _ _
+    SupEq _ _ _ _ _ _ _ _
       (closure y <<o>> substitution (OneelNDL x) y)
       (closure x)
       (erefl) (*s*)
@@ -821,7 +821,7 @@ Lemma closure_o_sub_eq_closure : forall x y,
   Qed. 
 
 Lemma link_axiom_4 {y z X Y} {disYX: Y # X} {disyY : ~ In y Y}: 
-  bigraph_equality
+  support_equivalence
     (substitution (Y ∪ (OneelNDL y)) z <<o>> 
       (bigraph_tensor_product 
         (dis_o := disj_OneEl y Y disyY) 
@@ -831,7 +831,7 @@ Lemma link_axiom_4 {y z X Y} {disYX: Y # X} {disyY : ~ In y Y}:
   Proof.
   intros.
   refine (
-    BigEq _ _ _ _ _ _ _ _
+    SupEq _ _ _ _ _ _ _ _
       (substitution (Y ∪ (OneelNDL y)) z <<o>> 
         ((bigraph_id 0 Y) ⊗ (substitution X y)))
       (substitution (Y ∪ X) z)
