@@ -381,9 +381,33 @@ Lemma exists_inner_implies_not_idle {s i r o} {b:bigraph s i r o} (i':NameSub i)
   - apply eq_refl.
   Qed.
 
+Lemma exists_inner_implies_not_idle_exists {s i r o} {b:bigraph s i r o} (e: get_edge b) :
+  (exists (i':NameSub i),
+  get_link (bg:=b) (inl i') = (inr e)) -> 
+    not_is_idle e.
+  Proof.
+  intros. 
+  destruct H.
+  apply (exists_inner_implies_not_idle x). apply H.
+  Qed.
 
 Lemma exists_port_implies_not_idle {s i r o} {b:bigraph s i r o} (p:Port (get_control (bg:=b))) (e: get_edge b) : 
   get_link (bg:=b) (inr p) = (inr e) -> 
+    not_is_idle e.
+  Proof.
+  Admitted. (*TODO*)
+
+Lemma exists_port_implies_not_idle_exists {s i r o} {b:bigraph s i r o} (e: get_edge b) : 
+  (exists (p:Port (get_control (bg:=b))),
+  get_link (bg:=b) (inr p) = (inr e)) -> 
+    not_is_idle e.
+  Proof.
+  Admitted. (*TODO*)
+
+
+Lemma exist_implies_not_idle_exists {s i r o} {b:bigraph s i r o} (e: get_edge b) : 
+  (exists (ip:NameSub i + Port (get_control (bg:=b))),
+  get_link (bg:=b) (ip) = (inr e)) -> 
     not_is_idle e.
   Proof.
   Admitted. (*TODO*)
@@ -412,6 +436,13 @@ Definition get_edges_wo_idles {s i r o} (b:bigraph s i r o) :=
 
 
 (*** LEAN SECTION ***)
+
+Record Truc A B :=
+{
+  E : Type;
+  f : A -> B + E;
+}.
+
 Definition lean {s i r o} (b:bigraph s i r o) :
   bigraph s i r o.
   Proof.
@@ -422,18 +453,14 @@ Definition lean {s i r o} (b:bigraph s i r o) :
     (get_parent (bg:=b))
     _
     (get_ap (bg:=b))).
-  unfold get_edges_wo_idles. 
-  intros [i'|p'].
-  - destruct (get_link (bg:=b) (inl i')) as [o'|e'] eqn:El. 
+  intros ip'.
+  assert (exists ip'', get_link (bg:=b) ip'' = get_link (bg:=b) ip') as H; [ exists (ip'); reflexivity | ]. 
+  destruct (get_link (bg:=b) ip') as [o'|e'].
   + left. exact o'.
   + right. exists e'. (*le GOAL*) 
-  eapply (exists_inner_implies_not_idle _). simpl. apply El.
-  - destruct (get_link (bg:=b) (inr p')) as [o'|e'] eqn:El.
-  + left. exact o'.
-  + right. unfold get_edges_wo_idles. exists e'. (*le GOAL*) 
-  apply (exists_port_implies_not_idle p'). apply El.
+  apply (exist_implies_not_idle_exists). 
+  exact H. 
   Defined.
-
 
 
 Definition surjective {A B} (f : A -> B) := forall b, exists a, f a = b.
@@ -454,10 +481,20 @@ Theorem lean_is_lean {s i r o} (b:bigraph s i r o) :
   destruct ip' as [ip Hip].
   exists ip.
   destruct ip as [inner | port]; simpl.
-  - destruct inner. simpl.
-    admit. 
-  - Fail rewrite Hip. admit. 
-  Abort.
+  - generalize ((ex_intro (fun ip'' : {inner0 : Name | In inner0 i} + Port (get_control (bg:=b)) => get_link (bg:=b) ip'' = get_link (bg:=b) (inl inner)) (inl inner) (erefl (get_link (bg:=b) (inl inner))))).
+    intros X. 
+    destruct get_link. 
+    discriminate Hip.
+    f_equal. apply subset_eq_compat. injection Hip. auto.
+  - generalize (ex_intro
+  (fun ip'' : {inner : Name | In inner i} + Port (get_control (bg:=b)) =>
+get_link (bg:=b) ip'' = get_link (bg:=b) (inr port))
+  (inr port) (erefl (get_link (bg:=b) (inr port)))).
+  intros Y.
+   destruct get_link. 
+    discriminate Hip.
+    f_equal. apply subset_eq_compat. injection Hip. auto.
+  Qed.
 
 Definition get_site {s i r o} (b:bigraph s i r o) : nat := s.
 Definition get_root {s i r o} (b:bigraph s i r o) : nat := r.
@@ -511,14 +548,23 @@ Theorem lean_bigraph_same_bigraph {s i r o} (b:bigraph s i r o) :
       rewrite bij_sum_compose_id.
       rewrite bij_fun_compose_id.
       reflexivity.
-    - destruct ip as [inner|port].
-      + destruct get_link eqn:E; simpl.
-        * Fail destruct get_link. admit.
-        * Fail destruct get_link. admit.
-      + destruct get_link eqn:E; simpl.
-        * Fail destruct get_link. admit.
-        * Fail destruct get_link. admit.
-  Admitted.
+    - intros ip.
+      destruct get_link eqn:E; simpl.
+      generalize ((ex_intro
+  (fun ip'' : {inner : Name | In inner i} + Port (get_control (bg:=b))
+=> get_link (bg:=b) ip'' = get_link (bg:=b) ip)
+  ip (erefl (get_link (bg:=b) ip)))).
+  intros.
+  destruct get_link. inversion E.
+  auto. discriminate E.
+  generalize (ex_intro
+  (fun ip'' : {inner : Name | In inner i} + Port (get_control (bg:=b))
+=> get_link (bg:=b) ip'' = get_link (bg:=b) ip)
+  ip (erefl (get_link (bg:=b) ip))).
+  intros. destruct get_link.
+  discriminate E.
+  inversion E. auto.
+  Qed.
 
 
 Definition lean_support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
@@ -527,6 +573,48 @@ Definition lean_support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList
 
 Lemma id_left_neutral : forall A B, forall f:A -> B, id <o> f =f. 
   Proof. intros. simpl; reflexivity. Qed.
+
+Lemma fob_funcomp_unfold {A B} {n:B}: forall bij : bijection A B,
+  bij ((bij ⁻¹) n) = n.
+  intros. 
+  set (tmpH := equal_f (fob_id _ _ bij) (n)).
+  unfold funcomp in tmpH.  
+  apply tmpH. 
+  Qed. 
+
+Lemma bof_funcomp_unfold {A B} {n:A}: forall bij : bijection A B,
+  bij⁻¹ (bij n) = n.
+  intros. 
+  set (tmpH := equal_f (bof_id _ _ bij) (n)).
+  unfold funcomp in tmpH.  
+  apply tmpH. 
+  Qed. 
+
+Lemma build_twin_ordinal {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+  {b1 : bigraph s1 i1 r1 o1} {b2 : bigraph s2 i2 r2 o2} 
+  {bij_n : bijection (get_node b1) (get_node b2)}
+  {n : get_node b2} (port : 'I_(Arity (get_control (bg:=b2) n))) :
+  exists port':'I_(Arity (get_control (bg:=b2) (bij_n ((bij_n ⁻¹) n)))), 
+  nat_of_ord port' = nat_of_ord port.
+  destruct port as [port Hport]. simpl.
+  eexists (Ordinal (m:=port) _).
+  reflexivity.
+  Unshelve.
+  rewrite fob_funcomp_unfold. apply Hport. 
+  Qed.
+
+Lemma build_twin_ordinal_rev {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+  {b1 : bigraph s1 i1 r1 o1} {b2 : bigraph s2 i2 r2 o2} 
+  {bij_n : bijection (get_node b1) (get_node b2)}
+  {n : get_node b1} (port : 'I_(Arity (get_control (bg:=b1) n))) :
+  exists port':'I_(Arity (get_control (bg:=b1) (bij_n ⁻¹ ((bij_n ) n)))), 
+  nat_of_ord port' = nat_of_ord port.
+  destruct port as [port Hport]. simpl.
+  eexists (Ordinal (m:=port) _).
+  reflexivity.
+  Unshelve.
+  rewrite bof_funcomp_unfold. apply Hport. 
+  Qed.
 
 Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : 
@@ -537,14 +625,14 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
   refine (
     SupEq _ _ _ _ _ _ _ _ (lean b1) (lean b2)
       bij_s bij_i bij_r bij_o bij_n _ bij_p control_eq parent_eq _
-  ).
+  ). 
   Unshelve.  
   2:{simpl.
   refine (<{ bij_e | _ }>).
   intros e. simpl. 
   split; intros.
   * apply not_is_idle_implies_exists_inner_or_node in H.
-  destruct H as [[[inner Hinner]|[n [port Hport]]] H].
+  destruct H as [[[inner Hinner]|port] H].
   - destruct (bij_i inner). 
   eapply (exists_inner_implies_not_idle (exist _ inner (H0 Hinner))).
   rewrite <- link_eq.
@@ -555,53 +643,96 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
   + discriminate H.
   + f_equal. f_equal.
   injection H. auto.
-  - eapply (exists_port_implies_not_idle (existT _ (bij_n n) (Ordinal (m:=port) _))).
-  Unshelve.
-  3:{ rewrite <-control_eq. simpl. 
-  rewrite (id_left_neutral _ _ (get_control (bg:=b1))).
-  unfold funcomp.
-  set (tmpH := equal_f (bof_id _ _ bij_n) (n)).
-  unfold funcomp in tmpH.  
-  rewrite tmpH.
-  apply Hport. }
+  - destruct port as [n port].
+  (* set (port' := build_twin_ordinal_rev (b2 := b2) (bij_n := bij_n) port).
+  destruct port' as [port' Hport']. *)
+  set (n':= bij_n n).
+  eapply (exists_port_implies_not_idle 
+    (existT _ n' (bij_p n port))). 
   rewrite <- link_eq.
   simpl.
   unfold parallel,funcomp, bij_subset_backward. simpl.
-  unfold eq_rect_r.
-  erewrite (port_proof_irrelevant_full (b:=b1) (n':=n)
-  (port':=Ordinal (n:=Arity (get_control (bg:=b1) n)) (m:=port) Hport)).
+  eassert (eq_rect_r
+  (fun n0 : get_node b2 => 'I_(Arity (get_control (bg:=b2) n0)))
+  (bij_p n port)
+  (equal_f (fob_id (get_node b1) (get_node b2) bij_n) n') = 
+  bij_p ((bij_n ⁻¹) n') (Ordinal (m:=port) _)  
+  ). 
+  unfold n'.
+  apply val_inj. simpl.
+  unfold eq_rect_r. unfold eq_rect.  
+  destruct (Logic.eq_sym
+  (equal_f (fob_id (get_node b1) (get_node b2) bij_n) (bij_n n))).
+  f_equal. simpl. f_equal. 
+  assert (forall x x' p p', x = x' 
+  -> nat_of_ord p = nat_of_ord p' -> nat_of_ord (bij_p x p) = 
+  nat_of_ord (bij_p x' p')).
+  intros.
+  subst x. f_equal. f_equal. destruct p. destruct p'. apply val_inj.
+  simpl. simpl in H1. auto. 
+  apply H0.
+  rewrite bof_funcomp_unfold. reflexivity. reflexivity.
+  
+  Unshelve. 3:{unfold n'. rewrite bof_funcomp_unfold. 
+  destruct port. simpl. apply i0. }
+  rewrite H0. clear H0. 
+  rewrite (bof_funcomp_unfold (bij_p ((bij_n ⁻¹) n'))).
+  unfold n'.
+  erewrite (port_proof_irrelevant_full (n:=(bij_n ⁻¹) (bij_n n)) (n':=n)).
+  2:{ apply bof_funcomp_unfold. }
+  Unshelve.
+  4:{simpl. exact port. }
   destruct get_link.
   + discriminate H.
-  + f_equal. f_equal.
-  injection H. auto.
-  -- set (tmpH := equal_f (bof_id _ _ bij_n) (n)).
-  unfold funcomp in tmpH.  
-  apply tmpH.
-  -- admit.
+  + f_equal. f_equal. injection H. auto.
+  simpl. reflexivity.
 
   * apply not_is_idle_implies_exists_inner_or_node in H.
-  destruct H as [[[inner Hinner]|[n [port Hport]]] H].
+  destruct H as [[[inner Hinner]|port] H].
   - destruct (bij_i inner). 
-  eapply (exists_inner_implies_not_idle (exist _ inner (H1 Hinner))).
+    eapply (exists_inner_implies_not_idle (exist _ inner (H1 Hinner))).
+    rewrite <- link_eq in H.
+    simpl in H.
+    unfold parallel,funcomp, bij_subset_backward in H. simpl in H.
+    rewrite <- (innername_proof_irrelevant b1 (H1 Hinner)) in H.
+    destruct get_link.
+    + discriminate H.
+    + f_equal. injection H. apply (bij_injective bij_e _ _).
+  - destruct port as [n port].
+  set (n':= backward bij_n n).
+  set (port' := build_twin_ordinal (b1 := b1) (bij_n := bij_n) port).
+  destruct port' as [port' Hport'].
+  eapply (exists_port_implies_not_idle 
+    (existT _ (n') (backward (bij_p n') port'))). (*port*)
   rewrite <- link_eq in H.
   simpl in H.
   unfold parallel,funcomp, bij_subset_backward in H. simpl in H.
-  rewrite <- (innername_proof_irrelevant b1 (H1 Hinner)) in H.
+  unfold n'.
+  assert (eq_rect_r
+  (fun n : get_node b2 => 'I_(Arity (get_control (bg:=b2) n)))
+  port (equal_f (fob_id (get_node b1) (get_node b2) bij_n) n)
+    = port').
+  { destruct port. destruct port'. 
+  simpl in Hport'. 
+  subst m0. apply val_inj. simpl.
+  unfold eq_rect_r.
+  unfold eq_rect. simpl. 
+  destruct (Logic.eq_sym (equal_f (fob_id (get_node b1) (get_node b2) bij_n) n)).
+  reflexivity. }
+  rewrite H0 in H.
+  clear H0.
   destruct get_link.
   + discriminate H.
-  + f_equal. injection H. apply (bij_injective bij_e _ _).
-  - eapply (exists_port_implies_not_idle (existT _ (bij_n⁻¹ n) (Ordinal (m:=port) _))).
+  + f_equal. injection H. apply (bij_injective bij_e _ _). }
+  simpl.
+  unfold parallel. 
+  apply functional_extensionality.
+  intros [i'|p']; simpl.
+  unfold funcomp. simpl.
+  destruct get_link.
+  apply functional_extensionality.
   Unshelve.
-  2:{ clear H.
-  rewrite <-control_eq in Hport. simpl in Hport. 
-  rewrite (id_left_neutral _ _ (get_control (bg:=b1))) in Hport.
-  unfold funcomp in Hport. apply Hport. }
-  rewrite <- link_eq in H.
-  simpl in H.
-  unfold parallel,funcomp, bij_subset_backward in H. simpl in H.
-  unfold eq_rect_r in H.
-  admit.
-  Admitted.
+  Qed.
 
 
 

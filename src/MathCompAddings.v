@@ -55,7 +55,8 @@ Lemma minus_lt : forall s m n, s - m < n -> s < n + m.
 
 Definition replace_in_H : forall {r r' : nat} (Hrr' : r' = r) (m : nat) (Hrm : m < r'), m <r.
 Proof.
-intros. destruct Hrr'. auto. Qed. 
+intros. destruct Hrr'. auto. 
+Qed. 
 
 Lemma eq_rect_ordinal : forall {r r' : nat} (Hrr' : r' = r) (m : nat) (Hrm' : m < r'),
   @eq_rect nat r' 
@@ -72,11 +73,34 @@ apply val_inj.
 reflexivity.
 Qed. 
 
+(* Lemma eq_rect_ordinal_open {node:finType} {ctrl:node -> nat} : 
+  forall {n n':node} {port} (H : port < ctrl n) (H' : port < ctrl n')
+  (Hnn' : n = n'),
+  eq_rect 
+    n
+    (fun y => 'I_(ctrl y))
+    (Ordinal (n:=ctrl n) (m:=port) H)
+    n'
+    Hnn' = Ordinal (n:=ctrl n') (m:=port) H'.
+  Proof.
+  intros.
+  simpl.
+  Admitted. *)
+
+
 Lemma Ordinal_proof_irrelevance : forall (s m : nat) (i0 i1 : m < s),
   Ordinal i0 = Ordinal i1.
 Proof.
   intros s m i0 i1.
   apply val_inj.
+  reflexivity.
+Qed.
+
+Lemma Ordinal_proof_irrelevance' {s m: nat} (s' m' : nat) {i0 i1}:
+  s'=s -> m = m' ->
+  nat_of_ord (Ordinal (n:=s) (m:=m) i0) = nat_of_ord (Ordinal (n:=s') (m:=m') i1).
+Proof.
+  intros. subst s'. subst m'.
   reflexivity.
 Qed.
 
