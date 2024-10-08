@@ -81,8 +81,10 @@ Definition get_link {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : {inne
   @link s i r o bg.
 Definition get_ap {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : FiniteParent (get_parent (bg:=bg)) := 
   @ap s i r o bg.
-Definition get_port {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : Type :=
-  Port (get_control (bg:=bg)).
+Definition get_site {s i r o} (b:bigraph s i r o) : nat := s.
+Definition get_root {s i r o} (b:bigraph s i r o) : nat := r.
+Definition get_innername {s i r o} (b:bigraph s i r o) : NoDupList := i.
+Definition get_outername {s i r o} (b:bigraph s i r o) : NoDupList := o.
 End GettersBigraphs.
 
 (** Tools for proof irrelevance *)

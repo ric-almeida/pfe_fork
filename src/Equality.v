@@ -246,11 +246,6 @@ Lemma bigraph_pkd_s_e_dec
   exact @bigraph_pkd_s_e_trans. Defined. 
 
 
-
-
-
-
-
 Section LeanSupportEquivalence.
 
 Parameter onto : forall [A : Type] (lA : list A), list { a : A | In a lA }.
@@ -277,8 +272,6 @@ Lemma wf_make_seq_NameSub {l} (inner:NameSub l) :
   Proof.
   apply onto_Onto.
   Qed.
-
-
 
 (*** GET LIST OF PORTS ***)
 Definition make_seq_Port_for_node_n {s i r o} {b:bigraph s i r o} (n:get_node b) : 
@@ -356,12 +349,6 @@ Definition not_is_idle {s i r o} {b:bigraph s i r o} (e: get_edge b) : bool :=
       end) 
     (make_seq_link_domain b).
 
-Fail Fixpoint is_idle {s i r o} {b:bigraph s i r o} (e: get_edge b) : bool := 
-  forall ip, match get_link (bg:=b) ip with 
-  |inr e' => e' == e
-  | _ => true
-  end.
-
 
 Lemma exists_inner_implies_not_idle {s i r o} {b:bigraph s i r o} (i':NameSub i) (e: get_edge b) : 
   get_link (bg:=b) (inl i') = (inr e) -> 
@@ -437,12 +424,6 @@ Definition get_edges_wo_idles {s i r o} (b:bigraph s i r o) :=
 
 (*** LEAN SECTION ***)
 
-Record Truc A B :=
-{
-  E : Type;
-  f : A -> B + E;
-}.
-
 Definition lean {s i r o} (b:bigraph s i r o) :
   bigraph s i r o.
   Proof.
@@ -495,12 +476,7 @@ Theorem lean_is_lean {s i r o} (b:bigraph s i r o) :
     f_equal. apply subset_eq_compat. injection Hip. auto.
   Qed.
 
-Definition get_site {s i r o} (b:bigraph s i r o) : nat := s.
-Definition get_root {s i r o} (b:bigraph s i r o) : nat := r.
-Definition get_innername {s i r o} (b:bigraph s i r o) : NoDupList := i.
-Definition get_outername {s i r o} (b:bigraph s i r o) : NoDupList := o.
-
-Record half_support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+Record place_graph_support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
   BigHalfEq
   {
@@ -516,7 +492,7 @@ Record half_support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
 
 
 Theorem lean_bigraph_same_bigraph {s i r o} (b:bigraph s i r o) :
-  half_support_equivalence b (lean b) /\ 
+  place_graph_support_equivalence b (lean b) /\ 
   forall (ip : NameSub i + Port (get_control (bg := b))),
     match (get_link (bg:=b) ip) with 
     | inl outer => 
@@ -570,25 +546,6 @@ Definition lean_support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) := 
   support_equivalence (lean b1) (lean b2).
 
-Lemma id_left_neutral : forall A B, forall f:A -> B, id <o> f =f. 
-  Proof. intros. simpl; reflexivity. Qed.
-
-Lemma fob_funcomp_unfold {A B} {n:B}: forall bij : bijection A B,
-  bij ((bij ⁻¹) n) = n.
-  intros. 
-  set (tmpH := equal_f (fob_id _ _ bij) (n)).
-  unfold funcomp in tmpH.  
-  apply tmpH. 
-  Qed. 
-
-Lemma bof_funcomp_unfold {A B} {n:A}: forall bij : bijection A B,
-  bij⁻¹ (bij n) = n.
-  intros. 
-  set (tmpH := equal_f (bof_id _ _ bij) (n)).
-  unfold funcomp in tmpH.  
-  apply tmpH. 
-  Qed. 
-
 Lemma build_twin_ordinal {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   {b1 : bigraph s1 i1 r1 o1} {b2 : bigraph s2 i2 r2 o2} 
   {bij_n : bijection (get_node b1) (get_node b2)}
@@ -600,19 +557,6 @@ Lemma build_twin_ordinal {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
   reflexivity.
   Unshelve.
   rewrite fob_funcomp_unfold. apply Hport. 
-  Qed.
-
-Lemma build_twin_ordinal_rev {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
-  {b1 : bigraph s1 i1 r1 o1} {b2 : bigraph s2 i2 r2 o2} 
-  {bij_n : bijection (get_node b1) (get_node b2)}
-  {n : get_node b1} (port : 'I_(Arity (get_control (bg:=b1) n))) :
-  exists port':'I_(Arity (get_control (bg:=b1) (bij_n ⁻¹ ((bij_n ) n)))), 
-  nat_of_ord port' = nat_of_ord port.
-  destruct port as [port Hport]. simpl.
-  eexists (Ordinal (m:=port) _).
-  reflexivity.
-  Unshelve.
-  rewrite bof_funcomp_unfold. apply Hport. 
   Qed.
 
 Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
@@ -643,8 +587,6 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
     + f_equal. f_equal.
     injection H. auto.
     - destruct port as [n port].
-    (* set (port' := build_twin_ordinal_rev (b2 := b2) (bij_n := bij_n) port).
-    destruct port' as [port' Hport']. *)
     set (n':= bij_n n).
     eapply (exists_port_implies_not_idle 
       (existT _ n' (bij_p n port))). 
@@ -1174,12 +1116,158 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
   subst s3.
   reflexivity.
 
-  
+  unfold eq_ind_r.
+  generalize ((@ex_intro
+    (sum (@sig Name (fun inner : Name => @In Name inner (ndlist i1)))
+    (@Port (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (@get_control s1 r1 i1 o1 b1)))
+    (fun
+    ip'' : sum (@sig Name (fun inner : Name => @In Name inner (ndlist i1)))
+    (@Port (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (@get_control s1 r1 i1 o1 b1)) =>
+    @eq
+    (sum (@sig Name (fun outer : Name => @In Name outer (ndlist o1)))
+    (Finite.sort (@get_edge s1 r1 i1 o1 b1))) (@get_link s1 r1 i1 o1 b1
+    ip'')
+    (@get_link s1 r1 i1 o1 b1
+    (@inr (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
+    ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
+    (@bij_dep_sum_2_forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (fun a : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
+    ordinal
+    (Arity
+    (@get_control s2 r2 i2 o2 b2
+    (@forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n a))))
+    (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
+    ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1)))
+    (fun a : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
+    @bijection_inv (ordinal (Arity (@get_control s1 r1 i1 o1 b1
+    a)))
+    (ordinal
+    (Arity
+    (@get_control s2 r2 i2 o2 b2
+    (@forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n
+    a)))) (bij_p a))
+    (@bij_dep_sum_1_forward (Finite.sort (@get_node s2 r2 i2 o2
+    b2))
+    (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (fun n : Finite.sort (@get_node s2 r2 i2 o2 b2) =>
+    ordinal (Arity (@get_control s2 r2 i2 o2 b2 n)))
+    (@bijection_inv (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n)
+    (@existT (Finite.sort (@get_node s2 r2 i2 o2 b2))
+    (fun n : Finite.sort (@get_node s2 r2 i2 o2 b2) =>
+    ordinal (Arity (@get_control s2 r2 i2 o2 b2 n))) pa
+    Hpa))))))
+    (@inr (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
+    ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
+    (@bij_dep_sum_2_forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (fun a : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
+    ordinal
+    (Arity
+    (@get_control s2 r2 i2 o2 b2
+    (@forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n a))))
+    (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
+    ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1)))
+    (fun a : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
+    @bijection_inv (ordinal (Arity (@get_control s1 r1 i1 o1 b1 a)))
+    (ordinal
+    (Arity
+    (@get_control s2 r2 i2 o2 b2
+    (@forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n a))))
+    (bij_p a))
+    (@bij_dep_sum_1_forward (Finite.sort (@get_node s2 r2 i2 o2 b2))
+    (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (fun n : Finite.sort (@get_node s2 r2 i2 o2 b2) =>
+    ordinal (Arity (@get_control s2 r2 i2 o2 b2 n)))
+    (@bijection_inv (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n)
+    (@existT (Finite.sort (@get_node s2 r2 i2 o2 b2))
+    (fun n : Finite.sort (@get_node s2 r2 i2 o2 b2) =>
+    ordinal (Arity (@get_control s2 r2 i2 o2 b2 n))) pa Hpa))))
+    (@Logic.eq_refl
+    (sum (@sig Name (fun outer : Name => @In Name outer (ndlist o1)))
+    (Finite.sort (@get_edge s1 r1 i1 o1 b1)))
+    (@get_link s1 r1 i1 o1 b1
+    (@inr (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
+    ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
+    (@bij_dep_sum_2_forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (fun a : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
+    ordinal
+    (Arity
+    (@get_control s2 r2 i2 o2 b2
+    (@forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n a))))
+    (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
+    ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1)))
+    (fun a : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
+    @bijection_inv (ordinal (Arity (@get_control s1 r1 i1 o1 b1
+    a)))
+    (ordinal
+    (Arity
+    (@get_control s2 r2 i2 o2 b2
+    (@forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n
+    a)))) (bij_p a))
+    (@bij_dep_sum_1_forward (Finite.sort (@get_node s2 r2 i2 o2
+    b2))
+    (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (fun n : Finite.sort (@get_node s2 r2 i2 o2 b2) =>
+    ordinal (Arity (@get_control s2 r2 i2 o2 b2 n)))
+    (@bijection_inv (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n)
+    (@existT (Finite.sort (@get_node s2 r2 i2 o2 b2))
+    (fun n : Finite.sort (@get_node s2 r2 i2 o2 b2) =>
+    ordinal (Arity (@get_control s2 r2 i2 o2 b2 n))) pa
+    Hpa)))))))).
+  intros.
+  destruct (get_link (bg:=b1)
+    (inr
+    (bij_dep_sum_2_forward (fun a : get_node b1 => bijection_inv (bij_p a))
+    (bij_dep_sum_1_forward (bijection_inv bij_n)
+    (existT (fun n : get_node b2 => 'I_(Arity (get_control (bg:=b2) n)))
+    pa Hpa))))) eqn:L1.
+  exfalso.
+  rewrite <- link_eq in L2.
+  simpl in L2.
+  clear control_eq parent_eq e e0.
+  unfold parallel, bij_subset_forward, bij_subset_backward, bij_dep_sum_2_forward, bij_dep_sum_1_forward in L2.
+  simpl in L2.
+  unfold funcomp in L2.
+  unfold parallel, bij_subset_forward, bij_subset_backward, bij_dep_sum_2_forward, bij_dep_sum_1_forward in L1.
+  simpl in L1.
+  destruct get_link.
+  discriminate L2.
 
-  Admitted.
-  
+  discriminate L1.
 
+  f_equal.
+  apply subset_eq_compat.
+  rewrite <- link_eq in L2.
+  simpl in L2.
+  clear control_eq parent_eq e e0.
+  unfold parallel, bij_subset_forward, bij_subset_backward, bij_dep_sum_2_forward, bij_dep_sum_1_forward in L2.
+  simpl in L2.
+  unfold funcomp in L2.
+  unfold parallel, bij_subset_forward, bij_subset_backward, bij_dep_sum_2_forward, bij_dep_sum_1_forward in L1.
+  simpl in L1.
+  destruct get_link.
+  discriminate L2.
 
+  inversion L1.
+  subst s3.
+  inversion L2. reflexivity.
+  Qed.
 
 
 

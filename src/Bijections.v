@@ -2001,3 +2001,23 @@ Theorem bij_eq_comp_id {A} : @bij_id A <O> bij_id = bij_id.
   - simpl. auto. 
   Qed. *)
 End BijSubsets.
+
+
+Lemma id_left_neutral : forall A B, forall f:A -> B, id <o> f =f. 
+  Proof. intros. simpl; reflexivity. Qed.
+
+Lemma fob_funcomp_unfold {A B} {n:B}: forall bij : bijection A B,
+  bij ((bij ⁻¹) n) = n.
+  intros. 
+  set (tmpH := equal_f (fob_id _ _ bij) (n)).
+  unfold funcomp in tmpH.  
+  apply tmpH. 
+  Qed. 
+
+Lemma bof_funcomp_unfold {A B} {n:A}: forall bij : bijection A B,
+  bij⁻¹ (bij n) = n.
+  intros. 
+  set (tmpH := equal_f (bof_id _ _ bij) (n)).
+  unfold funcomp in tmpH.  
+  apply tmpH. 
+  Qed. 
