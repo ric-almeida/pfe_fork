@@ -273,68 +273,22 @@ Lemma wf_make_seq_NameSub {l} (inner:NameSub l) :
   apply onto_Onto.
   Qed.
 
+
 (*** GET LIST OF PORTS ***)
 Definition make_seq_Port_for_node_n {s i r o} {b:bigraph s i r o} (n:get_node b) : 
-  seq (Port (get_control (bg:=b))).
-  Proof.
-  unfold Port.
-  set (arity := Arity (get_control (bg:=b) n)).
-  destruct (leq arity 0) eqn:E.
-  + exact [::].
-  + induction arity as [|ar] eqn:Har. 
-  eapply [:: existT (fun n => 'I_(Arity (get_control (bg:=b) n))) n (Ordinal (m:=0) _)].
-  eapply [:: existT (fun n => 'I_(Arity (get_control (bg:=b) n))) n (Ordinal (m:=ar) _)].
-  Unshelve. 
-  - exfalso. rewrite leq0n in E. discriminate E.
-  - subst arity. rewrite Har. apply ltnSn.
-  Defined. 
-
-Definition make_seq_Port {s i r o} (b:bigraph s i r o) : 
-  seq (Port (get_control (bg:=b))).
-  Proof.
-  set (nodes := enum (get_node b)).
-  apply (fold_left 
-    (fun qt n => make_seq_Port_for_node_n n ++ qt) 
-    nodes
-    []).
-  Defined.
+  seq (Port (get_control (bg:=b))) := map 
+    (fun port => existT (fun n => 'I_(Arity (get_control (bg:=b) n))) n (port)) 
+    (ord_enum (Arity (get_control (bg:=b) n))).
 
 Lemma wf_make_seq_Port {s i r o} (b:bigraph s i r o) 
-  (p:Port (get_control (bg:=b))) : 
-  In p (make_seq_Port b).
+  (node : get_node b)
+  {Iport : 'I_(Arity (get_control (bg:=b) node))}
+  : 
+  In (existT (fun n : get_node b => 'I_(Arity (get_control (bg:=b) n))) node Iport) (make_seq_Port_for_node_n node).
   Proof.
-  unfold make_seq_Port.
-  unfold make_seq_Port_for_node_n. simpl.
-  (*TODO*)
-  Admitted.
-
-
-(*** GET SEQ OF INNERS AND PORTS ***)
-Definition make_seq_link_domain {s i r o} (b:bigraph s i r o) : 
-  seq (NameSub i + Port (get_control (bg:=b))).
-  Proof.
-  exact (map inl (make_seq_NameSub (ndlist i)) ++ (map inr (make_seq_Port b))).
-  Defined.
-
-
-Lemma wf_make_seq_link_domain_inners {s i r o} (b:bigraph s i r o) 
-  (inner:Name) (hin : In inner (ndlist i)) :  
-    In (inl (exist ((In (A:=Name))^~ i) inner hin)) (make_seq_link_domain b).
-  Proof.
-    unfold make_seq_link_domain.
-    apply in_or_app. left.
-    apply in_map.
-    apply wf_make_seq_NameSub.
-  Qed.
-
-Lemma wf_make_seq_link_domain_ports {s i r o} (b:bigraph s i r o) 
-  (n:get_node b) (ar : 'I_(Arity (get_control (bg:=b) n))) :  
-    In (inr (existT _ n ar)) (make_seq_link_domain b).
-  Proof.
-    unfold make_seq_link_domain.
-    apply in_or_app. right.
-    apply in_map.
-    apply wf_make_seq_Port.
+  unfold make_seq_Port_for_node_n. 
+  apply in_map.
+  apply In_ord_enum.
   Qed.
 
 
@@ -342,12 +296,25 @@ Lemma wf_make_seq_link_domain_ports {s i r o} (b:bigraph s i r o)
 (*** IDLE EDGES ***************************************)
 Definition not_is_idle {s i r o} {b:bigraph s i r o} (e: get_edge b) : bool := 
   Coq.Lists.List.existsb 
-    (A := NameSub i + Port (get_control (bg:=b)))
-    (fun ip => match (get_link (bg:=b)) ip with 
+    (A := NameSub i)
+    (fun i => match (get_link (bg:=b)) (inl i) with 
       |inl _ => false 
       |inr e' => e == e'
       end) 
-    (make_seq_link_domain b).
+    (make_seq_NameSub (ndlist i))
+  || 
+  Coq.Lists.List.existsb 
+    (A := get_node b)
+    (fun n => 
+      Coq.Lists.List.existsb 
+        (A := Port (get_control (bg:=b)))
+        (fun p => match (get_link (bg:=b)) (inr p) with 
+          |inl _ => false 
+          |inr e' => e == e'
+          end) 
+        (make_seq_Port_for_node_n n)) 
+    (enum (get_node b)).
+
 
 
 Lemma exists_inner_implies_not_idle {s i r o} {b:bigraph s i r o} (i':NameSub i) (e: get_edge b) : 
@@ -356,16 +323,13 @@ Lemma exists_inner_implies_not_idle {s i r o} {b:bigraph s i r o} (i':NameSub i)
   Proof.
   intros.
   simpl in *.
-  unfold not_is_idle. 
+  unfold not_is_idle.  
+  apply Bool.orb_true_intro. left.
   unfold List.existsb.
-  simpl.
-  apply existsb_exists. exists (inl i').
+  apply existsb_exists. exists i'.
   rewrite H. split.
-  - unfold NameSub in i'.
-  simpl in *.
-  destruct i' as [i'' Hi'] eqn:E.
-  apply wf_make_seq_link_domain_inners.
-  - apply eq_refl.
+  - apply wf_make_seq_NameSub.
+  - by apply/eqP. 
   Qed.
 
 Lemma exists_inner_implies_not_idle_exists {s i r o} {b:bigraph s i r o} (e: get_edge b) :
@@ -378,18 +342,37 @@ Lemma exists_inner_implies_not_idle_exists {s i r o} {b:bigraph s i r o} (e: get
   apply (exists_inner_implies_not_idle x). apply H.
   Qed.
 
+
 Lemma exists_port_implies_not_idle {s i r o} {b:bigraph s i r o} (p:Port (get_control (bg:=b))) (e: get_edge b) : 
   get_link (bg:=b) (inr p) = (inr e) -> 
     not_is_idle e.
   Proof.
-  Admitted. (*TODO*)
+  intros.
+  simpl in *.
+  unfold not_is_idle.  
+  apply Bool.orb_true_intro. right.
+  unfold List.existsb.
+  destruct p as [node Iport] eqn:PORT. 
+  apply existsb_exists. exists node.
+  split. 
+  - apply In_enum.
+  - apply existsb_exists. exists p.
+  split.
+  + subst p. apply wf_make_seq_Port.
+  + subst p. destruct get_link.
+  * discriminate H.
+  * inversion H. by apply/eqP. 
+  Qed. 
 
 Lemma exists_port_implies_not_idle_exists {s i r o} {b:bigraph s i r o} (e: get_edge b) : 
   (exists (p:Port (get_control (bg:=b))),
   get_link (bg:=b) (inr p) = (inr e)) -> 
     not_is_idle e.
   Proof.
-  Admitted. (*TODO*)
+  intros. 
+  destruct H.
+  apply (exists_port_implies_not_idle x). apply H.
+  Qed.
 
 
 Lemma exist_implies_not_idle_exists {s i r o} {b:bigraph s i r o} (e: get_edge b) : 
@@ -397,7 +380,10 @@ Lemma exist_implies_not_idle_exists {s i r o} {b:bigraph s i r o} (e: get_edge b
   get_link (bg:=b) (ip) = (inr e)) -> 
     not_is_idle e.
   Proof.
-  Admitted. (*TODO*)
+  intros [[inner|port] H].
+  apply (exists_inner_implies_not_idle inner e H).
+  apply (exists_port_implies_not_idle port e H).
+  Qed.
 
 
 Lemma not_is_idle_implies_exists_inner_or_node {s i r o} {b:bigraph s i r o} (e: get_edge b) : 
@@ -406,17 +392,28 @@ Lemma not_is_idle_implies_exists_inner_or_node {s i r o} {b:bigraph s i r o} (e:
   Proof.
   intros.
   simpl in *.
-  unfold not_is_idle in H. 
-  unfold List.existsb in H.
+  unfold not_is_idle in H.
+  apply Bool.orb_prop in H.
+  destruct H as [H|H].
+  - unfold List.existsb in H.
   simpl in *.
-  apply existsb_exists in H. destruct H as [ip [H H']]. exists ip.
-  destruct (get_link (bg:=b) ip).
-  - discriminate H'.
-  - f_equal. symmetry.
-  by apply/eqP. 
+  apply existsb_exists in H. destruct H as [inner [H H']]. 
+  exists (inl inner).
+  destruct (get_link).
+  + discriminate H'.
+  + f_equal. symmetry.
+  by apply/eqP.
+  - unfold List.existsb in H.
+  simpl in *.
+  apply existsb_exists in H. destruct H as [node [Hnode H]].
+  apply existsb_exists in H. destruct H as [port [Hport H]].
+  exists (inr port).
+  destruct (get_link).
+  + discriminate H.
+  + f_equal. symmetry.
+  by apply/eqP.
   Qed.
-
-
+  
 Definition get_edges_wo_idles {s i r o} (b:bigraph s i r o) := 
   {e : get_edge b | not_is_idle e}.
 
@@ -672,7 +669,15 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
   unfold parallel. 
   apply functional_extensionality.
   unfold funcomp;simpl. intros ipa.
-  unfold bij_subset_backward, bij_subset_forward. simpl.
+  unfold bij_subset_backward, bDefinition make_seq_Port {s i r o} (b:bigraph s i r o) : 
+  seq (Port (get_control (bg:=b))).
+  Proof.
+  set (nodes := enum (get_node b)).
+  apply (fold_left 
+    (fun qt n => make_seq_Port_for_node_n n ++ qt) 
+    nodes
+    []).
+  Defined.ij_subset_forward. simpl.
   generalize (ex_intro
     (fun ip'' : {inner : Name | In inner i2} + Port (get_control (bg:=b2)) =>
     get_link (bg:=b2) ip'' = get_link (bg:=b2) ipa) ipa

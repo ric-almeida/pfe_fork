@@ -211,3 +211,30 @@ Lemma in_or_app_mc {Name} : forall (l1 l2 : seq Name) (inner : Name),
   right. constructor. reflexivity. 
 Qed.
 
+Lemma all_in_enum (A : finType) (a : A) : a \in enum A.
+Proof.
+  exact: mem_enum.
+Qed.
+
+Lemma mem_to_In (A : eqType) (a : A) (l : seq A) :
+  a \in l -> In a l.
+Proof.
+  move=> H.
+  elim: l H => [|x l IH] /=.
+  - by rewrite in_nil.
+  - rewrite in_cons.
+    move/orP => [/eqP -> | Hl]; [by left | by right; apply: IH].
+Qed.
+
+Lemma In_enum (A : finType) (a : A) : In a (enum A).
+Proof.
+  apply mem_to_In. apply all_in_enum.
+Qed.
+
+
+Lemma In_ord_enum {n : nat} (m : 'I_n) : In m (ord_enum n).
+Proof.
+  apply mem_to_In. apply mem_ord_enum.
+Qed.
+
+
