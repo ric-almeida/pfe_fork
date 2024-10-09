@@ -298,6 +298,9 @@ Definition substitution (i:NoDupList) (name:Name) : bigraph 0 i 0 (OneelNDL name
   destruct n'.
   Defined.
 
+Definition elementary_renaming (n n':Name) := substitution (OneelNDL n) n'.
+
+
 Definition closure (name:Name) : bigraph 0 (OneelNDL name) 0 EmptyNDL.
   Proof. 
   apply (@Big 0 (OneelNDL name) 0 EmptyNDL

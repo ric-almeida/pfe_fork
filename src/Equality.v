@@ -542,6 +542,8 @@ Theorem lean_bigraph_same_bigraph {s i r o} (b:bigraph s i r o) :
   Qed.
 
 
+
+(*LEAN SUPPORT EQUIVALENCE*)
 Definition lean_support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) := 
   support_equivalence (lean b1) (lean b2).

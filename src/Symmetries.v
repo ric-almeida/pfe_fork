@@ -767,15 +767,16 @@ Lemma sub_eq_id : forall x,
   Qed.
 
 Lemma closure_o_subst_neutral : forall x, 
-  support_equivalence
+  lean_support_equivalence
     (closure x <<o>> substitution EmptyNDL x)
     (bigraph_id 0 EmptyNDL).
   Proof.
   intros.
+  unfold lean_support_equivalence. simpl.
   refine (
     SupEq _ _ _ _ _ _ _ _
-      (closure x <<o>> substitution EmptyNDL x)
-      (bigraph_id 0 EmptyNDL)
+      (lean (closure x <<o>> substitution EmptyNDL x))
+      (lean (bigraph_id 0 EmptyNDL))
       (erefl) (*s*)
       (permutation_left_neutral_neutral) (*i*)
       (erefl) (*r*)
@@ -785,7 +786,56 @@ Lemma closure_o_subst_neutral : forall x,
       (fun n => _) (*p*)
       _ _ _
     ).
-    Unshelve. 4:{simpl. (*AAAAAAAAAAAAAAAAAAAAAAAAH*) Abort.
+  Unshelve. 4:{simpl.
+  eapply (mkBijection _ _ 
+    (fun xl => match xl with
+      | exist xunitvoid Hxuv => 
+        match xunitvoid with
+        | inl u => _ 
+        | inr v => void_univ_embedding v
+        end
+      end) 
+    (fun xv => match xv with
+      | exist xvoid Hxv => void_univ_embedding xvoid end)).
+  Unshelve. 3:{exfalso.
+  destruct xunitvoid.
+  - apply not_is_idle_implies_exists_inner_or_node in Hxuv.
+  destruct Hxuv as [ip Hxuv].
+  destruct ip as [inner | port].
+  destruct inner as [inner Hinner].
+  elim Hinner.
+  simpl in port.
+  destruct port as [port Hport].
+  destruct port as [port|port]; destruct port.
+  
+  elim e. }
+
+  apply functional_extensionality.
+  intros [xv Hxv]; destruct xv.
+
+  apply functional_extensionality.
+  intros [[xu | xv] Hx]; try destruct xv.
+  exfalso.
+  apply not_is_idle_implies_exists_inner_or_node in Hx.
+  destruct Hx as [ip Hxuv].
+  destruct ip as [inner | port].
+  destruct inner as [inner Hinner].
+  elim Hinner.
+  simpl in port.
+  destruct port as [port Hport].
+  destruct port as [port|port]; destruct port. }
+
+  + apply functional_extensionality.
+    intros v; destruct v.
+  + simpl. apply functional_extensionality.
+    intros [v | [s1]]; try destruct v; simpl.
+    discriminate i0.
+  + apply functional_extensionality.
+    intros [[name] | (v, tmp)]; simpl; try simpl in v; try destruct v.
+    elim i0.
+  + simpl in n. destruct n as [n|n]; destruct n.
+  Qed.
+
     
 (*Note that a closure /x ◦ G may create an idle edge, if x is an idle name of G. Intuitively idle edges are ‘invisible’, and indeed we shall see later how to ignore them.*)
 Lemma closure_o_sub_eq_closure : forall x y, 
@@ -866,4 +916,213 @@ Lemma link_axiom_4 {y z X Y} {disYX: Y # X} {disyY : ~ In y Y}:
 
 
 End LinkAxioms.
+
+
+Section NodeAxiom.
+Definition renaming (N N': NoDupList) {H: length N = length N'}: bigraph 0 N 0 N'.
+  destruct N as [l ndl]. 
+  destruct N' as [l' ndl']. simpl in H. 
+  generalize l l' ndl ndl' H. induction l0 as [|a l0 IHl0].  
+  - intros. simpl in *. symmetry in H0.
+  apply length_zero_iff_nil in H0.
+  subst l'0.
+  assert (forall NDL, {| ndlist := [::]; nd := NDL |} = EmptyNDL). {intros. apply nodupproofirrelevant. simpl. reflexivity. }
+  rewrite H0.
+  rewrite H0.
+  exact bigraph_empty.
+  
+  - intros l0' ndl0 ndl0' H'.
+  induction l0' as [|a' l0' IHl0']. 
+  + exfalso. auto. discriminate H'.
+  + specialize (IHl0 l0' (nodup_tl a l0 ndl0) (nodup_tl a' l0' ndl0')).
+  assert (length l0 = length l0').
+  inversion H'. reflexivity.
+  specialize (IHl0 H0).
+  clear H0.
+  eset (almost := elementary_renaming a a' ⊗ IHl0).
+  Unshelve.
+  2:{constructor. simpl. intros n [Hc|Hc] InH. 
+  subst a. clear IHl0' IHl0. rewrite (NoDup_cons_iff n l0) in ndl0.
+  destruct ndl0. contradiction. apply Hc. } 
+  2:{constructor. simpl. intros n [Hc|Hc] InH. 
+  subst a'. clear IHl0' IHl0. rewrite (NoDup_cons_iff n l0') in ndl0'.
+  destruct ndl0'. contradiction. apply Hc. }
+  destruct almost.
+  refine (@Big 0 {| ndlist := a :: l0; nd := ndl0 |} 0 {| ndlist := a' :: l0'; nd := ndl0'|} 
+  node0 edge0 control0 parent0 _ ap0).
+  - assert (NameSub (OneelNDL a ∪ {| ndlist := l0; nd := nodup_tl a l0 ndl0 |}) = 
+  NameSub ({| ndlist := a :: l0; nd := ndl0 |})).
+  + apply nodupproofirrelevantns. simpl.
+  destruct (in_dec EqDecN a l0).
+  exfalso. clear IHl0' IHl0 link0. rewrite (NoDup_cons_iff a l0) in ndl0. destruct ndl0. contradiction.
+  reflexivity.
+  assert (NameSub (OneelNDL a' ∪ {| ndlist := l0'; nd := nodup_tl a' l0' ndl0' |}) = 
+  NameSub ({| ndlist := a' :: l0'; nd := ndl0' |})).
+  + apply nodupproofirrelevantns. simpl.
+  destruct (in_dec EqDecN a' l0').
+  exfalso. clear IHl0' IHl0 link0. rewrite (NoDup_cons_iff a' l0') in ndl0'. destruct ndl0'. contradiction.
+  reflexivity.
+
+  + rewrite H0 in link0. rewrite H1 in link0.
+  intros ip.
+  destruct (link0 ip) as [outer|edge].
+  exact (inl outer).
+  exact (inr edge).
+  Defined.
+
+Theorem nodeRenamingVoid (N N': NoDupList) {H: length N = length N'}: get_node (@renaming N N' H) = void.
+  unfold renaming.
+  destruct N as [N NDN].
+  destruct N' as [N' NDN'].
+  simpl in H.
+  induction N as [|n N IHN].
+  - simpl in *.
+  set (Hbis := H).
+  unfold Hbis.
+  symmetry in Hbis.
+  apply length_zero_iff_nil in Hbis.
+  subst N'.
+  simpl. 
+  unfold eq_rect_r.
+  simpl.
+  unfold eq_rect.
+  simpl. 
+  unfold Logic.eq_sym.
+  destruct (length_zero_iff_nil [::]).
+  destruct H. simpl. unfold get_node. simpl.
+  admit.
+  Admitted.
+
+Theorem edgeRenamingVoid (N N': NoDupList) {H: length N = length N'}: get_edge (@renaming N N' H) = void.
+Admitted.
+
+Definition rewriteEqNat {lN lN' Ak} (H: lN = lN') (Hk : MyEqNat Ak lN) : MyEqNat Ak lN'.
+  subst lN. apply Hk.
+  Qed.
+
+Theorem nodeAxiom {N N':NoDupList} 
+  {Hlenght: length N = length N'} 
+  {k:Kappa} 
+  {Hk : MyEqNat (Arity k) (length (ndlist N))} : 
+  support_equivalence
+    ((bigraph_id 1 EmptyNDL ⊗ (renaming (H:=Hlenght) N N'))
+      <<o>> @discrete_ion _ tt k N Hk)
+    (@discrete_ion _ tt k N' (rewriteEqNat Hlenght Hk)).
+  Proof.
+  refine (
+    SupEq _ _ _ _ _ _ _ _
+      ((bigraph_id 1 EmptyNDL ⊗ (renaming (H:=Hlenght) N N'))
+        <<o>> @discrete_ion _ tt k N Hk)
+      (@discrete_ion _ tt k N' (rewriteEqNat Hlenght Hk))
+      (erefl) (*s*)
+      (permutation_left_neutral_neutral) (*i*)
+      (erefl) (*r*) 
+      (permutation_left_neutral_neutral) (*o*)
+      (_) (*n*)
+      (_) (*e*)
+      (_) (*p*)
+      _ _ _
+    ).
+    Unshelve. 4:{ simpl. rewrite nodeRenamingVoid.
+    exact (bijection_nest_left_neutral). }
+    4:{ simpl. rewrite edgeRenamingVoid.
+    exact (bijection_nest_left_neutral). }
+    4:{ intros. simpl in *. destruct n1 as [[v|v]|nodeion]; try destruct v.
+    exfalso. rewrite nodeRenamingVoid in v. destruct v.
+    simpl. exact bij_id.  }
+    - simpl. unfold funcomp,join.
+      apply functional_extensionality. intros nodeion.
+      unfold eq_rect_r. 
+      destruct (@backward (sum (sum Empty_set (Finite.sort (@get_node O O N N' (@renaming N N'
+        Hlenght)))) unit)
+        unit
+        (@eq_rect Finite.type
+        (@reverse_coercion Finite.type Set
+        Datatypes_Empty_set__canonical__fintype_Finite Empty_set)
+        (fun y : Finite.type => bijection (sum (sum Empty_set (Finite.sort y)) unit)
+        unit) (@bijection_nest_left_neutral unit)
+        (@get_node O O N N' (@renaming N N' Hlenght))
+        (@Logic.eq_sym Finite.type (@get_node O O N N' (@renaming N N' Hlenght))
+        (@reverse_coercion Finite.type Set
+        Datatypes_Empty_set__canonical__fintype_Finite Empty_set)
+        (@nodeRenamingVoid N N' Hlenght))) nodeion).
+      destruct s0.
+      elim e.
+      exfalso. rewrite nodeRenamingVoid in s0. elim s0.
+      reflexivity.
+    - simpl. unfold funcomp,join,parallel,sequence,sum_shuffle,extract1.
+      simpl.
+      apply functional_extensionality. intros [nodeion|site1].
+      + unfold eq_rect_r. 
+      destruct (@backward
+        (sum (sum Empty_set (Finite.sort (@get_node O O N N' (@renaming N N' Hlenght))))
+        unit) unit
+        (@eq_rect Finite.type
+        (@reverse_coercion Finite.type Set
+        Datatypes_Empty_set__canonical__fintype_Finite Empty_set)
+        (fun y : Finite.type => bijection (sum (sum Empty_set (Finite.sort y)) unit)
+        unit) (@bijection_nest_left_neutral unit)
+        (@get_node O O N N' (@renaming N N' Hlenght))
+        (@Logic.eq_sym Finite.type (@get_node O O N N' (@renaming N N' Hlenght))
+        (@reverse_coercion Finite.type Set
+        Datatypes_Empty_set__canonical__fintype_Finite Empty_set)
+        (@nodeRenamingVoid N N' Hlenght))) nodeion).
+      destruct s0 as [v|v];try destruct v.
+      exfalso. rewrite nodeRenamingVoid in v.
+      elim v.
+      + unfold extract1,bij_rew_forward. simpl.
+      rewrite eq_rect_ordinal. simpl. 
+      unfold fintype.split. simpl.
+      destruct (ltnP 0 1).
+      f_equal. apply val_inj. simpl. reflexivity.
+      discriminate i0.
+      f_equal. unfold eq_rect_r,eq_rect. simpl. 
+      destruct (Logic.eq_sym (nodeRenamingVoid N N') ).
+      simpl. reflexivity.
+    - simpl. unfold funcomp,join,parallel,sequence,sum_shuffle,extract1,switch_link,rearrange.
+    simpl.
+    apply functional_extensionality. intros [innervoide|ports].
+    + destruct innervoide. elim f.
+    + destruct ports as [nodeion ports].
+    unfold bij_join_port_backward,bij_dep_sum_2_forward,bij_dep_sum_1_forward.    
+    unfold eq_rect_r. unfold bijection_inv. simpl.
+    destruct (@backward
+      (sum
+      (sum Empty_set
+      (Finite.sort (@get_node O O N N' (@renaming N N' Hlenght))))
+      unit) unit
+      (@eq_rect Finite.type
+      (@reverse_coercion Finite.type Set
+      Datatypes_Empty_set__canonical__fintype_Finite Empty_set)
+      (fun y : Finite.type =>
+      bijection (sum (sum Empty_set (Finite.sort y)) unit) unit)
+      (@bijection_nest_left_neutral unit)
+      (@get_node O O N N' (@renaming N N' Hlenght))
+      (@Logic.eq_sym Finite.type
+      (@get_node O O N N' (@renaming N N' Hlenght))
+      (@reverse_coercion Finite.type Set
+      Datatypes_Empty_set__canonical__fintype_Finite
+      Empty_set) (@nodeRenamingVoid N N' Hlenght))) nodeion) eqn:E.
+    destruct s0 as [v|v]; try destruct v; exfalso.
+    clear E. rewrite nodeRenamingVoid in v. destruct v.
+    simpl. unfold funcomp. 
+    rewrite rew_const.
+    destruct ports as [ports Hports].
+    unfold extract1. simpl.
+    unfold bij_list_backward',permut_list_forward. 
+    destruct N as [N NDL].
+    destruct N' as [N' NDL'].
+    destruct (in_dec EqDecN (nth ports N DefaultName) EmptyNDL).
+    * elim i0.
+    * destruct get_link as [outer|edge].
+    ** f_equal.
+    destruct (rewriteEqNat Hlenght Hk).
+    unfold bij_subset_forward,bij_list_forward.
+    destruct outer.
+    apply subset_eq_compat. simpl.
+    simpl in E.
+    admit.
+    ** exfalso. rewrite edgeRenamingVoid in edge. destruct edge.
+    Admitted.
+End NodeAxiom.
 End Symmetries.
