@@ -944,11 +944,12 @@ Theorem merge_well_defined : forall n,
 (*Section for Packed Tensor Product*)
 Section PTP.
 Class DisjointNamesPacked (b1 b2 : bigraph_packed) :=
-  { disj_inner :: DisjointNames (i b1) (i b2);
+  { 
+    disj_inner :: DisjointNames (i b1) (i b2);
     disj_outer :: DisjointNames (o b1) (o b2)
   }.
   
-#[export] Instance disj_packed (b1 b2 : bigraph_packed) (Disji12 : DisjointNames (i b1) (i b2)) (Disjo12 : DisjointNames (o b1) (o b2)) : 
+Definition disj_packed (b1 b2 : bigraph_packed) (Disji12 : DisjointNames (i b1) (i b2)) (Disjo12 : DisjointNames (o b1) (o b2)) : 
   DisjointNamesPacked b1 b2.
   Proof.
   constructor.

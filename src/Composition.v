@@ -3,9 +3,9 @@ Set Warnings "-notation-overridden, -parsing, -masking-absolute-name".
 Require Import AbstractBigraphs.
 Require Import Names.
 Require Import SignatureBig.
-Require Import Equality.
 Require Import Bijections.
 Require Import MyBasics.
+Require Import LeanSupportEquivalence.
 
 Require Import Coq.Lists.List.
 Require Import Coq.Setoids.Setoid.
@@ -23,8 +23,8 @@ From mathcomp Require Import all_ssreflect.
   of b2 needs to be the innerface of b1. 
   We prove left and right neutral for identity bigraph and associativity *)
 Module CompositionBigraphs (s : SignatureParameter) (n : NamesParameter).
-Module eb := EquivalenceBigraphs s n.
-Include eb.
+Module leb := LeanSupportEquivalence s n.
+Include leb.
 
 Set Typeclasses Unique Instances.
 Set Typeclasses Iterative Deepening.

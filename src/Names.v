@@ -348,7 +348,7 @@ Record NoDupList : Type :=
     ndlist :> list Name ;
     nd : NoDup ndlist ;
   }.
-Remark nodupproofirrelevant : forall l1 l2, 
+Remark nodupproofirrelevant : forall l1 l2:NoDupList, 
     ndlist l1 = ndlist l2 -> l1 = l2.
     Proof. 
     intros.  
@@ -563,6 +563,23 @@ Lemma app_merge_id {i1 i2}:
   - rewrite IHi1; auto. apply nodup_tl in H. assumption.
   intros. apply H1. right. assumption. 
   Qed.
+
+
+Lemma app_merge_cons_id {a} {l:NoDupList}: 
+  NoDup l -> ~ In a l -> app_merge (OneelNDL a) l = a :: l.
+  Proof.
+  intros. 
+  rewrite (@app_merge_id (OneelNDL a) l).
+  + simpl. auto.
+  + simpl. 
+  constructor. 
+  - auto.
+  - constructor.
+  + apply H.
+  + intros. inversion H1. subst a. apply H0.
+  elim H2.
+  Qed.
+
 End MyNoDupList.
 
 Section MyPermutations.
@@ -1150,6 +1167,27 @@ Definition to_commute {i1 i2 : NoDupList}
     apply H.
     Defined.
 
+Lemma NameSub_merge_proof_irrelevance {t q ndl} :
+  NameSub (OneelNDL t ∪ 
+    {| ndlist := q; nd := nodup_tl t q ndl |}) = 
+  NameSub ({| ndlist := t :: q; nd := ndl |}).
+  Proof.
+  apply nodupproofirrelevantns. simpl.
+  destruct (in_dec EqDecN t q).
+  exfalso. rewrite (NoDup_cons_iff t q) in ndl.
+  destruct ndl. contradiction.
+  reflexivity.
+  Qed.
+
+Lemma Disjoint_NoDuPlist {a l ndl} :
+  OneelNDL a # {| ndlist := l; nd := nodup_tl a l ndl |}. 
+  Proof.
+  constructor. simpl. intros n [Hc|Hc] InH. 
+  subst a. rewrite (NoDup_cons_iff n l) in ndl.
+  destruct ndl. contradiction. apply Hc.
+  Qed.
+
+  
 Theorem intersection_disjoint_empty_NDL {i1 i2 : NoDupList} : 
   i1 # i2 -> myintersection i1 i2 = [].
   Proof.

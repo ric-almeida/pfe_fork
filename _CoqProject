@@ -8,10 +8,14 @@ src/SignatureBig.v
 src/Names.v
 src/MyEqNat.v
 src/AbstractBigraphs.v
-src/Equality.v
+src/SupportEquivalence.v
+src/LeanSupportEquivalence.v
 src/Composition.v
 src/TensorProduct.v
 src/Symmetries.v
+src/LinkAxioms.v
+src/PlaceAxioms.v
+src/NodeAxiom.v
 src/UnionPossible.v
 src/ParallelProduct.v
 src/Nesting.v

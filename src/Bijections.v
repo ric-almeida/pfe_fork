@@ -188,6 +188,33 @@ Definition bij_void_void_r {A} : bijection ((void + void) + (void + A)) A.
   reflexivity.
   Defined.
 
+
+Definition bij_node_axiom_product {A} : 
+bijection (void + (void + void) + A) A.
+eapply (mkBijection (void + (void + void) + A) A
+  (fun vvva => 
+          match vvva with 
+            | inl vvv => 
+              match vvv with 
+              | inl v => match v with end
+              | inr vv => match vv with |inl v => match v with end |inr v => match v with end end
+              end 
+            | inr a => a
+  end)
+  (fun a => inr a)).
+  apply functional_extensionality.
+  intro x.
+  reflexivity.
+  apply functional_extensionality.
+  destruct x.
+  destruct s.
+  elim e.
+  destruct s.
+  elim e.
+  elim e.
+  reflexivity.
+  Defined.
+
 Definition bij_nesting_assoc {a b c} :
   bijection 
 	  (void + (void + a + b) + c) 
@@ -663,6 +690,9 @@ Definition bij_sum_compose : forall {A B C D : Type}, bijection A B -> bijection
   Defined.
 
 Notation "f <+> g" := (bij_sum_compose f g) (at level 70).
+
+
+
 
 Section BijSumCompose.
 Theorem bij_inv_sum :forall {A B C D : Type} (bij_AB : bijection A B) (bij_CD : bijection C D),
@@ -2021,3 +2051,21 @@ Lemma bof_funcomp_unfold {A B} {n:A}: forall bij : bijection A B,
   unfold funcomp in tmpH.  
   apply tmpH. 
   Qed. 
+
+Definition bij_sum_left : forall {A B : Type}, 
+  bijection A B -> bijection (void+A) (B).
+  Proof.
+    intros A B bij_AB.
+    apply 
+    (mkBijection (void+A) (B)
+    (fun va => match va with 
+    |inl v => match v with end 
+    |inr a => forward bij_AB a 
+    end) 
+    (fun b => inr (backward bij_AB b))).
+    unfold funcomp. apply functional_extensionality.
+    intros. rewrite fob_funcomp_unfold. reflexivity.
+    unfold funcomp. apply functional_extensionality.
+    intros [v|a];try destruct v. 
+    rewrite bof_funcomp_unfold. reflexivity.
+  Defined.
