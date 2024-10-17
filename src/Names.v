@@ -1684,6 +1684,29 @@ Definition permutation_left_neutral_neutral {X:NoDupList} :
   * apply H.
   Qed.
 
+#[export] Instance permaxi {M N} {ndl : NoDup [M;N]} : 
+PermutationNames {| ndlist := [M;  N]; nd := ndl |}
+(EmptyNDL ∪ (OneelNDL M ∪ OneelNDL N)).
+constructor.
+simpl.
+destruct (EqDecN N M ).
+subst M.
+apply NoDup_cons_iff in ndl.
+destruct ndl.
+elim H. constructor. reflexivity.
+apply permutation_id.
+Qed. 
+
+#[export] Instance oneelndl {n i} {Hn: ~In n (ndlist i)} :
+  OneelNDL n # i.
+  constructor.
+  intros.
+  inversion H.
+  subst n.
+  contradiction.
+  apply H1.
+  Qed.
+  
 End permutationsNDL.
 
 

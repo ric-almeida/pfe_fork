@@ -35,3 +35,7 @@ Class MyEqNat (x y : nat) := { eqxy : x = y }.
   constructor. 
   apply addn0.
   Qed.
+
+Definition rewriteEqNat {lN lN' Ak} (H: lN = lN') (Hk : MyEqNat Ak lN) : MyEqNat Ak lN'.
+  subst lN. apply Hk.
+  Qed.
