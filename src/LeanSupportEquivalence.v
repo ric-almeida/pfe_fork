@@ -73,6 +73,7 @@ Definition make_seq_Port_for_node_n {s i r o} {b:bigraph s i r o} (n:get_node b)
     (fun port => existT (fun n => 'I_(Arity (get_control (bg:=b) n))) n (port)) 
     (ord_enum (Arity (get_control (bg:=b) n))).
 
+
 Lemma wf_make_seq_Port {s i r o} (b:bigraph s i r o) 
   (node : get_node b)
   {Iport : 'I_(Arity (get_control (bg:=b) node))}
@@ -245,25 +246,19 @@ Theorem lean_is_lean {s i r o} (b:bigraph s i r o) :
   is_lean (lean b).
   Proof.
   unfold is_lean,surjective_link.
-  unfold lean.
-  intros nie. simpl in nie. simpl.
-  destruct nie as [nie Hnie].
-  set (ip':= not_is_idle_implies_exists_inner_or_node nie Hnie).
-  destruct ip' as [ip Hip].
+  unfold lean. simpl.
+  intros [nie Hnie]. simpl in nie. simpl.
+  destruct (not_is_idle_implies_exists_inner_or_node nie Hnie) as [ip Hip].
   exists ip.
-  destruct ip as [inner | port]; simpl.
-  - generalize ((ex_intro (fun ip'' : {inner0 : Name | In inner0 i} + Port (get_control (bg:=b)) => get_link (bg:=b) ip'' = get_link (bg:=b) (inl inner)) (inl inner) (erefl (get_link (bg:=b) (inl inner))))).
-    intros X. 
-    destruct get_link. 
-    discriminate Hip.
-    f_equal. apply subset_eq_compat. injection Hip. auto.
-  - generalize (ex_intro (fun ip'' : {inner : Name | In inner i} + Port (get_control (bg:=b)) =>
-    get_link (bg:=b) ip'' = get_link (bg:=b) (inr port))
-    (inr port) (erefl (get_link (bg:=b) (inr port)))).
-    intros Y.
-    destruct get_link. 
-    discriminate Hip.
-    f_equal. apply subset_eq_compat. injection Hip. auto.
+  generalize (ex_intro
+    (fun ip'' : {inner : Name | In inner i} +
+    Port (get_control (bg:=b)) =>
+    get_link (bg:=b) ip'' = get_link (bg:=b) ip) ip
+    (erefl (get_link (bg:=b) ip))).
+  intros X.
+  destruct get_link.
+  discriminate Hip.
+  f_equal. apply subset_eq_compat. injection Hip. auto.
   Qed.
 
 Record place_graph_support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
@@ -271,7 +266,7 @@ Record place_graph_support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupL
   BigHalfEq
   {
     bij_s_h : s1 = s2 ;
-    bij_i_h : permutation i1 i2 ; (*Permutation i1 i2*)
+    bij_i_h : permutation i1 i2 ; 
     bij_r_h : r1 = r2 ;
     bij_o_h : permutation o1 o2 ;
     bij_n_h : bijection (get_node b1) (get_node b2);
@@ -344,6 +339,7 @@ Lemma build_twin_ordinal {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
   {n : get_node b2} (port : 'I_(Arity (get_control (bg:=b2) n))) :
   exists port':'I_(Arity (get_control (bg:=b2) (bij_n ((bij_n ⁻¹) n)))), 
   nat_of_ord port' = nat_of_ord port.
+  Proof.
   destruct port as [port Hport]. simpl.
   eexists (Ordinal (m:=port) _).
   reflexivity.
@@ -364,7 +360,7 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
   Unshelve.  
   2:{simpl.
     refine (<{ bij_e | _ }>).
-    intros e. simpl. 
+    intros e.  
     split; intros.
     * apply not_is_idle_implies_exists_inner_or_node in H.
     destruct H as [[[inner Hinner]|port] H].
@@ -385,30 +381,30 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
     rewrite <- link_eq.
     simpl.
     unfold parallel,funcomp, bij_subset_backward. simpl.
-    eassert (eq_rect_r
+    eassert (EA : eq_rect_r
     (fun n0 : get_node b2 => 'I_(Arity (get_control (bg:=b2) n0)))
     (bij_p n port)
     (equal_f (fob_id (get_node b1) (get_node b2) bij_n) n') = 
     bij_p ((bij_n ⁻¹) n') (Ordinal (m:=port) _)  
     ). 
-    unfold n'.
-    apply val_inj. simpl.
-    unfold eq_rect_r. unfold eq_rect.  
-    destruct (Logic.eq_sym
-    (equal_f (fob_id (get_node b1) (get_node b2) bij_n) (bij_n n))).
-    f_equal. simpl. f_equal. 
-    assert (forall x x' p p', x = x' 
-    -> nat_of_ord p = nat_of_ord p' -> nat_of_ord (bij_p x p) = 
-    nat_of_ord (bij_p x' p')).
-    intros.
-    subst x. f_equal. f_equal. destruct p. destruct p'. apply val_inj.
-    simpl. simpl in H1. auto. 
-    apply H0.
-    rewrite bof_funcomp_unfold. reflexivity. reflexivity.
-    
+      {unfold n'.
+      apply val_inj. simpl.
+      unfold eq_rect_r. unfold eq_rect.  
+      destruct (Logic.eq_sym
+      (equal_f (fob_id (get_node b1) (get_node b2) bij_n) (bij_n n))).
+      f_equal. simpl. f_equal. 
+      assert (forall x x' p p', x = x' 
+      -> nat_of_ord p = nat_of_ord p' -> nat_of_ord (bij_p x p) = 
+      nat_of_ord (bij_p x' p')).
+        {intros.
+        subst x. f_equal. f_equal. destruct p. destruct p'. apply val_inj.
+        simpl. simpl in H1. auto. }
+      apply H0.
+      rewrite bof_funcomp_unfold. reflexivity. reflexivity. }
     Unshelve. 3:{unfold n'. rewrite bof_funcomp_unfold. 
     destruct port. simpl. apply i0. }
-    rewrite H0. clear H0. 
+    
+    rewrite EA. clear EA. 
     rewrite (bof_funcomp_unfold (bij_p ((bij_n ⁻¹) n'))).
     unfold n'.
     erewrite (port_proof_irrelevant_full (n:=(bij_n ⁻¹) (bij_n n)) (n':=n)).
