@@ -226,7 +226,7 @@ Definition lean {s i r o} (b:bigraph s i r o) :
     _
     (get_ap (bg:=b))).
   intros ip'.
-  assert (exists ip'', get_link (bg:=b) ip'' = get_link (bg:=b) ip') as H; [ exists (ip'); reflexivity | ]. 
+  assert (exists ip'', get_link (bg:=b) ip'' = get_link (bg:=b) ip') as H; [ exists (ip'); reflexivity | ].  
   destruct (get_link (bg:=b) ip') as [o'|e'].
   + left. exact o'.
   + right. exists e'. (*le GOAL*) 
@@ -347,22 +347,20 @@ Lemma build_twin_ordinal {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
   rewrite fob_funcomp_unfold. apply Hport. 
   Qed.
 
-Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : 
-  support_equivalence b1 b2 -> lean_support_equivalence b1 b2.
+
+Lemma not_is_idle_imp {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
+  (bij_i : permutation i1 i2)
+  (bij_o : permutation o1 o2)
+  (bij_n : bijection (get_node b1) (get_node b2))
+  (bij_e : bijection (get_edge b1) (get_edge b2))
+  (bij_p : forall (n1 : (get_node b1)), bijection ('I_(Arity (get_control (bg:=b1) n1))) ('I_(Arity (get_control (bg:=b2) (bij_n n1)))))
+  (link_eq : ((<{bij_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{bij_id| bij_o}> <+> bij_e)) (get_link (bg := b1)) = get_link (bg := b2)) : 
+  forall a : get_edge b1,
+    not_is_idle a -> not_is_idle (bij_e a).
   Proof.
-  intros [bij_s bij_i bij_r bij_o bij_n bij_e bij_p control_eq parent_eq link_eq].
-  unfold lean_support_equivalence.
-  refine (
-    SupEq _ _ _ _ _ _ _ _ (lean b1) (lean b2)
-      bij_s bij_i bij_r bij_o bij_n _ bij_p control_eq parent_eq _
-  ). 
-  Unshelve.  
-  2:{simpl.
-    refine (<{ bij_e | _ }>).
-    intros e.  
-    split; intros.
-    * apply not_is_idle_implies_exists_inner_or_node in H.
+    intros e H.  
+    apply not_is_idle_implies_exists_inner_or_node in H.
     destruct H as [[[inner Hinner]|port] H].
     - destruct (bij_i inner). 
     eapply (exists_inner_implies_not_idle (exist _ inner (H0 Hinner))).
@@ -401,7 +399,7 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
         simpl. simpl in H1. auto. }
       apply H0.
       rewrite bof_funcomp_unfold. reflexivity. reflexivity. }
-    Unshelve. 3:{unfold n'. rewrite bof_funcomp_unfold. 
+    Unshelve. 2:{unfold n'. rewrite bof_funcomp_unfold. 
     destruct port. simpl. apply i0. }
     
     rewrite EA. clear EA. 
@@ -410,13 +408,27 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
     erewrite (port_proof_irrelevant_full (n:=(bij_n ⁻¹) (bij_n n)) (n':=n)).
     2:{ apply bof_funcomp_unfold. }
     Unshelve.
-    4:{simpl. exact port. }
+    3:{simpl. exact port. }
     destruct get_link.
     + discriminate H.
     + f_equal. f_equal. injection H. auto.
     simpl. reflexivity.
+  Qed.
 
-    * apply not_is_idle_implies_exists_inner_or_node in H.
+
+Lemma not_is_idle_is_imp {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
+  (bij_i : permutation i1 i2)
+  (bij_o : permutation o1 o2)
+  (bij_n : bijection (get_node b1) (get_node b2))
+  (bij_e : bijection (get_edge b1) (get_edge b2))
+  (bij_p : forall (n1 : (get_node b1)), bijection ('I_(Arity (get_control (bg:=b1) n1))) ('I_(Arity (get_control (bg:=b2) (bij_n n1)))))
+  (link_eq : ((<{bij_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{bij_id| bij_o}> <+> bij_e)) (get_link (bg := b1)) = get_link (bg := b2)) : 
+  forall a : get_edge b1,
+    not_is_idle (bij_e a) -> not_is_idle a.
+  Proof.
+  intros e H.
+  apply not_is_idle_implies_exists_inner_or_node in H.
     destruct H as [[[inner Hinner]|port] H].
     - destruct (bij_i inner). 
       eapply (exists_inner_implies_not_idle (exist _ inner (H1 Hinner))).
@@ -428,32 +440,124 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
       + discriminate H.
       + f_equal. injection H. apply (bij_injective bij_e _ _).
     - destruct port as [n port].
-    set (n':= backward bij_n n).
-    set (port' := build_twin_ordinal (b1 := b1) (bij_n := bij_n) port).
-    destruct port' as [port' Hport'].
-    eapply (exists_port_implies_not_idle 
-      (existT _ (n') (backward (bij_p n') port'))). (*port*)
-    rewrite <- link_eq in H.
-    simpl in H.
-    unfold parallel,funcomp, bij_subset_backward in H. simpl in H.
-    unfold n'.
-    assert (eq_rect_r
-    (fun n : get_node b2 => 'I_(Arity (get_control (bg:=b2) n)))
-    port (equal_f (fob_id (get_node b1) (get_node b2) bij_n) n)
-      = port').
-    { destruct port. destruct port'. 
-    simpl in Hport'. 
-    subst m0. apply val_inj. simpl.
-    unfold eq_rect_r.
-    unfold eq_rect. simpl. 
-    destruct (Logic.eq_sym (equal_f (fob_id (get_node b1) (get_node b2) bij_n) n)).
-    reflexivity. }
-    rewrite H0 in H.
-    clear H0.
-    destruct get_link.
-    + discriminate H.
-    + f_equal. injection H. apply (bij_injective bij_e _ _). 
+      set (n':= backward bij_n n).
+      set (port' := build_twin_ordinal (b1 := b1) (bij_n := bij_n) port).
+      destruct port' as [port' Hport'].
+      eapply (exists_port_implies_not_idle 
+        (existT _ (n') (backward (bij_p n') port'))). (*port*)
+      rewrite <- link_eq in H.
+      simpl in H.
+      unfold parallel,funcomp, bij_subset_backward in H. simpl in H.
+      unfold n'.
+      assert (eq_rect_r
+      (fun n : get_node b2 => 'I_(Arity (get_control (bg:=b2) n)))
+      port (equal_f (fob_id (get_node b1) (get_node b2) bij_n) n)
+        = port').
+      { destruct port. destruct port'. 
+      simpl in Hport'. 
+      subst m0. apply val_inj. simpl.
+      unfold eq_rect_r.
+      unfold eq_rect. simpl. 
+      destruct (Logic.eq_sym (equal_f (fob_id (get_node b1) (get_node b2) bij_n) n)).
+      reflexivity. }
+      rewrite H0 in H.
+      clear H0.
+      destruct get_link.
+      + discriminate H.
+      + f_equal. injection H. apply (bij_injective bij_e _ _).
+  Qed.
+(* 
+  intros e.
+  set (e' := bij_e e).
+  assert (e = bijection_inv bij_e e').
+    unfold e'.
+    simpl.
+    rewrite bof_funcomp_unfold.
+    reflexivity.
+  rewrite H.
+  eapply (not_is_idle_imp b2 b1 (permutation_commute bij_i) (permutation_commute bij_o) (bijection_inv bij_n) (bijection_inv bij_e)).
+  Unshelve.
+  2:{ 
+    intros n2.
+    clear link_eq.
+    specialize (bij_p (bijection_inv bij_n n2)).
+    simpl in bij_p.
+    rewrite fob_funcomp_unfold in bij_p.
+    apply (bijection_inv bij_p).
   }
+  rewrite <- link_eq.
+  rewrite <- bij_compose_forward_simpl.
+  rewrite bij_fun_compose_compose.
+  rewrite bij_sum_compose_compose.
+  rewrite bij_sum_compose_compose.
+  rewrite bij_subset_compose_compose.
+  rewrite bij_subset_compose_compose.
+  rewrite bij_sigT_compose_compose.
+  simpl.
+  rewrite (bof_id _ _ bij_e) .
+  apply functional_extensionality.
+  intros ip.
+  destruct ip as [(inner, Hinner) | (node, port)]; unfold parallel, funcomp; simpl.
+  rewrite <- (innername_proof_irrelevant b1 Hinner).
+  destruct get_link.
+  f_equal. unfold bij_subset_forward.
+  destruct s0. apply subset_eq_compat. reflexivity. reflexivity.
+  erewrite (port_proof_irrelevant_full (n':=node) (port' := port)).
+  Unshelve.
+  2:{rewrite (bof_id _ _ bij_n). reflexivity. }
+  2:{unfold eq_rect_r.
+  (* erewrite (eq_rect_pi ( x:= node)).
+  erewrite (eq_rect_pi ( x:= bij_n ((bij_n ⁻¹) (bij_n node)))). *)
+  unfold funcomp.
+  destruct port as [port Hport]. simpl in *.
+  assert (eq_rect node
+    (fun y : get_node b1 => 'I_(Arity (get_control (bg:=b1) y)))
+    port ((bij_n ⁻¹) (bij_n ((bij_n ⁻¹) (bij_n node)))) ?[H'] = port).
+  erewrite fob_funcomp_unfold at 9.
+  rewrite fob_funcomp_unfold.
+  unfold funcomp. 
+  
+  admit. }
+  destruct get_link.
+  f_equal. unfold bij_subset_forward.
+  destruct s0. apply subset_eq_compat. reflexivity. reflexivity.
+  Unshelve. rewrite (bof_id _ _ bij_n). reflexivity.
+  Admitted. *)
+
+
+Lemma not_is_idle_eq {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) 
+  (bij_i : permutation i1 i2)
+  (bij_o : permutation o1 o2)
+  (bij_n : bijection (get_node b1) (get_node b2))
+  (bij_e : bijection (get_edge b1) (get_edge b2))
+  (bij_p : forall (n1 : (get_node b1)), bijection ('I_(Arity (get_control (bg:=b1) n1))) ('I_(Arity (get_control (bg:=b2) (bij_n n1)))))
+  (link_eq : ((<{bij_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{bij_id| bij_o}> <+> bij_e)) (get_link (bg := b1)) = get_link (bg := b2)) : 
+  forall a : get_edge b1,
+    not_is_idle a <-> not_is_idle (bij_e a).
+  Proof.
+  split.
+  apply (not_is_idle_imp b1 b2 bij_i bij_o bij_n bij_e bij_p link_eq).
+  apply (not_is_idle_is_imp b1 b2 bij_i bij_o bij_n bij_e bij_p link_eq).
+  Qed.
+
+
+Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : 
+  support_equivalence b1 b2 -> lean_support_equivalence b1 b2.
+  Proof.
+  intros [bij_s bij_i bij_r bij_o bij_n bij_e bij_p control_eq parent_eq link_eq].
+  unfold lean_support_equivalence.
+  refine (
+    SupEq _ _ _ _ _ _ _ _ (lean b1) (lean b2)
+      bij_s bij_i bij_r bij_o bij_n _ bij_p control_eq parent_eq _
+  ). 
+  Unshelve.  
+  2:{simpl.
+    eapply (<{ bij_e | _ }>).
+    Unshelve.
+    apply (not_is_idle_eq b1 b2 bij_i bij_o bij_n bij_e bij_p link_eq).
+  }    
   simpl.
   unfold parallel. 
   apply functional_extensionality.
@@ -466,210 +570,94 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
   intros.
   destruct get_link eqn:L2.
   unfold eq_ind_r.
-  generalize ((@ex_intro
-    (sum (@sig Name (fun inner : Name => @In Name inner (ndlist i1)))
+  
+  generalize ((@ex_intro (sum (@sig Name (fun inner : Name => @In Name inner (ndlist i1)))
     (@Port (Finite.sort (@get_node s1 r1 i1 o1 b1)) (@get_control s1 r1 i1
-    o1 b1)))
-    (fun
-    ip'' : sum (@sig Name (fun inner : Name => @In Name inner (ndlist i1)))
+    o1 b1))) (fun ip'' : sum (@sig Name (fun inner : Name => @In Name inner (ndlist i1)))
     (@Port (Finite.sort (@get_node s1 r1 i1 o1 b1))
-    (@get_control s1 r1 i1 o1 b1)) =>
-    @eq
-    (sum (@sig Name (fun outer : Name => @In Name outer (ndlist o1)))
-    (Finite.sort (@get_edge s1 r1 i1 o1 b1))) (@get_link s1 r1 i1 o1 b1
-    ip'')
-    (@get_link s1 r1 i1 o1 b1
-    match
-    ipa
-    return
+    (@get_control s1 r1 i1 o1 b1)) => @eq (sum (@sig Name (fun outer : Name => @In Name outer (ndlist o1))) (Finite.sort (@get_edge s1 r1 i1 o1 b1))) (@get_link s1 r1 i1 o1 b1 ip'') (@get_link s1 r1 i1 o1 b1 match ipa return
     (sum (@sig Name (fun name : Name => @In Name name (ndlist i1)))
     (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1)))))
-    with
-    | @inl _ _ a =>
-    @inl (@sig Name (fun name : Name => @In Name name (ndlist i1)))
-    (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
-    (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
-    ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
-    match
-    a return (@sig Name (fun name : Name => @In Name name
-    (ndlist i1)))
-    with
-    | @exist _ _ b Qb =>
-    @exist Name (fun name : Name => @In Name name (ndlist i1))
-    b
-    (match
-    bij_i b
-    return
-    (forall _ : @In Name b (ndlist i2),
-    @In Name b (ndlist i1))
-    with
-    | @conj _ _ _ H => H
-    end
-    (@eq_ind Name b (fun y : Name => @In Name y (ndlist i2))
-    Qb b
-    (@Logic.eq_sym Name b b
-    (@Logic.eq_refl Name
-    (@funcomp Name Name Name (fun x : Name => x)
-    (fun x : Name => x) b)))))
-    end
-    | @inr _ _ c =>
-    @inr (@sig Name (fun name : Name => @In Name name (ndlist i1)))
-    (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
-    (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
-    ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
-    (@bij_dep_sum_2_forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
-    (fun a : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
-    ordinal
-    (Arity
-    (@get_control s2 r2 i2 o2 b2
-    (@forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
-    (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n a))))
-    (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
-    ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1)))
-    (fun a : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
-    @bijection_inv (ordinal (Arity (@get_control s1 r1 i1 o1 b1
-    a)))
-    (ordinal
-    (Arity
-    (@get_control s2 r2 i2 o2 b2
-    (@forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
-    (Finite.sort (@get_node s2 r2 i2 o2 b2))
-    bij_n a)))) (bij_p a))
-    (@bij_dep_sum_1_forward (Finite.sort (@get_node s2 r2 i2 o2
-    b2))
-    (Finite.sort (@get_node s1 r1 i1 o1 b1))
-    (fun n : Finite.sort (@get_node s2 r2 i2 o2 b2) =>
-    ordinal (Arity (@get_control s2 r2 i2 o2 b2 n)))
-    (@bijection_inv (Finite.sort (@get_node s1 r1 i1 o1 b1))
-    (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n) c))
-    end))
-    match
-    ipa
-    return
-    (sum (@sig Name (fun name : Name => @In Name name (ndlist i1)))
-    (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
-    (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
-    ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1)))))
-    with
-    | @inl _ _ a =>
-    @inl (@sig Name (fun name : Name => @In Name name (ndlist i1)))
-    (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    with | @inl _ _ a => @inl (@sig Name (fun name : Name => @In Name name (ndlist i1))) (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
     match a return (@sig Name (fun name : Name => @In Name name
-    (ndlist i1))) with
-    | @exist _ _ b Qb =>
-    @exist Name (fun name : Name => @In Name name (ndlist i1)) b
-    (match
-    bij_i b
-    return (forall _ : @In Name b (ndlist i2),
-    @In Name b (ndlist i1))
-    with
-    | @conj _ _ _ H => H
-    end
-    (@eq_ind Name b (fun y : Name => @In Name y (ndlist i2)) Qb
-    b
-    (@Logic.eq_sym Name b b
-    (@Logic.eq_refl Name
-    (@funcomp Name Name Name (fun x : Name => x)
-    (fun x : Name => x) b)))))
-    end
-    | @inr _ _ c =>
-    @inr (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    (ndlist i1))) with | @exist _ _ b Qb =>  @exist Name (fun name : Name => @In Name name (ndlist i1)) b (match bij_i b return (forall _ : @In Name b (ndlist i2),  @In Name b (ndlist i1)) with | @conj _ _ _ H => H  end
+    (@eq_ind Name b (fun y : Name => @In Name y (ndlist i2)) Qb b (@Logic.eq_sym Name b b (@Logic.eq_refl Name (@funcomp Name Name Name (fun x : Name => x) (fun x : Name => x) b))))) end | @inr _ _ c => @inr (@sig Name (fun name : Name => @In Name name (ndlist i1))) (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1)) (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) => ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
+    (@bij_dep_sum_2_forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (fun a : Finite.sort (@get_node s1 r1 i1 o1 b1) => ordinal (Arity
+    (@get_control s2 r2 i2 o2 b2 (@forward (Finite.sort (@get_node s1 r1 i1 o1 b1)) (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n a))))
+    (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) => ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))) (fun a : Finite.sort (@get_node s1 r1 i1 o1 b1) => @bijection_inv (ordinal (Arity (@get_control s1 r1 i1 o1 b1
+    a))) (ordinal (Arity (@get_control s2 r2 i2 o2 b2 (@forward (Finite.sort (@get_node s1 r1 i1 o1 b1)) (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n a)))) (bij_p a)) (@bij_dep_sum_1_forward (Finite.sort (@get_node s2 r2 i2 o2 b2)) (Finite.sort (@get_node s1 r1 i1 o1 b1)) (fun n : Finite.sort (@get_node s2 r2 i2 o2 b2) => ordinal (Arity (@get_control s2 r2 i2 o2 b2 n))) (@bijection_inv (Finite.sort (@get_node s1 r1 i1 o1 b1)) (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n) c)) end)) match ipa return
+    (sum (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
+    ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))) with | @inl _ _ a =>
+    @inl (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1)) (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) => ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1)))) match a return (@sig Name (fun name : Name => @In Name name
+    (ndlist i1))) with | @exist _ _ b Qb => @exist Name (fun name : Name => @In Name name (ndlist i1)) b (match bij_i b return (forall _ : @In Name b (ndlist i2), @In Name b (ndlist i1)) with | @conj _ _ _ H => H end
+    (@eq_ind Name b (fun y : Name => @In Name y (ndlist i2)) Qb b (@Logic.eq_sym Name b b (@Logic.eq_refl Name (@funcomp Name Name Name (fun x : Name => x) (fun x : Name => x) b)))))
+    end | @inr _ _ c => @inr (@sig Name (fun name : Name => @In Name name (ndlist i1)))
     (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
     (@bij_dep_sum_2_forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun a : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
-    ordinal
-    (Arity
-    (@get_control s2 r2 i2 o2 b2
+    ordinal (Arity (@get_control s2 r2 i2 o2 b2
     (@forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n a))))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1)))
     (fun a : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     @bijection_inv (ordinal (Arity (@get_control s1 r1 i1 o1 b1 a)))
-    (ordinal
-    (Arity
-    (@get_control s2 r2 i2 o2 b2
+    (ordinal (Arity (@get_control s2 r2 i2 o2 b2
     (@forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n a))))
-    (bij_p a))
-    (@bij_dep_sum_1_forward (Finite.sort (@get_node s2 r2 i2 o2 b2))
+    (bij_p a)) (@bij_dep_sum_1_forward (Finite.sort (@get_node s2 r2 i2 o2 b2))
     (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n : Finite.sort (@get_node s2 r2 i2 o2 b2) =>
     ordinal (Arity (@get_control s2 r2 i2 o2 b2 n)))
     (@bijection_inv (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n) c))
-    end
-    (@Logic.eq_refl
-    (sum (@sig Name (fun outer : Name => @In Name outer (ndlist o1)))
+    end (@Logic.eq_refl (sum (@sig Name (fun outer : Name => @In Name outer (ndlist o1)))
     (Finite.sort (@get_edge s1 r1 i1 o1 b1)))
-    (@get_link s1 r1 i1 o1 b1
-    match
-    ipa
-    return
+    (@get_link s1 r1 i1 o1 b1  match ipa return
     (sum (@sig Name (fun name : Name => @In Name name (ndlist i1)))
     (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1)))))
-    with
-    | @inl _ _ a =>
-    @inl (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    with | @inl _ _ a => @inl (@sig Name (fun name : Name => @In Name name (ndlist i1)))
     (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
-    match
-    a return (@sig Name (fun name : Name => @In Name name
-    (ndlist i1)))
-    with
-    | @exist _ _ b Qb =>
-    @exist Name (fun name : Name => @In Name name (ndlist i1))
-    b
-    (match
-    bij_i b
-    return
-    (forall _ : @In Name b (ndlist i2),
-    @In Name b (ndlist i1))
-    with
-    | @conj _ _ _ H => H
-    end
+    match a return (@sig Name (fun name : Name => @In Name name
+    (ndlist i1))) with | @exist _ _ b Qb => @exist Name (fun name : Name => @In Name name (ndlist i1)) b (match bij_i b return
+    (forall _ : @In Name b (ndlist i2), @In Name b (ndlist i1))
+    with | @conj _ _ _ H => H end
     (@eq_ind Name b (fun y : Name => @In Name y (ndlist i2))
-    Qb b
-    (@Logic.eq_sym Name b b
-    (@Logic.eq_refl Name
+    Qb b (@Logic.eq_sym Name b b (@Logic.eq_refl Name
     (@funcomp Name Name Name (fun x : Name => x)
     (fun x : Name => x) b)))))
-    end
-    | @inr _ _ c =>
-    @inr (@sig Name (fun name : Name => @In Name name (ndlist i1)))
-    (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    end | @inr _ _ c => @inr (@sig Name (fun name : Name => @In Name name (ndlist i1))) (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
     (@bij_dep_sum_2_forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun a : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
-    ordinal
-    (Arity
-    (@get_control s2 r2 i2 o2 b2
+    ordinal (Arity (@get_control s2 r2 i2 o2 b2
     (@forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n a))))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1)))
     (fun a : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     @bijection_inv (ordinal (Arity (@get_control s1 r1 i1 o1 b1
-    a)))
-    (ordinal
-    (Arity
-    (@get_control s2 r2 i2 o2 b2
+    a))) (ordinal (Arity (@get_control s2 r2 i2 o2 b2
     (@forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (Finite.sort (@get_node s2 r2 i2 o2 b2))
     bij_n a)))) (bij_p a))
     (@bij_dep_sum_1_forward (Finite.sort (@get_node s2 r2 i2 o2
-    b2))
-    (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    b2)) (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n : Finite.sort (@get_node s2 r2 i2 o2 b2) =>
     ordinal (Arity (@get_control s2 r2 i2 o2 b2 n)))
     (@bijection_inv (Finite.sort (@get_node s1 r1 i1 o1 b1))
@@ -719,6 +707,7 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
   subst s0.
   inversion L2.
   reflexivity.
+
 
   discriminate E'.
 

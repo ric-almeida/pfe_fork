@@ -53,9 +53,25 @@ Record support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
     bij_e : bijection (get_edge b1) (get_edge b2);
     bij_p : forall (n1 : (get_node b1)), bijection ('I_(Arity (get_control (bg:=b1) n1))) ('I_(Arity (get_control (bg:=b2) (bij_n n1)))) ;
     big_control_eq : (bij_n -->> (@bij_id Kappa)) (get_control (bg:=b1)) = get_control (bg:=b2) ;
-    big_parent_eq  : ((bij_n <+> (bij_rew bij_s)) -->> (bij_n <+> ((bij_rew bij_r)))) (get_parent (bg:=b1)) = get_parent (bg:=b2) ;
-    big_link_eq    : ((<{bij_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{bij_id| bij_o}> <+> bij_e)) (get_link (bg := b1)) = get_link (bg := b2)
+    big_parent_eq : ((bij_n <+> (bij_rew bij_s)) -->> (bij_n <+> ((bij_rew bij_r)))) (get_parent (bg:=b1)) = get_parent (bg:=b2) ;
+    big_link_eq : ((<{bij_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{bij_id| bij_o}> <+> bij_e)) (get_link (bg := b1)) = get_link (bg := b2)
   }.
+
+(* Record support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
+  SupEq
+  {
+    bij_s : s1 = s2 ;
+    bij_i : permutation i1 i2 ; (*Permutation i1 i2*)
+    bij_r : r1 = r2 ;
+    bij_o : permutation o1 o2 ;
+    bij_n : permutation (get_node b1) (get_node b2);
+    bij_e : permutation (get_edge b1) (get_edge b2);
+    bij_p : forall (n1 : (get_node b1)), bijection ('I_(Arity (get_control (bg:=b1) n1))) ('I_(Arity (get_control (bg:=b2) (bij_n n1)))) ;
+    big_control_eq : (<{bij_id | bij_n}> -->> (@bij_id Kappa)) (get_control (bg:=b1)) = get_control (bg:=b2) ;
+    big_parent_eq : ((bij_n <+> (bij_rew bij_s)) -->> (bij_n <+> ((bij_rew bij_r)))) (get_parent (bg:=b1)) = get_parent (bg:=b2) ;
+    big_link_eq : ((<{bij_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{bij_id| bij_o}> <+> bij_e)) (get_link (bg := b1)) = get_link (bg := b2)
+  }. *)
   
 Lemma support_equivalence_refl {s r : nat} {i o : NoDupList} (b : bigraph s i r o) :
   support_equivalence b b.
