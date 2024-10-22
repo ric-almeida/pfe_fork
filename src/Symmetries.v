@@ -27,7 +27,7 @@ Require Import List.
 (** * Symmetries
   This section deals with the symmetries. 
   Symmetries are bigraphs that should obey properties specified in (S1),(S2),(S3) and (S4). *)
-Module Symmetries (s : SignatureParameter) (n : NamesParameter).
+Module Symmetries (s : SignatureParameter) (n : InfiniteParameter).
 Module tp := TensorProduct s n.
 Include tp.
 
@@ -56,9 +56,9 @@ Theorem symmetry_eq_id : forall m:nat, forall X:NoDupList,
         (symmetry_big m X 0 EmptyNDL)
         (bigraph_id m X)
         (addn0 m) (*s*)
-        (fun (name : Name) => right_empty X name) (*i*)
+        (fun (name : InfType) => right_empty X name) (*i*)
         (addn0 m) (*r*)
-        (fun (name : Name) => right_empty X name) (*o*)
+        (fun (name : InfType) => right_empty X name) (*o*)
         bij_id (*n*)
         bij_id (*e*)
         (fun n => bij_rew (@arity_symmetry_eq m X n)) (*p*)
@@ -107,7 +107,7 @@ Definition permutation_union_commute : forall X Y:NoDupList,
   Qed.
 
 Definition permutation_union_commutePN : forall X Y:NoDupList,
-  PermutationNames (X ∪ Y) (Y ∪ X).
+  PermutationNDL (X ∪ Y) (Y ∪ X).
   Proof.
     intros. constructor.
     apply permutation_union_commute.

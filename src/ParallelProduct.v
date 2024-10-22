@@ -28,7 +28,7 @@ Require Import List.
   This section deals with the operation of disjoint juxtaposition. This is the act
   of putting two bigraphs with disjoint interfaces "next" to one another. 
   After the definition, we prove associativity and commutativity of dis_juxtaposition *)
-Module ParallelProduct (s : SignatureParameter) (n : NamesParameter).
+Module ParallelProduct (s : SignatureParameter) (n : InfiniteParameter).
 Module mup := UnionPossible s n.
 Include mup.
 
@@ -46,13 +46,13 @@ Definition link_juxt {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
     apply in_app_or_m_nod_dup in npf; try (apply (nd i2); try (apply (nd i1))).
     destruct npf.
     * (*inner1*)
-    destruct (get_link (bg:=b1) (inl (exist (fun name : Name => In name i1) n i0))).
+    destruct (get_link (bg:=b1) (inl (exist (fun name : InfType => In name i1) n i0))).
     ** (*l1 (i1) = o1 *)
     left. destruct s0. exists x. apply in_left_list. apply i3.
     ** (*l1 (i1) = e1 *)
     right. simpl. left. exact s0.
     * (*inner2*) 
-    destruct (get_link (bg:=b2) (inl (exist (fun name : Name => In name i2) n i0))).
+    destruct (get_link (bg:=b2) (inl (exist (fun name : InfType => In name i2) n i0))).
     ** (*l2 (i2) = o2 *)
     left. destruct s0. exists x. apply in_right_list. apply i3.
     ** (*l2 (i2) = e2 *)
@@ -695,7 +695,7 @@ Theorem bigraph_pp_congruence : forall {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3 s4 i
       unfold bij_subset_forward, bij_subset_backward, bij_dep_sum_2_forward, bij_dep_sum_1_forward, parallel, funcomp.
       simpl.
       set (Hn := match bij_i12 i24 with | conj _ H => H  end
-        (eq_ind_r (fun b : Name => In b i2) (not_in_left i0 n0) erefl)).  
+        (eq_ind_r (fun b : InfType => In b i2) (not_in_left i0 n0) erefl)).  
       rewrite <- (innername_proof_irrelevant b1 Hn).
       destruct get_link; try reflexivity.
       apply f_equal. destruct s0. apply subset_eq_compat. reflexivity. 
@@ -741,8 +741,8 @@ Theorem arity_comp_pp_dist : forall {s1r3 i1o3 r1 o1 s2r4 i2o4 r2 o2 r3s1 r4s2 s
   (b4 : bigraph s4 i4 r4s2 o4i2)
   {up12 : UnionPossible b1 b2} {up34 : UnionPossible b3 b4}
   {eqs2r4 : MyEqNat s2r4 r4s2} {eqs1r3 : MyEqNat s1r3 r3s1} 
-  {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
-  {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)}
+  {p13 : PermutationNDL (ndlist o3i1) (ndlist i1o3)}
+  {p24 : PermutationNDL (ndlist o4i2) (ndlist i2o4)}
   (n12_34 :  (get_node (b1 || b2 <<o>> (b3 || b4)))),
   Arity (get_control (bg:=(b1 || b2) <<o>> (b3 || b4)) n12_34) =
   Arity (get_control (bg:=(b1 <<o>> b3) || (b2 <<o>> b4)) (sum_shuffle n12_34)).
@@ -758,8 +758,8 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o
   (b4 : bigraph s4 i4 r4 o4i2)
   {eqs2r4 : MyEqNat s2 r4} {eqs1r3 : MyEqNat s1 r3} 
   {up12 : UnionPossible b1 b2} {up34 : UnionPossible b3 b4}
-  {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
-  {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)},
+  {p13 : PermutationNDL (ndlist o3i1) (ndlist i1o3)}
+  {p24 : PermutationNDL (ndlist o4i2) (ndlist i2o4)},
   support_equivalence 
     ((b1 || b2) <<o>> (b3 || b4))
     ((b1 <<o>> b3) || (b2 <<o>> b4)).
@@ -773,9 +773,9 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o
     ((b1 || b2) <<o>> (b3 || b4))
     ((b1 <<o>> b3) || (b2 <<o>> b4))
     (reflexivity (s3 + s4)) (*s3 + s4*)
-    reflnames (*i3 + i4*)
+    reflFinSub (*i3 + i4*)
     (reflexivity (r1 + r2)) (*r1 + r2*)
-    reflnames (*o1 + o2*)
+    reflFinSub (*o1 + o2*)
     bij_sum_shuffle(* n1 + n2 + n3 + n4*)
     bij_sum_shuffle (* e1 + e2 + e3 + e4 *)
     (fun n12_34 => bij_rew (arity_comp_pp_dist b1 b2 b3 b4 n12_34)) (* Port *)
@@ -876,7 +876,7 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o
       destruct get_link eqn:E'.
       **** rewrite <- (innername_proof_irrelevant b2 i0) in up12.      
       destruct (get_link (bg:=b2)
-      (inl (exist (fun name : Name => In name i2o4) o' i0))).
+      (inl (exist (fun name : InfType => In name i2o4) o' i0))).
       ++ f_equal. destruct s0. destruct s5. apply subset_eq_compat.
       simpl in up12. symmetry. apply up12.
       ++ exfalso. apply up12. 
@@ -884,23 +884,23 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o
       *** rewrite <- (innername_proof_irrelevant b1 (match PN_P p13 o' with
       | conj H _ => H
       end opf')).
-      assert ((@exist Name (fun inner : Name => @In Name inner (ndlist i1o3)) o'
+      assert ((@exist InfType (fun inner : InfType => @In InfType inner (ndlist i1o3)) o'
         (match
-          @PN_P (@reverse_coercion NoDupList (list Name) o3i1 (ndlist o3i1))
-            (@reverse_coercion NoDupList (list Name) i1o3 (ndlist i1o3)) p13 o'
+          @PN_P (@reverse_coercion NoDupList (list InfType) o3i1 (ndlist o3i1))
+            (@reverse_coercion NoDupList (list InfType) i1o3 (ndlist i1o3)) p13 o'
           return
             (forall
-                _ : @In Name o'
-                      (ndlist (@reverse_coercion NoDupList (list Name) o3i1 (ndlist o3i1))),
-              @In Name o'
-                (ndlist (@reverse_coercion NoDupList (list Name) i1o3 (ndlist i1o3))))
+                _ : @In InfType o'
+                      (ndlist (@reverse_coercion NoDupList (list InfType) o3i1 (ndlist o3i1))),
+              @In InfType o'
+                (ndlist (@reverse_coercion NoDupList (list InfType) i1o3 (ndlist i1o3))))
         with
         | conj H _ => H
         end opf')) =
-        (@exist Name (fun name : Name => @In Name name (ndlist i1o3)) o'
+        (@exist InfType (fun name : InfType => @In InfType name (ndlist i1o3)) o'
                     (match
                       @PN_P o3i1 i1o3 p13 o'
-                      return (forall _ : @In Name o' (ndlist o3i1), @In Name o' (ndlist i1o3))
+                      return (forall _ : @In InfType o' (ndlist o3i1), @In InfType o' (ndlist i1o3))
                     with
                     | conj H _ => H
                     end opf'))
@@ -909,30 +909,30 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o
       rewrite H.
       assert (
         @get_link s1 r1 i1o3 o1 b1
-              (@inl (@sig Name (fun inner : Name => @In Name inner (ndlist i1o3)))
+              (@inl (@sig InfType (fun inner : InfType => @In InfType inner (ndlist i1o3)))
                  (@Port ( (@get_node s1 r1 i1o3 o1 b1)) (@get_control s1 r1 i1o3 o1 b1))
-                 (@exist Name (fun name : Name => @In Name name (ndlist i1o3)) o'
+                 (@exist InfType (fun name : InfType => @In InfType name (ndlist i1o3)) o'
                     (match
                        @PN_P o3i1 i1o3 p13 o'
-                       return (forall _ : @In Name o' (ndlist o3i1), @In Name o' (ndlist i1o3))
+                       return (forall _ : @In InfType o' (ndlist o3i1), @In InfType o' (ndlist i1o3))
                      with
                      | conj H0 _ => H0
                      end opf')))
           =
                      
         @get_link s1 r1 i1o3 o1 b1 
-            (@inl (@sig Name (fun inner : Name => @In Name inner (ndlist i1o3)))
+            (@inl (@sig InfType (fun inner : InfType => @In InfType inner (ndlist i1o3)))
                (@Port ( (@get_node s1 r1 i1o3 o1 b1)) (@get_control s1 r1 i1o3 o1 b1))
-               (@exist Name (fun name : Name => @In Name name (ndlist i1o3)) o'
+               (@exist InfType (fun name : InfType => @In InfType name (ndlist i1o3)) o'
                   (match
                      @PN_P o3i1 i1o3 p13 o'
-                     return (forall _ : @In Name o' (ndlist o3i1), @In Name o' (ndlist i1o3))
+                     return (forall _ : @In InfType o' (ndlist o3i1), @In InfType o' (ndlist i1o3))
                    with
                    | conj H0 _ => H0
                    end opf')))).
       auto.
       rewrite <- H.
-      destruct (get_link (bg:=b1) (inl (exist (fun inner : Name => In inner i1o3) o' (match PN_P p13 o' with | conj H1 _ => H1 end opf')))) eqn:E'.
+      destruct (get_link (bg:=b1) (inl (exist (fun inner : InfType => In inner i1o3) o' (match PN_P p13 o' with | conj H1 _ => H1 end opf')))) eqn:E'.
       **** f_equal.
       **** reflexivity.
     - (*bijs l1234(p34) =l1324(p34)*)
@@ -965,7 +965,7 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o
       destruct get_link eqn:E'.
       *** rewrite <- (innername_proof_irrelevant b2 i1) in up12.      
       destruct (get_link (bg:=b2)
-      (inl (exist (fun name : Name => In name i2o4) x i1))).
+      (inl (exist (fun name : InfType => In name i2o4) x i1))).
       ++ f_equal. destruct s0. destruct s5. apply subset_eq_compat.
       simpl in up12. symmetry. apply up12.
       ++ exfalso. apply up12. 
@@ -974,10 +974,10 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o
       assert (
         @get_link s1 r1 i1o3 o1 b1
               (@inl
-                 (@sig Name (fun name : Name => @In Name name (ndlist i1o3)))
+                 (@sig InfType (fun name : InfType => @In InfType name (ndlist i1o3)))
                  (@Port ( (@get_node s1 r1 i1o3 o1 b1))
                     (@get_control s1 r1 i1o3 o1 b1))
-                 (@exist Name (fun name : Name => @In Name name (ndlist i1o3))
+                 (@exist InfType (fun name : InfType => @In InfType name (ndlist i1o3))
                     x
                     (@not_in_left x (ndlist i1o3) (ndlist i2o4)
                        (match
@@ -987,9 +987,9 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o
                                p13 p24) x
                           return
                             (forall
-                               _ : @In Name x
+                               _ : @In InfType x
                                      (app_merge (ndlist o3i1) (ndlist o4i2)),
-                             @In Name x
+                             @In InfType x
                                (app_merge (ndlist i1o3) (ndlist i2o4)))
                         with
                         | conj H _ => H
@@ -997,15 +997,15 @@ Theorem bigraph_comp_pp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o
         =
         @get_link s1 r1 i1o3 o1 b1
             (@inl
-               (@sig Name (fun inner : Name => @In Name inner (ndlist i1o3)))
+               (@sig InfType (fun inner : InfType => @In InfType inner (ndlist i1o3)))
                (@Port ( (@get_node s1 r1 i1o3 o1 b1))
                   (@get_control s1 r1 i1o3 o1 b1))
-               (@exist Name (fun name : Name => @In Name name (ndlist i1o3)) x
+               (@exist InfType (fun name : InfType => @In InfType name (ndlist i1o3)) x
                   (match
                      @PN_P o3i1 i1o3 p13 x
                      return
-                       (forall _ : @In Name x (ndlist o3i1),
-                        @In Name x (ndlist i1o3))
+                       (forall _ : @In InfType x (ndlist o3i1),
+                        @In InfType x (ndlist i1o3))
                    with
                    | conj H _ => H
                    end i0)))

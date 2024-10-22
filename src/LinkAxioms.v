@@ -24,7 +24,7 @@ Require Import List.
 
 
 
-Module LinkAxioms (s : SignatureParameter) (n : NamesParameter).
+Module LinkAxioms (s : SignatureParameter) (n : InfiniteParameter).
 Module tp := TensorProduct s n.
 Include tp.
 

@@ -29,18 +29,18 @@ Eval compute in  (make_seq_ListTypenat (1::2::[])).
 Print make_seq_ListTypenat.
 
 
-Definition add_t_to_subset_list {q} (t:Name) 
-  (l:seq {n : Name | In n q}) : 
-  seq {n : Name | In n (t::q)} :=
+Definition add_t_to_subset_list {q} (t:InfType) 
+  (l:seq {n : InfType | In n q}) : 
+  seq {n : InfType | In n (t::q)} :=
   map (fun n => match n with 
         | exist tn hn => 
             @exist _ _ tn (@List.in_cons _ t tn q hn) end )
       l.
 
-Definition aux (n:Name) (l:list Name) (hin: In n l) := 
+Definition aux (n:InfType) (l:list InfType) (hin: In n l) := 
   @exist _ (fun n => In n l) n hin.
 
-(* Definition make_seq_ListType (l:list Name) : list {n:Name| In n l}.
+(* Definition make_seq_ListType (l:list InfType) : list {n:InfType| In n l}.
   Proof.
   simpl.
   induction l as [|tl ql IHl].
@@ -50,7 +50,7 @@ Definition aux (n:Name) (l:list Name) (hin: In n l) :=
 Check list_rect.
   Print make_seq_ListType. *)
 
-Definition make_seq_ListType (l:list Name) : list {n:Name| In n l}.
+Definition make_seq_ListType (l:list InfType) : list {n:InfType| In n l}.
   Proof.
   simpl.
   induction l as [|tl ql IHl].
@@ -60,8 +60,8 @@ Definition make_seq_ListType (l:list Name) : list {n:Name| In n l}.
 
 
 Definition from_tlql_to_ql 
-  {tl : Name}
-  {ql : seq Name}
+  {tl : InfType}
+  {ql : seq InfType}
   {ndl : NoDup (tl :: ql)}
   (inner : ListType {| ndlist := tl :: ql; nd := ndl |})
   (Hinner : In (sval inner) ql) : 
@@ -72,8 +72,8 @@ Definition from_tlql_to_ql
   Defined.
 
 Lemma proj_eq_tlql 
-  {tl : Name}
-  {ql : seq Name}
+  {tl : InfType}
+  {ql : seq InfType}
   {ndl : NoDup (tl :: ql)}
   (inner : ListType {| ndlist := tl :: ql; nd := ndl |})
   (Hinner : In (sval inner) ql) : 
@@ -82,7 +82,7 @@ Lemma proj_eq_tlql
   destruct inner. reflexivity.
   Qed.
 
-(* Lemma add_t_to_subset_list_change_nothing {tl : Name} {ql : seq Name} {ndl : NoDup (tl :: ql)} (inner : ListType {| ndlist := tl :: ql; nd := ndl |})
+(* Lemma add_t_to_subset_list_change_nothing {tl : InfType} {ql : seq InfType} {ndl : NoDup (tl :: ql)} (inner : ListType {| ndlist := tl :: ql; nd := ndl |})
   (Hinner : In (sval inner) ql ): 
   In (from_tlql_to_ql inner Hinner) (make_seq_ListType ql)
     ->
@@ -111,13 +111,13 @@ Lemma proj_eq_tlql
 
 
 (* Lemma inter 
-  (tl : Name)
-  (ql : seq Name)
-  (n : Name)
+  (tl : InfType)
+  (ql : seq InfType)
+  (n : InfType)
   (Hinner : In n ql) :
-  In (exist ((In (A:=Name))^~ ql) n Hinner) (make_seq_ListType ql)
+  In (exist ((In (A:=InfType))^~ ql) n Hinner) (make_seq_ListType ql)
   ->
-  In (exist ((In (A:=Name))^~ (tl :: ql)) n (or_intror Hinner))
+  In (exist ((In (A:=InfType))^~ (tl :: ql)) n (or_intror Hinner))
     (add_t_to_subset_list (make_seq_ListType ql) tl).
   Proof. 
   intros. Check in_map.
@@ -129,7 +129,7 @@ Lemma proj_eq_tlql
   Admitted. *)
 
 
-(* Lemma wf_make_seq_ListType {l} (n:Name) (hin: In n l) : 
+(* Lemma wf_make_seq_ListType {l} (n:InfType) (hin: In n l) : 
   In (exist _ n hin) (make_seq_ListType l).
   Proof.
   induction l as [|tl ql IHl].

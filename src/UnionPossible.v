@@ -23,7 +23,7 @@ From mathcomp Require Import all_ssreflect.
 
 Require Import List.
 
-Module UnionPossible (s : SignatureParameter) (n : NamesParameter).
+Module UnionPossible (s : SignatureParameter) (n : InfiniteParameter).
 
 Module tp := TensorProduct s n.
 Include tp.
@@ -77,7 +77,7 @@ Lemma union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
     unfold to_left,to_right in *.
     destruct get_link eqn:E.
     - rewrite <- (innername_proof_irrelevant b2 (from_intersection_left H21)) in up12. 
-    destruct (get_link (bg:=b2) (inl (exist (fun name : Name => In name i2) i (from_intersection_left H21)))). 
+    destruct (get_link (bg:=b2) (inl (exist (fun name : InfType => In name i2) i (from_intersection_left H21)))). 
     + rewrite <- (innername_proof_irrelevant b1 (from_intersection_left (intersection_commutes H21))).
     rewrite E.
     destruct s0. destruct s3.
@@ -85,7 +85,7 @@ Lemma union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
     + apply up12.
     - destruct (get_link (bg:=b2)
     (inl
-      (exist (fun name : Name => In name i2) i
+      (exist (fun name : InfType => In name i2) i
           (from_intersection_left H21)))) eqn:E'.
     + rewrite <- (innername_proof_irrelevant b1 (from_intersection_left (intersection_commutes H21))).
     rewrite E. apply up12.
@@ -97,8 +97,8 @@ Lemma union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
   {b2 : bigraph s2 i2o4 r2 o2} 
   {b3 : bigraph s3 i3 r3 o3i1} 
   {b4 : bigraph s4 i4 r4 o4i2}
-  {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
-  {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)}
+  {p13 : PermutationNDL (ndlist o3i1) (ndlist i1o3)}
+  {p24 : PermutationNDL (ndlist o4i2) (ndlist i2o4)}
   {eqs2r4 : MyEqNat s2 r4} {eqs1r3 : MyEqNat s1 r3} 
   (up12 : UnionPossible b1 b2) (up34 : UnionPossible b3 b4) :
   UnionPossible 
@@ -127,7 +127,7 @@ Lemma union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
         rewrite <- (innername_proof_irrelevant b1 (from_intersection_left (in_both_in_intersection Ho'' i1))).
         destruct get_link eqn:E'.
         ++ destruct i0.
-          destruct (get_link (bg:=b4) (inl (exist (fun name : Name => In name i4) x (from_intersection_right i0)))) eqn:E''.
+          destruct (get_link (bg:=b4) (inl (exist (fun name : InfType => In name i4) x (from_intersection_right i0)))) eqn:E''.
           * destruct s5.
             simpl in up34. destruct up34.
             rewrite <- (innername_proof_irrelevant b2 (from_intersection_right
@@ -140,12 +140,12 @@ Lemma union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
             (@in_both_in_intersection
                (ndlist
                   (@reverse_coercion NoDupList
-                     (list Name) i1o3 
+                     (list InfType) i1o3 
                      (ndlist i1o3))) 
                (ndlist i2o4) o' Ho'' i1) = Tmp).
                auto.
                rewrite H in up12.
-            destruct (get_link (bg:=b2) (inl (exist (fun x : Name => In x i2o4) o' Tmp))) eqn:EI.
+            destruct (get_link (bg:=b2) (inl (exist (fun x : InfType => In x i2o4) o' Tmp))) eqn:EI.
             ** apply up12.
             ** apply up12.
           * apply up34.

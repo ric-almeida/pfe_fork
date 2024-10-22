@@ -36,7 +36,7 @@ Import ListNotations.
   We prove that our relation support_equivalence is reflexive, 
   symmetric and transitive. This is going to be useful to be able to rewrite 
   bigraphs at will. *)
-Module SupportEquivalenceBigraphs (s : SignatureParameter) (n : NamesParameter).
+Module SupportEquivalenceBigraphs (s : SignatureParameter) (n : InfiniteParameter).
 Module b := Bigraphs s n.
 Include b. 
 
@@ -162,11 +162,11 @@ Lemma support_equivalence_trans
   destruct Heqb2b3 as (bij_s23, bij_i23, bij_r23, bij_o23, bij_n23, bij_e23, bij_p23, big_control_eq23, big_parent_eq23, big_link_eq23).
   apply (SupEq _ _ _ _ _ _ _ _ b1 b3
           (eq_trans bij_s12 bij_s23)
-          (fun name : Name => @iff_trans 
-            (@In Name name (ndlist i1)) 
-            (@In Name name (ndlist i2))
-            (@In Name (@forward Name Name (@bij_id Name) name) (ndlist i3))
-            (bij_i12 name) (bij_i23 (@forward Name Name (@bij_id Name) name))
+          (fun name : InfType => @iff_trans 
+            (@In InfType name (ndlist i1)) 
+            (@In InfType name (ndlist i2))
+            (@In InfType (@forward InfType InfType (@bij_id InfType) name) (ndlist i3))
+            (bij_i12 name) (bij_i23 (@forward InfType InfType (@bij_id InfType) name))
           )
           (eq_trans bij_r12 bij_r23)
           (fun a => iff_trans (bij_o12 a) (bij_o23 (bij_id a)))
@@ -184,8 +184,8 @@ Lemma support_equivalence_trans
     rewrite <- bij_sum_compose_compose.
     rewrite <- bij_fun_compose_compose.
     reflexivity.
-  + rewrite <- (@bij_subset_compose_compose_id Name (fun name => In name i1) (fun name => In name i2) (fun name => In name i3) bij_i12 bij_i23). 
-    rewrite <- (@bij_subset_compose_compose_id Name (fun name => In name o1) (fun name => In name o2) (fun name => In name o3) bij_o12 bij_o23). 
+  + rewrite <- (@bij_subset_compose_compose_id InfType (fun name => In name i1) (fun name => In name i2) (fun name => In name i3) bij_i12 bij_i23). 
+    rewrite <- (@bij_subset_compose_compose_id InfType (fun name => In name o1) (fun name => In name o2) (fun name => In name o3) bij_o12 bij_o23). 
     rewrite <- big_link_eq23.
     rewrite <- big_link_eq12.
     rewrite <- bij_compose_forward_simpl.

@@ -23,7 +23,7 @@ From mathcomp Require Import all_ssreflect.
 Require Import List.
 
 
-Module NodeAxiom (s : SignatureParameter) (n : NamesParameter).
+Module NodeAxiom (s : SignatureParameter) (n : InfiniteParameter).
 Module tp := TensorProduct s n.
 Include tp.
 
@@ -31,7 +31,7 @@ Set Typeclasses Unique Instances.
 Set Typeclasses Iterative Deepening.
 
 
-Theorem nodeAxiomelementary {N N':Name} 
+Theorem nodeAxiomelementary {N N':InfType} 
   {k:Kappa} 
   {Hk : MyEqNat (Arity k) 1} : 
   support_equivalence
@@ -97,7 +97,7 @@ Theorem nodeAxiomelementary {N N':Name}
 
 
 
-Theorem nodeAxiomProductelementary {N N' M M':Name} 
+Theorem nodeAxiomProductelementary {N N' M M':InfType} 
   {ndl : NoDup [M;N]}
   {ndl' : NoDup [M';N']}
   {HN : (OneelNDL M) # (OneelNDL N)}
@@ -182,7 +182,7 @@ Theorem nodeAxiomProductelementary {N N' M M':Name}
   Qed.
 
 
-Fixpoint index (n:Name) (l:list Name) := match l with 
+Fixpoint index (n:InfType) (l:list InfType) := match l with 
   | [] => 0
   | t::q => if EqDecN t n then 0 else 1 + index t q 
   end.
@@ -199,14 +199,14 @@ Admitted.
 Lemma memNindex x s : (~In x s) -> index x s = size s.
 Admitted.
 
-Lemma nth_index x s : In x s -> nth (index x s) s DefaultName = x.
+Lemma nth_index x s : In x s -> nth (index x s) s DefaultInfType = x.
 Admitted.
 
-Lemma nthIn n l : (n < length l) -> In (nth n l DefaultName) l.
+Lemma nthIn n l : (n < length l) -> In (nth n l DefaultInfType) l.
 Admitted.
 
 Lemma index_nth_id i s : i < length s -> NoDup s -> 
-  index (nth i s DefaultName) s = i.
+  index (nth i s DefaultInfType) s = i.
 Admitted.
 
 Definition mkLinkRenaming (i:NoDupList) (o:NoDupList) 
@@ -218,7 +218,7 @@ Definition mkLinkRenaming (i:NoDupList) (o:NoDupList)
   destruct i as [i ndi].
   destruct o as [o ndo].
   unfold ListType in *.
-  exists (nth (index inner i) o DefaultName).
+  exists (nth (index inner i) o DefaultInfType).
   simpl in *.
   apply nthIn.
   rewrite <- Hlen.
@@ -298,7 +298,7 @@ Theorem nodeAxiom {N N':NoDupList}
     unfold bij_list_backward',permut_list_forward. 
     destruct N as [N NDL].
     destruct N' as [N' NDL'].
-    destruct (in_dec EqDecN (nth ports N DefaultName) EmptyNDL).
+    destruct (in_dec EqDecN (nth ports N DefaultInfType) EmptyNDL).
     * elim i0.
     * unfold mkLinkRenaming. 
     f_equal.

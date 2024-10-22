@@ -203,7 +203,7 @@ Proof.
   apply ltnSE in H. apply H.
   Qed.
 
-Lemma in_or_app_mc {Name} : forall (l1 l2 : seq Name) (inner : Name),
+Lemma in_or_app_mc {InfType} : forall (l1 l2 : seq InfType) (inner : InfType),
   In inner ((l1 ++ (inner :: l2)%SEQ)%list).
   Proof.
   intros l1 l2 inner.

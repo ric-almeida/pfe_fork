@@ -22,7 +22,7 @@ From mathcomp Require Import all_ssreflect.
   of putting a bigraph inside another one. To do b1 <<o>> b2, the outerface 
   of b2 needs to be the innerface of b1. 
   We prove left and right neutral for identity bigraph and associativity *)
-Module CompositionBigraphs (s : SignatureParameter) (n : NamesParameter).
+Module CompositionBigraphs (s : SignatureParameter) (n : InfiniteParameter).
 Module leb := LeanSupportEquivalence s n.
 Include leb.
 
@@ -32,7 +32,7 @@ Set Typeclasses Iterative Deepening.
   
 
 Definition bigraph_composition {s1 r1 s2 r2 : nat} {i1o2 o2i1 o1 i2 : NoDupList}
-  {p: PermutationNames o2i1 i1o2} {eqsr : MyEqNat s1 r2}
+  {p: PermutationNDL o2i1 i1o2} {eqsr : MyEqNat s1 r2}
   (b1 : bigraph s1 i1o2 r1 o1) (b2 : bigraph s2 i2 r2 o2i1) 
     : bigraph s2 i2 r1 o1. (*s1=r2*)
   Proof. 
@@ -93,7 +93,7 @@ Theorem bigraph_comp_left_neutral : forall {s i r o}
   refine (
     SupEq s r s r i o i o (bigraph_id r o <<o>> b) b
       erefl (*s*)
-      (fun (name : Name) => reflexivity (In name i)) (*i*)
+      (fun (name : InfType) => reflexivity (In name i)) (*i*)
       erefl (*r*)
       (left_empty o) (*o*)
       bij_void_sum_neutral (*n*)
@@ -165,9 +165,9 @@ Theorem bigraph_comp_right_neutral : forall {s i r o}
   apply 
     (SupEq _ _ _ _ _ _ _ _ (b <<o>> bigraph_id s i) b
       erefl
-      (fun (name : Name) => reflexivity (In name i))
+      (fun (name : InfType) => reflexivity (In name i))
       erefl
-      (fun (name : Name) => reflexivity (In name o))
+      (fun (name : InfType) => reflexivity (In name o))
       bij_void_sum_neutral_r
       bij_void_sum_neutral_r 
       (fun n => bij_rew  (arity_comp_right_neutral b n)) 
@@ -218,8 +218,8 @@ End C3.
 Section C2.
 Lemma arity_comp_assoc : 
   forall {s1 i1o2 r1 o1 s2 r2 r3 i2o3 o2i1 s3 i3 o3i2} 
-  { pi1o2 : PermutationNames (ndlist o2i1) (ndlist i1o2)}
-  { pi2o3 : PermutationNames (ndlist o3i2) (ndlist i2o3)}
+  { pi1o2 : PermutationNDL (ndlist o2i1) (ndlist i1o2)}
+  { pi2o3 : PermutationNDL (ndlist o3i2) (ndlist i2o3)}
   {eqs1r2 : MyEqNat s1 r2} {eqs2r3 : MyEqNat s2 r3}
   (b1 : bigraph s1 i1o2 r1 o1) 
   (b2 : bigraph s2 i2o3 r2 o2i1) 
@@ -235,8 +235,8 @@ Lemma arity_comp_assoc :
   Qed.
 
 Theorem bigraph_comp_assoc : forall {s1 i1o2 r1 o1 s2 r2 r3 i2o3 o2i1 s3 i3 o3i2} 
-  { pi1o2 : PermutationNames (ndlist o2i1) (ndlist i1o2)}
-  { pi2o3 : PermutationNames (ndlist o3i2) (ndlist i2o3)}
+  { pi1o2 : PermutationNDL (ndlist o2i1) (ndlist i1o2)}
+  { pi2o3 : PermutationNDL (ndlist o3i2) (ndlist i2o3)}
   {eqs1r2 : MyEqNat s1 r2} {eqs2r3 : MyEqNat s2 r3}
   (b1 : bigraph s1 i1o2 r1 o1) 
   (b2 : bigraph s2 i2o3 r2 o2i1) 
@@ -248,9 +248,9 @@ Theorem bigraph_comp_assoc : forall {s1 i1o2 r1 o1 s2 r2 r3 i2o3 o2i1 s3 i3 o3i2
   intros.
   apply (SupEq _ _ _ _ _ _ _ _ ((b1 <<o>> b2) <<o>> b3) (b1 <<o>> (b2 <<o>> b3))
     erefl
-    (fun (name : Name) => iff_refl (In name i3))
+    (fun (name : InfType) => iff_refl (In name i3))
     erefl
-    (fun (name : Name) => iff_refl (In name o1))
+    (fun (name : InfType) => iff_refl (In name o1))
     bij_sum_assoc
     bij_sum_assoc
     (fun n12_3 => bij_rew  (arity_comp_assoc b1 b2 b3 n12_3))
@@ -317,8 +317,8 @@ End C2.
 (** Congruence of composition *)
 Definition arity_comp_congruence_forward 
   {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 r3 r4 i3 o3i1 s4 i4 o4i2} 
-  {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
-  {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)}
+  {p13 : PermutationNDL (ndlist o3i1) (ndlist i1o3)}
+  {p24 : PermutationNDL (ndlist o4i2) (ndlist i2o4)}
   {eqs1r3 : MyEqNat s1 r3} {eqs2r4 : MyEqNat s2 r4}
   (b1 : bigraph s1 i1o3 r1 o1) 
   (b2 : bigraph s2 i2o4 r2 o2) 
@@ -338,8 +338,8 @@ Definition arity_comp_congruence_forward
 
 Definition arity_comp_congruence_backward
   {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 r3 r4 i3 o3i1 s4 i4 o4i2} 
-  {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
-  {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)}
+  {p13 : PermutationNDL (ndlist o3i1) (ndlist i1o3)}
+  {p24 : PermutationNDL (ndlist o4i2) (ndlist i2o4)}
   {eqs1r3 : MyEqNat s1 r3} {eqs2r4 : MyEqNat s2 r4}
   (b1 : bigraph s1 i1o3 r1 o1) 
   (b2 : bigraph s2 i2o4 r2 o2) 
@@ -359,8 +359,8 @@ Definition arity_comp_congruence_backward
 
 Lemma arity_comp_congruence : forall 
   {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 r3 r4 i3 o3i1 s4 i4 o4i2} 
-  {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
-  {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)}
+  {p13 : PermutationNDL (ndlist o3i1) (ndlist i1o3)}
+  {p24 : PermutationNDL (ndlist o4i2) (ndlist i2o4)}
   {eqs1r3 : MyEqNat s1 r3} {eqs2r4 : MyEqNat s2 r4}
   (b1 : bigraph s1 i1o3 r1 o1) 
   (b2 : bigraph s2 i2o4 r2 o2) 
@@ -390,8 +390,8 @@ Lemma arity_comp_congruence : forall
 
 Theorem bigraph_comp_congruence : forall 
   { s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 r3 r4 i3 o3i1 s4 i4 o4i2} 
-  { p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
-  {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)}
+  { p13 : PermutationNDL (ndlist o3i1) (ndlist i1o3)}
+  {p24 : PermutationNDL (ndlist o4i2) (ndlist i2o4)}
   {eqs1r3 : MyEqNat s1 r3} {eqs2r4 : MyEqNat s2 r4}
   (b1 : bigraph s1 i1o3 r1 o1) 
   (b2 : bigraph s2 i2o4 r2 o2) 

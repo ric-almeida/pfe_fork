@@ -5,9 +5,9 @@ src/MyBasics.v
 src/MathCompAddings.v
 src/Bijections.v
 src/SignatureBig.v
-src/Names.v
+src/InfSets.v
 src/MyEqNat.v
-src/AbstractBigraphs.v
+src/ConcreteBigraphs.v
 src/SupportEquivalence.v
 src/LeanSupportEquivalence.v
 src/Composition.v

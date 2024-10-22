@@ -20,7 +20,7 @@ Import ListNotations.
 From mathcomp Require Import all_ssreflect.
 
 (** Merge operator *)
-Module MergeBig (s : SignatureParameter) (n : NamesParameter).
+Module MergeBig (s : SignatureParameter) (n : InfiniteParameter).
 Module pp := ParallelProduct s n.
 Include pp.
 

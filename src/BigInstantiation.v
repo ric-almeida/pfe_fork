@@ -31,12 +31,12 @@ End MySigP.
 
 
 
-Module MyNamesP <: Names.NamesParameter.
-Definition Name := nat.
-Definition EqDecN : forall x y : Name, {x = y} + {x <> y}.
+Module MyNamesP <: Names.InfiniteParameter.
+Definition InfType := nat.
+Definition EqDecN : forall x y : InfType, {x = y} + {x <> y}.
 decide equality. Qed.
 
-Definition InfName : forall l : list nat, exists n : nat, ~ In n l. 
+Definition InfProof : forall l : list nat, exists n : nat, ~ In n l. 
 Proof.
   intros l.
   exists (S (fold_right max 0 l)). 
@@ -49,25 +49,25 @@ Proof.
     Admitted.
    
 
-Definition DefaultName := 0.
-Definition freshName : list Name -> Name := 
+Definition DefaultInfType := 0.
+Definition freshElInInfType : list InfType -> InfType := 
   fun l => S (fold_right max 0 l). 
 
-Compute (freshName []).
-Compute (freshName [1]).
-Compute (freshName [3]).
-Compute (freshName [2;3]). 
+Compute (freshElInInfType []).
+Compute (freshElInInfType [1]).
+Compute (freshElInInfType [3]).
+Compute (freshElInInfType [2;3]). 
 
 
 
-Lemma notInfreshName : forall l:list Name, ~ In (freshName l) l. 
+Lemma notInfreshElInInfType : forall l:list InfType, ~ In (freshElInInfType l) l. 
 Proof. 
 intros.
 unfold not. intros H. 
 induction l as [|name l' Hl].
 - elim H.
 - destruct H.
-+ unfold freshName in *.
++ unfold freshElInInfType in *.
 simpl in *. 
 set (x := fold_right Init.Nat.max 0 l').
 fold x in H.
@@ -475,7 +475,7 @@ exists (e::aNDL). constructor; auto.
 Defined. 
 
 
-Definition myPN : PermutationNames
+Definition myPN : PermutationNDL
      (app_merge_NoDupList
         (app_merge_NoDupList EmptyNDL
            (app_merge_NoDupList (OneelNDL e)
@@ -497,7 +497,7 @@ unfold permutation. intros. split; intros.
 Defined.
 
 Definition myPN' :
-PermutationNames
+PermutationNDL
      (app_merge_NoDupList EmptyNDL
         (app_merge_NoDupList
            (app_merge_NoDupList (OneelNDL e) eNDL)
@@ -561,7 +561,7 @@ Example simplBigboolOp'
 
 
 
-Definition btmp : {inner : Name
+Definition btmp : {inner : InfType
    | In inner
        (app_merge_NoDupList (app_merge_NoDupList EmptyNDL EmptyNDL) bNDL)} +
    Port (get_control simplBigboolOp). 
@@ -570,7 +570,7 @@ Proof.
 
 
 Definition btmp' :
-({inner : Name
+({inner : InfType
    | In inner
        (app_merge_NoDupList (app_merge_NoDupList bNDL EmptyNDL) EmptyNDL)} +
    Port (get_control simplBigboolOp')).

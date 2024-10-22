@@ -24,7 +24,7 @@ Require Import List.
 
 
 
-Module PlaceAxioms (s : SignatureParameter) (n : NamesParameter).
+Module PlaceAxioms (s : SignatureParameter) (n : InfiniteParameter).
 Module tp := TensorProduct s n.
 Include tp.
 

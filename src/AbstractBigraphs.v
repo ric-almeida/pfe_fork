@@ -35,7 +35,7 @@ Include MyEqNat.
 Import ListNotations.
 
 (** This module implements bigraphs and basic operations on bigraphs *)
-Module Bigraphs (sp : SignatureParameter) (np : Names.NamesParameter).
+Module Bigraphs (sp : SignatureParameter) (np : Names.InfiniteParameter).
 Module s := Signature sp.
 Module n := Names np.
 Include s.
@@ -73,7 +73,7 @@ Definition get_control {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : ge
   @control s i r o bg.
 Definition get_parent {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : (get_node bg) + (ordinal s) -> (get_node bg) + (ordinal r) :=
   @parent s i r o bg.
-Definition get_link {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : {inner:Name | In inner i} + Port (@get_control s r i o bg) -> {outer:Name | In outer o} + (get_edge bg) :=
+Definition get_link {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : {inner:InfType | In inner i} + Port (@get_control s r i o bg) -> {outer:InfType | In outer o} + (get_edge bg) :=
   @link s i r o bg.
 Definition get_ap {s r : nat} {i o : NoDupList} (bg : bigraph s i r o) : FiniteParent (get_parent (bg:=bg)) := 
   @ap s i r o bg.
@@ -93,7 +93,7 @@ Theorem parent_proof_irrelevant {s i r o} (b:bigraph s i r o):
   Qed.
 
 Theorem innername_proof_irrelevant {s i r o} (b:bigraph s i r o): 
-  forall n:Name, forall Hn: In n i, forall Hn':In n i,
+  forall n:InfType, forall Hn: In n i, forall Hn':In n i,
   get_link (bg:=b) (inl (exist _ n Hn)) = get_link (bg:=b) (inl (exist _ n Hn')).
   Proof. 
   intros. apply f_equal. apply f_equal. apply subset_eq_compat. reflexivity.
@@ -174,7 +174,7 @@ Definition discrete_atom {A:finType}
       - destruct i as [i H]. elim H. 
       - left. unfold ListType. destruct o as [o Ho]. 
       destruct p as [i H]. destruct H as [p Hp]. 
-      exists (Coq.Lists.List.nth p o DefaultName). 
+      exists (Coq.Lists.List.nth p o DefaultInfType). 
       apply nth_In. destruct Hkappa as [Hkappa]. rewrite <- Hkappa.
       set (tmp := ltP (m:=p) (n:=Arity k)).
       apply Bool.reflect_iff in tmp.
@@ -207,7 +207,7 @@ Definition discrete_ion {A:finType}
       - destruct i as [i H]. elim H. 
       - left. unfold ListType. destruct o as [o Ho]. 
       destruct p as [i H]. destruct H as [p Hp]. 
-      exists (Coq.Lists.List.nth p o DefaultName). 
+      exists (Coq.Lists.List.nth p o DefaultInfType). 
       apply nth_In. destruct Hkappa as [Hkappa].
       rewrite <- Hkappa.
       set (tmp := ltP (m:=p) (n:=Arity k)).
@@ -279,7 +279,7 @@ Definition symmetry_big (m:nat) (X:NoDupList) (n:nat) (Y:NoDupList) :
     destruct n'.
   Defined.
 
-Definition substitution (i:NoDupList) (name:Name) : bigraph 0 i 0 (OneelNDL name).
+Definition substitution (i:NoDupList) (name:InfType) : bigraph 0 i 0 (OneelNDL name).
   Proof. 
   apply (@Big 0 i 0 (OneelNDL name)
     void (*node : ∅*)
@@ -294,10 +294,10 @@ Definition substitution (i:NoDupList) (name:Name) : bigraph 0 i 0 (OneelNDL name
   destruct n'.
   Defined.
 
-Definition elementary_renaming (n n':Name) := substitution (OneelNDL n) n'.
+Definition elementary_renaming (n n':InfType) := substitution (OneelNDL n) n'.
 
 
-Definition closure (name:Name) : bigraph 0 (OneelNDL name) 0 EmptyNDL.
+Definition closure (name:InfType) : bigraph 0 (OneelNDL name) 0 EmptyNDL.
   Proof. 
   apply (@Big 0 (OneelNDL name) 0 EmptyNDL
     void (*node : ∅*)

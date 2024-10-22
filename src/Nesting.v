@@ -21,14 +21,14 @@ From mathcomp Require Import all_ssreflect.
 Import ListNotations.
 
 (** Nesting operator *)
-Module NestingBig (s : SignatureParameter) (n : NamesParameter).
+Module NestingBig (s : SignatureParameter) (n : InfiniteParameter).
 Module pp := ParallelProduct s n.
 Include pp.
 
 Definition nest {s1 r1 s2 r2 : nat} {o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 EmptyNDL r1 o1) (b2 : bigraph s2 i2 r2 o2) 
   {eqs1r2 : MyEqNat s1 r2}
-  (* {p : PermutationNames i1 EmptyNDL} *)
+  (* {p : PermutationNDL i1 EmptyNDL} *)
   (* : bigraph s2 i2 r1 (app_merge_NoDupList o1 o2)  *)
   := ((bigraph_id 0 o2) || b1) <<o>> b2.
 
@@ -76,7 +76,7 @@ Global Notation "G '<.>' F" := (nest G F) (at level 50, left associativity).
 
 Lemma my_id_union : forall X Y:NoDupList, 
   bigraph_pkd_s_e
-    (@bigraph_identity O (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id_PN (@reverse_coercion NoDupList (list Name) (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y)))))
+    (@bigraph_identity O (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id_PN (@reverse_coercion NoDupList (list InfType) (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y)))))
     ((bigraph_identity (i := X)) || (bigraph_identity (i := Y))).
   Proof.
     intros X Y.
@@ -90,7 +90,7 @@ Lemma my_id_union : forall X Y:NoDupList,
     unfold sum_shuffle.
     refine 
       (SupEq 0 0 0 0 (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y)
-        (@bigraph_identity O (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id_PN (@reverse_coercion NoDupList (list Name) (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y)))))
+        (@bigraph_identity O (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id_PN (@reverse_coercion NoDupList (list InfType) (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y)))))
         ((bigraph_identity (i := X)) || (bigraph_identity (i := Y)))
         erefl
         (permutation_id (app_merge_NoDupList X Y))
@@ -130,7 +130,7 @@ Theorem intermediaire_rewrie {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
   split. auto. auto. Qed. 
 
 Theorem intermediaire_rewrie' {s1 r1 s2 r2 : nat} {i1o2 o2i1 o1 i2 : NoDupList}
-  {p: PermutationNames o2i1 i1o2} {eqsr : MyEqNat s1 r2}
+  {p: PermutationNDL o2i1 i1o2} {eqsr : MyEqNat s1 r2}
   (b1 : bigraph s1 i1o2 r1 o1) (b2 : bigraph s2 i2 r2 o2i1) 
   (b3 : bigraph s2 i2 r1 o1)
   {up : UnionPossible b1 b2} :
@@ -140,7 +140,7 @@ Theorem intermediaire_rewrie' {s1 r1 s2 r2 : nat} {i1o2 o2i1 o1 i2 : NoDupList}
 
 Lemma my_id_union' : forall X Y:NoDupList, 
   bigraph_pkd_s_e
-    (@packing O (app_merge_NoDupList X Y) O (app_merge_NoDupList X Y) (@bigraph_identity O (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id_PN (@reverse_coercion NoDupList (list Name) (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y))))))
+    (@packing O (app_merge_NoDupList X Y) O (app_merge_NoDupList X Y) (@bigraph_identity O (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id_PN (@reverse_coercion NoDupList (list InfType) (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y))))))
     (packing ((bigraph_identity (i := X)) || (bigraph_identity (i := Y)))).
   intros X Y.
     unfold bigraph_id. unfold bigraph_identity.
@@ -153,7 +153,7 @@ Lemma my_id_union' : forall X Y:NoDupList,
     unfold sum_shuffle.
     refine 
       (SupEq 0 0 0 0 (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (app_merge_NoDupList X Y)
-        (@bigraph_identity O (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id_PN (@reverse_coercion NoDupList (list Name) (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y)))))
+        (@bigraph_identity O (app_merge_NoDupList X Y) (app_merge_NoDupList X Y) (permutation_id_PN (@reverse_coercion NoDupList (list InfType) (app_merge_NoDupList X Y) (ndlist (app_merge_NoDupList X Y)))))
         ((bigraph_identity (i := X)) || (bigraph_identity (i := Y)))
         erefl
         (permutation_id (app_merge_NoDupList X Y))

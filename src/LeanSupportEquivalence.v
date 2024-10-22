@@ -37,7 +37,7 @@ Import ListNotations.
   We prove that our relation support_equivalence is reflexive, 
   symmetric and transitive. This is going to be useful to be able to rewrite 
   bigraphs at will. *)
-Module LeanSupportEquivalence (s : SignatureParameter) (n : NamesParameter).
+Module LeanSupportEquivalence (s : SignatureParameter) (n : InfiniteParameter).
 Module eb := SupportEquivalenceBigraphs s n.
 Include eb. 
 
@@ -57,7 +57,7 @@ Axiom onto_Onto : forall [A : Type] (lA : list A) (a : { a : A | In a lA }), In 
 
 
 (*** GET LIST OF INNERNAMES ***)
-Definition make_seq_ListType (l:list Name) : list {n:Name| In n l}
+Definition make_seq_ListType (l:list InfType) : list {n:InfType| In n l}
   := onto l.
 
 Lemma wf_make_seq_ListType {l} (inner:ListType l) : 
@@ -251,7 +251,7 @@ Theorem lean_is_lean {s i r o} (b:bigraph s i r o) :
   destruct (not_is_idle_implies_exists_inner_or_node nie Hnie) as [ip Hip].
   exists ip.
   generalize (ex_intro
-    (fun ip'' : {inner : Name | In inner i} +
+    (fun ip'' : {inner : InfType | In inner i} +
     Port (get_control (bg:=b)) =>
     get_link (bg:=b) ip'' = get_link (bg:=b) ip) ip
     (erefl (get_link (bg:=b) ip))).
@@ -311,14 +311,14 @@ Theorem lean_bigraph_same_bigraph {s i r o} (b:bigraph s i r o) :
     - intros ip.
       destruct get_link eqn:E; simpl.
       + generalize ((ex_intro
-        (fun ip'' : {inner : Name | In inner i} + Port (get_control (bg:=b))
+        (fun ip'' : {inner : InfType | In inner i} + Port (get_control (bg:=b))
         => get_link (bg:=b) ip'' = get_link (bg:=b) ip)
         ip (erefl (get_link (bg:=b) ip)))).
       intros.
       destruct get_link. inversion E.
       auto. discriminate E.
       + generalize (ex_intro
-        (fun ip'' : {inner : Name | In inner i} + Port (get_control (bg:=b))
+        (fun ip'' : {inner : InfType | In inner i} + Port (get_control (bg:=b))
         => get_link (bg:=b) ip'' = get_link (bg:=b) ip)
         ip (erefl (get_link (bg:=b) ip))).
       intros. destruct get_link.
@@ -564,42 +564,42 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
   unfold funcomp;simpl. intros ipa.
   unfold bij_subset_backward, bij_subset_forward. simpl.
   generalize (ex_intro
-    (fun ip'' : {inner : Name | In inner i2} + Port (get_control (bg:=b2)) =>
+    (fun ip'' : {inner : InfType | In inner i2} + Port (get_control (bg:=b2)) =>
     get_link (bg:=b2) ip'' = get_link (bg:=b2) ipa) ipa
     (erefl (get_link (bg:=b2) ipa))).
   intros.
   destruct get_link eqn:L2.
   unfold eq_ind_r.
   
-  generalize ((@ex_intro (sum (@sig Name (fun inner : Name => @In Name inner (ndlist i1)))
+  generalize ((@ex_intro (sum (@sig InfType (fun inner : InfType => @In InfType inner (ndlist i1)))
     (@Port (Finite.sort (@get_node s1 r1 i1 o1 b1)) (@get_control s1 r1 i1
-    o1 b1))) (fun ip'' : sum (@sig Name (fun inner : Name => @In Name inner (ndlist i1)))
+    o1 b1))) (fun ip'' : sum (@sig InfType (fun inner : InfType => @In InfType inner (ndlist i1)))
     (@Port (Finite.sort (@get_node s1 r1 i1 o1 b1))
-    (@get_control s1 r1 i1 o1 b1)) => @eq (sum (@sig Name (fun outer : Name => @In Name outer (ndlist o1))) (Finite.sort (@get_edge s1 r1 i1 o1 b1))) (@get_link s1 r1 i1 o1 b1 ip'') (@get_link s1 r1 i1 o1 b1 match ipa return
-    (sum (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    (@get_control s1 r1 i1 o1 b1)) => @eq (sum (@sig InfType (fun outer : InfType => @In InfType outer (ndlist o1))) (Finite.sort (@get_edge s1 r1 i1 o1 b1))) (@get_link s1 r1 i1 o1 b1 ip'') (@get_link s1 r1 i1 o1 b1 match ipa return
+    (sum (@sig InfType (fun name : InfType => @In InfType name (ndlist i1)))
     (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1)))))
-    with | @inl _ _ a => @inl (@sig Name (fun name : Name => @In Name name (ndlist i1))) (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    with | @inl _ _ a => @inl (@sig InfType (fun name : InfType => @In InfType name (ndlist i1))) (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
-    match a return (@sig Name (fun name : Name => @In Name name
-    (ndlist i1))) with | @exist _ _ b Qb =>  @exist Name (fun name : Name => @In Name name (ndlist i1)) b (match bij_i b return (forall _ : @In Name b (ndlist i2),  @In Name b (ndlist i1)) with | @conj _ _ _ H => H  end
-    (@eq_ind Name b (fun y : Name => @In Name y (ndlist i2)) Qb b (@Logic.eq_sym Name b b (@Logic.eq_refl Name (@funcomp Name Name Name (fun x : Name => x) (fun x : Name => x) b))))) end | @inr _ _ c => @inr (@sig Name (fun name : Name => @In Name name (ndlist i1))) (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1)) (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) => ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
+    match a return (@sig InfType (fun name : InfType => @In InfType name
+    (ndlist i1))) with | @exist _ _ b Qb =>  @exist InfType (fun name : InfType => @In InfType name (ndlist i1)) b (match bij_i b return (forall _ : @In InfType b (ndlist i2),  @In InfType b (ndlist i1)) with | @conj _ _ _ H => H  end
+    (@eq_ind InfType b (fun y : InfType => @In InfType y (ndlist i2)) Qb b (@Logic.eq_sym InfType b b (@Logic.eq_refl InfType (@funcomp InfType InfType InfType (fun x : InfType => x) (fun x : InfType => x) b))))) end | @inr _ _ c => @inr (@sig InfType (fun name : InfType => @In InfType name (ndlist i1))) (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1)) (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) => ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
     (@bij_dep_sum_2_forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun a : Finite.sort (@get_node s1 r1 i1 o1 b1) => ordinal (Arity
     (@get_control s2 r2 i2 o2 b2 (@forward (Finite.sort (@get_node s1 r1 i1 o1 b1)) (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n a))))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) => ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))) (fun a : Finite.sort (@get_node s1 r1 i1 o1 b1) => @bijection_inv (ordinal (Arity (@get_control s1 r1 i1 o1 b1
     a))) (ordinal (Arity (@get_control s2 r2 i2 o2 b2 (@forward (Finite.sort (@get_node s1 r1 i1 o1 b1)) (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n a)))) (bij_p a)) (@bij_dep_sum_1_forward (Finite.sort (@get_node s2 r2 i2 o2 b2)) (Finite.sort (@get_node s1 r1 i1 o1 b1)) (fun n : Finite.sort (@get_node s2 r2 i2 o2 b2) => ordinal (Arity (@get_control s2 r2 i2 o2 b2 n))) (@bijection_inv (Finite.sort (@get_node s1 r1 i1 o1 b1)) (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n) c)) end)) match ipa return
-    (sum (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    (sum (@sig InfType (fun name : InfType => @In InfType name (ndlist i1)))
     (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))) with | @inl _ _ a =>
-    @inl (@sig Name (fun name : Name => @In Name name (ndlist i1)))
-    (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1)) (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) => ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1)))) match a return (@sig Name (fun name : Name => @In Name name
-    (ndlist i1))) with | @exist _ _ b Qb => @exist Name (fun name : Name => @In Name name (ndlist i1)) b (match bij_i b return (forall _ : @In Name b (ndlist i2), @In Name b (ndlist i1)) with | @conj _ _ _ H => H end
-    (@eq_ind Name b (fun y : Name => @In Name y (ndlist i2)) Qb b (@Logic.eq_sym Name b b (@Logic.eq_refl Name (@funcomp Name Name Name (fun x : Name => x) (fun x : Name => x) b)))))
-    end | @inr _ _ c => @inr (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    @inl (@sig InfType (fun name : InfType => @In InfType name (ndlist i1)))
+    (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1)) (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) => ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1)))) match a return (@sig InfType (fun name : InfType => @In InfType name
+    (ndlist i1))) with | @exist _ _ b Qb => @exist InfType (fun name : InfType => @In InfType name (ndlist i1)) b (match bij_i b return (forall _ : @In InfType b (ndlist i2), @In InfType b (ndlist i1)) with | @conj _ _ _ H => H end
+    (@eq_ind InfType b (fun y : InfType => @In InfType y (ndlist i2)) Qb b (@Logic.eq_sym InfType b b (@Logic.eq_refl InfType (@funcomp InfType InfType InfType (fun x : InfType => x) (fun x : InfType => x) b)))))
+    end | @inr _ _ c => @inr (@sig InfType (fun name : InfType => @In InfType name (ndlist i1)))
     (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
@@ -621,26 +621,26 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
     ordinal (Arity (@get_control s2 r2 i2 o2 b2 n)))
     (@bijection_inv (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (Finite.sort (@get_node s2 r2 i2 o2 b2)) bij_n) c))
-    end (@Logic.eq_refl (sum (@sig Name (fun outer : Name => @In Name outer (ndlist o1)))
+    end (@Logic.eq_refl (sum (@sig InfType (fun outer : InfType => @In InfType outer (ndlist o1)))
     (Finite.sort (@get_edge s1 r1 i1 o1 b1)))
     (@get_link s1 r1 i1 o1 b1  match ipa return
-    (sum (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    (sum (@sig InfType (fun name : InfType => @In InfType name (ndlist i1)))
     (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1)))))
-    with | @inl _ _ a => @inl (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    with | @inl _ _ a => @inl (@sig InfType (fun name : InfType => @In InfType name (ndlist i1)))
     (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
-    match a return (@sig Name (fun name : Name => @In Name name
-    (ndlist i1))) with | @exist _ _ b Qb => @exist Name (fun name : Name => @In Name name (ndlist i1)) b (match bij_i b return
-    (forall _ : @In Name b (ndlist i2), @In Name b (ndlist i1))
+    match a return (@sig InfType (fun name : InfType => @In InfType name
+    (ndlist i1))) with | @exist _ _ b Qb => @exist InfType (fun name : InfType => @In InfType name (ndlist i1)) b (match bij_i b return
+    (forall _ : @In InfType b (ndlist i2), @In InfType b (ndlist i1))
     with | @conj _ _ _ H => H end
-    (@eq_ind Name b (fun y : Name => @In Name y (ndlist i2))
-    Qb b (@Logic.eq_sym Name b b (@Logic.eq_refl Name
-    (@funcomp Name Name Name (fun x : Name => x)
-    (fun x : Name => x) b)))))
-    end | @inr _ _ c => @inr (@sig Name (fun name : Name => @In Name name (ndlist i1))) (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
+    (@eq_ind InfType b (fun y : InfType => @In InfType y (ndlist i2))
+    Qb b (@Logic.eq_sym InfType b b (@Logic.eq_refl InfType
+    (@funcomp InfType InfType InfType (fun x : InfType => x)
+    (fun x : InfType => x) b)))))
+    end | @inr _ _ c => @inr (@sig InfType (fun name : InfType => @In InfType name (ndlist i1))) (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
     (@bij_dep_sum_2_forward (Finite.sort (@get_node s1 r1 i1 o1 b1))
@@ -666,25 +666,25 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
   intros.
   destruct ipa as [ia | pa]. 
   destruct (@get_link s1 r1 i1 o1 b1
-    (@inl (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    (@inl (@sig InfType (fun name : InfType => @In InfType name (ndlist i1)))
     (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
-    match ia return (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    match ia return (@sig InfType (fun name : InfType => @In InfType name (ndlist i1)))
     with
     | @exist _ _ b Qb =>
-    @exist Name (fun name : Name => @In Name name (ndlist i1)) b
+    @exist InfType (fun name : InfType => @In InfType name (ndlist i1)) b
     (match
-    bij_i b return (forall _ : @In Name b (ndlist i2),
-    @In Name b (ndlist i1))
+    bij_i b return (forall _ : @In InfType b (ndlist i2),
+    @In InfType b (ndlist i1))
     with
     | @conj _ _ _ H => H
     end
-    (@eq_ind Name b (fun y : Name => @In Name y (ndlist i2)) Qb b
-    (@Logic.eq_sym Name b b
-    (@Logic.eq_refl Name
-    (@funcomp Name Name Name (fun x : Name => x)
-    (fun x : Name => x) b)))))
+    (@eq_ind InfType b (fun y : InfType => @In InfType y (ndlist i2)) Qb b
+    (@Logic.eq_sym InfType b b
+    (@Logic.eq_refl InfType
+    (@funcomp InfType InfType InfType (fun x : InfType => x)
+    (fun x : InfType => x) b)))))
     end)) eqn:E'.
   f_equal. 
   destruct s0. destruct s3. 
@@ -722,7 +722,7 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
   rewrite <- (innername_proof_irrelevant b1 ((match bij_i ia with
     | conj _ H => H
     end
-    (eq_ind ia ((In (A:=Name))^~ i2) Hia ia
+    (eq_ind ia ((In (A:=InfType))^~ i2) Hia ia
     (Logic.eq_sym (erefl ((id <o> id) ia))))))) in L2. 
   destruct get_link.
   discriminate E'.
@@ -772,93 +772,93 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
   destruct ipa as [[ia Hia] | [pa Hpa]].
   unfold eq_ind_r.
   generalize (@ex_intro
-    (sum (@sig Name (fun inner : Name => @In Name inner (ndlist i1)))
+    (sum (@sig InfType (fun inner : InfType => @In InfType inner (ndlist i1)))
     (@Port (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (@get_control s1 r1 i1 o1 b1)))
     (fun
-    ip'' : sum (@sig Name (fun inner : Name => @In Name inner (ndlist i1)))
+    ip'' : sum (@sig InfType (fun inner : InfType => @In InfType inner (ndlist i1)))
     (@Port (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (@get_control s1 r1 i1 o1 b1)) =>
     @eq
-    (sum (@sig Name (fun outer : Name => @In Name outer (ndlist o1)))
+    (sum (@sig InfType (fun outer : InfType => @In InfType outer (ndlist o1)))
     (Finite.sort (@get_edge s1 r1 i1 o1 b1))) (@get_link s1 r1 i1 o1 b1
     ip'')
     (@get_link s1 r1 i1 o1 b1
-    (@inl (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    (@inl (@sig InfType (fun name : InfType => @In InfType name (ndlist i1)))
     (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
-    (@exist Name (fun name : Name => @In Name name (ndlist i1)) ia
+    (@exist InfType (fun name : InfType => @In InfType name (ndlist i1)) ia
     (match
     bij_i ia
-    return (forall _ : @In Name ia (ndlist i2),
-    @In Name ia (ndlist i1))
+    return (forall _ : @In InfType ia (ndlist i2),
+    @In InfType ia (ndlist i1))
     with
     | @conj _ _ _ H => H
     end
-    (@eq_ind Name ia (fun y : Name => @In Name y (ndlist i2))
+    (@eq_ind InfType ia (fun y : InfType => @In InfType y (ndlist i2))
     Hia ia
-    (@Logic.eq_sym Name ia ia
-    (@Logic.eq_refl Name
-    (@funcomp Name Name Name (fun x : Name => x)
-    (fun x : Name => x) ia)))))))))
-    (@inl (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    (@Logic.eq_sym InfType ia ia
+    (@Logic.eq_refl InfType
+    (@funcomp InfType InfType InfType (fun x : InfType => x)
+    (fun x : InfType => x) ia)))))))))
+    (@inl (@sig InfType (fun name : InfType => @In InfType name (ndlist i1)))
     (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
-    (@exist Name (fun name : Name => @In Name name (ndlist i1)) ia
+    (@exist InfType (fun name : InfType => @In InfType name (ndlist i1)) ia
     (match
     bij_i ia
-    return (forall _ : @In Name ia (ndlist i2), @In Name ia
+    return (forall _ : @In InfType ia (ndlist i2), @In InfType ia
     (ndlist i1))
     with
     | @conj _ _ _ H => H
     end
-    (@eq_ind Name ia (fun y : Name => @In Name y (ndlist i2)) Hia ia
-    (@Logic.eq_sym Name ia ia
-    (@Logic.eq_refl Name
-    (@funcomp Name Name Name (fun x : Name => x)
-    (fun x : Name => x) ia)))))))
+    (@eq_ind InfType ia (fun y : InfType => @In InfType y (ndlist i2)) Hia ia
+    (@Logic.eq_sym InfType ia ia
+    (@Logic.eq_refl InfType
+    (@funcomp InfType InfType InfType (fun x : InfType => x)
+    (fun x : InfType => x) ia)))))))
     (@Logic.eq_refl
-    (sum (@sig Name (fun outer : Name => @In Name outer (ndlist o1)))
+    (sum (@sig InfType (fun outer : InfType => @In InfType outer (ndlist o1)))
     (Finite.sort (@get_edge s1 r1 i1 o1 b1)))
     (@get_link s1 r1 i1 o1 b1
-    (@inl (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    (@inl (@sig InfType (fun name : InfType => @In InfType name (ndlist i1)))
     (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
-    (@exist Name (fun name : Name => @In Name name (ndlist i1)) ia
+    (@exist InfType (fun name : InfType => @In InfType name (ndlist i1)) ia
     (match
     bij_i ia
-    return (forall _ : @In Name ia (ndlist i2),
-    @In Name ia (ndlist i1))
+    return (forall _ : @In InfType ia (ndlist i2),
+    @In InfType ia (ndlist i1))
     with
     | @conj _ _ _ H => H
     end
-    (@eq_ind Name ia (fun y : Name => @In Name y (ndlist i2))
+    (@eq_ind InfType ia (fun y : InfType => @In InfType y (ndlist i2))
     Hia ia
-    (@Logic.eq_sym Name ia ia
-    (@Logic.eq_refl Name
-    (@funcomp Name Name Name (fun x : Name => x)
-    (fun x : Name => x) ia)))))))))).
+    (@Logic.eq_sym InfType ia ia
+    (@Logic.eq_refl InfType
+    (@funcomp InfType InfType InfType (fun x : InfType => x)
+    (fun x : InfType => x) ia)))))))))).
   intros.
   destruct (@get_link s1 r1 i1 o1 b1
-    (@inl (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    (@inl (@sig InfType (fun name : InfType => @In InfType name (ndlist i1)))
     (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
-    (@exist Name (fun name : Name => @In Name name (ndlist i1)) ia
+    (@exist InfType (fun name : InfType => @In InfType name (ndlist i1)) ia
     (match
-    bij_i ia return (forall _ : @In Name ia (ndlist i2),
-    @In Name ia (ndlist i1))
+    bij_i ia return (forall _ : @In InfType ia (ndlist i2),
+    @In InfType ia (ndlist i1))
     with
     | @conj _ _ _ H => H
     end
-    (@eq_ind Name ia (fun y : Name => @In Name y (ndlist i2)) Hia ia
-    (@Logic.eq_sym Name ia ia
-    (@Logic.eq_refl Name
-    (@funcomp Name Name Name (fun x : Name => x)
-    (fun x : Name => x) ia)))))))) eqn:L1.
+    (@eq_ind InfType ia (fun y : InfType => @In InfType y (ndlist i2)) Hia ia
+    (@Logic.eq_sym InfType ia ia
+    (@Logic.eq_refl InfType
+    (@funcomp InfType InfType InfType (fun x : InfType => x)
+    (fun x : InfType => x) ia)))))))) eqn:L1.
   exfalso.
   rewrite <- link_eq in L2.
   simpl in L2.
@@ -868,7 +868,7 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
   unfold funcomp in L2.
   erewrite <- (innername_proof_irrelevant b1 (match bij_i ia with
     | conj _ x0 => x0
-    end (eq_ind_r ((In (A:=Name))^~ i2) Hia (erefl ia)))) in L1.
+    end (eq_ind_r ((In (A:=InfType))^~ i2) Hia (erefl ia)))) in L1.
   destruct get_link.
   discriminate L2.
 
@@ -884,7 +884,7 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
   unfold funcomp in L2.
   rewrite <- (innername_proof_irrelevant b1 (match bij_i ia with
     | conj _ x0 => x0
-    end (eq_ind_r ((In (A:=Name))^~ i2) Hia (erefl ia)))) in L1.
+    end (eq_ind_r ((In (A:=InfType))^~ i2) Hia (erefl ia)))) in L1.
   destruct get_link.
   discriminate L1.
 
@@ -895,19 +895,19 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
 
   unfold eq_ind_r.
   generalize ((@ex_intro
-    (sum (@sig Name (fun inner : Name => @In Name inner (ndlist i1)))
+    (sum (@sig InfType (fun inner : InfType => @In InfType inner (ndlist i1)))
     (@Port (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (@get_control s1 r1 i1 o1 b1)))
     (fun
-    ip'' : sum (@sig Name (fun inner : Name => @In Name inner (ndlist i1)))
+    ip'' : sum (@sig InfType (fun inner : InfType => @In InfType inner (ndlist i1)))
     (@Port (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (@get_control s1 r1 i1 o1 b1)) =>
     @eq
-    (sum (@sig Name (fun outer : Name => @In Name outer (ndlist o1)))
+    (sum (@sig InfType (fun outer : InfType => @In InfType outer (ndlist o1)))
     (Finite.sort (@get_edge s1 r1 i1 o1 b1))) (@get_link s1 r1 i1 o1 b1
     ip'')
     (@get_link s1 r1 i1 o1 b1
-    (@inr (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    (@inr (@sig InfType (fun name : InfType => @In InfType name (ndlist i1)))
     (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
@@ -940,7 +940,7 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
     (fun n : Finite.sort (@get_node s2 r2 i2 o2 b2) =>
     ordinal (Arity (@get_control s2 r2 i2 o2 b2 n))) pa
     Hpa))))))
-    (@inr (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    (@inr (@sig InfType (fun name : InfType => @In InfType name (ndlist i1)))
     (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))
@@ -971,10 +971,10 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
     (fun n : Finite.sort (@get_node s2 r2 i2 o2 b2) =>
     ordinal (Arity (@get_control s2 r2 i2 o2 b2 n))) pa Hpa))))
     (@Logic.eq_refl
-    (sum (@sig Name (fun outer : Name => @In Name outer (ndlist o1)))
+    (sum (@sig InfType (fun outer : InfType => @In InfType outer (ndlist o1)))
     (Finite.sort (@get_edge s1 r1 i1 o1 b1)))
     (@get_link s1 r1 i1 o1 b1
-    (@inr (@sig Name (fun name : Name => @In Name name (ndlist i1)))
+    (@inr (@sig InfType (fun name : InfType => @In InfType name (ndlist i1)))
     (@sigT (Finite.sort (@get_node s1 r1 i1 o1 b1))
     (fun n1 : Finite.sort (@get_node s1 r1 i1 o1 b1) =>
     ordinal (Arity (@get_control s1 r1 i1 o1 b1 n1))))

@@ -24,7 +24,7 @@ From mathcomp Require Import all_ssreflect.
   This section deals with the operation of disjoint juxtaposition. This is the act
   of putting two bigraphs with disjoint interfaces "next" to one another. 
   After the definition, we prove existence of a unit, commutativity, associativity and congruence. *)
-Module TensorProduct (s : SignatureParameter) (n : NamesParameter).
+Module TensorProduct (s : SignatureParameter) (n : InfiniteParameter).
 Module c := CompositionBigraphs s n.
 Include c.
 
@@ -65,9 +65,9 @@ Definition bigraph_tensor_product {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList}
     ((bij_id <+> bijection_inv bij_ord_sum) <o>
       (bij_sum_shuffle <o> (parallel (get_parent (bg:=b1)) (get_parent (bg:=b2))) <o> (bijection_inv bij_sum_shuffle)) <o> 
       (bij_id <+> bij_ord_sum))
-    (((@bij_list_names o1 o2 (DN_D dis_o)) <+> bij_id) <o>
+    (((@bij_list_ndl o1 o2 (DN_D dis_o)) <+> bij_id) <o>
       bij_sum_shuffle <o> (parallel (get_link (bg:= b1)) (get_link (bg:= b2))) <o> (bijection_inv bij_sum_shuffle) <o> 
-      (bijection_inv ((@bij_list_names i1 i2 (DN_D dis_i)) <+> (bij_join_port (get_control (bg:= b1)) (get_control (bg:= b2))))))
+      (bijection_inv ((@bij_list_ndl i1 i2 (DN_D dis_i)) <+> (bij_join_port (get_control (bg:= b1)) (get_control (bg:= b2))))))
       FiniteParent_tensorproduct
     ).
   (* 
@@ -372,8 +372,8 @@ Theorem bigraph_tp_assoc :
               fun (_ : In i123 (app_merge i1 i2) -> ~ In i123 ndlist0) (_ : In i123 (app_merge (app_merge i1 i2) ndlist0))
               => nd0
           end (DN_D (disj_app_left i1 i2 i3 dis_i13 dis_i23) i123)
-            (in_app_merge_trans i123 (eq_ind_r (fun b : Name => In b (app_merge i1 (app_merge i2 i3))) i0 erefl)))
-          (in_app_merge_trans i123 (eq_ind_r (fun b : Name => In b (app_merge i1 (app_merge i2 i3))) i0 erefl))
+            (in_app_merge_trans i123 (eq_ind_r (fun b : InfType => In b (app_merge i1 (app_merge i2 i3))) i0 erefl)))
+          (in_app_merge_trans i123 (eq_ind_r (fun b : InfType => In b (app_merge i1 (app_merge i2 i3))) i0 erefl))
         with
         | inl i4 => False_ind (In i123 i3) (n i4)
         | inr i4 => i4
@@ -608,7 +608,7 @@ Theorem bigraph_tp_congruence :
       set (Hn' := 
         match bij_i12 i24 with
         | conj _ H => H
-        end (eq_ind_r (fun b : Name => In b i2) i6 erefl)).
+        end (eq_ind_r (fun b : InfType => In b i2) i6 erefl)).
       rewrite (innername_proof_irrelevant b1 i5 Hn').
       destruct get_link; try reflexivity.
       apply f_equal. destruct s0. apply subset_eq_compat. reflexivity.
@@ -625,16 +625,16 @@ Theorem bigraph_tp_congruence :
             end (DN_D dis_i13 i24)
               (match app_merge_cong bij_i12 bij_i34 i24 with
                 | conj _ H => H
-                end (eq_ind_r (fun b : Name => In b (app_merge i2 i4)) i0 erefl)) n)
+                end (eq_ind_r (fun b : InfType => In b (app_merge i2 i4)) i0 erefl)) n)
             (match i3 as n1 return ((In i24 i1 -> ~ In i24 n1) -> In i24 (app_merge i1 n1) -> NoDup n1) with
             | {| ndlist := ndlist0; nd := nd0 |} => fun (_ : In i24 i1 -> ~ In i24 ndlist0) (_ : In i24 (app_merge i1 ndlist0)) => nd0
             end (DN_D dis_i13 i24)
               (match app_merge_cong bij_i12 bij_i34 i24 with
                 | conj _ H => H
-                end (eq_ind_r (fun b : Name => In b (app_merge i2 i4)) i0 erefl)))
+                end (eq_ind_r (fun b : InfType => In b (app_merge i2 i4)) i0 erefl)))
             (match app_merge_cong bij_i12 bij_i34 i24 with
             | conj _ H => H
-            end (eq_ind_r (fun b : Name => In b (app_merge i2 i4)) i0 erefl))
+            end (eq_ind_r (fun b : InfType => In b (app_merge i2 i4)) i0 erefl))
         with
         | inl i5 => False_ind (In i24 i3) (n i5)
         | inr i5 => i5
@@ -692,8 +692,8 @@ Theorem arity_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r2 o2 s3 i3 r3 r4 o3i
   {dis_i12 : i1o3 # i2o4} {dis_o12 : o1 # o2}
   {dis_i34 : i3 # i4} {dis_o34 : o3i1 # o4i2}
   {eqs2r4 : MyEqNat s2 r4} {eqs1r3 : MyEqNat s1 r3} 
-  {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
-  {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)}
+  {p13 : PermutationNDL (ndlist o3i1) (ndlist i1o3)}
+  {p24 : PermutationNDL (ndlist o4i2) (ndlist i2o4)}
   (n12_34 : (get_node (b1 ⊗ b2 <<o>> (b3 ⊗ b4)))),
   Arity (get_control
     (bg:=(b1 ⊗ b2) <<o>> (b3 ⊗ b4)) n12_34) =
@@ -715,8 +715,8 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r3 r4 r2 o2 s3 i3 o
   {dis_i12 : i1o3 # i2o4} {dis_o12 : o1 # o2}
   {dis_i34 : i3 # i4} {dis_o34 : o3i1 # o4i2}
   {eqs2r4 : MyEqNat s2 r4} {eqs1r3 : MyEqNat s1 r3} 
-  {p13 : PermutationNames (ndlist o3i1) (ndlist i1o3)}
-  {p24 : PermutationNames (ndlist o4i2) (ndlist i2o4)},
+  {p13 : PermutationNDL (ndlist o3i1) (ndlist i1o3)}
+  {p24 : PermutationNDL (ndlist o4i2) (ndlist i2o4)},
   support_equivalence 
   ((b1 ⊗ b2) <<o>> (b3 ⊗ b4))
   ((b1 <<o>> b3) ⊗ (b2 <<o>> b4)).
@@ -728,9 +728,9 @@ Theorem bigraph_comp_tp_dist : forall {s1 i1o3 r1 o1 s2 i2o4 r3 r4 r2 o2 s3 i3 o
     ((b1 ⊗ b2) <<o>> (b3 ⊗ b4)) 
     ((b1 <<o>> b3) ⊗ (b2 <<o>> b4))
     (reflexivity (s3 + s4)) (*s3 + s4*)
-    reflnames (*i3 + i4*)
+    reflFinSub (*i3 + i4*)
     (reflexivity (r1 + r2)) (*r1 + r2*)
-    reflnames (*o1 + o2*)
+    reflFinSub (*o1 + o2*)
     bij_sum_shuffle(* n1 + n2 + n3 + n4*)
     bij_sum_shuffle (* e1 + e2 + e3 + e4 *)
     (fun n12_34 => bij_rew (arity_comp_tp_dist b1 b2 b3 b4 n12_34)) (* Port *)
@@ -945,11 +945,11 @@ Theorem merge_well_defined : forall n,
 Section PTP.
 Class DisjointNamesPacked (b1 b2 : bigraph_packed) :=
   { 
-    disj_inner :: DisjointNames (i b1) (i b2);
-    disj_outer :: DisjointNames (o b1) (o b2)
+    disj_inner :: DisjointNDL (i b1) (i b2);
+    disj_outer :: DisjointNDL (o b1) (o b2)
   }.
   
-Definition disj_packed (b1 b2 : bigraph_packed) (Disji12 : DisjointNames (i b1) (i b2)) (Disjo12 : DisjointNames (o b1) (o b2)) : 
+Definition disj_packed (b1 b2 : bigraph_packed) (Disji12 : DisjointNDL (i b1) (i b2)) (Disjo12 : DisjointNDL (o b1) (o b2)) : 
   DisjointNamesPacked b1 b2.
   Proof.
   constructor.
