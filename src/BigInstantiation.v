@@ -129,7 +129,7 @@ Example simplBig :
   destruct f as [i Hi].
   induction i as [|i' Hi'] eqn:Ei.
   *** right. exact tt.
-  *** left. unfold NameSub. exists a.  
+  *** left. unfold ListType. exists a.  
   unfold aNDL. simpl.
   left. reflexivity. }
   2:{ intros [n|s]. 
@@ -149,8 +149,8 @@ Definition myparent (ns : type findec_bool + fin 1) :
   type findec_bool + fin 1 :=
   match ns with | inl n => inr zero1 | inr s => inl false end.
 
-Definition mylink (ip : NameSub bNDL + Port mycontrol) : 
-  NameSub aNDL +  type findec_unit.
+Definition mylink (ip : ListType bNDL + Port mycontrol) : 
+  ListType aNDL +  type findec_unit.
 Proof.
   destruct ip as [b|p].
   + right. exact tt.
@@ -158,7 +158,7 @@ Proof.
   * destruct ps as [i Hi].
   induction i as [|i' Hi'] eqn:Ei.
   *** right. exact tt.
-  *** left. unfold NameSub. exists a.  
+  *** left. unfold ListType. exists a.  
   unfold aNDL. simpl.
   left. reflexivity.
   * right. exact tt. 
@@ -387,14 +387,14 @@ Definition parentComponent (ns : type MyNodesFDT + fin 2) :
     end
 end.
 
-Definition linkComponent (ip : NameSub EmptyNDL + Port controlComponent) : 
-  NameSub eNDL +  type voidfd.
+Definition linkComponent (ip : ListType EmptyNDL + Port controlComponent) : 
+  ListType eNDL +  type voidfd.
 Proof.
   destruct ip as [b|p].
   + destruct b; elim i0.
   + destruct p as [n ps]. 
   destruct n eqn:E; simpl in ps; unfold Arity,id in ps; destruct ps as [i Hi]; try apply Nat.nlt_0_r in Hi; try elim Hi.
-  left. unfold NameSub. exists e. constructor. reflexivity.
+  left. unfold ListType. exists e. constructor. reflexivity.
 Defined. 
 
 Example componentBig : 

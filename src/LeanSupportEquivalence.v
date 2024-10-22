@@ -57,11 +57,11 @@ Axiom onto_Onto : forall [A : Type] (lA : list A) (a : { a : A | In a lA }), In 
 
 
 (*** GET LIST OF INNERNAMES ***)
-Definition make_seq_NameSub (l:list Name) : list {n:Name| In n l}
+Definition make_seq_ListType (l:list Name) : list {n:Name| In n l}
   := onto l.
 
-Lemma wf_make_seq_NameSub {l} (inner:NameSub l) : 
-  In inner (make_seq_NameSub (ndlist l)).
+Lemma wf_make_seq_ListType {l} (inner:ListType l) : 
+  In inner (make_seq_ListType (ndlist l)).
   Proof.
   apply onto_Onto.
   Qed.
@@ -90,12 +90,12 @@ Lemma wf_make_seq_Port {s i r o} (b:bigraph s i r o)
 (*** IDLE EDGES ***************************************)
 Definition not_is_idle {s i r o} {b:bigraph s i r o} (e: get_edge b) : bool := 
   Coq.Lists.List.existsb 
-    (A := NameSub i)
+    (A := ListType i)
     (fun i => match (get_link (bg:=b)) (inl i) with 
       |inl _ => false 
       |inr e' => e == e'
       end) 
-    (make_seq_NameSub (ndlist i))
+    (make_seq_ListType (ndlist i))
   || 
   Coq.Lists.List.existsb 
     (A := get_node b)
@@ -111,7 +111,7 @@ Definition not_is_idle {s i r o} {b:bigraph s i r o} (e: get_edge b) : bool :=
 
 
 
-Lemma exists_inner_implies_not_idle {s i r o} {b:bigraph s i r o} (i':NameSub i) (e: get_edge b) : 
+Lemma exists_inner_implies_not_idle {s i r o} {b:bigraph s i r o} (i':ListType i) (e: get_edge b) : 
   get_link (bg:=b) (inl i') = (inr e) -> 
     not_is_idle e.
   Proof.
@@ -122,12 +122,12 @@ Lemma exists_inner_implies_not_idle {s i r o} {b:bigraph s i r o} (i':NameSub i)
   unfold List.existsb.
   apply existsb_exists. exists i'.
   rewrite H. split.
-  - apply wf_make_seq_NameSub.
+  - apply wf_make_seq_ListType.
   - by apply/eqP. 
   Qed.
 
 Lemma exists_inner_implies_not_idle_exists {s i r o} {b:bigraph s i r o} (e: get_edge b) :
-  (exists (i':NameSub i),
+  (exists (i':ListType i),
   get_link (bg:=b) (inl i') = (inr e)) -> 
     not_is_idle e.
   Proof.
@@ -170,7 +170,7 @@ Lemma exists_port_implies_not_idle_exists {s i r o} {b:bigraph s i r o} (e: get_
 
 
 Lemma exist_implies_not_idle_exists {s i r o} {b:bigraph s i r o} (e: get_edge b) : 
-  (exists (ip:NameSub i + Port (get_control (bg:=b))),
+  (exists (ip:ListType i + Port (get_control (bg:=b))),
   get_link (bg:=b) (ip) = (inr e)) -> 
     not_is_idle e.
   Proof.
@@ -278,7 +278,7 @@ Record place_graph_support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupL
 
 Theorem lean_bigraph_same_bigraph {s i r o} (b:bigraph s i r o) :
   place_graph_support_equivalence b (lean b) /\ 
-  forall (ip : NameSub i + Port (get_control (bg := b))),
+  forall (ip : ListType i + Port (get_control (bg := b))),
     match (get_link (bg:=b) ip) with 
     | inl outer => 
       match (get_link (bg:=lean b) ip) with  

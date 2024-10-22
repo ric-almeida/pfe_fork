@@ -44,21 +44,36 @@ Include n.
   This section defines the Type bigraph *)
 Section IntroBigraphs.
 
+
 Record bigraph  (site: nat) 
                 (innername: NoDupList) 
                 (root: nat) 
                 (outername: NoDupList) : Type := 
   Big  
   { 
-    node : finType ;
-    edge : finType ;
-    control : node -> Kappa ;
-    parent : node + ordinal site ->  node + ordinal root ; 
+    node : NoDupList ;
+    edge : NoDupList ;
+    control : ListType node -> Kappa ;
+    parent : ListType node + ordinal site -> ListType node + ordinal root ; 
     link : ListType innername + Port control -> 
-                (ListType outername) + edge; 
+                (ListType outername) + ListType edge; 
     ap : FiniteParent parent ;
   }.
   
+Record bigraph  (site: nat) 
+                (innername: NoDupList) 
+                (root: nat) 
+                (outername: NoDupList) : Type := 
+  Big  
+  { 
+    node : NoDupList ;
+    edge : NoDupList ;
+    control : node -> Kappa ;
+    parent : ListType node + ordinal site ->  ListType node + ordinal root ; 
+    link : ListType innername + Port control -> 
+                (ListType outername) + ListType edge; 
+    ap : FiniteParent parent ;
+  }.
 
 End IntroBigraphs.
 

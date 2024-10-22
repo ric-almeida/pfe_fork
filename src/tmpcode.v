@@ -1,4 +1,4 @@
-Definition make_seq_NameSubnat (l:list nat) : list {n:nat| In n l}.
+Definition make_seq_ListTypenat (l:list nat) : list {n:nat| In n l}.
   Proof.
   (*eapply (
     map 
@@ -25,8 +25,8 @@ Definition make_seq_NameSubnat (l:list nat) : list {n:nat| In n l}.
   simpl. left. reflexivity.
   Defined.
 
-Eval compute in  (make_seq_NameSubnat (1::2::[])).  
-Print make_seq_NameSubnat.
+Eval compute in  (make_seq_ListTypenat (1::2::[])).  
+Print make_seq_ListTypenat.
 
 
 Definition add_t_to_subset_list {q} (t:Name) 
@@ -40,7 +40,7 @@ Definition add_t_to_subset_list {q} (t:Name)
 Definition aux (n:Name) (l:list Name) (hin: In n l) := 
   @exist _ (fun n => In n l) n hin.
 
-(* Definition make_seq_NameSub (l:list Name) : list {n:Name| In n l}.
+(* Definition make_seq_ListType (l:list Name) : list {n:Name| In n l}.
   Proof.
   simpl.
   induction l as [|tl ql IHl].
@@ -48,9 +48,9 @@ Definition aux (n:Name) (l:list Name) (hin: In n l) :=
   - apply (@exist _ _ tl (or_introl (erefl tl))::(add_t_to_subset_list tl IHl)).
   Defined.
 Check list_rect.
-  Print make_seq_NameSub. *)
+  Print make_seq_ListType. *)
 
-Definition make_seq_NameSub (l:list Name) : list {n:Name| In n l}.
+Definition make_seq_ListType (l:list Name) : list {n:Name| In n l}.
   Proof.
   simpl.
   induction l as [|tl ql IHl].
@@ -63,9 +63,9 @@ Definition from_tlql_to_ql
   {tl : Name}
   {ql : seq Name}
   {ndl : NoDup (tl :: ql)}
-  (inner : NameSub {| ndlist := tl :: ql; nd := ndl |})
+  (inner : ListType {| ndlist := tl :: ql; nd := ndl |})
   (Hinner : In (sval inner) ql) : 
-  NameSub {| ndlist := ql; nd := nodup_tl tl ql ndl |}.
+  ListType {| ndlist := ql; nd := nodup_tl tl ql ndl |}.
   Proof.
   destruct inner as [iname Hiname]. exists iname. simpl in *.
   destruct Hiname. subst tl. apply Hinner. apply H. 
@@ -75,18 +75,18 @@ Lemma proj_eq_tlql
   {tl : Name}
   {ql : seq Name}
   {ndl : NoDup (tl :: ql)}
-  (inner : NameSub {| ndlist := tl :: ql; nd := ndl |})
+  (inner : ListType {| ndlist := tl :: ql; nd := ndl |})
   (Hinner : In (sval inner) ql) : 
   sval (from_tlql_to_ql inner Hinner) = sval inner.
   Proof. 
   destruct inner. reflexivity.
   Qed.
 
-(* Lemma add_t_to_subset_list_change_nothing {tl : Name} {ql : seq Name} {ndl : NoDup (tl :: ql)} (inner : NameSub {| ndlist := tl :: ql; nd := ndl |})
+(* Lemma add_t_to_subset_list_change_nothing {tl : Name} {ql : seq Name} {ndl : NoDup (tl :: ql)} (inner : ListType {| ndlist := tl :: ql; nd := ndl |})
   (Hinner : In (sval inner) ql ): 
-  In (from_tlql_to_ql inner Hinner) (make_seq_NameSub ql)
+  In (from_tlql_to_ql inner Hinner) (make_seq_ListType ql)
     ->
-  In inner (add_t_to_subset_list (make_seq_NameSub ql) tl). 
+  In inner (add_t_to_subset_list (make_seq_ListType ql) tl). 
   Proof.
   destruct (from_tlql_to_ql inner Hinner) as [iname' Hiname'] eqn:E'.
   set (proj_eq_tlql inner Hinner). 
@@ -115,13 +115,13 @@ Lemma proj_eq_tlql
   (ql : seq Name)
   (n : Name)
   (Hinner : In n ql) :
-  In (exist ((In (A:=Name))^~ ql) n Hinner) (make_seq_NameSub ql)
+  In (exist ((In (A:=Name))^~ ql) n Hinner) (make_seq_ListType ql)
   ->
   In (exist ((In (A:=Name))^~ (tl :: ql)) n (or_intror Hinner))
-    (add_t_to_subset_list (make_seq_NameSub ql) tl).
+    (add_t_to_subset_list (make_seq_ListType ql) tl).
   Proof. 
   intros. Check in_map.
-  induction (make_seq_NameSub ql); simpl in *.
+  induction (make_seq_ListType ql); simpl in *.
   - apply H.
   - 
 
@@ -129,8 +129,8 @@ Lemma proj_eq_tlql
   Admitted. *)
 
 
-(* Lemma wf_make_seq_NameSub {l} (n:Name) (hin: In n l) : 
-  In (exist _ n hin) (make_seq_NameSub l).
+(* Lemma wf_make_seq_ListType {l} (n:Name) (hin: In n l) : 
+  In (exist _ n hin) (make_seq_ListType l).
   Proof.
   induction l as [|tl ql IHl].
   - elim hin.
@@ -142,8 +142,8 @@ Lemma proj_eq_tlql
   Qed. *)
 
 
-Lemma wf_make_seq_NameSub {l} (inner:NameSub l) : 
-  In inner (make_seq_NameSub (ndlist l)).
+Lemma wf_make_seq_ListType {l} (inner:ListType l) : 
+  In inner (make_seq_ListType (ndlist l)).
   Proof.
   destruct l as [l ndl].
   simpl in *.
@@ -187,10 +187,10 @@ Lemma card_bool : #|{: bool}| = 2. Proof. by rewrite cardT enumT unlock. Qed. *)
 
 
 
-Fixpoint aux_is_lean {i p o e} {l: NameSub i + p -> NameSub o + e} e' :=
+Fixpoint aux_is_lean {i p o e} {l: ListType i + p -> ListType o + e} e' :=
   match e' with 
   | [] => True 
-  | e''::q => exists ip:NameSub i + p, l ip = inr e'' /\ @aux_is_lean i p o e l q
+  | e''::q => exists ip:ListType i + p, l ip = inr e'' /\ @aux_is_lean i p o e l q
   end.
 
 Definition is_lean' {s i r o} (b:bigraph s i r o) :=

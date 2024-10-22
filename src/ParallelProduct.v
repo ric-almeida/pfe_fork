@@ -38,8 +38,8 @@ Set Typeclasses Iterative Deepening.
 Definition link_juxt {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2)
   (*{up : union_possible b1 b2} Ii don't use it in this definition though*)
-  (ip :NameSub (i1 ∪ i2) + Port (join (get_control (bg:=b1)) (get_control (bg:=b2)))) :
-  NameSub (o1 ∪ o2) +  ((get_edge b1) + (get_edge b2)). 
+  (ip :ListType (i1 ∪ i2) + Port (join (get_control (bg:=b1)) (get_control (bg:=b2)))) :
+  ListType (o1 ∪ o2) +  ((get_edge b1) + (get_edge b2)). 
   Proof.
   destruct ip as [[n npf] | p].
   + (*inner*)  

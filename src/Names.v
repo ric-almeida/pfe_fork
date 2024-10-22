@@ -903,15 +903,15 @@ End DisjointLists.
 Global Notation "l1 # l2" := (DisjointNames l1 l2) (at level 50, left associativity). 
 
 
-Section NameSubsets.
-Definition NameSub (nl : NoDupList) : Type :=
+Section ListTypesets.
+Definition ListType (nl : NoDupList) : Type :=
   {name:Name | In name nl}.
 Remark nodupproofirrelevantns : forall l1 l2, 
-    ndlist l1 = ndlist l2 -> NameSub l1 = NameSub l2.
-    Proof. intros. unfold NameSub. rewrite H. reflexivity. Qed. 
+    ndlist l1 = ndlist l2 -> ListType l1 = ListType l2.
+    Proof. intros. unfold ListType. rewrite H. reflexivity. Qed. 
 
 Definition bij_list_forward (i1:NoDupList) (i2:NoDupList) : 
-  (NameSub i1) + (NameSub i2) ->  NameSub (app_merge_NoDupList i1 i2).
+  (ListType i1) + (ListType i2) ->  ListType (app_merge_NoDupList i1 i2).
   Proof.
   refine (fun name => match name with
                 | inl (exist name' H1) => _
@@ -925,9 +925,9 @@ Definition bij_list_forward (i1:NoDupList) (i2:NoDupList) :
 
 
 Definition bij_list_backward (i1:NoDupList) (i2:NoDupList) :
-  NameSub (app_merge_NoDupList i1 i2)
+  ListType (app_merge_NoDupList i1 i2)
   ->
-  (NameSub i1) + (NameSub i2).
+  (ListType i1) + (ListType i2).
   Proof.
   destruct i1 as [i1 ndi1].
   destruct i2 as [i2 ndi2]. simpl.
@@ -936,9 +936,9 @@ Definition bij_list_backward (i1:NoDupList) (i2:NoDupList) :
   Defined.
 
 Definition bij_list_backward' (i1:NoDupList) (i2:NoDupList) {dis_i:Disjoint i1 i2}:
-  NameSub (app_merge_NoDupList i1 i2)
+  ListType (app_merge_NoDupList i1 i2)
   ->
-  (NameSub i1) + (NameSub i2).
+  (ListType i1) + (ListType i2).
   Proof.
   unfold Disjoint in dis_i.
   intros.
@@ -955,7 +955,7 @@ Definition bij_list_backward' (i1:NoDupList) (i2:NoDupList) {dis_i:Disjoint i1 i
   
 
 Definition bij_list_names (i1:NoDupList) (i2:NoDupList) {dis_i:Disjoint i1 i2} : 
-  bijection ((NameSub i1) + (NameSub i2)) (NameSub (app_merge_NoDupList i1 i2)).
+  bijection ((ListType i1) + (ListType i2)) (ListType (app_merge_NoDupList i1 i2)).
   Proof.
   apply 
   (mkBijection _ _ 
@@ -982,7 +982,7 @@ Definition bij_list_names (i1:NoDupList) (i2:NoDupList) {dis_i:Disjoint i1 i2} :
   unfold Disjoint in dis_i. apply dis_i in i. apply i. apply Hini2.
   * apply f_equal. apply subset_eq_compat. reflexivity.
   Defined.
-End NameSubsets.
+End ListTypesets.
 
 
 
@@ -1126,19 +1126,19 @@ Definition intersectionNDL (i1 i2 : NoDupList) : NoDupList.
     apply nodup_tl in nd1. apply nd1.
   Defined.
 
-Definition to_left {i1 i2 : NoDupList} (i : NameSub(intersectionNDL i1 i2))
-  : NameSub i1.
+Definition to_left {i1 i2 : NoDupList} (i : ListType(intersectionNDL i1 i2))
+  : ListType i1.
   Proof.
-    unfold NameSub.
+    unfold ListType.
     destruct i.
     exists x.
     apply from_intersection_left in i. apply i.
   Defined.
 
-Definition to_right {i1 i2 : NoDupList} (i : NameSub(intersectionNDL i1 i2))
-  : NameSub i2.
+Definition to_right {i1 i2 : NoDupList} (i : ListType(intersectionNDL i1 i2))
+  : ListType i2.
   Proof.
-    unfold NameSub.
+    unfold ListType.
     destruct i.
     exists x.
     apply from_intersection_right in i. apply i.
@@ -1146,9 +1146,9 @@ Definition to_right {i1 i2 : NoDupList} (i : NameSub(intersectionNDL i1 i2))
 
 Definition to_intersection {i1 i2 : NoDupList}
   (name:Name) (ini1 : In name i1) (ini2 : In name i2) : 
-    NameSub (intersectionNDL i1 i2).
+    ListType (intersectionNDL i1 i2).
     Proof. 
-    unfold NameSub.
+    unfold ListType.
     exists name.
     unfold intersectionNDL.
     simpl.
@@ -1157,20 +1157,20 @@ Definition to_intersection {i1 i2 : NoDupList}
     Defined.
 
 Definition to_commute {i1 i2 : NoDupList}
-  (name:NameSub (intersectionNDL i1 i2)) : 
-    NameSub (intersectionNDL i2 i1).
+  (name:ListType (intersectionNDL i1 i2)) : 
+    ListType (intersectionNDL i2 i1).
     Proof. 
-    unfold NameSub in *.
+    unfold ListType in *.
     destruct name as [name H].
     exists name.
     apply intersection_commutes.
     apply H.
     Defined.
 
-Lemma NameSub_merge_proof_irrelevance {t q ndl} :
-  NameSub (OneelNDL t ∪ 
+Lemma ListType_merge_proof_irrelevance {t q ndl} :
+  ListType (OneelNDL t ∪ 
     {| ndlist := q; nd := nodup_tl t q ndl |}) = 
-  NameSub ({| ndlist := t :: q; nd := ndl |}).
+  ListType ({| ndlist := t :: q; nd := ndl |}).
   Proof.
   apply nodupproofirrelevantns. simpl.
   destruct (in_dec EqDecN t q).

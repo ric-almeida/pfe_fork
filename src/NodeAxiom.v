@@ -211,13 +211,13 @@ Admitted.
 
 Definition mkLinkRenaming (i:NoDupList) (o:NoDupList) 
   {Hlen : length i = length o}: 
-  NameSub i + Port void_univ_embedding -> NameSub o + void.
+  ListType i + Port void_univ_embedding -> ListType o + void.
   Proof.
   intros [[inner Hinner]|[v _]];try destruct v.
   left.
   destruct i as [i ndi].
   destruct o as [o ndo].
-  unfold NameSub in *.
+  unfold ListType in *.
   exists (nth (index inner i) o DefaultName).
   simpl in *.
   apply nthIn.

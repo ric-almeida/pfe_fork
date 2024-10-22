@@ -30,7 +30,7 @@ Include tp.
 
 Definition union_possible {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) :=
-  forall (i : NameSub (i1 ∩ i2)),
+  forall (i : ListType (i1 ∩ i2)),
   match (get_link (bg:=b1) (inl (to_left i))) with
   | inr e => False
   | inl o1' => 
@@ -69,7 +69,7 @@ Lemma union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
   Proof.
     destruct up12 as [up12]. constructor.
     unfold union_possible in *.
-    unfold NameSub in *.
+    unfold ListType in *.
     intros i.
     specialize (up12 (to_commute i)).
     unfold to_commute in up12.
@@ -108,7 +108,7 @@ Lemma union_possible_commutes {s1 i1 r1 o1 s2 i2 r2 o2}
     destruct up12 as [up12].
     destruct up34 as [up34].
     constructor.
-    unfold union_possible, NameSub in *.
+    unfold union_possible, ListType in *.
     unfold bigraph_composition.
     simpl. 
     intros.
