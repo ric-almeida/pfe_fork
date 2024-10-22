@@ -708,7 +708,7 @@ Theorem support_equivalence_implies_lean_support_equivalence {s1 r1 s2 r2 : nat}
   inversion L2.
   reflexivity.
 
-
+ 
   discriminate E'.
 
   exfalso.
