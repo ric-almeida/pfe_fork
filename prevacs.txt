@@ -6,7 +6,7 @@ model checking sur nos programmes, Lucas nous envoie son code
 
 
 coq : 
-Finir BigInstantiation le module sur les Names 
+Finir BigInstantiation le module sur les InfSets 
 
 passer au pattern matching 
 

@@ -15,7 +15,7 @@ Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.
 Require Import PropExtensionality.
 Require Import SignatureBig.
-Require Import Names.
+Require Import InfSets.
 
 
 Require Import Coq.Lists.List.
@@ -35,9 +35,9 @@ Include MyEqNat.
 Import ListNotations.
 
 (** This module implements bigraphs and basic operations on bigraphs *)
-Module Bigraphs (sp : SignatureParameter) (np : Names.InfiniteParameter).
+Module Bigraphs (sp : SignatureParameter) (np : InfSets.InfiniteParameter).
 Module s := Signature sp.
-Module n := Names np.
+Module n := InfSets np.
 Include s.
 Include n.
 (** * Definition of a bigraph

@@ -1,8 +1,8 @@
 Set Warnings "-notation-overridden, -parsing, -masking-absolute-name, -cannot-define-projection".
 
-Require Import AbstractBigraphs.
+Require Import ConcreteBigraphs.
 Require Import Bijections.
-Require Import Names.
+Require Import InfSets.
 Require Import SignatureBig.
 Require Import MyBasics.
 Require Import MathCompAddings.

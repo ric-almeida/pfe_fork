@@ -1,8 +1,8 @@
 Set Warnings "-notation-overridden, -parsing, -masking-absolute-name, -cannot-define-projection".
 
-Require Import AbstractBigraphs.
+Require Import ConcreteBigraphs.
 Require Import Bijections.
-Require Import Names.
+Require Import InfSets.
 Require Import SignatureBig.
 Require Import MyBasics.
 Require Import MathCompAddings.
@@ -36,62 +36,178 @@ Import ListNotations.
   We prove that our relation support_equivalence is reflexive, 
   symmetric and transitive. This is going to be useful to be able to rewrite 
   bigraphs at will. *)
-Module SupportEquivalenceBigraphs (s : SignatureParameter) (n : InfiniteParameter).
-Module b := Bigraphs s n.
-Include b. 
+Module SupportEquivalenceBigraphs (s : SignatureParameter)
+  (np : InfiniteParameter)
+  (vp : InfiniteParameter)
+  (ep : InfiniteParameter).
+Module b := Bigraphs s np vp ep.
+Import b. 
+
 
 (** ** On the heterogeneous type *)
-Record support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
+Record support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : n.NoDupList} 
   (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
   SupEq
   {
     bij_s : s1 = s2 ;
-    bij_i : permutation i1 i2 ; (*Permutation i1 i2*)
+    bij_i : n.permutation (n.ndlist i1) (n.ndlist i2) ; 
     bij_r : r1 = r2 ;
-    bij_o : permutation o1 o2 ;
-    bij_n : bijection (get_node b1) (get_node b2);
-    bij_e : bijection (get_edge b1) (get_edge b2);
-    bij_p : forall (n1 : (get_node b1)), bijection ('I_(Arity (get_control (bg:=b1) n1))) ('I_(Arity (get_control (bg:=b2) (bij_n n1)))) ;
-    big_control_eq : (bij_n -->> (@bij_id Kappa)) (get_control (bg:=b1)) = get_control (bg:=b2) ;
-    big_parent_eq : ((bij_n <+> (bij_rew bij_s)) -->> (bij_n <+> ((bij_rew bij_r)))) (get_parent (bg:=b1)) = get_parent (bg:=b2) ;
-    big_link_eq : ((<{bij_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{bij_id| bij_o}> <+> bij_e)) (get_link (bg := b1)) = get_link (bg := b2)
+    bij_o : n.permutation (n.ndlist o1) (n.ndlist o2) ; 
+    bij_n : v.permutation (v.ndlist (get_node b1)) (v.ndlist (get_node b2));
+    bij_e : e.permutation (e.ndlist (get_edge b1)) (e.ndlist (get_edge b2));
+    bij_p : forall (n1 : v.ListType (get_node b1)),
+      bijection 
+        ('I_(Arity (get_control (bg:=b1) n1))) 
+        ('I_(Arity (get_control (bg:=b2) (<{bij_id | bij_n}> n1)))) ;
+    big_control_eq : (<{bij_id | bij_n}> -->> (@bij_id Kappa)) (get_control (bg:=b1)) = get_control (bg:=b2) ;
+    big_parent_eq : ((<{bij_id | bij_n}> <+> (bij_rew bij_s)) -->> (<{bij_id | bij_n}> <+> ((bij_rew bij_r)))) (get_parent (bg:=b1)) = get_parent (bg:=b2) ;
+    big_link_eq : ((<{bij_id | bij_i}> <+> <{ <{bij_id | bij_n}> & bij_p }>) -->> (<{bij_id| bij_o}> <+> <{bij_id | bij_e}>)) (get_link (bg := b1)) = get_link (bg := b2)
   }.
 
-(* Record support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : NoDupList} 
-  (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) : Prop :=
-  SupEq
-  {
-    bij_s : s1 = s2 ;
-    bij_i : permutation i1 i2 ; (*Permutation i1 i2*)
-    bij_r : r1 = r2 ;
-    bij_o : permutation o1 o2 ;
-    bij_n : permutation (get_node b1) (get_node b2);
-    bij_e : permutation (get_edge b1) (get_edge b2);
-    bij_p : forall (n1 : (get_node b1)), bijection ('I_(Arity (get_control (bg:=b1) n1))) ('I_(Arity (get_control (bg:=b2) (bij_n n1)))) ;
-    big_control_eq : (<{bij_id | bij_n}> -->> (@bij_id Kappa)) (get_control (bg:=b1)) = get_control (bg:=b2) ;
-    big_parent_eq : ((bij_n <+> (bij_rew bij_s)) -->> (bij_n <+> ((bij_rew bij_r)))) (get_parent (bg:=b1)) = get_parent (bg:=b2) ;
-    big_link_eq : ((<{bij_id | bij_i}> <+> <{ bij_n & bij_p }>) -->> (<{bij_id| bij_o}> <+> bij_e)) (get_link (bg := b1)) = get_link (bg := b2)
-  }. *)
-  
-Lemma support_equivalence_refl {s r : nat} {i o : NoDupList} (b : bigraph s i r o) :
+Lemma bij_subset_v_permutation_id {s r} {i o} (b : bigraph s i r o) : 
+  <{ bij_id | v.permutation_id (v.ndlist (get_node b)) }> = bij_id.
+  Proof.
+  apply Bijections.bij_eq;simpl; apply functional_extensionality; intros [node Hnode].
+  unfold bij_subset_forward. apply subset_eq_compat. reflexivity.
+  unfold bij_subset_backward. apply subset_eq_compat. reflexivity.
+  Qed.
+
+Lemma bij_subset_e_permutation_id {s r} {i o} (b : bigraph s i r o) : 
+  <{ bij_id | e.permutation_id (e.ndlist (get_edge b)) }> = bij_id.
+  Proof.
+  apply Bijections.bij_eq;simpl; apply functional_extensionality; intros [node Hnode].
+  unfold bij_subset_forward. apply subset_eq_compat. reflexivity.
+  unfold bij_subset_backward. apply subset_eq_compat. reflexivity.
+  Qed.
+
+Lemma bij_subset_n_permutation_id {l} : 
+  <{ bij_id | n.permutation_id l }> = bij_id.
+  Proof.
+  apply Bijections.bij_eq;simpl; apply functional_extensionality; intros [name Hname].
+  unfold bij_subset_forward. apply subset_eq_compat. reflexivity.
+  unfold bij_subset_backward. apply subset_eq_compat. reflexivity.
+  Qed.
+
+Lemma eq_rect_bij_id {s r} {i o} (b : bigraph s i r o)
+  (n1 : v.ListType (get_node b)) : 
+  forall p,
+  nat_of_ord (eq_rect bij_id
+    (fun y : bijection 
+      {x : v.InfType | In x (v.ndlist (get_node b))} 
+      {x : v.InfType | In x (v.ndlist (get_node b))} =>
+        bijection 
+          'I_(Arity (get_control (bg:=b) n1))
+          'I_(Arity (get_control (bg:=b) (y n1)))) 
+    bij_id
+    <{ bij_id | v.permutation_id (v.ndlist (get_node b)) }>
+    (Logic.eq_sym (bij_subset_v_permutation_id b)) p) = nat_of_ord p.
+  intros. unfold eq_rect.
+  destruct p. simpl. 
+
+  Admitted.
+
+Lemma support_equivalence_refl {s r} {i o} (b : bigraph s i r o) :
   support_equivalence b b.
   Proof.
-  eapply (SupEq _ _ _ _ _ _ _ _ _ _ erefl _ erefl _ bij_id bij_id (fun _ => bij_id)).
-  + rewrite bij_fun_compose_id.
+  eapply (SupEq _ _ _ _ _ _ _ _ _ _ 
+    erefl 
+    (n.permutation_id (n.ndlist i)) 
+    erefl 
+    (n.permutation_id (n.ndlist o)) 
+    (v.permutation_id (v.ndlist (get_node b))) 
+    (e.permutation_id (e.ndlist (get_edge b))) 
+    (fun _ => _)).
+  Unshelve. 4:{ rewrite bij_subset_v_permutation_id. exact bij_id. }
+  + rewrite bij_subset_v_permutation_id. 
+    rewrite bij_fun_compose_id.
     reflexivity.
-  + rewrite bij_rew_id.
+  + rewrite bij_subset_v_permutation_id.
+    rewrite bij_rew_id.
     rewrite bij_rew_id.
     rewrite bij_sum_compose_id.
     rewrite bij_sum_compose_id.
     rewrite bij_fun_compose_id.
     reflexivity.
-  + rewrite bij_sigT_compose_id.
-    rewrite bij_subset_compose_id.
-    rewrite bij_subset_compose_id.
+  + rewrite bij_subset_n_permutation_id.
+    rewrite bij_subset_n_permutation_id.
+    rewrite bij_subset_e_permutation_id.
     rewrite bij_sum_compose_id.
-    rewrite bij_sum_compose_id.
-    rewrite bij_fun_compose_id.
-    reflexivity.
+    unfold eq_rect_r. 
+    simpl. unfold funcomp,parallel,bij_dep_sum_2_forward, bijection_inv.
+    simpl.
+    apply functional_extensionality. 
+    intros [inner|[[port]]].
+    reflexivity. 
+    simpl.
+    apply port_proof_irrelevant_full.
+    apply subset_eq_compat. reflexivity.
+    simpl.
+    rewrite eq_rect_bij_id.
+
+    unfold eq_rect_r,eq_ind_r. simpl.
+    unfold bij_subset_forward,bij_subset_backward.
+    destruct o0.
+    simpl.
+
+    apply val_inj.
+    unfold eq_rect. simpl.
+    destruct (@Logic.eq_sym (@In v.InfType port (v.ndlist (@get_node s r i o
+b)))
+(@proj1
+(forall _ : @In v.InfType port (v.ndlist (@get_node s r i
+o b)),
+@In v.InfType port (v.ndlist (@get_node s r i o b)))
+(forall _ : @In v.InfType port (v.ndlist (@get_node s r i
+o b)),
+@In v.InfType port (v.ndlist (@get_node s r i o b)))
+(@conj
+(forall _ : @In v.InfType port
+(v.ndlist (@get_node s r i o b)),
+@In v.InfType port (v.ndlist (@get_node s r i o b)))
+(forall _ : @In v.InfType port
+(v.ndlist (@get_node s r i o b)),
+@In v.InfType port (v.ndlist (@get_node s r i o b)))
+(fun H : @In v.InfType port (v.ndlist (@get_node s r i
+o b)) => H)
+(fun H : @In v.InfType port (v.ndlist (@get_node s r i
+o b)) => H))
+i0) i0
+(proof_irrelevance
+(@In v.InfType port (v.ndlist (@get_node s r i o b)))
+(@proj1
+(forall _ : @In v.InfType port
+(v.ndlist (@get_node s r i o b)),
+@In v.InfType port (v.ndlist (@get_node s r i o b)))
+(forall _ : @In v.InfType port
+(v.ndlist (@get_node s r i o b)),
+@In v.InfType port (v.ndlist (@get_node s r i o b)))
+(@conj
+(forall
+_ : @In v.InfType port
+(v.ndlist (@get_node s r i o b)),
+@In v.InfType port (v.ndlist (@get_node s r i o b)))
+(forall
+_ : @In v.InfType port
+(v.ndlist (@get_node s r i o b)),
+@In v.InfType port (v.ndlist (@get_node s r i o b)))
+(fun x : @In v.InfType port
+(v.ndlist (@get_node s r i o b)) => x)
+(fun x : @In v.InfType port
+(v.ndlist (@get_node s r i o b)) => x))
+i0) i0) in (@eq _ _ a)).
+    Set Printing All.
+
+    erewrite (proof_irrelevance _).
+    Search (eq_rect).
+    rewrite rew_opp_r.
+    unfold eq_rect_r,eq_ind_r.
+    erewrite eq_rect_pi. 
+    f_equal.
+     simpl.
+    
+    unfold bij_subset_backward.
+
+    erewrite port_proof_irrelevant.
   Unshelve.
   - unfold permutation. intros. reflexivity.
   - unfold permutation. intros. reflexivity.

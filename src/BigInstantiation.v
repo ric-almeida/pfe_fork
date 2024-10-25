@@ -1,7 +1,7 @@
 Set Warnings "-notation-overridden, -parsing".
 
-Require Import AbstractBigraphs.
-Require Import Names.
+Require Import ConcreteBigraphs.
+Require Import InfSets.
 Require Import SignatureBig.
 Require Import Equality.
 Require Import Bijections.
@@ -31,7 +31,7 @@ End MySigP.
 
 
 
-Module MyNamesP <: Names.InfiniteParameter.
+Module MyNamesP <: InfSets.InfiniteParameter.
 Definition InfType := nat.
 Definition EqDecN : forall x y : InfType, {x = y} + {x <> y}.
 decide equality. Qed.
