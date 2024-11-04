@@ -102,9 +102,9 @@ Lemma eq_rect_bij_id {s r} {i o} (b : bigraph s i r o)
     <{ bij_id | v.permutation_id (v.ndlist (get_node b)) }>
     (Logic.eq_sym (bij_subset_v_permutation_id b)) p) = nat_of_ord p.
   intros. unfold eq_rect.
-  destruct p. simpl. 
-
+  destruct p. simpl.
   Admitted.
+
 
 Lemma support_equivalence_refl {s r} {i o} (b : bigraph s i r o) :
   support_equivalence b b.
@@ -132,6 +132,7 @@ Lemma support_equivalence_refl {s r} {i o} (b : bigraph s i r o) :
     rewrite bij_subset_n_permutation_id.
     rewrite bij_subset_e_permutation_id.
     rewrite bij_sum_compose_id.
+    rewrite bij_subset_v_permutation_id.
     unfold eq_rect_r. 
     simpl. unfold funcomp,parallel,bij_dep_sum_2_forward, bijection_inv.
     simpl.
