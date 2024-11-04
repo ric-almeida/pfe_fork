@@ -55,6 +55,13 @@ Record support_equivalence {s1 r1 s2 r2 : nat} {i1 o1 i2 o2 : n.NoDupList}
     bij_o : n.permutation (n.ndlist o1) (n.ndlist o2) ; 
     bij_n : v.permutation (v.ndlist (get_node b1)) (v.ndlist (get_node b2));
     bij_e : e.permutation (e.ndlist (get_edge b1)) (e.ndlist (get_edge b2));
+    bij_p' : 
+    forall (n1 : v.ListType (get_node b1)),
+    forall (n2 : v.ListType (get_node b2)),
+    sval n1 = sval n2 ->
+      bijection 
+        ('I_(Arity (get_control (bg:=b1) n1))) 
+        ('I_(Arity (get_control (bg:=b2) n2))) ;
     bij_p : forall (n1 : v.ListType (get_node b1)),
       bijection 
         ('I_(Arity (get_control (bg:=b1) n1))) 
@@ -117,7 +124,7 @@ Lemma support_equivalence_refl {s r} {i o} (b : bigraph s i r o) :
     (v.permutation_id (v.ndlist (get_node b))) 
     (e.permutation_id (e.ndlist (get_edge b))) 
     (fun _ => _)).
-  Unshelve. 4:{ rewrite bij_subset_v_permutation_id. exact bij_id. }
+  Unshelve. 5:{ rewrite bij_subset_v_permutation_id. exact bij_id. }
   + rewrite bij_subset_v_permutation_id. 
     rewrite bij_fun_compose_id.
     reflexivity.
@@ -132,8 +139,10 @@ Lemma support_equivalence_refl {s r} {i o} (b : bigraph s i r o) :
     rewrite bij_subset_n_permutation_id.
     rewrite bij_subset_e_permutation_id.
     rewrite bij_sum_compose_id.
+    unfold eq_rect_r.  
+    
+    Check eq_rect.
     rewrite bij_subset_v_permutation_id.
-    unfold eq_rect_r. 
     simpl. unfold funcomp,parallel,bij_dep_sum_2_forward, bijection_inv.
     simpl.
     apply functional_extensionality. 

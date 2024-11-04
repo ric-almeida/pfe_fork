@@ -57,8 +57,8 @@ Record bigraph  (site: nat)
                 (outername: n.NoDupList) : Type := 
   Big  
   { 
-    node : v.NoDupList ;
-    edge : e.NoDupList ;
+    node : v.NoDupList ; (*finType*)
+    edge : e.NoDupList ; (*finType*)
     control : v.ListType node -> Kappa ;
     parent : v.ListType node + ordinal site -> v.ListType node + ordinal root ; 
     link : n.ListType innername + Port control -> 
