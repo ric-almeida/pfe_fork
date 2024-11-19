@@ -206,7 +206,6 @@ Definition bigraph_empty : bigraph 0 EmptyNDL 0 EmptyNDL := bigraph_id 0 EmptyND
 Definition discrete_atom {A:finType} 
   (a:A) {k:Kappa} (o:NoDupList) 
   {Hkappa : MyEqNat (Arity k) (length (ndlist o))}: bigraph 0 EmptyNDL 1 o.
-  Search (is_true (0 < 1)).
   eapply (@Big
       0 EmptyNDL 1 o
       A

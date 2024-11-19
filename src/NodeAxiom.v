@@ -241,7 +241,6 @@ Definition renaming (i o: NoDupList)
   unfold FiniteParent. intros n;destruct n.
   Defined.
 
-Print  renaming.
 
 
 Theorem nodeAxiom {N N':NoDupList} 
