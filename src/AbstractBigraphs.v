@@ -44,10 +44,6 @@ Include n.
   This section defines the Type bigraph *)
 Section IntroBigraphs.
 
-(* Check subFinType.
-Print adhoc_seq_sub_finType.
-Search (adhoc_seq_sub_finType).
-Search (list _ -> finType). *)
 Record bigraph  (site: nat) 
                 (innername: NoDupList) 
                 (root: nat) 
@@ -62,7 +58,6 @@ Record bigraph  (site: nat)
                 (NameSub outername) + edge; 
     ap : FiniteParent parent ;
   }.
-  
 
 End IntroBigraphs.
 
@@ -86,6 +81,56 @@ Definition get_root {s i r o} (b:bigraph s i r o) : nat := r.
 Definition get_innername {s i r o} (b:bigraph s i r o) : NoDupList := i.
 Definition get_outername {s i r o} (b:bigraph s i r o) : NoDupList := o.
 End GettersBigraphs.
+
+
+
+Section SortBigraphs.
+Parameter sort:Type.
+Parameter EqDecS : forall x y : sort, {x = y} + {x <> y}.
+Parameter signatureK: Kappa -> sort.
+
+Inductive formation_rule : Type :=
+  | atomic (x:sort) (*node of sort x has no children*)
+  | cardinality (x:sort) (z:sort) (n:nat) (*node of sort x has n children of sort z*)
+  | child_relation (x:sort) (y:sort) (*node of sort x only has y type*)
+  | other (p:Prop).
+
+(*atomic has no children*)
+Definition not_is_atomic {s i r o} {b:bigraph s i r o} (n: get_node b) : bool := 
+  Coq.Lists.List.existsb 
+    (A := ordinal s)
+    (fun s => match (get_parent (bg:=b)) (inr s) with 
+      |inr _ => false 
+      |inl n' => n == n'
+      end) 
+    (enum (ordinal s))
+  || 
+  Coq.Lists.List.existsb 
+    (A := get_node b)
+    (fun nod => match (get_parent (bg:=b)) (inl nod) with 
+      |inr _ => false 
+      |inl n' => n == n'
+      end) 
+    (enum ((get_node b))).
+
+Fixpoint check_atomic {s i r o} {b:bigraph s i r o} (l:list (get_node b)) :=
+  match l with 
+    | [] => true 
+    | nh::nq => not_is_atomic (b:=b) nh && check_atomic nq
+    end.
+
+Definition check_formation_rule {s i r o}
+    (b:bigraph s i r o) (f:formation_rule) : bool := 
+  match f with 
+  | atomic x => check_atomic 
+    (filter 
+      (fun nh => EqDecS (signatureK (get_control (bg:=b) nh)) x) 
+      (enum (get_node b)))
+  | _ => true
+  end.
+
+End SortBigraphs.
+
 
 (** Tools for proof irrelevance *)
 
