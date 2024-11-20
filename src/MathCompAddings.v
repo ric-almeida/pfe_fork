@@ -238,3 +238,18 @@ Proof.
 Qed.
 
 
+Lemma filter_true {A}: forall l:list A, 
+  [seq _ <- l  | true] = l.
+  induction l.
+  auto.
+  simpl. rewrite IHl. auto.
+  Qed. 
+
+
+Lemma enum_unit_tt : 
+  @enum_mem Datatypes_unit__canonical__fintype_Finite
+    (@mem unit (predPredType unit)
+    (@PredOfSimpl.coerce unit (pred_of_argType unit))) = [::tt].
+  rewrite enumT unlock. by [].
+  Qed.
+    (* enum unit = [::tt]. *)

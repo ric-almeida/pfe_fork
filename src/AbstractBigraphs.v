@@ -85,9 +85,16 @@ End GettersBigraphs.
 
 
 Section SortBigraphs.
-Parameter sort:Type.
+(* Parameter sort:Type.
 Parameter EqDecS : forall x y : sort, {x = y} + {x <> y}.
-Parameter signatureK: Kappa -> sort.
+Parameter signatureK: Kappa -> sort. *)
+
+Definition sort:Type:=nat.
+Definition EqDecS : forall x y : sort, {x = y} + {x <> y}.
+  intros.
+  apply (decP eqnP).
+  Defined.
+Definition signatureK: Kappa -> sort := fun _ => 0.
 
 Inductive formation_rule : Type :=
   | atomic (x:sort) (*node of sort x has no children*)
@@ -116,7 +123,7 @@ Definition not_is_atomic {s i r o} {b:bigraph s i r o} (n: get_node b) : bool :=
 Fixpoint check_atomic {s i r o} {b:bigraph s i r o} (l:list (get_node b)) :=
   match l with 
     | [] => true 
-    | nh::nq => not_is_atomic (b:=b) nh && check_atomic nq
+    | nh::nq => (negb (not_is_atomic (b:=b) nh)) && check_atomic nq
     end.
 
 Definition check_formation_rule {s i r o}
@@ -235,6 +242,9 @@ Definition discrete_atom {A:finType}
     intros u' H.
     exfalso. discriminate H.
     Defined. 
+
+
+
 
 Definition discrete_ion {A:finType} 
   (a:A) {k:Kappa} (o:NoDupList) 

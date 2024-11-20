@@ -44,8 +44,6 @@ Proof.
   induction l as [| t q IH]. 
   - elim H. 
   - simpl in H. destruct H as [H | H].
-    + lia. 
-    + destruct (Init.Nat.max t (fold_right Init.Nat.max 0 q)) eqn:E.
     Admitted.
    
 
@@ -81,13 +79,51 @@ Admitted.
 End MyNamesP.
 
 
+Module AB := Bigraphs MySigP MyNamesP.
+Include AB.
 
-Module MB := MergeBig MySigP MyNamesP.
-Include MB.
+Definition simpl_atom := discrete_atom tt (o:=EmptyNDL).
+
+Lemma filter_true {A}: forall l:list A, 
+  [seq _ <- l  | true] = l.
+  Proof.
+  induction l.
+  auto.
+  simpl. rewrite IHl. auto.
+  Qed. 
+
+Lemma atom_is_atomic : check_formation_rule 
+  (simpl_atom)
+  (atomic 0).
+  Proof.
+  unfold check_formation_rule.
+  simpl. 
+  rewrite filter_true.
+
+  assert ((@enum_mem Datatypes_unit__canonical__fintype_Finite
+    (@mem unit (predPredType unit)
+    (@PredOfSimpl.coerce unit (pred_of_argType unit)))) = [tt]).
+    {rewrite enumT unlock. by []. }
+
+  rewrite H. simpl.
+  rewrite Bool.andb_true_r.
+  unfold not_is_atomic.
+  rewrite Bool.negb_orb.
+  apply andb_true_intro.
+  split.
+  - rewrite enum_ord0. auto. 
+  - simpl. rewrite H. auto. 
+  Qed. 
+
+
+
+
+(* Module MB := MergeBig MySigP MyNamesP.
+Include MB. *)
 
 
 (*FROM NOW IT BUGS BC I CHANGED NAME FROM STRING TO NAT*)
-Example b : string := "b".
+(* Example b : string := "b".
 Example bNDL : NoDupList.
 exists [b]. constructor; auto. constructor. Defined.
 
@@ -97,18 +133,28 @@ exists [a]. constructor; auto. constructor. Defined.
 
 Example e : string := "e".
 Example eNDL : NoDupList.
+exists [e]. constructor; auto. constructor. Defined. *)
+
+Example b : nat := 2.
+Example bNDL : NoDupList.
+exists [b]. constructor; auto. constructor. Defined.
+
+Example a : nat := 1.
+Example aNDL : NoDupList.
+exists [a]. constructor; auto. constructor. Defined.
+
+Example e : nat := 5.
+Example eNDL : NoDupList.
 exists [e]. constructor; auto. constructor. Defined.
-
-
 
 
 Example simplBig : 
   bigraph 1 bNDL 1 aNDL.
-  eapply (Big
+  eapply (@Big
     1 bNDL 1 aNDL
-    (findec_fin 2)
-    findec_unit
-    (fun n => match n with | exist _ n _  => n+1 end) (*control*)
+    (ordinal 2)
+    unit
+    (fun n => match n with | n  => n+1 end) (*control*)
     _
     (*(fun ns => match ns with 
       | inl n => inr zero1
@@ -119,15 +165,15 @@ Example simplBig :
   Unshelve.
   3:{ intros [b|p]. (*link*)
   + (*link b*) right. exact tt.
-  + destruct p. destruct x.
+  + destruct p. destruct x as [x].
   induction x as [|x' H] eqn:E.
   * right. exact tt.
   * assert (x'=0).
-  ** lia.
-  ** rewrite H0 in f.
-  simpl in f. unfold Arity,id in f.
-  destruct f as [i Hi].
-  induction i as [|i' Hi'] eqn:Ei.
+  ** subst x. simpl in o. admit.
+  ** subst x.
+  simpl in o. unfold Arity in o.
+  destruct o as [i' Hi].
+  induction i' as [|i'' Hi'] eqn:Ei.
   *** right. exact tt.
   *** left. unfold NameSub. exists a.  
   unfold aNDL. simpl.
