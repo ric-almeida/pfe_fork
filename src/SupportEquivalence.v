@@ -124,7 +124,7 @@ Lemma support_equivalence_refl {s r} {i o} (b : bigraph s i r o) :
     (v.permutation_id (v.ndlist (get_node b))) 
     (e.permutation_id (e.ndlist (get_edge b))) 
     (fun _ => _)).
-  Unshelve. 5:{ rewrite bij_subset_v_permutation_id. exact bij_id. }
+  Unshelve. 5:{ rewrite bij_subset_v_permutation_id. intros. exact bij_id. }
   + rewrite bij_subset_v_permutation_id. 
     rewrite bij_fun_compose_id.
     reflexivity.
