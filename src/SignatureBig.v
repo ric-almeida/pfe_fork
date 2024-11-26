@@ -13,6 +13,7 @@ From mathcomp Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq fintype 
 Module Type SignatureParameter.
 
 Parameter Kappa:Type.
+Parameter EqDecK : forall x y : Kappa, {x = y} + {x <> y}.
 Parameter Arity:Kappa-> nat.
 
 End SignatureParameter.
