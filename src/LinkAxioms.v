@@ -137,7 +137,6 @@ Lemma closure_o_subst_neutral : forall x,
   Qed.
 
     
-(*Note that a closure /x ◦ G may create an idle edge, if x is an idle name of G. Intuitively idle edges are ‘invisible’, and indeed we shall see later how to ignore them.*)
 Lemma closure_o_sub_eq_closure : forall x y, 
   support_equivalence
     (closure y <<o>> substitution (OneelNDL x) y)

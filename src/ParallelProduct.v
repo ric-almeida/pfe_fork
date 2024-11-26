@@ -294,41 +294,6 @@ Theorem bigraph_pp_right_neutral : forall {s i r o} (b : bigraph s i r o),
       f_equal. destruct s0. apply subset_eq_compat. reflexivity.
   Qed.
 
-(* Lemma arity_pp_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) {up : UnionPossible b1 b2} n12,
-  Arity (get_control (bg := b1 || b2) n12) = 
-  Arity (get_control (bg := bigraph_parallel_product (up:=union_possible_commutes up) b2 b1) (bij_sum_comm n12)).
-  Proof.
-  intros until n12.
-  destruct n12.
-  + reflexivity.
-  + reflexivity.
-  Qed. *)
-
-(* Theorem bigraph_pp_comm : forall {s1 i1 r1 o1 s2 i2 r2 o2} (b1 : bigraph s1 i1 r1 o1) (b2 : bigraph s2 i2 r2 o2) {up : UnionPossible b1 b2},
-  support_equivalence (b1 ||b2) (bigraph_parallel_product (up:=union_possible_commutes up) b2 b1).
-  Proof.
-  intros.
-  refine (SupEq _ _ _ _ _ _ _ _ (b1 || b2) (b2 || b1)
-    (@esym _ _ _ _)
-    in_app_merge_comu
-    (@esym _ _ _ _)
-    in_app_merge_comu
-    bij_sum_comm
-    bij_sum_comm
-    (fun n12 => bij_rew (arity_pp_comm b1 b2 n12))
-    _ _ _
-  ).
-  + apply functional_extensionality.
-    destruct x as [k2 | k1]; reflexivity.
-  + apply functional_extensionality.
-    destruct x as [[n2 | n1] | s21']; simpl; unfold funcomp,parallel,bij_rew_forward ; simpl.
-    -  destruct get_parent ; try reflexivity.
-    f_equal. destruct o0. rewrite eq_rect_ordinal. unfold unsplit,lshift.
-    apply val_inj;simpl.
-    rewrite (@eq_rect_exist nat nat (fun n x => x < n) (r1 + r2) (r2 + r1) _ (r1 + x) _).
-    apply subset_eq_compat. try lia.
-    Abort. We don't have commutativity *)
-
 #[export] Instance union_possible_assoc_pp {s1 i1 r1 o1 s2 i2 r2 o2 s3 i3 r3 o3}
   {b1 : bigraph s1 i1 r1 o1} 
   {b2 : bigraph s2 i2 r2 o2} 

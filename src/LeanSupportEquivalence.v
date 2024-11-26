@@ -8,6 +8,7 @@ Require Import MyBasics.
 Require Import MathCompAddings.
 Require Import FunctionalExtensionality.
 Require Import SupportEquivalence.
+Require Import ListSpec.
 
 
 Require Import Coq.Lists.List.
@@ -24,36 +25,11 @@ From mathcomp Require Import path div.
 
 Import ListNotations.
 
-(** This module implements equivalence between two bigraphs
-  This section defines the equivalence relation between bigraphs. 
-  We say there's an equivalence between two types if we give a bijection 
-  (cf support_for_bigraphs) between the two types. To define the equivalence 
-  between bigraphs, we want an equivalence between each Type and between 
-  each function.
-  To do that, we make definitions of equivalence between each function. 
-  We coerce the Record support_equivalence into a Prop, which means that we can
-  access the bjections, but also that their existence means the Prop is True.
-  Note that our equivalence is heterogeneous. 
-  We prove that our relation support_equivalence is reflexive, 
-  symmetric and transitive. This is going to be useful to be able to rewrite 
-  bigraphs at will. *)
+(** This module implements lean-support equivalence between two bigraphs
+  It is defined from support-equivalence on bigraphs with no idle edge. *)
 Module LeanSupportEquivalence (s : SignatureParameter) (n : NamesParameter).
 Module eb := SupportEquivalenceBigraphs s n.
 Include eb. 
-
-Parameter onto : forall [A : Type] (lA : list A), list { a : A | In a lA }.
-
-Axiom onto_nil : forall {A : Type}, onto (@nil A) = nil.
-
-Axiom onto_cons : forall [A : Type] (h : A) (t : list A),
-  onto (h::t) = 
-  (exist (fun a => In a (h::t)) h (in_eq h t)) :: 
-    (map (fun (a_in_t : { a : A | In a t }) => 
-      let (a, Ha) := a_in_t in exist _ a (List.in_cons _ _ _ Ha)) (onto t)).
-
-Axiom onto_Onto : forall [A : Type] (lA : list A) (a : { a : A | In a lA }), In a (onto lA).
-
-
 
 
 (*** GET LIST OF INNERNAMES ***)

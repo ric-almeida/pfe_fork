@@ -25,7 +25,7 @@ Import ListNotations.
 
 (** This module implements equivalence between two bigraphs
   This section defines the equivalence relation between bigraphs. 
-  We say there's an equivalence between two types if we give a bijection 
+  We say there's support-equivalence between two types if we give a bijection 
   (cf support_for_bigraphs) between the two types. To define the equivalence 
   between bigraphs, we want an equivalence between each Type and between 
   each function.

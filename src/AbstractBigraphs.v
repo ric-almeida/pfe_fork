@@ -1,11 +1,6 @@
 Set Warnings "-notation-overridden, -parsing".
 Set Warnings "-notation-overridden, -notation-overriden".
 
-
-(* Require Import Coq.Logic.Decidable.
-Require Import Coq.Setoids.Setoid. *)
-(* Require Import ToolsForBigraphs. *)
-(* Require Import FinFun. *)
 Require Import MyBasics.
 Require Import MyEqNat.
 Require Import Basics.
@@ -40,6 +35,7 @@ Module s := Signature sp.
 Module n := Names np.
 Include s.
 Include n.
+
 (** * Definition of a bigraph
   This section defines the Type bigraph *)
 Section IntroBigraphs.
@@ -86,7 +82,6 @@ End GettersBigraphs.
 
 
 (** Tools for proof irrelevance *)
-
 Theorem parent_proof_irrelevant {s i r o} (b:bigraph s i r o): 
   forall n n': 'I_s, n = n' ->
   get_parent (bg:=b) (inr n) = get_parent (inr n').
@@ -136,9 +131,10 @@ Theorem port_proof_irrelevant_full {s i r o} (b:bigraph s i r o):
   reflexivity.
   Qed.
 
+
 (** Section defining some elementary bigraphs *)
 Section ElementaryBigraphs. 
-Definition bigraph_id (s: nat) (i : NoDupList) : bigraph s i s i. (*actually s i s (permutation i) *)
+Definition bigraph_id (s: nat) (i : NoDupList) : bigraph s i s i.
   Proof.
   apply (@Big s i s i
           void (*node : ∅*)

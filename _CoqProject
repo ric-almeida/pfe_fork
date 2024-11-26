@@ -1,6 +1,5 @@
 -R src MyProofs
 -I src/  
-src/Tactics.v
 src/MyBasics.v
 src/MathCompAddings.v
 src/Bijections.v
@@ -9,6 +8,7 @@ src/Names.v
 src/MyEqNat.v
 src/AbstractBigraphs.v
 src/SupportEquivalence.v
+src/ListSpec.v
 src/LeanSupportEquivalence.v
 src/Composition.v
 src/TensorProduct.v
@@ -20,4 +20,3 @@ src/UnionPossible.v
 src/ParallelProduct.v
 src/Nesting.v
 src/MergeProduct.v
-src/Sorting.v

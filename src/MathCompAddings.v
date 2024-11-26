@@ -18,8 +18,6 @@ Definition void_univ_embedding {A : Type} : void -> A.
 
 Definition nlt_0_it : forall p, p<0 -> False. 
   intros p Hp.
-  (* apply is_true_lt in Hp. *)
-  (* apply Nat.nlt_0_r in Hp. apply Hp. *)
   unfold is_true in Hp. 
   set (nHp := ltn0 p).
   exfalso.
@@ -72,20 +70,6 @@ simpl.
 apply val_inj.
 reflexivity.
 Qed. 
-
-(* Lemma eq_rect_ordinal_open {node:finType} {ctrl:node -> nat} : 
-  forall {n n':node} {port} (H : port < ctrl n) (H' : port < ctrl n')
-  (Hnn' : n = n'),
-  eq_rect 
-    n
-    (fun y => 'I_(ctrl y))
-    (Ordinal (n:=ctrl n) (m:=port) H)
-    n'
-    Hnn' = Ordinal (n:=ctrl n') (m:=port) H'.
-  Proof.
-  intros.
-  simpl.
-  Admitted. *)
 
 
 Lemma Ordinal_proof_irrelevance : forall (s m : nat) (i0 i1 : m < s),
@@ -252,4 +236,3 @@ Lemma enum_unit_tt :
     (@PredOfSimpl.coerce unit (pred_of_argType unit))) = [::tt].
   rewrite enumT unlock. by [].
   Qed.
-    (* enum unit = [::tt]. *)
