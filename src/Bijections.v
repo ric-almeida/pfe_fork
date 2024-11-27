@@ -11,7 +11,6 @@ Set Warnings "-notation-overridden, -notation-overriden".
 Require Import FunctionalExtensionality.
 Require Import ProofIrrelevance.
 Require Import PropExtensionality.
-Require Import Tactics.
 Require Import MyBasics.
 Require Import MathCompAddings.
 Require Import PeanoNat.
