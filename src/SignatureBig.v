@@ -12,9 +12,9 @@ From mathcomp Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq fintype 
   It contains a Module Type with Kappa and Arity, and Ports built from the Signature *)
 Module Type SignatureParameter.
 
-Parameter Kappa:Type.
+Parameter Kappa : Type.
 Parameter EqDecK : forall x y : Kappa, {x = y} + {x <> y}.
-Parameter Arity:Kappa-> nat.
+Parameter Arity : Kappa-> nat.
 
 End SignatureParameter.
 

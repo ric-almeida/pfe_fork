@@ -52,21 +52,21 @@ Definition not_is_atomic {s i r o} {b:bigraph s i r o} (n: get_node b) : bool :=
 
 (*this supposes we give in l the list of nodes with the correct sort
 it checks whether all elements of the list is atomic *)
-Fixpoint check_atomic {s i r o} {b:bigraph s i r o} (l:list (get_node b)) :=
+(* Fixpoint check_atomic {s i r o} {b:bigraph s i r o} (l:list (get_node b)) :=
   match l with 
     | [] => true 
     | nh::nq => (negb (not_is_atomic (b:=b) nh)) && check_atomic nq
-    end.
+    end. *)
 
 
 Definition get_children {s i r o} {b:bigraph s i r o} (n: get_node b) : list (get_node b) :=
   filter 
-  (fun nh => 
-    match (get_parent (bg:=b)) (inl nh) with 
-    |inr _ => false
-    |inl n' => n == n'
-    end) 
-  (enum (get_node b)).
+    (fun nh => 
+      match (get_parent (bg:=b)) (inl nh) with 
+      |inr _ => false
+      |inl n' => n == n'
+      end) 
+    (enum (get_node b)).
     
 Definition check_one_child {s i r o} {b:bigraph s i r o} (n: get_node b) : bool := 
   size (get_children n) == 1.
@@ -82,14 +82,20 @@ Definition check_one_child_of_sort_s {s i r o} {b:bigraph s i r o} (s: sort) (n:
   | _ => false
   end.
 
+Fixpoint check_nodes_of_sort_s {s i r o} {b:bigraph s i r o} (s: sort) (l: list (get_node b)): bool :=
+  match l with 
+  | child :: q => EqDecS (signatureK (get_control child)) s && check_nodes_of_sort_s s q
+  | [] => true
+  end. 
+
 (*this supposes we give in l the list of nodes with the correct sort
 it checks whether all elements of the list is atomic *)
-Fixpoint check_check_one_child_of_sort_s {s i r o} {b:bigraph s i r o} 
+(* Fixpoint check_check_one_child_of_sort_s {s i r o} {b:bigraph s i r o} 
   (s_child:sort) (l:list (get_node b)) :=
   match l with 
     | [] => true 
     | nh::nq => check_one_child_of_sort_s s_child nh && check_check_one_child_of_sort_s s_child nq
-    end.
+    end. *)
 
 (* Definition sort:Type:=nat.
 Definition EqDecS : forall x y : sort, {x = y} + {x <> y}.
@@ -102,7 +108,7 @@ Definition signatureK: Kappa -> sort := fun _ => 0. *)
 Inductive pat : Type :=
   | and_pat (p:pat) (p':pat)
   | or_pat (p:pat) (p':pat)
-  | star_pat (lp : list pat)
+  | star_pat (p : pat)
   | baseS_pat (s:sort).
 
 (*missing the LinkGraph aspect*)
@@ -113,6 +119,16 @@ Inductive constructor : Type :=
 Inductive formation_rule : Type := 
   | sort_rule (s:sort) (constructors:list constructor).
 
+(*this supposes we give in l the list of nodes *)
+Fixpoint check_pattern {s i r o}
+  {b:bigraph s i r o} (p:pat) (n:get_node b)  : bool := 
+  match p with 
+  | and_pat p p' => true
+  | or_pat p p' => check_pattern p n || check_pattern p' n
+  | star_pat p => check_pattern 
+  | baseS_pat s_child => check_one_child_of_sort_s s_child n (*forgot OR no child*)
+  end.
+
 
 Fixpoint check_list_constructor {s i r o}
   (b:bigraph s i r o) (s:sort) (clist:list constructor) : bool :=
@@ -121,19 +137,26 @@ Fixpoint check_list_constructor {s i r o}
     | hclist :: qclist => 
       match hclist with
       | ctrl_name c =>
-          EqDecS (signatureK c) s && 
-          check_atomic (filter  (fun nh => EqDecK (get_control (bg:=b) nh) c) 
-                                (enum (get_node b))) (*here, use a map*)
+        EqDecS (signatureK c) s && 
+        fold_left 
+          (fun qt nh => (negb (not_is_atomic (b:=b) nh)) && qt)
+          (filter  (fun nh => EqDecK (get_control (bg:=b) nh) c) (enum (get_node b))) 
+          true
       | patterns c p => 
-        match p with 
+        fold_left 
+          (fun qt nh => check_pattern p nh && qt)
+          (filter (fun nh => EqDecK (get_control (bg:=b) nh) c) (enum (get_node b)))
+          true
+        (* match p with 
           | and_pat p p' => true
           | or_pat p p' => true
           | star_pat p => true
           | baseS_pat s_child => 
-            check_check_one_child_of_sort_s s_child
-            (filter  (fun nh => EqDecK (get_control (bg:=b) nh) c) 
-                                (enum (get_node b))) 
-        end
+            fold_left 
+              (fun qt nh => check_one_child_of_sort_s s_child nh && qt)
+              (filter  (fun nh => EqDecK (get_control (bg:=b) nh) c) (enum (get_node b))) 
+              true
+        end *)
       end 
       && check_list_constructor b s qclist
     end.
