@@ -1,3 +1,5 @@
+** THIS IS A FORK OF https://gitlab.isae-supaero.fr/c.marcon/pfe AND NOT MY WORK **
+
 # PHD
 
 Playground for my PhD, mostly bigraphs in Coq
