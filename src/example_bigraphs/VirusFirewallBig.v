@@ -230,7 +230,7 @@ Program Definition my_link (x : NameSub inames + Port my_control) : NameSub onam
       intros; auto; intro H; inversion H. Qed. 
     Next Obligation. 
       repeat (split; [ intros; auto; intro H; inversion H |]).
-      intros; auto; intro H; inversion H. Qed. 
+      intros; auto; intro H; inversion H. Qed.  
     Next Obligation. 
       repeat (split; [ intros; auto; intro H; inversion H |]).
       intros; auto; intro H; inversion H. Qed.
