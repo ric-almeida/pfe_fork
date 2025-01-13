@@ -1,3 +1,8 @@
+** THIS IS A FORK OF https://gitlab.isae-supaero.fr/c.marcon/pfe AND NOT MY WORK **
+This branch currently only adds an example bigraph instantiated in BiCoq. It's based
+on the virus-and-firewall network model from https://bitbucket.org/uog-bigraph/bigraph-tools/src/master/bigrapher/examples/virus-multifirewall.big
+-----------------------------------------------------------------------------------
+
 # PHD
 
 Playground for my PhD, mostly bigraphs in Coq
